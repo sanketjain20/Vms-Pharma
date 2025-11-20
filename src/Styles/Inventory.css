@@ -1,0 +1,60 @@
+/* ----------- Inventory Page Wrapper ----------- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+.i-container {
+  padding: 20px;
+  color: #fff;
+  background: #000000fb;
+  min-height: 100vh;
+  margin-top: 5px;
+ font-family: 'Poppins', sans-serif;
+}
+
+.i-title {
+  font-size: 26px;          /* Size of heading */
+  font-weight: 900;         /* Extra bold */
+  margin-bottom: 25px;
+  font-family: "Cornerstone", "Arial Black", "Impact", sans-serif; /* Fallback fonts */
+  text-transform: uppercase; /* All caps like the image */
+  letter-spacing: 2px;      /* Slight spacing between letters */
+  color: #fffdfd;              /* Dark, modern color *//* Optional gradient effect */
+  display: inline-block;
+  padding: 3px 3px;       /* Small padding for visual emphasis */
+}
+
+
+/* ----------- Stats Cards (optional if you add later) ----------- */
+.inventory-stats {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.inventory-card {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 18px 22px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  width: 180px;
+  box-shadow: 0 3px 15px rgba(255, 138, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.inventory-card-title {
+  font-size: 14px;
+  color: #bbb;
+  text-transform: uppercase;
+}
+
+.inventory-card-value {
+  margin-top: 5px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ff8a00;
+}
+
+/* ----------- Grid Container ----------- */

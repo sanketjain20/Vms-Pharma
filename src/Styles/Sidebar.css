@@ -1,0 +1,129 @@
+/* -------------------------------------- */
+/* SIDEBAR BASE */
+/* -------------------------------------- */
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 60px; /* collapsed */
+  height: 100vh;
+  background: #111;
+  color: #fff;
+  transition: width 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+  z-index: 10000;
+  overflow: visible !important;
+}
+
+/* Expanded sidebar */
+.sidebar.open {
+  width: 200px;
+  padding-left: 10px;
+}
+
+/* Logo animation */
+.logo {
+  width: 40px;
+  height: 40px;
+  margin: 20px 0;
+  transition: 0.3s ease;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.logo.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.nav-list {
+  width: 100%;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  position: relative;
+  cursor: pointer;
+}
+
+.nav-icon {
+  min-width: 30px;
+  text-align: center;
+}
+
+/* Text hidden in collapse */
+.nav-text {
+  margin-left: 10px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.sidebar.open .nav-text {
+  opacity: 1;
+}
+
+/* -------------------------------------- */
+/* TOGGLE BUTTON */
+/* -------------------------------------- */
+
+.sidebar-toggle {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: white;
+  cursor: pointer;
+  z-index: 10001;
+  font-size: 25px;
+}
+
+/* -------------------------------------- */
+/* TOOLTIP */
+/* -------------------------------------- */
+
+.nav-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #4b4a4a;
+  color: #fff;
+  padding: 6px 9px;
+  font-size: 12px;
+  border-radius: 3px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  display: none;
+  z-index: 99999;
+}
+
+/* Show tooltip only when collapsed */
+.sidebar:not(.open) .nav-item:hover::after {
+  display: block;
+  opacity: 1;
+}
+
+/* Tooltip Arrow */
+.nav-item::before {
+  content: "";
+  position: absolute;
+  left: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #000;
+  opacity: 0;
+  display: none;
+}
+
+.sidebar:not(.open) .nav-item:hover::before {
+  display: block;
+  opacity: 1;
+}

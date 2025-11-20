@@ -1,0 +1,27 @@
+/* Layout wrapper */
+.layout {
+  display: flex;
+  min-height: 100px;
+  width: 100%;
+}
+
+/* Main content including navbar, content, footer */
+.layout-main {
+  margin-left: 60px; /* initial sidebar collapsed width */
+  transition: margin-left 0.3s;
+  width: calc(100% - 60px);
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-main.shifted {
+  margin-left: 200px; /* expanded sidebar width */
+  width: calc(100% - 200px);
+}
+
+.layout-content {
+  padding: 20px;
+  background: #000000;
+  flex: 1; /* take remaining height */
+  overflow-y: auto;
+}

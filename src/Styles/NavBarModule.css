@@ -1,0 +1,101 @@
+/* NAVBAR MODULE */
+header {
+  position:static;
+  top: 0;
+  left: 0;
+  width: 100%;
+    height: 65px;
+  min-height: 60px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* right side for profile */
+  background: #000;          /* pure black */
+  color: #fff;
+  border-bottom: 1px solid #222;
+
+  padding: 0 20px;
+  z-index: 1000;
+
+  transition: left 0.3s, width 0.3s;
+}
+
+/* Shift navbar when sidebar is open */
+header.shifted {
+  left: 200px; /* width of expanded sidebar */
+  width: calc(100% - 200px);
+}
+
+/* Right section containing profile */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Profile circle with initials */
+.profile {
+  width: 38px;
+  height: 38px;
+
+  background: #0369ee;   /* orange theme */
+  color: #000;
+  font-weight: bold;
+  font-size: 16px;
+
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+/* Hover effect */
+.profile:hover {
+  background: #40a1e2;
+}
+
+/* Optional: Vendor name next to profile */
+.vendor-name {
+  margin-left: 10px;
+  font-size: 16px;
+  color: #a2e0f8;
+  font-weight: 500;
+}
+
+/* Optional: Vendor image next to profile */
+.vendor-logo {
+  margin-left: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 50px; /* below profile circle */
+  right: 0;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  width: 140px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+}
+
+.dropdown-item {
+  padding: 10px 15px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.dropdown-item:hover {
+  background: #40a1e2;
+  color: #000;
+}

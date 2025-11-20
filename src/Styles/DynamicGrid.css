@@ -1,0 +1,171 @@
+/* ---------------------- Search/Add Container ---------------------- */
+.search-add-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Search box */
+.search-wrapper {
+  position: relative;
+  flex: 1.5;
+}
+
+.search-input {
+  width: 80%;
+  padding: 4px 14px 8px 14px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #555;
+  outline: none;
+  background-color: #2b2828;
+  color: #fff;
+}
+
+.search-input::placeholder {
+  color: #aaa;
+}
+
+.search-icon {
+  position: absolute;
+  right: 22%;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* Add button */
+.add-button {
+  width: 160px;
+  padding: 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(90deg, #056dce, #06a2eb);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.add-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 4px 15px rgba(255, 138, 0, 0.5);
+}
+
+/* ---------------------- Status Filters ---------------------- */
+.status-filters {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.status-chip {
+  padding: 6px 12px;
+  border-radius: 12px;
+  background-color: #161616;
+  color: #ccc;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 7%;
+  text-align: center;
+}
+
+.status-chip.active {
+  background-color: #2379ca;
+  color: #fff;
+}
+
+/* ---------------------- Grid Table ---------------------- */
+.grid-container {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px;
+}
+
+/* Scrollable body */
+.scroll-body {
+  max-height: 400px; /* adjust as needed */
+  overflow-y: auto;
+}
+
+/* Table formatting */
+.grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Sticky header */
+.grid-table thead {
+  position: sticky;
+  top: 0;
+  background: rgba(34, 34, 34, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.grid-table th {
+  padding: 12px;
+  color: #eee;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* Row styling */
+.grid-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.grid-table tbody tr:hover {
+  background: rgba(255, 138, 0, 0.08);
+}
+
+.grid-table td {
+  padding: 10px 12px;
+  color: #ddd;
+}
+
+/* ---------------------- TEXT TRUNCATION ---------------------- */
+.grid-table th,
+.grid-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------------------- Pagination ---------------------- */
+.grid-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.grid-pagination button,
+.grid-pagination select {
+  padding: 3px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background-color: #111;
+  color: #fff;
+  cursor: pointer;
+}
+
+.grid-pagination button:disabled {
+  opacity: 0.5;
+}
+
+.grid-pagination span {
+  color: #fff;
+  font-weight: 600;
+}
