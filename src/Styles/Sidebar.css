@@ -127,3 +127,58 @@
   display: block;
   opacity: 1;
 }
+/* Submenu parent */
+.submenu-parent {
+  position: relative;
+}
+
+/* Parent item */
+.submenu-parent {
+  position: relative;
+}
+
+/* FULL HEIGHT RIGHT SIDEBAR */
+/* Keep all your existing CSS unchanged ... */
+
+/* FULL HEIGHT RIGHT SIDEBAR */
+/* Submenu positioning remains the same, we only override left dynamically via inline style */
+.submenu {
+  display: none;
+  position: fixed;
+  top: 0;
+  width: 250px;
+  height: 100vh;
+  background: #121824;
+  border-left: 1px solid #333;
+  padding-top: 80px;
+  z-index: 999;
+  overflow-y: auto;
+}
+
+.submenu-parent:hover .submenu {
+  display: block;
+}
+
+/* Submenu text always visible */
+.submenu .nav-text {
+  opacity: 1 !important;
+  margin-left: 0;
+  display: block;
+}
+
+
+
+/* submenu items styling */
+.submenu-item {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  color: white;
+}
+
+.submenu-item:hover {
+  background: #333333;
+}

@@ -19,6 +19,7 @@ import ProductType from "./MyComponents/ProductType";
 import Vendor from "./MyComponents/Vendor";
 import Reports from "./MyComponents/Reports";
 import Inventory from "./MyComponents/Inventory";
+import Sales from "./MyComponents/Sales";
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
         <Route path="vendor" element={<Vendor />} />
         <Route path="reports" element={<Reports />} />
         <Route path="inventory" element={<Inventory />} />
+        <Route path="sales" element={<Sales /> }/>
       </Route>
     </Routes>
   );

@@ -6,8 +6,9 @@
   color: #fff;
   background: #000000fb;
   min-height: 100vh;
-  margin-top: 5px;
+  margin-top: 0px;
  font-family: 'Poppins', sans-serif;
+ padding-top: 5px;
 }
 
 .i-title {
