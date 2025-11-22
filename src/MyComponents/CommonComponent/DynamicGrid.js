@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import "../Styles/DynamicGrid.css";
+import "../../Styles/DynamicGrid.css";
 import { FaSearch } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-export default function DynamicGrid({ columns = [], apiUrl }) {
+
+export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [data, setData] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -11,6 +13,8 @@ export default function DynamicGrid({ columns = [], apiUrl }) {
   const [searchText, setSearchText] = useState("");
 
   /* ---------------------- Fetch API ---------------------- */
+  const navigate = useNavigate();
+
   useEffect(() => {
     fetch(`${apiUrl}/${page}/${size}`, {
       method: "GET",
@@ -25,8 +29,8 @@ export default function DynamicGrid({ columns = [], apiUrl }) {
             Array.isArray(dataObj)
               ? dataObj
               : typeof dataObj === "object"
-              ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
-              : [];
+                ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
+                : [];
 
           setData(list);
           setTotalPages(dataObj?.totalPages || 1);
@@ -45,9 +49,9 @@ export default function DynamicGrid({ columns = [], apiUrl }) {
     .filter((row) =>
       searchText
         ? Object.values(row)
-            .join(" ")
-            .toLowerCase()
-            .includes(searchText.toLowerCase())
+          .join(" ")
+          .toLowerCase()
+          .includes(searchText.toLowerCase())
         : true
     );
 
@@ -73,8 +77,14 @@ export default function DynamicGrid({ columns = [], apiUrl }) {
           />
           <FaSearch className="search-icon" />
         </div>
+        <button className="add-button" onClick={() => navigate(`/master/${Module.toLowerCase()}/add`)}>
 
-        <button className="add-button">Add Item</button>
+          <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#ffffffff">
+            <path d="M444-288h72v-156h156v-72H516v-156h-72v156H288v72h156v156ZM216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm0-72h528v-528H216v528Zm0-528v528-528Z" />
+          </svg>
+          Add New {Module}
+        </button>
+
       </div>
 
       {/* Status Filters */}
@@ -86,17 +96,15 @@ export default function DynamicGrid({ columns = [], apiUrl }) {
           All
         </span>
         <span
-          className={`status-chip ${
-            selectedStatus === "active" ? "active" : ""
-          }`}
+          className={`status-chip ${selectedStatus === "active" ? "active" : ""
+            }`}
           onClick={() => setSelectedStatus("active")}
         >
           Active
         </span>
         <span
-          className={`status-chip ${
-            selectedStatus === "inactive" ? "active" : ""
-          }`}
+          className={`status-chip ${selectedStatus === "inactive" ? "active" : ""
+            }`}
           onClick={() => setSelectedStatus("inactive")}
         >
           Inactive

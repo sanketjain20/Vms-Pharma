@@ -1,6 +1,6 @@
 import React from "react";
-import DynamicGrid from "../MyComponents/DynamicGrid";
-import "../Styles/Inventory.css";
+import DynamicGrid from "../CommonComponent/DynamicGrid";
+import "../../Styles/Inventory.css";
 
 export default function ProductType() {
 const columns = [
@@ -19,6 +19,7 @@ PRODUCT TYPES</h2>
       <DynamicGrid 
         columns={columns} 
         apiUrl="http://localhost:8080/api/ProductType/GetAllProductType" 
+        Module="Prod Type"
       />
     </div>
   );

@@ -1,0 +1,32 @@
+import React from "react";
+import DynamicGrid from "../CommonComponent/DynamicGrid";
+import "../../Styles/Inventory.css";
+
+export default function Product() {
+const columns = [
+  { header: "Invoice No.", field: "invoiceNumber", width: "130px" },
+  { header: "Total Amount (₹)", field: "totalAmount", width: "150px" },
+  { header: "Total Tax (₹)", field: "totalTax", width: "110px" },
+  { header: "Net Amount (₹)", field: "netAmount", width: "130px" },
+  { header: "Total Discount (₹)", field: "totalDiscount", width: "140px" },
+  { header: "Billing Mode", field: "billingMode", width: "130px" },
+  { header: "Date", field: "createdAt", width: "180px" },
+];
+
+
+  return (
+    <div className="i-container">
+      <h2 className="i-title">
+<svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#FFFFFF"><path d="M450-154v-309L180-619v309l270 156Zm60 0 270-156v-310L510-463v309Zm-60 69L150-258q-14-8-22-22t-8-30v-340q0-16 8-30t22-22l300-173q14-8 30-8t30 8l300 173q14 8 22 22t8 30v340q0 16-8 30t-22 22L510-85q-14 8-30 8t-30-8Zm194-525 102-59-266-154-102 59 266 154Zm-164 96 104-61-267-154-104 60 267 155Z"/></svg>
+SALES</h2>
+      
+      
+      <DynamicGrid 
+        columns={columns} 
+        apiUrl="http://localhost:8080/api/Sales/GetAllSales" 
+        Module="Sales"
+      />
+    </div>
+  );
+}
+

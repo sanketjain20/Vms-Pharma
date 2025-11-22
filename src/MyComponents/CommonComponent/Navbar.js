@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../Styles/Navbar.css";
+import "../../Styles/Navbar.css";
 
 export default function Navbar({ sidebarOpen }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);

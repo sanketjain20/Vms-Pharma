@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import "../Styles/Sidebar.css";
+import "../../Styles/Sidebar.css";
 
 // Icon Mapping (same as before)
 const iconMap = { 
@@ -69,7 +69,7 @@ export default function Sidebar() {
 
   const handleNavigation = (moduleName) => {
     const routeName = moduleName.toLowerCase().replace(/_/g, "-");
-    navigate(`/app/${routeName}`);
+    navigate(`/master/${routeName}`);
   };
 
   const findModuleOriginal = (targetNorm) =>

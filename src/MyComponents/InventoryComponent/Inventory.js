@@ -1,6 +1,6 @@
 import React from "react";
-import DynamicGrid from "../MyComponents/DynamicGrid";
-import "../Styles/Inventory.css";
+import DynamicGrid from "../CommonComponent/DynamicGrid";
+import "../../Styles/Inventory.css";
 
 export default function Inventory() {
 const columns = [
@@ -27,7 +27,8 @@ const columns = [
       
       <DynamicGrid 
         columns={columns} 
-        apiUrl="http://localhost:8080/api/Inventory/GetAllInventory" 
+        apiUrl="http://localhost:8080/api/Inventory/GetAllInventory"
+        Module="Inventory"
       />
     </div>
   );

@@ -39,8 +39,11 @@
 
 /* Add button */
 .add-button {
-  width: 160px;
-  padding: 8px 0;
+  /* Remove fixed width */
+  /* width: 220px; */
+
+  /* Use padding for size instead */
+  padding: 8px 16px; /* horizontal padding can adjust width automatically */
   font-size: 16px;
   font-weight: 600;
   color: #fff;
@@ -49,7 +52,11 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+
+  /* Optional: keep button from shrinking too small */
+  min-width: 80px;
 }
+
 
 .add-button:hover {
   transform: scale(1.05);
