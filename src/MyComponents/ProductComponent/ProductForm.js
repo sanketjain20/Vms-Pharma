@@ -17,7 +17,7 @@ export default function ProductForm({ onSubmit, onClose }) {
 
   const page = 0;
   const size = 100;
-  const apiUrl = `http://localhost:8080/api/ProductType/GetAllProductType?page=${page}&size=${size}`;
+  const apiUrl = `http://localhost:8080/api/ProductType/GetAllProductType/${page}/${size}`;
 
   // Fetch product types
   useEffect(() => {
