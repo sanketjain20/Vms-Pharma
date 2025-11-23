@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/ProductForm.css";
+import { toast } from "react-toastify";
 
 export default function ProductForm({ onSubmit, onClose }) {
   const [productTypes, setProductTypes] = useState([]);
@@ -11,13 +12,11 @@ export default function ProductForm({ onSubmit, onClose }) {
     product_type_id: "",
   });
   const [errors, setErrors] = useState({});
-  const [activeTab, setActiveTab] = useState("details"); // tabs: details, pricingUnit
+  const [activeTab, setActiveTab] = useState("details");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const page = 0;
-  const size = 100;
-  const apiUrl = `http://localhost:8080/api/ProductType/GetAllProductType/${page}/${size}`;
+  const apiUrl = `http://localhost:8080/api/ProductType/GetAllProductType`;
 
   // Fetch product types
   useEffect(() => {
@@ -37,8 +36,8 @@ export default function ProductForm({ onSubmit, onClose }) {
             Array.isArray(dataObj)
               ? dataObj
               : typeof dataObj === "object"
-                ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
-                : [];
+              ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
+              : [];
           setProductTypes(list);
         } else {
           console.error("API returned error status:", response.status);
@@ -67,21 +66,59 @@ export default function ProductForm({ onSubmit, onClose }) {
     const newErrors = {};
     if (!formData.name || !formData.name.trim())
       newErrors.name = "Product name is mandatory";
-    if (!formData.product_type_id || !formData.product_type_id.trim())
-      newErrors.product_type_id = "Product type mandatory";
+    if (
+      formData.product_type_id === null ||
+      formData.product_type_id === undefined ||
+      formData.product_type_id === ""
+    )
+      newErrors.product_type_id = "Product type is mandatory";
     if (!formData.price) newErrors.price = "Price is mandatory";
     if (!formData.unit) newErrors.unit = "Unit is mandatory";
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  // 🔥 FINAL UPDATED handleSubmit
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    onSubmit("product", formData);
+
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      unit: formData.unit,
+      product_type_id: formData.product_type_id,
+    };
+
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/Product/AddProduct",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok && result.status === 200) {
+        toast.success("Product added successfully");
+        onSubmit(); 
+        onClose();
+      } else {
+        toast.error(result.message || "Product creation failed");
+      }
+    } catch (error) {
+      console.error("API ERROR:", error);
+      toast.error("Something went wrong while saving product");
+    }
   };
 
   return (
@@ -122,17 +159,9 @@ export default function ProductForm({ onSubmit, onClose }) {
                     value={formData.name}
                     onChange={handleChange}
                   />
-                  {errors.name && <div className="error-msg">{errors.name}</div>}
-                </div>
-
-                <div>
-                  <label>Description</label>
-                  <input
-                    type="text"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                  />
+                  {errors.name && (
+                    <div className="error-msg">{errors.name}</div>
+                  )}
                 </div>
 
                 <div className="custom-select" ref={dropdownRef}>
@@ -142,7 +171,9 @@ export default function ProductForm({ onSubmit, onClose }) {
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                   >
                     <div className="selected">
-                      {productTypes.find(pt => pt.id === formData.product_type_id)?.name || "Select Product Type"}
+                      {productTypes.find(
+                        (pt) => pt.id === formData.product_type_id
+                      )?.name || "Select Product Type"}
                     </div>
                     <ul className="options">
                       {productTypes.map((pt) => (
@@ -150,7 +181,10 @@ export default function ProductForm({ onSubmit, onClose }) {
                           key={pt.id}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setFormData({ ...formData, product_type_id: pt.id });
+                            setFormData({
+                              ...formData,
+                              product_type_id: pt.id,
+                            });
                             setDropdownOpen(false);
                           }}
                         >
@@ -162,6 +196,17 @@ export default function ProductForm({ onSubmit, onClose }) {
                   {errors.product_type_id && (
                     <div className="error-msg">{errors.product_type_id}</div>
                   )}
+                </div>
+
+                <div>
+                  <label>Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows={4}
+                    placeholder="Enter description"
+                  ></textarea>
                 </div>
               </div>
             )}
@@ -176,7 +221,9 @@ export default function ProductForm({ onSubmit, onClose }) {
                     value={formData.price}
                     onChange={handleChange}
                   />
-                  {errors.price && <div className="error-msg">{errors.price}</div>}
+                  {errors.price && (
+                    <div className="error-msg">{errors.price}</div>
+                  )}
                 </div>
 
                 <div>
@@ -187,7 +234,9 @@ export default function ProductForm({ onSubmit, onClose }) {
                     value={formData.unit}
                     onChange={handleChange}
                   />
-                  {errors.unit && <div className="error-msg">{errors.unit}</div>}
+                  {errors.unit && (
+                    <div className="error-msg">{errors.unit}</div>
+                  )}
                 </div>
               </div>
             )}

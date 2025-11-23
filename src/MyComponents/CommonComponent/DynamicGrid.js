@@ -15,29 +15,33 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
 
   /* ---------------------- Fetch API ---------------------- */
 
-  useEffect(() => {
-    fetch(`${apiUrl}/${page}/${size}`, {
-      method: "GET",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    })
-      .then((res) => res.json())
-      .then((response) => {
-        if (response.status === 200) {
-          const dataObj = response.data;
-          const list =
-            Array.isArray(dataObj)
-              ? dataObj
-              : typeof dataObj === "object"
-                ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
-                : [];
+  const refreshGrid = () => {
+  fetch(`${apiUrl}/${page}/${size}`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.status === 200) {
+        const dataObj = response.data;
+        const list = Array.isArray(dataObj)
+          ? dataObj
+          : typeof dataObj === "object"
+          ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
+          : [];
 
-          setData(list);
-          setTotalPages(dataObj?.totalPages || 1);
-        }
-      })
-      .catch((err) => console.error(err));
-  }, [apiUrl, page, size]);
+        setData(list);
+        setTotalPages(dataObj?.totalPages || 1);
+      }
+    })
+    .catch((err) => console.error(err));
+};
+
+useEffect(() => {
+  refreshGrid();
+}, [apiUrl, page, size]);
+
 
   /* ---------------------- Search + Status Filter ---------------------- */
   const filteredData = data
@@ -204,12 +208,11 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
       </div>
 
 
-          {/* --- DYNAMIC MODULE MODAL --- */}
       <ModuleModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         moduleName={Module}
-        onSubmit={handleSubmit}
+        onSubmit={refreshGrid}
       />
     </div>
   );
