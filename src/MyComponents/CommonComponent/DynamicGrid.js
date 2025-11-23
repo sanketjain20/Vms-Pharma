@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/DynamicGrid.css";
-import { FaSearch } from "react-icons/fa";
-import ModuleModal from "../Add-Form/ModuleModal";
-
+import { FaSearch, FaEdit, FaEye, FaBan } from "react-icons/fa";
+import ModuleModal from "../CommonAEUDForm/ModuleModal";
+import ViewModal from "../CommonAEUDForm/ViewModal"; // View modal
 
 export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [data, setData] = useState([]);
@@ -11,37 +11,37 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchText, setSearchText] = useState("");
-   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [viewUkey, setViewUkey] = useState(null); // uKey for View modal
 
   /* ---------------------- Fetch API ---------------------- */
-
-  const refreshGrid = () => {
-  fetch(`${apiUrl}/${page}/${size}`, {
-    method: "GET",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-  })
-    .then((res) => res.json())
-    .then((response) => {
-      if (response.status === 200) {
-        const dataObj = response.data;
-        const list = Array.isArray(dataObj)
-          ? dataObj
-          : typeof dataObj === "object"
-          ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
-          : [];
-
-        setData(list);
-        setTotalPages(dataObj?.totalPages || 1);
-      }
+  const refreshGrid = React.useCallback(() => {
+    fetch(`${apiUrl}/${page}/${size}`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
     })
-    .catch((err) => console.error(err));
-};
+      .then((res) => res.json())
+      .then((response) => {
+        if (response.status === 200) {
+          const dataObj = response.data;
+          const list = Array.isArray(dataObj)
+            ? dataObj
+            : typeof dataObj === "object"
+            ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
+            : [];
 
-useEffect(() => {
-  refreshGrid();
-}, [apiUrl, page, size]);
+          setData(list);
+          setTotalPages(dataObj?.totalPages || 1);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, [apiUrl, page, size]);
 
+  useEffect(() => {
+    refreshGrid();
+  }, [refreshGrid]);
 
   /* ---------------------- Search + Status Filter ---------------------- */
   const filteredData = data
@@ -53,24 +53,33 @@ useEffect(() => {
     .filter((row) =>
       searchText
         ? Object.values(row)
-          .join(" ")
-          .toLowerCase()
-          .includes(searchText.toLowerCase())
+            .join(" ")
+            .toLowerCase()
+            .includes(searchText.toLowerCase())
         : true
     );
 
   /* ---------------------- Column Width System ---------------------- */
   const computedWidths = () => {
-    const count = columns.length || 1;
-    return columns.map((c) => c.width || `${Math.floor(100 / count)}%`);
+    return columns.map(
+      (c) => c.width || `${Math.floor(100 / columns.length)}%`
+    );
   };
-
   const widths = computedWidths();
 
-  // --- COMMON SUBMIT FUNCTION FOR ALL MODULES ---
-  const handleSubmit = (moduleName, formData) => {
-    console.log(`Submitting ${moduleName}`, formData);
-    // TODO: Call API to save data
+  /* ---------------------- Action Handlers ---------------------- */
+  const handleEdit = (row) => {
+    console.log("Edit clicked for", row);
+  };
+
+  const handleView = (row) => {
+    console.log("View clicked for", row);
+    setViewUkey(row.uKey); // correct capitalization
+    setIsViewOpen(true);
+  };
+
+  const handleDisable = (row) => {
+    console.log("Disable clicked for", row);
   };
 
   return (
@@ -90,7 +99,6 @@ useEffect(() => {
         <button className="add-button" onClick={() => setIsModalOpen(true)}>
           Add New {Module}
         </button>
-
       </div>
 
       {/* Status Filters */}
@@ -102,15 +110,17 @@ useEffect(() => {
           All
         </span>
         <span
-          className={`status-chip ${selectedStatus === "active" ? "active" : ""
-            }`}
+          className={`status-chip ${
+            selectedStatus === "active" ? "active" : ""
+          }`}
           onClick={() => setSelectedStatus("active")}
         >
           Active
         </span>
         <span
-          className={`status-chip ${selectedStatus === "inactive" ? "active" : ""
-            }`}
+          className={`status-chip ${
+            selectedStatus === "inactive" ? "active" : ""
+          }`}
           onClick={() => setSelectedStatus("inactive")}
         >
           Inactive
@@ -149,6 +159,27 @@ useEffect(() => {
               {filteredData?.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {columns.map((col, colIndex) => {
+                    if (col.field === "Action") {
+                      return (
+                        <td key={colIndex} className="action-column">
+                          <FaEdit
+                            className="action-icon"
+                            title="Edit"
+                            onClick={() => handleEdit(row)}
+                          />
+                          <FaEye
+                            className="action-icon"
+                            title="View"
+                            onClick={() => handleView(row)}
+                          />
+                          <FaBan
+                            className="action-icon"
+                            title="Disable"
+                            onClick={() => handleDisable(row)}
+                          />
+                        </td>
+                      );
+                    }
                     const value = row[col.field];
                     return (
                       <td
@@ -185,9 +216,7 @@ useEffect(() => {
           </span>
 
           <button
-            onClick={() =>
-              setPage((p) => Math.min(p + 1, totalPages - 1))
-            }
+            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
             disabled={page + 1 >= totalPages}
           >
             ▶
@@ -207,13 +236,26 @@ useEffect(() => {
         </div>
       </div>
 
-
+      {/* Add / Edit Modal */}
       <ModuleModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         moduleName={Module}
         onSubmit={refreshGrid}
       />
+
+      {/* View Modal */}
+      {isViewOpen && (
+        <ViewModal
+          isOpen={isViewOpen}
+          onClose={() => {
+            setIsViewOpen(false);
+            setViewUkey(null);
+          }}
+          moduleName={Module}
+          uKey={viewUkey} // pass uKey properly
+        />
+      )}
     </div>
   );
 }

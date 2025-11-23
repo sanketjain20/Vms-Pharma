@@ -11,7 +11,7 @@ const columns = [
   { header: "Phone Num", field: "phone",width:"160px"},
   { header: "Role", field: "roleName",width:"100px" },
   { header: "Address", field: "address",width:"150px" },
-  { header: "Actions", field: "actions", width: "120px" }
+  { header: "Actions", field: "Action", width: "120px" }
 ];
 
 

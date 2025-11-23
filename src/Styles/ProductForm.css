@@ -277,15 +277,16 @@
 }
 
 .btn-ghost {
-  background: rgb(255, 253, 253);
-  color: #000000;
-  border: 1px solid rgba(5, 5, 5, 0.06);
   padding: 6px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  height: 35px;
   font-size: 13px;
   font-weight: 600;
+  color: rgb(8, 8, 8);
+  background: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  height: 35px;
 }
 
 .error-msg {

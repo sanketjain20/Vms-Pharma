@@ -243,7 +243,6 @@ export default function ProductForm({ onSubmit, onClose }) {
           </div>
 
           <div className="modal-footer-fixed">
-            <div className="small-muted">All fields saved locally (demo).</div>
             <div className="modal-actions">
               <button className="btn-ghost" type="button" onClick={onClose}>
                 Cancel
