@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/DynamicGrid.css";
 import { FaSearch } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import ModuleModal from "../Add-Form/ModuleModal";
 
 
 export default function DynamicGrid({ columns = [], apiUrl, Module }) {
@@ -11,9 +11,9 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchText, setSearchText] = useState("");
+   const [isModalOpen, setIsModalOpen] = useState(false);
 
   /* ---------------------- Fetch API ---------------------- */
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetch(`${apiUrl}/${page}/${size}`, {
@@ -63,6 +63,12 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
 
   const widths = computedWidths();
 
+  // --- COMMON SUBMIT FUNCTION FOR ALL MODULES ---
+  const handleSubmit = (moduleName, formData) => {
+    console.log(`Submitting ${moduleName}`, formData);
+    // TODO: Call API to save data
+  };
+
   return (
     <div className="grid-wrapper">
       {/* Search + Add Section */}
@@ -77,11 +83,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
           />
           <FaSearch className="search-icon" />
         </div>
-        <button className="add-button" onClick={() => navigate(`/master/${Module.toLowerCase()}/add`)}>
-
-          <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#ffffffff">
-            <path d="M444-288h72v-156h156v-72H516v-156h-72v156H288v72h156v156ZM216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm0-72h528v-528H216v528Zm0-528v528-528Z" />
-          </svg>
+        <button className="add-button" onClick={() => setIsModalOpen(true)}>
           Add New {Module}
         </button>
 
@@ -200,6 +202,15 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
           </select>
         </div>
       </div>
+
+
+          {/* --- DYNAMIC MODULE MODAL --- */}
+      <ModuleModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        moduleName={Module}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }
