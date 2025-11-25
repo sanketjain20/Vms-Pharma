@@ -128,14 +128,16 @@
 }
 
 .grid-table tr:nth-child(even) {
-  background-color: #2b2b2b; 
-  color:white;   /* even rows */
+  background-color: #ffffff; 
+  color:rgb(3, 3, 3);   /* even rows */
+  font-weight: 500 ;
  }
 
 
 .grid-table tr:nth-child(odd) {
-  background-color: #b3b3b3; 
-  color:black;   /* odd rows */
+  background-color: #badefc; 
+  color:black; 
+  font-weight: 500 ;  /* odd rows */
 }
 
 
@@ -155,7 +157,7 @@
   color: inherit;
 }
 .grid-table tbody tr:hover {
-  background: rgb(231, 231, 230);
+  border: 2px solid #056dce;
   color:black;
 }
 

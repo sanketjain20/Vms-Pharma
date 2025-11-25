@@ -4,6 +4,7 @@ import { FaSearch, FaEdit, FaEye, FaBan } from "react-icons/fa";
 import ModuleModal from "../CommonAEUDForm/ModuleModal";
 import EditModal from "../CommonAEUDForm/EditModal";
 import ViewModal from "../CommonAEUDForm/ViewModal";
+import StatusModal from "../CommonAEUDForm/StatusModal";
 
 export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [data, setData] = useState([]);
@@ -24,6 +25,11 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewUkey, setViewUkey] = useState(null);
 
+  // STATUS modal
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [statusUkey, setStatusUkey] = useState(null);
+  const [statusDisableValue, setStatusDisableValue] = useState(0);
+
   /* ---------------------- Fetch API ---------------------- */
   const refreshGrid = React.useCallback(() => {
     fetch(`${apiUrl}/${page}/${size}`, {
@@ -35,6 +41,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
       .then((response) => {
         if (response.status === 200) {
           const dataObj = response.data;
+
           const list = Array.isArray(dataObj)
             ? dataObj
             : typeof dataObj === "object"
@@ -54,11 +61,19 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
 
   /* ---------------------- Filters ---------------------- */
   const filteredData = data
-    ?.filter((row) =>
-      selectedStatus === "all"
-        ? true
-        : row.status?.toLowerCase() === selectedStatus
-    )
+    ?.filter((row) => {
+      if (selectedStatus === "all") return true;
+
+      let rowStatus = "";
+
+      if (row.status) {
+        rowStatus = row.status.toLowerCase();
+      } else if (row.disable !== undefined) {
+        rowStatus = row.disable === 0 ? "active" : "inactive";
+      }
+
+      return rowStatus === selectedStatus;
+    })
     .filter((row) =>
       searchText
         ? Object.values(row)
@@ -79,19 +94,25 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
 
   /* ---------------------- Action handlers ---------------------- */
   const handleEdit = (row) => {
-    console.log("Edit clicked for", row);
     setEditUkey(row.uKey);
     setIsEditOpen(true);
   };
 
   const handleView = (row) => {
-    console.log("View clicked for", row);
     setViewUkey(row.uKey);
     setIsViewOpen(true);
   };
 
   const handleDisable = (row) => {
-    console.log("Disable clicked for", row);
+    setStatusUkey(row.uKey);
+    setStatusDisableValue(0);
+    setIsStatusOpen(true);
+  };
+
+  const handleActivate = (row) => {
+    setStatusUkey(row.uKey);
+    setStatusDisableValue(1);
+    setIsStatusOpen(true);
   };
 
   return (
@@ -174,21 +195,36 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
                     if (col.field === "Action") {
                       return (
                         <td key={colIndex} className="action-column">
-                          <FaEdit
-                            className="action-icon"
-                            title="Edit"
-                            onClick={() => handleEdit(row)}
-                          />
-                          <FaEye
-                            className="action-icon"
-                            title="View"
-                            onClick={() => handleView(row)}
-                          />
-                          <FaBan
-                            className="action-icon"
-                            title="Disable"
-                            onClick={() => handleDisable(row)}
-                          />
+                          {selectedStatus === "inactive" ? (
+                            <span
+                              className="action-icon"
+                              title="Activate"
+                              onClick={() => handleActivate(row)}
+                              style={{ cursor: "pointer" }}
+                              dangerouslySetInnerHTML={{
+                                __html:
+                                  '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>',
+                              }}
+                            />
+                          ) : (
+                            <>
+                              <FaEdit
+                                className="action-icon"
+                                title="Edit"
+                                onClick={() => handleEdit(row)}
+                              />
+                              <FaEye
+                                className="action-icon"
+                                title="View"
+                                onClick={() => handleView(row)}
+                              />
+                              <FaBan
+                                className="action-icon"
+                                title="Disable"
+                                onClick={() => handleDisable(row)}
+                              />
+                            </>
+                          )}
                         </td>
                       );
                     }
@@ -229,7 +265,9 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
           </span>
 
           <button
-            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+            onClick={() =>
+              setPage((p) => Math.min(p + 1, totalPages - 1))
+            }
             disabled={page + 1 >= totalPages}
           >
             ▶
@@ -249,7 +287,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
         </div>
       </div>
 
-      {/* Add */}
+      {/* ADD */}
       <ModuleModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -257,18 +295,16 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
         onSubmit={refreshGrid}
       />
 
-      {/* EDIT Modal */}
+      {/* EDIT */}
       <EditModal
         isOpen={isEditOpen}
-        onClose={() => {
-          setIsEditOpen(false);
-        }}
+        onClose={() => setIsEditOpen(false)}
         moduleName={Module}
         uKey={editUkey}
         onSubmit={refreshGrid}
       />
 
-      {/* VIEW Modal */}
+      {/* VIEW */}
       {isViewOpen && (
         <ViewModal
           isOpen={isViewOpen}
@@ -280,6 +316,16 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
           uKey={viewUkey}
         />
       )}
+
+      {/* STATUS (FIXED) */}
+      <StatusModal
+        isOpen={isStatusOpen}
+        onClose={() => setIsStatusOpen(false)}
+        moduleName={Module}
+        uKey={statusUkey}
+        isDisable={statusDisableValue}
+        onSubmit={refreshGrid}
+      />
     </div>
   );
 }

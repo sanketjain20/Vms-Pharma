@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/ProductForm.css";
 import { toast } from "react-toastify";
 
-export default function EditProductForm({ uKey, onClose,onSubmit }) {
+export default function EditProductForm({ uKey, onClose, onSubmit }) {
   const [productTypes, setProductTypes] = useState([]);
   const [formData, setFormData] = useState({
     id: "",
@@ -41,13 +41,13 @@ export default function EditProductForm({ uKey, onClose,onSubmit }) {
             Array.isArray(dataObj)
               ? dataObj
               : typeof dataObj === "object"
-              ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
-              : [];
+                ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
+                : [];
           setProductTypes(list);
         }
       })
       .catch((err) => console.error("Product type load error:", err));
-  }, []);
+  }, [apiProductType]); // added dependency to remove warning
 
   // ================================
   // LOAD PRODUCT DETAILS
@@ -62,22 +62,29 @@ export default function EditProductForm({ uKey, onClose,onSubmit }) {
       .then((response) => {
         if (response.status === 200 && response.data) {
           const product = response.data;
+
           setFormData((prev) => ({
             ...prev,
             ...product,
             productType: product.productType || "",
           }));
-          setOriginalData(response.data);
+
+          setOriginalData({
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            unit: product.unit,
+            product_type_id: product.product_type_id,
+          });
         } else {
           toast.error("Error loading product details");
         }
       })
       .catch((err) => console.error("Product load error:", err));
-  }, [uKey]);
+  }, [apiGetProduct]); // added dependency to remove warning
 
   // ================================
   // MAP productType NAME → product_type_id
-  // AFTER BOTH APIS ARE LOADED
   // ================================
   useEffect(() => {
     if (
@@ -138,18 +145,28 @@ export default function EditProductForm({ uKey, onClose,onSubmit }) {
   };
 
   // ================================
-  // CHECK FIELD CHANGES
+  // CHECK IF DATA HAS CHANGED
   // ================================
   const isChanged = () => {
     if (!originalData) return false;
 
-    return (
-      originalData.name !== formData.name ||
-      originalData.description !== formData.description ||
-      originalData.price !== formData.price ||
-      originalData.unit !== formData.unit ||
-      originalData.product_type_id !== formData.product_type_id
-    );
+    const originalNormalized = {
+      name: originalData.name ?? "",
+      description: originalData.description ?? "",
+      price: Number(originalData.price ?? 0),
+      unit: originalData.unit ?? "",
+      product_type_id: Number(originalData.product_type_id ?? 0),
+    };
+
+    const formNormalized = {
+      name: formData.name ?? "",
+      description: formData.description ?? "",
+      price: Number(formData.price ?? 0),
+      unit: formData.unit ?? "",
+      product_type_id: Number(formData.product_type_id ?? 0),
+    };
+
+    return JSON.stringify(originalNormalized) !== JSON.stringify(formNormalized);
   };
 
   // ================================
@@ -241,10 +258,8 @@ export default function EditProductForm({ uKey, onClose,onSubmit }) {
                   {errors.name && <div className="error-msg">{errors.name}</div>}
                 </div>
 
-                {/* PRODUCT TYPE DROPDOWN */}
                 <div className="custom-select" ref={dropdownRef}>
                   <label>Product Type</label>
-
                   <div
                     className={`select-box ${dropdownOpen ? "active" : ""}`}
                     onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -275,7 +290,6 @@ export default function EditProductForm({ uKey, onClose,onSubmit }) {
                       </ul>
                     )}
                   </div>
-
                   {errors.product_type_id && (
                     <div className="error-msg">{errors.product_type_id}</div>
                   )}
@@ -320,15 +334,17 @@ export default function EditProductForm({ uKey, onClose,onSubmit }) {
             )}
           </div>
 
-          {/* FOOTER */}
           <div className="modal-footer-fixed">
             <div className="modal-actions">
               <button className="btn-ghost" type="button" onClick={onClose}>
                 Cancel
               </button>
-              <button type="submit" className="submit-button" disabled={!isChanged()}>
-                Update Product
-              </button>
+
+              {isChanged() && (
+                <button type="submit" className="submit-button">
+                  Update Product
+                </button>
+              )}
             </div>
           </div>
         </form>
