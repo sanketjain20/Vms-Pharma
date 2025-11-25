@@ -36,14 +36,6 @@ export default function ProductView({ uKey, onClose }) {
             </h3>
           </div>
           <div className="modal-controls">
-            <div className="tab-row">
-              <div
-                className={`tab ${activeTab === "details" ? "active" : ""}`}
-                onClick={() => setActiveTab("details")}
-              >
-                Details
-              </div>
-            </div>
             <button className="btn-ghost" onClick={onClose} title="Close">
               ✖
             </button>

@@ -11,6 +11,7 @@ const columns = [
   { header: "Total Discount (₹)", field: "totalDiscount", width: "140px" },
   { header: "Billing Mode", field: "billingMode", width: "130px" },
   { header: "Date", field: "createdAt", width: "180px" },
+  { header: "Actions", field: "Action", width: "120px" },
 ];
 
 

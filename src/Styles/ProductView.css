@@ -58,33 +58,15 @@
 }
 
 /* -------------------- Tabs -------------------- */
-.tab-row {
-  display: flex;
-  gap: 10px;
-}
 
-.tab {
-  padding: 4px 12px;
-  cursor: pointer;
-  border-radius: 6px;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  transition: background 0.2s;
-}
-
-.tab.active {
-  background: #fff;
-  color: var(--modal-header-bg);
-}
 
 /* -------------------- Close Button -------------------- */
 .btn-ghost {
   border: none;
-  background: transparent;
+  background: white;
   cursor: pointer;
-  font-size: 18px;
-  color: #fff;
+  font-size: 14px;
+  color: #070707;
   transition: color 0.2s;
 }
 
@@ -165,4 +147,13 @@
 .product-view span {
   font-weight: 500;
   color: #111827; /* dark text for value */
+}
+
+.btn-ghost {
+  border: none;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  color: #070707;
+  transition: color 0.2s;
 }

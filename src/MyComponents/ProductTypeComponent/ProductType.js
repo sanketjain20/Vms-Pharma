@@ -6,7 +6,8 @@ export default function ProductType() {
 const columns = [
   { header: "ProductType Code", field: "typeCode", width: "170px" },
   { header: "Name", field: "name", width: "180px" },
-  { header: "Description", field: "description", width: "260px" }
+  { header: "Description", field: "description", width: "260px" },
+  { header: "Actions", field: "Action", width: "120px" },
 ];
 
   return (
@@ -18,7 +19,7 @@ PRODUCT TYPES</h2>
       
       <DynamicGrid 
         columns={columns} 
-        apiUrl="http://localhost:8080/api/ProductType/GetAllProductType" 
+        apiUrl="http://localhost:8080/api/ProductType/GetAllProductTypePaged" 
         Module="Prod Type"
       />
     </div>

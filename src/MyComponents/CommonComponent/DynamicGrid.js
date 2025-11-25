@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import "../../Styles/DynamicGrid.css";
 import { FaSearch, FaEdit, FaEye, FaBan } from "react-icons/fa";
 import ModuleModal from "../CommonAEUDForm/ModuleModal";
-import ViewModal from "../CommonAEUDForm/ViewModal"; // View modal
+import EditModal from "../CommonAEUDForm/EditModal";
+import ViewModal from "../CommonAEUDForm/ViewModal";
 
 export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [data, setData] = useState([]);
@@ -11,9 +12,17 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchText, setSearchText] = useState("");
+
+  // ADD modal
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // EDIT modal
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editUkey, setEditUkey] = useState(null);
+
+  // VIEW modal
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const [viewUkey, setViewUkey] = useState(null); // uKey for View modal
+  const [viewUkey, setViewUkey] = useState(null);
 
   /* ---------------------- Fetch API ---------------------- */
   const refreshGrid = React.useCallback(() => {
@@ -43,7 +52,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
     refreshGrid();
   }, [refreshGrid]);
 
-  /* ---------------------- Search + Status Filter ---------------------- */
+  /* ---------------------- Filters ---------------------- */
   const filteredData = data
     ?.filter((row) =>
       selectedStatus === "all"
@@ -59,22 +68,25 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
         : true
     );
 
-  /* ---------------------- Column Width System ---------------------- */
+  /* ---------------------- Width ---------------------- */
   const computedWidths = () => {
     return columns.map(
       (c) => c.width || `${Math.floor(100 / columns.length)}%`
     );
   };
+
   const widths = computedWidths();
 
-  /* ---------------------- Action Handlers ---------------------- */
+  /* ---------------------- Action handlers ---------------------- */
   const handleEdit = (row) => {
     console.log("Edit clicked for", row);
+    setEditUkey(row.uKey);
+    setIsEditOpen(true);
   };
 
   const handleView = (row) => {
     console.log("View clicked for", row);
-    setViewUkey(row.uKey); // correct capitalization
+    setViewUkey(row.uKey);
     setIsViewOpen(true);
   };
 
@@ -84,7 +96,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
 
   return (
     <div className="grid-wrapper">
-      {/* Search + Add Section */}
+      {/* Search + Add */}
       <div className="search-add-container">
         <div className="search-wrapper">
           <input
@@ -101,7 +113,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
         </button>
       </div>
 
-      {/* Status Filters */}
+      {/* Status filters */}
       <div className="status-filters">
         <span
           className={`status-chip ${selectedStatus === "all" ? "active" : ""}`}
@@ -127,9 +139,9 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
         </span>
       </div>
 
-      {/* TABLE */}
+      {/* Table */}
       <div className="grid-container">
-        {/* Header Table */}
+        {/* Header */}
         <table className="grid-table">
           <colgroup>
             {widths.map((w, i) => (
@@ -147,7 +159,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
           </thead>
         </table>
 
-        {/* Scrollable Body */}
+        {/* Body */}
         <div className="scroll-body">
           <table className="grid-table">
             <colgroup>
@@ -180,6 +192,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
                         </td>
                       );
                     }
+
                     const value = row[col.field];
                     return (
                       <td
@@ -236,7 +249,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
         </div>
       </div>
 
-      {/* Add / Edit Modal */}
+      {/* Add */}
       <ModuleModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -244,7 +257,18 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
         onSubmit={refreshGrid}
       />
 
-      {/* View Modal */}
+      {/* EDIT Modal */}
+      <EditModal
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+        }}
+        moduleName={Module}
+        uKey={editUkey}
+        onSubmit={refreshGrid}
+      />
+
+      {/* VIEW Modal */}
       {isViewOpen && (
         <ViewModal
           isOpen={isViewOpen}
@@ -253,7 +277,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
             setViewUkey(null);
           }}
           moduleName={Module}
-          uKey={viewUkey} // pass uKey properly
+          uKey={viewUkey}
         />
       )}
     </div>
