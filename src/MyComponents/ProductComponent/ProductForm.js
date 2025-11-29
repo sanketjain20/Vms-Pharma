@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 
 export default function ProductForm({ onSubmit, onClose }) {
   const [productTypes, setProductTypes] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -18,7 +19,6 @@ export default function ProductForm({ onSubmit, onClose }) {
 
   const apiUrl = `http://localhost:8080/api/ProductType/GetAllProductType`;
 
-  // Fetch product types
   useEffect(() => {
     fetch(apiUrl, {
       method: "GET",
@@ -46,11 +46,11 @@ export default function ProductForm({ onSubmit, onClose }) {
       .catch((error) => console.error("Error fetching product types:", error));
   }, [apiUrl]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
+        setSearchTerm("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -77,7 +77,6 @@ export default function ProductForm({ onSubmit, onClose }) {
     return newErrors;
   };
 
-  // 🔥 FINAL UPDATED handleSubmit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -110,7 +109,7 @@ export default function ProductForm({ onSubmit, onClose }) {
 
       if (response.ok && result.status === 200) {
         toast.success("Product added successfully");
-        onSubmit(); 
+        onSubmit();
         onClose();
       } else {
         toast.error(result.message || "Product creation failed");
@@ -120,6 +119,11 @@ export default function ProductForm({ onSubmit, onClose }) {
       toast.error("Something went wrong while saving product");
     }
   };
+
+  // Filter during typing
+  const filteredProductTypes = productTypes.filter((pt) =>
+    pt.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="modal-backdrop show">
@@ -170,27 +174,52 @@ export default function ProductForm({ onSubmit, onClose }) {
                     className={`select-box ${dropdownOpen ? "active" : ""}`}
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                   >
-                    <div className="selected">
-                      {productTypes.find(
-                        (pt) => pt.id === formData.product_type_id
-                      )?.name || "Select Product Type"}
-                    </div>
+                    <input
+                      type="text"
+                      value={
+                        dropdownOpen
+                          ? searchTerm
+                          : productTypes.find(
+                              (pt) => pt.id === formData.product_type_id
+                            )?.name || "Select Product Type"
+                      }
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDropdownOpen(true);
+                      }}
+                      readOnly={!dropdownOpen}
+                      className="select-input"
+                      style={{
+                        border: "none",
+                        background: "transparent",
+                        width: "100%",
+                        cursor: "pointer",
+                      }}
+                    />
+
                     <ul className="options">
-                      {productTypes.map((pt) => (
-                        <li
-                          key={pt.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFormData({
-                              ...formData,
-                              product_type_id: pt.id,
-                            });
-                            setDropdownOpen(false);
-                          }}
-                        >
-                          {pt.name}
-                        </li>
-                      ))}
+                      {dropdownOpen &&
+                        filteredProductTypes.map((pt) => (
+                          <li
+                            key={pt.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFormData({
+                                ...formData,
+                                product_type_id: pt.id,
+                              });
+                              setDropdownOpen(false);
+                              setSearchTerm("");
+                            }}
+                          >
+                            {pt.name}
+                          </li>
+                        ))}
+
+                      {dropdownOpen && filteredProductTypes.length === 0 && (
+                        <li style={{ color: "#777" }}>No result found</li>
+                      )}
                     </ul>
                   </div>
                   {errors.product_type_id && (

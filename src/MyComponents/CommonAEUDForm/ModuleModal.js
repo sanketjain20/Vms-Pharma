@@ -3,9 +3,10 @@ import "../../Styles/ModuleModal.css";
 
 // Import all module forms
 import ProductForm from "../ProductComponent/ProductForm";
-import VendorForm from "../VendorComponent/VendorForm";
-import InventoryForm from "../InventoryComponent/InventoryForm";
-import SalesForm from "../SalesComponent/SalesForm";
+import VendorAdd from "../VendorComponent/VendorAdd";
+import InventoryAdd from "../InventoryComponent/InventoryAdd";
+import SalesAdd from "../SalesComponent/SalesAdd";
+import ProductTypeAdd from "../ProductTypeComponent/ProductTypeAdd";
 
 export default function ModuleModal({ isOpen, onClose, moduleName, onSubmit }) {
   if (!isOpen) return null;
@@ -15,11 +16,13 @@ export default function ModuleModal({ isOpen, onClose, moduleName, onSubmit }) {
       case "Product":
         return <ProductForm onSubmit={onSubmit} onClose={onClose} />;
       case "Vendor":
-        return <VendorForm onSubmit={onSubmit} onClose={onClose} />;
+        return <VendorAdd onSubmit={onSubmit} onClose={onClose} />;
       case "Inventory":
-        return <InventoryForm onSubmit={onSubmit} onClose={onClose} />;
+        return <InventoryAdd onSubmit={onSubmit} onClose={onClose} />;
       case "Sales":
-        return <SalesForm onSubmit={onSubmit} onClose={onClose} />;
+        return <SalesAdd onSubmit={onSubmit} onClose={onClose} />;
+      case "Product Type":
+        return <ProductTypeAdd onSubmit={onSubmit} onClose={onClose} />;
       default:
         return <p>No form available for {moduleName}</p>;
     }

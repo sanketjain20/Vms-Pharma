@@ -1,6 +1,8 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ProductType() {
 const columns = [
@@ -20,8 +22,10 @@ PRODUCT TYPES</h2>
       <DynamicGrid 
         columns={columns} 
         apiUrl="http://localhost:8080/api/ProductType/GetAllProductTypePaged" 
-        Module="Prod Type"
+        Module="Product Type"
       />
+
+      <ToastContainer position="top-center" autoClose={2000} />
     </div>
   );
 }

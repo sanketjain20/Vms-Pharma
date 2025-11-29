@@ -6,6 +6,7 @@ import ProductView from "../ProductComponent/ProductView";
 import VendorView from "../VendorComponent/VendorView";
 import InventoryView from "../InventoryComponent/InventoryView";
 import SalesView from "../SalesComponent/SalesView";
+import ProductTypeView from "../ProductTypeComponent/ProductTypeView";
 
 export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
   if (!isOpen) return null;
@@ -20,6 +21,8 @@ export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
         return <InventoryView uKey={uKey} onClose={onClose} />;
       case "Sales":
         return <SalesView uKey={uKey} onClose={onClose} />;
+      case "Product Type":
+        return <ProductTypeView uKey={uKey} onClose={onClose} />;
       default:
         return <p>No form available for {moduleName}</p>;
     }
@@ -28,8 +31,8 @@ export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
   return (
 
 
-        <div className="modal-body">
-          {renderForm()}
-        </div>
+    <div className="modal-body">
+      {renderForm()}
+    </div>
   );
 }

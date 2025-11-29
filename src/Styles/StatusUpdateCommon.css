@@ -1,9 +1,30 @@
+/* Overlay with blur */
+.modal-overlay {
+  position: fixed;
+  inset: 0; /* covers entire screen */
+  background: rgba(0, 0, 0, 0.4); /* semi-transparent */
+  backdrop-filter: blur(6px); /* blur behind the modal */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal container */
+.modal-box {
+  background: #222; /* optional: modal background color */
+  padding: 20px;
+  border-radius: 8px;
+  width: 450px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
 .status-text {
   font-size: 16px;
-  margin-bottom: 15px;
+  margin-top: 10px; /* gap from close button */
   font-weight: 500;
   text-align: center;
-  color:white
+  color: white;
 }
 
 .green-text {
@@ -51,3 +72,29 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* CLOSE BUTTON ABOVE TEXT */
+.close-btn {
+  display: block;
+  margin: 0 auto; /* center horizontally */
+  margin-bottom: 10px; /* gap between button and text */
+  border: none;
+  background: white;
+  color: black;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s ease;
+  width: 24px; /* small square */
+  height: 24px;
+  line-height: 24px; /* center the X vertically */
+  text-align: center; /* center the X horizontally */
+  border-radius: 50%; /* make it circular */
+  padding: 0;
+}
+
+.close-btn:hover {
+  background: #f0f0f0;
+  color: #ff0000;
+}
+
