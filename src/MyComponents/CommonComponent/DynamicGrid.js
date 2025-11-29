@@ -5,6 +5,7 @@ import ModuleModal from "../CommonAEUDForm/ModuleModal";
 import EditModal from "../CommonAEUDForm/EditModal";
 import ViewModal from "../CommonAEUDForm/ViewModal";
 import StatusModal from "../CommonAEUDForm/StatusModal";
+import { toast } from "react-toastify";
 
 export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [data, setData] = useState([]);
@@ -31,29 +32,37 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [statusDisableValue, setStatusDisableValue] = useState(0);
 
   /* ---------------------- Fetch API ---------------------- */
-  const refreshGrid = React.useCallback(() => {
-    fetch(`${apiUrl}/${page}/${size}`, {
-      method: "GET",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
+
+const refreshGrid = React.useCallback(() => {
+  fetch(`${apiUrl}/${page}/${size}`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.status === 200) {
+        const dataObj = response.data;
+
+        const list = Array.isArray(dataObj)
+          ? dataObj
+          : typeof dataObj === "object"
+            ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
+            : [];
+
+        setData(list);
+        setTotalPages(dataObj?.totalPages || 1);
+      } else {
+        // Show custom error message if status is not 200
+        toast.error(response.message || "Something went wrong!");
+      }
     })
-      .then((res) => res.json())
-      .then((response) => {
-        if (response.status === 200) {
-          const dataObj = response.data;
+    .catch((err) => {
+      console.error("Something went wrong: ", err);
+      toast.error("Something went wrong! Please try again.");
+    });
+}, [apiUrl, page, size]);
 
-          const list = Array.isArray(dataObj)
-            ? dataObj
-            : typeof dataObj === "object"
-              ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
-              : [];
-
-          setData(list);
-          setTotalPages(dataObj?.totalPages || 1);
-        }
-      })
-      .catch((err) => console.error(err));
-  }, [apiUrl, page, size]);
 
   useEffect(() => {
     refreshGrid();
@@ -193,17 +202,39 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
                     if (col.field === "Action") {
                       return (
                         <td key={colIndex} className="action-column">
+
                           {selectedStatus === "inactive" ? (
-                            <span
-                              className="action-icon"
-                              title="Activate"
-                              onClick={() => handleActivate(row)}
-                              style={{ cursor: "pointer" }}
-                              dangerouslySetInnerHTML={{
-                                __html:
-                                  '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#2da109ff"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>',
-                              }}
-                            />
+                            <>
+                              {/* ✅ View Button */}
+                              <span
+                                className="action-icon"
+                                title="View"
+                                onClick={() => handleView(row)}
+                                style={{ cursor: "pointer" }}
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  height="24px"
+                                  viewBox="0 -960 960 960"
+                                  width="24px"
+                                  fill="#504f4fff"
+                                >
+                                  <path d="M274-360q31 0 55.5-18t34.5-47l15-46q16-48-8-88.5T302-600H161l19 157q5 35 31.5 59t62.5 24Zm412 0q36 0 62.5-24t31.5-59l19-157H659q-45 0-69 41t-8 89l14 45q10 29 34.5 47t55.5 18Zm-412 80q-66 0-115.5-43.5T101-433L80-600H40v-80h262q44 0 80.5 21.5T440-600h81q21-37 57.5-58.5T659-680h261v80h-40l-21 167q-8 66-57.5 109.5T686-280q-57 0-102.5-32.5T520-399l-15-45q-2-7-4-14.5t-4-21.5h-34q-2 12-4 19.5t-4 14.5l-15 46q-18 54-63.5 87T274-280Z" />
+                                </svg>
+                              </span>
+
+                              {/* ✅ Activate Button */}
+                              <span
+                                className="action-icon"
+                                title="Activate"
+                                onClick={() => handleActivate(row)}
+                                style={{ cursor: "pointer" }}
+                                dangerouslySetInnerHTML={{
+                                  __html:
+                                    '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#2da109ff"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>',
+                                }}
+                              />
+                            </>
                           ) : (
                             <>
                               <span

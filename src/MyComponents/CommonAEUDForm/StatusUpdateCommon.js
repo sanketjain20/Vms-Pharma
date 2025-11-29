@@ -19,7 +19,7 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
         apiUrl = `/api/vendor/ToggleStatus?uKey=${uKey}&isDisable=${isDisable}`;
         break;
       case "Inventory":
-        apiUrl = `/api/inventory/ToggleStatus?uKey=${uKey}&isDisable=${isDisable}`;
+        apiUrl = `http://localhost:8080/api/Inventory/ToggleInventoryDisable/${uKey}/${isDisable}`;
         break;
       case "Sales":
         apiUrl = `/api/sales/ToggleStatus?uKey=${uKey}&isDisable=${isDisable}`;

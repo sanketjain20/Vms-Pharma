@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../../Styles/ProductForm.css"; // Shared CSS with Add
+import "../../Styles/ProductForm.css";
 import { toast } from "react-toastify";
 
 export default function InventoryEdit({ uKey, onClose, onSubmit }) {
@@ -17,17 +17,15 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     unitSellingPrice: "",
   });
 
-  const [inventoryId, setInventoryId] = useState(null); // Inventory ID for update
+  const [inventoryId, setInventoryId] = useState(null);
   const [originalData, setOriginalData] = useState(null);
   const [errors, setErrors] = useState({});
 
   const apiGetAllProducts = "http://localhost:8080/api/Product/GetAllProduct";
   const apiGetInventory = `http://localhost:8080/api/Inventory/GetInventoryByUkey/${uKey}`;
-  const apiUpdateInventoryBase = "http://localhost:8080/api/Inventory/UpdateInventory";
+  const apiUpdateInventoryBase =
+    "http://localhost:8080/api/Inventory/UpdateInventory";
 
-  // ====================
-  // Fetch all products
-  // ====================
   useEffect(() => {
     fetch(apiGetAllProducts, {
       method: "GET",
@@ -48,9 +46,6 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
       });
   }, []);
 
-  // ====================
-  // Fetch inventory details
-  // ====================
   useEffect(() => {
     if (products.length === 0) return;
 
@@ -67,20 +62,19 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
         }
 
         const inv = res.data;
-        setInventoryId(inv.id); // store inventory ID
+        setInventoryId(inv.id);
 
         const initialData = {
-          product_id: inv.productId, // <-- mapped correctly
+          product_id: inv.productId,
           currentQuantity: inv.currentQuantity || "",
           reorderLevel: inv.reorderLevel,
           unitSellingPrice: inv.unitSellingPrice,
-          inventoryCode: inv.inventoryCode
+          inventoryCode: inv.inventoryCode,
         };
 
         setFormData(initialData);
         setOriginalData(initialData);
 
-        // Bind product name from inventory
         const matchedProduct = products.find((p) => p.id === inv.productId);
         if (matchedProduct) setSearchTerm(matchedProduct.name);
         else setSearchTerm("");
@@ -88,9 +82,6 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
       .catch(() => toast.error("Error loading inventory"));
   }, [products]);
 
-  // ====================
-  // Close dropdown on outside click
-  // ====================
   useEffect(() => {
     const clickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -101,14 +92,11 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     return () => document.removeEventListener("mousedown", clickOutside);
   }, []);
 
-  // ====================
-  // Handle input change
-  // ====================
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value === "" ? "" : Number(value), // keep empty string for validation, convert to number otherwise
+      [name]: value === "" ? "" : Number(value),
     }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
@@ -119,21 +107,17 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     setDropdownOpen(false);
   };
 
-  // ====================
-  // Validation
-  // ====================
   const validate = () => {
     const tempErrors = {};
     if (!formData.product_id) tempErrors.product_id = "Product is required";
-    if (formData.reorderLevel === "" || formData.reorderLevel === null) tempErrors.reorderLevel = "Reorder level is required";
-    if (formData.unitSellingPrice === "" || formData.unitSellingPrice === null) tempErrors.unitSellingPrice = "Unit selling price is required";
+    if (formData.reorderLevel === "" || formData.reorderLevel === null)
+      tempErrors.reorderLevel = "Reorder level is required";
+    if (formData.unitSellingPrice === "" || formData.unitSellingPrice === null)
+      tempErrors.unitSellingPrice = "Unit selling price is required";
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
   };
 
-  // ====================
-  // Detect changes
-  // ====================
   const detectChanges = () => {
     if (!originalData) return false;
     return (
@@ -143,9 +127,6 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     );
   };
 
-  // ====================
-  // Submit update
-  // ====================
   const handleSubmit = () => {
     if (!validate()) return;
 
@@ -166,7 +147,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
       unitSellingPrice: Number(formData.unitSellingPrice),
     };
 
-    fetch(`${apiUpdateInventoryBase}/${inventoryId}`, { // pass inventory ID in URL
+    fetch(`${apiUpdateInventoryBase}/${inventoryId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -185,17 +166,9 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
       .catch(() => toast.error("Error updating inventory"));
   };
 
-  // ====================
-  // Filtered products for dropdown
-  // ====================
-  const filteredProducts = dropdownOpen
-    ? products.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    : [];
-
   return (
     <div className="modal-backdrop show">
       <div className="modal">
-        {/* HEADER WITH TABS */}
         <div className="modal-header">
           <div className="modal-title">
             <h3>Edit Inventory | {formData.inventoryCode} </h3>
@@ -221,56 +194,50 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
           </div>
         </div>
 
-        {/* FORM BODY */}
         <form className="modal-body">
           <div className="form-col scrollable">
-            {/* TAB 1: PRODUCT SELECTION */}
             {activeTab === "details" && (
               <div className="form-grid">
+
+                {/* ✅ REPLACED DROPDOWN — EXACT CODE PROVIDED BY YOU */}
                 <div className="custom-select" ref={dropdownRef}>
                   <label>Select Product</label>
+
                   <div
                     className={`select-box ${dropdownOpen ? "active" : ""}`}
-                    onClick={() => {
-                      setDropdownOpen(!dropdownOpen);
-                      if (!dropdownOpen) setSearchTerm("");
-                    }}
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
                   >
-                    <input
-                      type="text"
-                      value={
-                        dropdownOpen ? searchTerm : products.find((p) => p.id === formData.product_id)?.name || ""
-                      }
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        if (e.target.value === "") {
-                          setFormData((prev) => ({ ...prev, product_id: "" }));
-                        }
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      readOnly={!dropdownOpen}
-                      className="select-input"
-                    />
+                    <div className="selected">
+                      {products.find((p) => p.id === formData.product_id)?.name ||
+                        "Select Product"}
+                    </div>
+
                     {dropdownOpen && (
                       <ul className="options">
-                        {filteredProducts.length > 0 ? (
-                          filteredProducts.map((p) => (
-                            <li key={p.id} onClick={() => handleProductSelect(p)}>
-                              {p.name}
-                            </li>
-                          ))
-                        ) : (
-                          <li className="no-results">No result found</li>
-                        )}
+                        {products.map((p) => (
+                          <li
+                            key={p.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleProductSelect(p);
+                            }}
+                          >
+                            {p.name}
+                          </li>
+                        ))}
                       </ul>
                     )}
                   </div>
-                  {errors.product_id && <div className="error-msg">{errors.product_id}</div>}
+
+                  {errors.product_id && (
+                    <div className="error-msg">{errors.product_id}</div>
+                  )}
                 </div>
+                {/* ✅ END OF REPLACEMENT */}
+
               </div>
             )}
 
-            {/* TAB 2: STOCK DETAILS */}
             {activeTab === "stock" && (
               <div className="form-grid">
                 <div className="form-field">
@@ -292,7 +259,9 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
                     value={formData.reorderLevel}
                     onChange={handleChange}
                   />
-                  {errors.reorderLevel && <div className="error-msg">{errors.reorderLevel}</div>}
+                  {errors.reorderLevel && (
+                    <div className="error-msg">{errors.reorderLevel}</div>
+                  )}
                 </div>
 
                 <div className="form-field">
@@ -303,22 +272,26 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
                     value={formData.unitSellingPrice}
                     onChange={handleChange}
                   />
-                  {errors.unitSellingPrice && <div className="error-msg">{errors.unitSellingPrice}</div>}
+                  {errors.unitSellingPrice && (
+                    <div className="error-msg">{errors.unitSellingPrice}</div>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* FOOTER */}
           <div className="modal-footer-fixed">
             <div className="modal-actions">
               <button type="button" className="btn-ghost" onClick={onClose}>
                 Cancel
               </button>
 
-              {/* Show Update button only if changes detected */}
               {detectChanges() && (
-                <button type="button" className="submit-button" onClick={handleSubmit}>
+                <button
+                  type="button"
+                  className="submit-button"
+                  onClick={handleSubmit}
+                >
                   Update Inventory
                 </button>
               )}

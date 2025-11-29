@@ -20,6 +20,7 @@ import Vendor from "./MyComponents/VendorComponent/Vendor";
 import Reports from "./MyComponents/ReportComponent/Reports";
 import Inventory from "./MyComponents/InventoryComponent/Inventory";
 import Sales from "./MyComponents/SalesComponent/Sales";
+import Role from "./MyComponents/RoleComponent/Role";
 
 function App() {
   return (
@@ -62,6 +63,8 @@ function App() {
 
         {/* Sales */}
         <Route path="sales" element={<Sales />} />
+
+        <Route path="roles" element={<Role />} />
       </Route>
     </Routes>
   );
