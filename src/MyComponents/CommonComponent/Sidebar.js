@@ -14,18 +14,18 @@ const iconMap = {
   default: ( <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-507h560v-133H200v133Zm0 214h560v-134H200v134Zm0 213h560v-133H200v133Zm40-454v-80h80v80h-80Zm0 214v-80h80v80h-80Zm0 214v-80h80v80h-80Z"/></svg> ) 
 };
 
-// helper: normalize module name for comparisons
+// helper: normalize module name
 const normalize = (s = "") =>
   String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
 
 export default function Sidebar() {
-  const [open, setOpen] = useState(false); // main sidebar open state
+  const [open, setOpen] = useState(false);
   const [modules, setModules] = useState([]);
   const [error, setError] = useState("");
-  const [hoveredMenu, setHoveredMenu] = useState(null); // submenu hover
+  const [hoveredMenu, setHoveredMenu] = useState(null);
   const navigate = useNavigate();
-  const sidebarRef = useRef(null); // ref for the sidebar
-  const toggleRef = useRef(null);  // ref for the toggle button
+  const sidebarRef = useRef(null);
+  const toggleRef = useRef(null);
 
   // Fetch modules
   useEffect(() => {
@@ -40,6 +40,8 @@ export default function Sidebar() {
       })
       .then((data) => {
         if (data.status === 200 && Array.isArray(data.data)) {
+                    // ✅ STORE MODULES IN LOCAL STORAGE (ONLY CHANGE)
+          localStorage.setItem("modules", JSON.stringify(data.data));
           setModules(data.data);
         } else {
           setError("No modules available.");
@@ -48,7 +50,7 @@ export default function Sidebar() {
       .catch(() => setError("Failed to load modules."));
   }, []);
 
-  // Close main sidebar if click outside (but not toggle button)
+  // Close sidebar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -58,7 +60,7 @@ export default function Sidebar() {
         !toggleRef.current.contains(event.target)
       ) {
         setOpen(false);
-        setHoveredMenu(null); // also close submenu
+        setHoveredMenu(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -81,19 +83,24 @@ export default function Sidebar() {
   const hasProduct = normalizedSet.has("product");
   const hasProductType = normalizedSet.has("producttype");
 
+  const hasVendor = normalizedSet.has("vendor");
+  const hasRoles = normalizedSet.has("roles");
+
   const originalProduct = findModuleOriginal("product");
   const originalProductType = findModuleOriginal("producttype");
 
+  const originalVendor = findModuleOriginal("vendor");
+  const originalRoles = findModuleOriginal("roles");
+
   return (
     <>
-      {/* Toggle Button */}
       <div className="sidebar-toggle" ref={toggleRef} onClick={() => setOpen(!open)}>☰</div>
 
-      {/* Sidebar */}
       <aside ref={sidebarRef} className={`sidebar ${open ? "open" : ""}`}>
         <div className={`logo ${open ? "show" : ""}`}></div>
 
         <div className="nav-list">
+
           {/* HOME */}
           <div className="nav-item" data-tooltip="Home" onClick={() => navigate("/home")}>
             <span className="nav-icon">{iconMap.home}</span>
@@ -112,10 +119,7 @@ export default function Sidebar() {
               <span className="nav-text">Product & Type</span>
 
               {(open || hoveredMenu === "product") && (
-                <div
-                  className="submenu"
-                  style={{ left: open ? 200 : 60 }}
-                >
+                <div className="submenu" style={{ left: open ? 200 : 60 }}>
                   {hasProduct && (
                     <div className="submenu-item" onClick={() => handleNavigation(originalProduct || "Product")}>
                       <span className="nav-text">Product</span>
@@ -131,16 +135,46 @@ export default function Sidebar() {
             </div>
           )}
 
+          {/* ✅ NEW — VENDOR & ROLES SUBMENU */}
+          {(hasVendor || hasRoles) && (
+            <div
+              className="nav-item submenu-parent"
+              data-tooltip="Vendor & Roles"
+              onMouseEnter={() => setHoveredMenu("vendorroles")}
+              onMouseLeave={() => setHoveredMenu(null)}
+            >
+              <span className="nav-icon">{iconMap.vendor}</span>
+              <span className="nav-text">Vendor & Roles</span>
+
+              {(open || hoveredMenu === "vendorroles") && (
+                <div className="submenu" style={{ left: open ? 200 : 60 }}>
+                  {hasVendor && (
+                    <div className="submenu-item" onClick={() => handleNavigation(originalVendor || "Vendor")}>
+                      <span className="nav-text">Vendor</span>
+                    </div>
+                  )}
+                  {hasRoles && (
+                    <div className="submenu-item" onClick={() => handleNavigation(originalRoles || "Roles")}>
+                      <span className="nav-text">Roles</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* OTHER MODULES */}
-          {modules.filter((m) => normalize(m) !== "product" && normalize(m) !== "producttype")
+          {modules
+            .filter(
+              (m) =>
+                !["product", "producttype", "vendor", "roles"].includes(normalize(m))
+            )
             .map((mod) => (
               <div
                 key={mod}
                 className="nav-item"
                 data-tooltip={formatName(mod)}
                 onClick={() => handleNavigation(mod)}
-                onMouseEnter={() => setHoveredMenu(normalize(mod))}
-                onMouseLeave={() => setHoveredMenu(null)}
               >
                 <span className="nav-icon">{iconMap[normalize(mod)] || iconMap.default}</span>
                 <span className="nav-text">{formatName(mod)}</span>

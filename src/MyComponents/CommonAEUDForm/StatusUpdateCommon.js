@@ -27,6 +27,9 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
       case "Product Type":
         apiUrl = `http://localhost:8080/api/ProductType/ToggleProdTypeDisable/${uKey}/${isDisable}`;
         break;
+      case "Roles":
+        apiUrl = `http://localhost:8080/api/Roles/ToggleRoleDisable/${uKey}/${isDisable}`;
+        break;
       default:
         toast.error("Invalid module name");
         setLoading(false);

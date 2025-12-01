@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/ProductView.css"; // reuse existing CSS
+import "../../Styles/Product/ProductView.css"; // reuse existing CSS
 
 export default function InventoryView({ uKey, onClose }) {
   const [inventory, setInventory] = useState(null);

@@ -1,0 +1,224 @@
+:root {
+  --role-modal-bg: #c6ddf3;
+}
+
+.role-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.role-modal {
+  width: 880px;
+  max-width: 95%;
+  min-height: 300px;
+  max-height:550px;
+  background: var(--role-modal-bg);
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px;
+}
+
+.role-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  background: linear-gradient(90deg,#3d96e9,#2d2ae4);
+  border-radius: 5px;
+  padding:8px 8px
+}
+
+.role-modal-title h3 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.role-small-muted {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Buttons */
+.role-btn-ghost-cross {
+  padding: 6px 14px;
+  font-size: 13px;
+  background: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  height: 30px;
+  width: 38px;
+  margin: 5px;
+  color: rgb(5, 5, 5);
+  text-align: center;
+}
+
+.role-btn-ghost-cross:hover{
+  color:red;
+}
+.role-btn-ghost {
+  padding: 6px 14px;
+  font-size: 13px;
+  background: linear-gradient(90deg,#3d96e9,#2d2ae4);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  height: 36px;
+  min-width: 25px;
+  margin: 5px;
+  color: white;
+    font-weight: 500;
+}
+
+.role-submit-button {
+  padding: 6px 14px;
+  background: linear-gradient(90deg,#3d96e9,#2d2ae4);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  height: 36px;
+  min-width: 90px;
+  margin: 5px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.role-submit-button:hover {
+  background-color: #357abd;
+}
+
+/* Body */
+.role-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Form grid */
+.role-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.role-form-grid label{
+  color:black;
+  margin: 5px;
+  font-size: 15px;
+  margin-top: 0px;
+}
+/* Role Name label & input */
+.role-form-grid > div {
+  display: flex;
+  flex-direction: column; /* input below label */
+  gap: 6px; /* space between label and input */
+}
+
+/* Role name input */
+.role-form-grid input[type="text"] {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  width: 100%; /* full width inside form column */
+  max-width: 400px; /* optional max width */
+  background-color: #f4f7fa;
+  margin: 5px;
+  margin-bottom: 0px;
+  color: black ;
+}
+
+.role-form-grid input:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 6px rgba(74,144,226,0.3);
+}
+
+.role-error-msg {
+  color: red;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Permissions List */
+.role-permissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Module container */
+.role-permission-module {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #9dccf8;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin: 7px;
+
+  width: fit-content;   /* width adjusts to content */
+  min-width: 600px;     /* optional: minimum width for uniformity */
+    /* optional: maximum width */
+}
+
+
+.role-permission-module:hover {
+  background: #d0e6fa;
+}
+
+.role-permission-module-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+.role-permission-toggle {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.role-permission-module.active .role-permission-toggle {
+  transform: rotate(90deg);
+}
+
+/* Actions container */
+.role-permission-actions {
+  display: none;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.role-permission-module.active .role-permission-actions {
+  display: flex;
+}
+
+.role-permission-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: calc(25% - 6px); /* max 4 per row */
+}
+
+/* Footer buttons aligned to right with space */
+.role-modal-footer-fixed {
+  display: flex;
+  justify-content: flex-end; /* right align */
+  gap: 12px; /* space between Cancel and Save */
+  padding-top: 12px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}

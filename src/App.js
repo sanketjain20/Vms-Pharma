@@ -21,6 +21,10 @@ import Reports from "./MyComponents/ReportComponent/Reports";
 import Inventory from "./MyComponents/InventoryComponent/Inventory";
 import Sales from "./MyComponents/SalesComponent/Sales";
 import Role from "./MyComponents/RoleComponent/Role";
+import Unauthorized from "./MyComponents/SecurityComponent/Unauthorized";
+
+// 🔒 FRONTEND MODULE GUARD
+import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
 
 function App() {
   return (
@@ -46,26 +50,80 @@ function App() {
 
       {/* MODULE PAGES */}
       <Route path="/master" element={<LayoutModule />}>
-        {/* Product */}
-        <Route path="product" element={<Product />} />
 
-        {/* Product Type */}
-        <Route path="product-type" element={<ProductType />} />
+        {/* PRODUCT */}
+        <Route
+          path="product"
+          element={
+            <ModuleGuard moduleName="PRODUCT">
+              <Product />
+            </ModuleGuard>
+          }
+        />
 
-        {/* Vendor */}
-        <Route path="vendor" element={<Vendor />} />
+        {/* PRODUCT TYPE */}
+        <Route
+          path="product-type"
+          element={
+            <ModuleGuard moduleName="PRODUCT_TYPE">
+              <ProductType />
+            </ModuleGuard>
+          }
+        />
 
-        {/* Reports */}
-        <Route path="reports" element={<Reports />} />
+        {/* VENDOR */}
+        <Route
+          path="vendor"
+          element={
+            <ModuleGuard moduleName="VENDOR">
+              <Vendor />
+            </ModuleGuard>
+          }
+        />
 
-        {/* Inventory */}
-        <Route path="inventory" element={<Inventory />} />
+        {/* REPORTS */}
+        <Route
+          path="reports"
+          element={
+            <ModuleGuard moduleName="REPORTS">
+              <Reports />
+            </ModuleGuard>
+          }
+        />
 
-        {/* Sales */}
-        <Route path="sales" element={<Sales />} />
+        {/* INVENTORY */}
+        <Route
+          path="inventory"
+          element={
+            <ModuleGuard moduleName="INVENTORY">
+              <Inventory />
+            </ModuleGuard>
+          }
+        />
 
-        <Route path="roles" element={<Role />} />
+        {/* SALES */}
+        <Route
+          path="sales"
+          element={
+            <ModuleGuard moduleName="SALES">
+              <Sales />
+            </ModuleGuard>
+          }
+        />
+
+        {/* ROLES */}
+        <Route
+          path="roles"
+          element={
+            <ModuleGuard moduleName="ROLES">
+              <Role />
+            </ModuleGuard>
+          }
+        />
       </Route>
+
+      {/* UNAUTHORIZED PAGE */}
+      <Route path="/unauthorized" element={<Unauthorized />} />
     </Routes>
   );
 }

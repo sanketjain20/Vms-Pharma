@@ -1,0 +1,197 @@
+:root {
+  --modal-bg: #c6ddf3;
+  --modal-header-bg: #3b82f6;
+  --modal-header-color: #fff;
+  --label-color: #1f2937;
+  --value-color: #111827;
+  --row-border: rgba(0, 0, 0, 0.1);
+}
+
+/* -------------------- Overlay -------------------- */
+.role-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+/* -------------------- Modal Container -------------------- */
+.role-modal {
+  width: 880px;
+  max-width: 95%;
+  max-height: 80%;
+  background: var(--modal-bg);
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
+  color: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* -------------------- Header -------------------- */
+.role-modal-header {
+  background: var(--modal-header-bg);
+  color: var(--modal-header-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+}
+
+.role-modal-title h3 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.role-small-muted {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* -------------------- Close Button -------------------- */
+.role-btn-ghost-cross {
+  border: none;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  color: #070707;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.2s;
+}
+
+.role-btn-ghost-cross:hover {
+  color: #ff3b00;
+}
+
+/* -------------------- Modal Body -------------------- */
+.role-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* Role Name Row Style (looks like product row) */
+.role-read-row {
+  font-size: 1rem;
+  border-bottom: 1px solid var(--row-border);
+  padding: 6px 0;
+}
+
+.role-read-row label {
+  font-weight: 600;
+  color: var(--label-color);
+  margin-right: 6px;
+}
+
+.role-readonly {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-weight: 500;
+  color: var(--value-color);
+  font-size: 1rem;
+}
+
+/* -------------------- Permissions Section -------------------- */
+.role-permissions-section h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.role-permissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Module box → same style as product rows but card-like */
+.role-permission-module {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #e3f0fc;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin: 7px 0;
+}
+
+.role-permission-module:hover {
+  background: #d8e8fb;
+}
+
+/* Module name row */
+.role-permission-module-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+/* Expand icon */
+.role-permission-toggle {
+  font-weight: bold;
+  font-size: 17px;
+}
+
+/* Permissions list inside module */
+.role-permission-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  padding-left: 4px;
+}
+
+.role-permission-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.role-permission-action input {
+  pointer-events: none;
+}
+
+/* -------------------- Footer -------------------- */
+.role-modal-footer-fixed {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 20px;
+  background: rgba(0, 0, 0, 0.03);
+  border-top: 1px solid var(--row-border);
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+/* Footer Close Button */
+.role-btn-ghost {
+  padding: 6px 14px;
+  margin-left: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+.role-btn-ghost:hover {
+  background: #2563eb;
+}

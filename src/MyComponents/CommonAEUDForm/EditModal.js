@@ -7,6 +7,7 @@ import VendorEdit from "../VendorComponent/VendorEdit";
 import InventoryEdit from "../InventoryComponent/InventoryEdit";
 import SalesEdit from "../SalesComponent/SalesEdit";
 import ProductTypeEdit from "../ProductTypeComponent/ProductTypeEdit";
+import RoleEdit from "../RoleComponent/RoleEdit";
 
 export default function EditModal({ isOpen, onClose, moduleName, uKey, onSubmit }) {
   if (!isOpen) return null;
@@ -23,6 +24,8 @@ export default function EditModal({ isOpen, onClose, moduleName, uKey, onSubmit 
         return <SalesEdit uKey={uKey} onClose={onClose} onSubmit={onSubmit} />;
       case "Product Type":
         return <ProductTypeEdit uKey={uKey} onSubmit={onSubmit} onClose={onClose} />;
+      case "Roles":
+        return <RoleEdit uKey={uKey} onSubmit={onSubmit} onClose={onClose} />;
       default:
         return <p>No form available for {moduleName}</p>;
     }

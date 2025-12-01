@@ -2,10 +2,10 @@
    GLOBAL RESET & LAYOUT
    ========================= */
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: "Inter", "Poppins", sans-serif;
+  box-sizing: border-box;
+  font-family: "Inter", "Segoe UI", "Roboto", sans-serif;
 }
 
 html, body, #root {

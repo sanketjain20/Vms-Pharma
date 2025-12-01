@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../../Styles/ProductForm.css"; // Reuse same modal CSS
+import "../../Styles/Product/ProductForm.css"; // Reuse same modal CSS
 import { toast } from "react-toastify";
 
 export default function InventoryAdd({ onSubmit, onClose }) {

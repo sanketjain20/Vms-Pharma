@@ -7,6 +7,7 @@ import VendorAdd from "../VendorComponent/VendorAdd";
 import InventoryAdd from "../InventoryComponent/InventoryAdd";
 import SalesAdd from "../SalesComponent/SalesAdd";
 import ProductTypeAdd from "../ProductTypeComponent/ProductTypeAdd";
+import RoleAdd from "../RoleComponent/RoleAdd";
 
 export default function ModuleModal({ isOpen, onClose, moduleName, onSubmit }) {
   if (!isOpen) return null;
@@ -23,6 +24,8 @@ export default function ModuleModal({ isOpen, onClose, moduleName, onSubmit }) {
         return <SalesAdd onSubmit={onSubmit} onClose={onClose} />;
       case "Product Type":
         return <ProductTypeAdd onSubmit={onSubmit} onClose={onClose} />;
+         case "Roles":
+        return <RoleAdd onSubmit={onSubmit} onClose={onClose} />;
       default:
         return <p>No form available for {moduleName}</p>;
     }

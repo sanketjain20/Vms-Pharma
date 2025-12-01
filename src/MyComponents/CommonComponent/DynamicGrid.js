@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/DynamicGrid.css";
-import { FaSearch, FaEdit, FaEye, FaBan } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import ModuleModal from "../CommonAEUDForm/ModuleModal";
 import EditModal from "../CommonAEUDForm/EditModal";
 import ViewModal from "../CommonAEUDForm/ViewModal";
@@ -14,6 +14,8 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchText, setSearchText] = useState("");
+
+  const [emptyMsg, setEmptyMsg] = useState(""); // ← NEW STATE FOR EMPTY MESSAGE
 
   // ADD modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,6 +35,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module }) {
 
   /* ---------------------- Fetch API ---------------------- */
 
+
 const refreshGrid = React.useCallback(() => {
   fetch(`${apiUrl}/${page}/${size}`, {
     method: "GET",
@@ -44,25 +47,35 @@ const refreshGrid = React.useCallback(() => {
       if (response.status === 200) {
         const dataObj = response.data;
 
+        // Safely get list of rows
         const list = Array.isArray(dataObj)
           ? dataObj
-          : typeof dataObj === "object"
-            ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
-            : [];
+          : typeof dataObj === "object" && dataObj !== null
+          ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
+          : [];
 
         setData(list);
-        setTotalPages(dataObj?.totalPages || 1);
+        setTotalPages(
+          typeof dataObj === "object" && dataObj?.totalPages
+            ? dataObj.totalPages
+            : 1
+        );
+
+        // Set empty message for grid display
+        if (!list || list.length === 0) {
+          setEmptyMsg(response.message || "No records found.");
+        } else {
+          setEmptyMsg("");
+        }
       } else {
-        // Show custom error message if status is not 200
         toast.error(response.message || "Something went wrong!");
       }
     })
     .catch((err) => {
-      console.error("Something went wrong: ", err);
+      console.error("Network or server error: ", err);
       toast.error("Something went wrong! Please try again.");
     });
 }, [apiUrl, page, size]);
-
 
   useEffect(() => {
     refreshGrid();
@@ -86,9 +99,9 @@ const refreshGrid = React.useCallback(() => {
     .filter((row) =>
       searchText
         ? Object.values(row)
-          .join(" ")
-          .toLowerCase()
-          .includes(searchText.toLowerCase())
+            .join(" ")
+            .toLowerCase()
+            .includes(searchText.toLowerCase())
         : true
     );
 
@@ -152,15 +165,17 @@ const refreshGrid = React.useCallback(() => {
           All
         </span>
         <span
-          className={`status-chip ${selectedStatus === "active" ? "active" : ""
-            }`}
+          className={`status-chip ${
+            selectedStatus === "active" ? "active" : ""
+          }`}
           onClick={() => setSelectedStatus("active")}
         >
           Active
         </span>
         <span
-          className={`status-chip ${selectedStatus === "inactive" ? "active" : ""
-            }`}
+          className={`status-chip ${
+            selectedStatus === "inactive" ? "active" : ""
+          }`}
           onClick={() => setSelectedStatus("inactive")}
         >
           Inactive
@@ -195,124 +210,143 @@ const refreshGrid = React.useCallback(() => {
                 <col key={i} style={{ width: w }} />
               ))}
             </colgroup>
+
             <tbody>
-              {filteredData?.map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  {columns.map((col, colIndex) => {
-                    if (col.field === "Action") {
+              {/* ⭐ NEW LOGIC → SHOW ROW MESSAGE IF EMPTY */}
+              {emptyMsg && filteredData.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    style={{
+                      textAlign: "center",
+                      padding: "20px",
+                      color: "#666",
+                      fontSize: "15px",
+                    }}
+                  >
+                    {emptyMsg}
+                  </td>
+                </tr>
+              ) : (
+                filteredData?.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {columns.map((col, colIndex) => {
+                      if (col.field === "Action") {
+                        return (
+                          <td key={colIndex} className="action-column">
+                            {/* ACTION CODE UNTOUCHED */}
+                            {selectedStatus === "inactive" ? (
+                              <>
+                                <span
+                                  className="action-icon"
+                                  title="View"
+                                  onClick={() => handleView(row)}
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    height="24px"
+                                    viewBox="0 -960 960 960"
+                                    width="24px"
+                                    fill="#504f4fff"
+                                  >
+                                    <path d="M274-360q31 0 55.5-18t34.5-47l15-46q16-48-8-88.5T302-600H161l19 157q5 35 31.5 59t62.5 24Zm412 0q36 0 62.5-24t31.5-59l19-157H659q-45 0-69 41t-8 89l14 45q10 29 34.5 47t55.5 18Zm-412 80q-66 0-115.5-43.5T101-433L80-600H40v-80h262q44 0 80.5 21.5T440-600h81q21-37 57.5-58.5T659-680h261v80h-40l-21 167q-8 66-57.5 109.5T686-280q-57 0-102.5-32.5T520-399l-15-45q-2-7-4-14.5t-4-21.5h-34q-2 12-4 19.5t-4 14.5l-15 46q-18 54-63.5 87T274-280Z" />
+                                  </svg>
+                                </span>
+
+                                <span
+                                  className="action-icon"
+                                  title="Activate"
+                                  onClick={() => handleActivate(row)}
+                                  style={{ cursor: "pointer" }}
+                                  dangerouslySetInnerHTML={{
+                                    __html:
+                                      '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#2da109ff"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>',
+                                  }}
+                                />
+                              </>
+                            ) : (
+                              <>
+                                <span
+                                  className="action-icon"
+                                  title="Edit"
+                                  onClick={() => handleEdit(row)}
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    height="24px"
+                                    viewBox="0 -960 960 960"
+                                    width="24px"
+                                    fill="#504f4fff"
+                                  >
+                                    <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
+                                  </svg>
+                                </span>
+
+                                <span
+                                  className="action-icon"
+                                  title="View"
+                                  onClick={() => handleView(row)}
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    height="24px"
+                                    viewBox="0 -960 960 960"
+                                    width="24px"
+                                    fill="#504f4fff"
+                                  >
+                                    <path d="M274-360q31 0 55.5-18t34.5-47l15-46q16-48-8-88.5T302-600H161l19 157q5 35 31.5 59t62.5 24Zm412 0q36 0 62.5-24t31.5-59l19-157H659q-45 0-69 41t-8 89l14 45q10 29 34.5 47t55.5 18Zm-412 80q-66 0-115.5-43.5T101-433L80-600H40v-80h262q44 0 80.5 21.5T440-600h81q21-37 57.5-58.5T659-680h261v80h-40l-21 167q-8 66-57.5 109.5T686-280q-57 0-102.5-32.5T520-399l-15-45q-2-7-4-14.5t-4-21.5h-34q-2 12-4 19.5t-4 14.5l-15 46q-18 54-63.5 87T274-280Z" />
+                                  </svg>
+                                </span>
+
+                                <span
+                                  className="action-icon"
+                                  title="Disable"
+                                  onClick={() => handleDisable(row)}
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    height="24px"
+                                    viewBox="0 -960 960 960"
+                                    width="24px"
+                                    fill="#EA3323"
+                                  >
+                                    <path d="M819-28 701-146q-48 32-103.5 49T480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-62 17-117.5T146-701L27-820l57-57L876-85l-57 57ZM480-160q45 0 85.5-12t76.5-33L487-360l-63 64-170-170 56-56 114 114 7-8-226-226q-21 36-33 76.5T160-480q0 133 93.5 226.5T480-160Zm335-100-59-59q21-35 32.5-75.5T800-480q0-133-93.5-226.5T480-800q-45 0-85.5 11.5T319-756l-59-59q48-31 103.5-48T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 61-17 116.5T815-260ZM602-474l-56-56 104-104 56 56-104 104Zm-64-64ZM424-424Z" />
+                                  </svg>
+                                </span>
+                              </>
+                            )}
+                          </td>
+                        );
+                      }
+
+                      const value = row[col.field];
+
                       return (
-                        <td key={colIndex} className="action-column">
-
-                          {selectedStatus === "inactive" ? (
-                            <>
-                              {/* ✅ View Button */}
-                              <span
-                                className="action-icon"
-                                title="View"
-                                onClick={() => handleView(row)}
-                                style={{ cursor: "pointer" }}
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  height="24px"
-                                  viewBox="0 -960 960 960"
-                                  width="24px"
-                                  fill="#504f4fff"
-                                >
-                                  <path d="M274-360q31 0 55.5-18t34.5-47l15-46q16-48-8-88.5T302-600H161l19 157q5 35 31.5 59t62.5 24Zm412 0q36 0 62.5-24t31.5-59l19-157H659q-45 0-69 41t-8 89l14 45q10 29 34.5 47t55.5 18Zm-412 80q-66 0-115.5-43.5T101-433L80-600H40v-80h262q44 0 80.5 21.5T440-600h81q21-37 57.5-58.5T659-680h261v80h-40l-21 167q-8 66-57.5 109.5T686-280q-57 0-102.5-32.5T520-399l-15-45q-2-7-4-14.5t-4-21.5h-34q-2 12-4 19.5t-4 14.5l-15 46q-18 54-63.5 87T274-280Z" />
-                                </svg>
-                              </span>
-
-                              {/* ✅ Activate Button */}
-                              <span
-                                className="action-icon"
-                                title="Activate"
-                                onClick={() => handleActivate(row)}
-                                style={{ cursor: "pointer" }}
-                                dangerouslySetInnerHTML={{
-                                  __html:
-                                    '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#2da109ff"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>',
-                                }}
-                              />
-                            </>
-                          ) : (
-                            <>
-                              <span
-                                className="action-icon"
-                                title="Edit"
-                                onClick={() => handleEdit(row)}
-                                style={{ cursor: "pointer" }}
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  height="24px"
-                                  viewBox="0 -960 960 960"
-                                  width="24px"
-                                  fill="#504f4fff"
-                                >
-                                  <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
-                                </svg>
-                              </span>
-
-                              <span
-                                className="action-icon"
-                                title="View"
-                                onClick={() => handleView(row)}
-                                style={{ cursor: "pointer" }}
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  height="24px"
-                                  viewBox="0 -960 960 960"
-                                  width="24px"
-                                  fill="#504f4fff"
-                                >
-                                  <path d="M274-360q31 0 55.5-18t34.5-47l15-46q16-48-8-88.5T302-600H161l19 157q5 35 31.5 59t62.5 24Zm412 0q36 0 62.5-24t31.5-59l19-157H659q-45 0-69 41t-8 89l14 45q10 29 34.5 47t55.5 18Zm-412 80q-66 0-115.5-43.5T101-433L80-600H40v-80h262q44 0 80.5 21.5T440-600h81q21-37 57.5-58.5T659-680h261v80h-40l-21 167q-8 66-57.5 109.5T686-280q-57 0-102.5-32.5T520-399l-15-45q-2-7-4-14.5t-4-21.5h-34q-2 12-4 19.5t-4 14.5l-15 46q-18 54-63.5 87T274-280Z" />
-                                </svg>
-                              </span>
-
-
-                              <span
-                                className="action-icon"
-                                title="Disable"
-                                onClick={() => handleDisable(row)}
-                                style={{ cursor: "pointer" }}
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  height="24px"
-                                  viewBox="0 -960 960 960"
-                                  width="24px"
-                                  fill="#EA3323"
-                                >
-                                  <path d="M819-28 701-146q-48 32-103.5 49T480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-62 17-117.5T146-701L27-820l57-57L876-85l-57 57ZM480-160q45 0 85.5-12t76.5-33L487-360l-63 64-170-170 56-56 114 114 7-8-226-226q-21 36-33 76.5T160-480q0 133 93.5 226.5T480-160Zm335-100-59-59q21-35 32.5-75.5T800-480q0-133-93.5-226.5T480-800q-45 0-85.5 11.5T319-756l-59-59q48-31 103.5-48T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 61-17 116.5T815-260ZM602-474l-56-56 104-104 56 56-104 104Zm-64-64ZM424-424Z" />
-                                  \  </svg>
-                              </span>
-
-                            </>
-                          )}
+                        <td
+                          key={colIndex}
+                          title={
+                            value !== undefined && value !== null
+                              ? typeof value === "object"
+                                ? JSON.stringify(value)
+                                : String(value)
+                              : ""
+                          }
+                        >
+                          {value !== undefined && value !== null
+                            ? typeof value === "object"
+                              ? JSON.stringify(value)
+                              : String(value)
+                            : ""}
                         </td>
                       );
-                    }
-
-                    const value = row[col.field];
-                    return (
-                      <td
-                        key={colIndex}
-                        title={
-                          value !== undefined && value !== null
-                            ? String(value)
-                            : ""
-                        }
-                      >
-                        {value !== undefined && value !== null
-                          ? String(value)
-                          : ""}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
+                    })}
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -383,7 +417,7 @@ const refreshGrid = React.useCallback(() => {
         />
       )}
 
-      {/* STATUS (FIXED) */}
+      {/* STATUS */}
       <StatusModal
         isOpen={isStatusOpen}
         onClose={() => setIsStatusOpen(false)}

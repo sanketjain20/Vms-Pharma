@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/ProductView.css";
+import "../../Styles/Product/ProductView.css";
 
 export default function ProductTypeView({ uKey, onClose }) {
   const [productType, setProductType] = useState(null);

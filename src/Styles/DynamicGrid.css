@@ -39,28 +39,45 @@
 
 /* Add button */
 .add-button {
-  /* Remove fixed width */
-  /* width: 220px; */
-
-  /* Use padding for size instead */
-  padding: 8px 16px; /* horizontal padding can adjust width automatically */
+  padding: 10px 20px;
   font-size: 16px;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(90deg, #056dce, #06a2eb);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
 
-  /* Optional: keep button from shrinking too small */
+  /* Your same gradient */
+  background: linear-gradient(90deg, #056dce, #06a2eb);
+
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+
+  /* Smooth animation */
+  transition: all 0.25s ease;
+
+  /* Elegant depth */
+  box-shadow: 0 3px 8px rgba(0, 123, 255, 0.35);
+
+  /* Prevent shrink */
   min-width: 80px;
+
+  /* Make it feel clickable */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-
+/* Hover – premium glow + float */
 .add-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0px 4px 15px rgba(255, 138, 0, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 123, 255, 0.55);
+}
+
+/* Press effect */
+.add-button:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
 }
 
 /* ---------------------- Status Filters ---------------------- */
@@ -110,7 +127,7 @@
 .grid-table th {
   padding: 8px;
   color:white;
-  font-weight: 600;
+  font-weight: 650;
   text-align: center;
   border-right: 1px solid rgba(255, 255, 255, 0.1); /* vertical line */
   border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* horizontal line under header */
@@ -208,4 +225,17 @@
 .grid-pagination span {
   color: #fff;
   font-weight: 600;
+}
+
+/* DynamicGrid.css */
+
+/* Message when grid has no data */
+.grid-empty-message {
+  text-align: center;        /* Center the text horizontally */
+  padding: 20px;             /* Give some spacing */
+  font-size: 16px;           /* Slightly bigger font */
+  color: #555;               /* Grey color */
+  font-weight: 500;          /* Medium weight */
+  background-color: #f9f9f9; /* Light background to distinguish */
+  border-top: 1px solid #e0e0e0; /* Optional top border like a row */
 }

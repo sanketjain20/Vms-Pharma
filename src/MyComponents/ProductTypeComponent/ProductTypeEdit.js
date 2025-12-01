@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/ProductForm.css";
+import "../../Styles/Product/ProductForm.css";
 import { toast } from "react-toastify";
 
 export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
