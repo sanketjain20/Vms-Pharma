@@ -44,7 +44,9 @@ export default function Sidebar() {
           localStorage.setItem("modules", JSON.stringify(data.data));
           setModules(data.data);
         } else {
-          setError("No modules available.");
+        localStorage.setItem("modules", JSON.stringify([]));
+        setModules([]);
+          setError("");
         }
       })
       .catch(() => setError("Failed to load modules."));
