@@ -1,0 +1,249 @@
+/* ----------- GLOBAL THEME COLORS ----------- */
+:root {
+  --sales-modal-bg: #c6ddf3;
+  --sales-primary: linear-gradient(90deg,#3d96e9,#2d2ae4);
+  --sales-light: #f4f7fa;
+}
+
+/* ----------- MODAL BACKDROP ----------- */
+.sales-modal.show {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* ----------- MAIN CONTAINER ----------- */
+.sales-container {
+  width: 900px;
+  max-width: 95%;
+  max-height: 90vh;
+  background: var(--sales-modal-bg);
+  border-radius: 14px;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* ----------- HEADER ----------- */
+.sales-header {
+  background: var(--sales-primary);
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sales-header h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.close-btn {
+  border: none;
+  background: white;
+  color: black;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: red;
+}
+
+/* ----------- SECTION ----------- */
+.sales-section {
+  background: #9dccf8;
+  padding: 14px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.sales-section h4 {
+  margin-bottom: 10px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* ----------- LABELS ----------- */
+.sales-section label {
+  margin-top: 10px;
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: black;
+}
+
+/* ----------- INPUTS ----------- */
+.sales-section select,
+.sales-section input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: var(--sales-light);
+  margin-top: 4px;
+  color: black;
+}
+
+.sales-section input:focus,
+.sales-section select:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 6px rgba(74,144,226,0.4);
+}
+
+/* ----------- RADIO BUTTON GROUP ----------- */
+.radio-group {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* ----------- FLEX ROWS ----------- */
+.product-row,
+.quantity-tax-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.product-row > div,
+.quantity-tax-row > div {
+  flex: 1;
+}
+
+/* ----------- TAX ROW ----------- */
+.tax-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tax-row input {
+  flex: 1;
+}
+
+.tax-row select {
+  width: 90px;
+}
+
+/* ----------- ADD BUTTON ----------- */
+.add-btn {
+  background: var(--sales-primary);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  margin-top: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.add-btn:hover {
+  opacity: 0.9;
+}
+
+/* ----------- INVENTORY BOX ----------- */
+.inv-box {
+  background: white;
+  padding: 10px;
+  margin-top: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* ----------- TABLE ----------- */
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sales-table th,
+.sales-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.sales-table th {
+  background: #3d96e9;
+  color: white;
+}
+
+/* ----------- FOOTER ----------- */
+.sales-footer {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  padding-top: 15px;
+}
+
+.cancel-btn,
+.submit-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cancel-btn {
+  background: white;
+  color: black;
+  border: 1px solid #aaa;
+}
+
+.cancel-btn:hover {
+  background: #eee;
+}
+
+.submit-btn {
+  background: var(--sales-primary);
+  color: white;
+}
+
+.submit-btn:hover {
+  opacity: 0.9;
+}
+
+/* ----------- NUMBER INPUT SPIN REMOVE ----------- */
+/* Chrome, Safari, Edge */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* ----------- COMMON TAX CHECKBOX ----------- */
+.tax-row label input[type="checkbox"] {
+  margin-right: 6px;
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+.tax-row label {
+  font-weight: 500;
+}
