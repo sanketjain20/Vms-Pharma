@@ -19,7 +19,7 @@
 
 /* ----------- MAIN CONTAINER ----------- */
 .sales-container {
-  width: 900px;
+  width: 1000px;
   max-width: 95%;
   max-height: 90vh;
   background: var(--sales-modal-bg);
@@ -246,4 +246,24 @@ input[type=number] {
 
 .tax-row label {
   font-weight: 500;
+}
+
+.tax-column {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.tax-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tax-input-row input {
+  flex: 1;
+}
+
+.tax-input-row select {
+  width: 70px;
 }

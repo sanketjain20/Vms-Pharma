@@ -275,19 +275,25 @@ export default function SalesAdd({ onClose, onSubmit }) {
             </div>
 
             {taxMode === "PRODUCT" && (
-              <div className="tax-row">
+              <div className="tax-column">
                 <label>Tax</label>
-                <input
-                  type="number"
-                  value={taxInput}
-                  onChange={(e) => setTaxInput(e.target.value)}
-                  placeholder="Enter tax"
-                  min="0"
-                />
-                <select value={taxType} onChange={(e) => setTaxType(e.target.value)}>
-                  <option value="PERCENT">%</option>
-                  <option value="FLAT">₹</option>
-                </select>
+
+                <div className="tax-input-row">
+                  <input
+                    type="number"
+                    value={taxInput}
+                    onChange={(e) => setTaxInput(e.target.value)}
+                    placeholder="Enter tax"
+                    min="0"
+                  />
+                  <select
+                    value={taxType}
+                    onChange={(e) => setTaxType(e.target.value)}
+                  >
+                    <option value="PERCENT">%</option>
+                    <option value="FLAT">₹</option>
+                  </select>
+                </div>
               </div>
             )}
           </div>
