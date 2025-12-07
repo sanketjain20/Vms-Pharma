@@ -19,7 +19,7 @@
 
 /* ----------- MAIN CONTAINER ----------- */
 .sales-container {
-  width: 1000px;
+  width: 800px;
   max-width: 95%;
   max-height: 90vh;
   background: var(--sales-modal-bg);
@@ -267,3 +267,11 @@ input[type=number] {
 .tax-input-row select {
   width: 70px;
 }
+/* Style for inline error messages */
+/* Inline validation error messages */
+.error {
+  color: red;         /* Makes the error text red */
+  font-size: 12px;    /* Slightly smaller font */
+  margin-top: 2px;    /* Spacing below input or select */
+}
+
