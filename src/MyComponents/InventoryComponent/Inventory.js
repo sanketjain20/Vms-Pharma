@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 export default function Inventory() {
 const columns = [
   { header: "Inventory Code", field: "inventoryCode", width: "170px" },
-  { header: "Product ID", field: "productId", width: "130px" },
+  { header: "Product Name", field: "productName", width: "130px" },
   { header: "Current Qty", field: "currentQuantity", width: "130px" },
   { header: "Reorder Level", field: "reorderLevel", width: "140px" },
   { header: "Unit Cost Price (₹)", field: "unitCostPrice", width: "180px" },

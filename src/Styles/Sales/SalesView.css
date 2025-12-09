@@ -1,3 +1,4 @@
+/* SalesView.css */
 :root {
   --modal-bg: #c6ddf3;
   --modal-header-bg: #3b82f6;
@@ -56,9 +57,11 @@
 .sales-view-btn-ghost {
   border: none;
   background: white;
+  color: black;
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 15px;
   cursor: pointer;
-  font-size: 14px;
-  color: #070707;
 }
 
 .sales-view-btn-ghost:hover {
@@ -102,6 +105,16 @@
   color: #111;
 }
 
+/* TOTALS BELOW TABLE */
+.sales-totals {
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid var(--row-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 /* ITEMS TABLE */
 .sales-items-table {
   width: 100%;
@@ -121,9 +134,8 @@
   font-weight: 700;
   padding: 14px 12px;
   text-align: left;
-  font-size: 16px;
+  font-size: 17px;
   letter-spacing: 0.4px;
-  text-transform: uppercase;
 }
 
 /* TABLE CELLS */
@@ -149,4 +161,31 @@
 /* LAST ROW — REMOVE BOTTOM BORDER */
 .sales-items-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* SalesView.css */
+/* Keep all previous CSS the same and add this at the end */
+
+/* TOTALS RIGHT-ALIGNED */
+.sales-totals-right {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding-right: 10px;
+}
+
+.sales-totals-right .totals-row {
+  display: flex;
+  justify-content: space-between;
+  gap :70px;
+  width: 350px; /* fixed width to align values on right */
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sales-totals-right .net-amount {
+  font-size: 18px;
+  font-weight: 700;
 }

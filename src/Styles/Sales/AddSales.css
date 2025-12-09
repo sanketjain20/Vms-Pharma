@@ -30,36 +30,73 @@
   border: 1px solid rgba(0,0,0,0.1);
 }
 
-/* ----------- HEADER ----------- */
+/* ----------- HEADER + TABS ----------- */
+/* ----------- HEADER + TABS INLINE ----------- */
 .sales-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* move tabs + close to right */
+  gap: 12px;
   background: var(--sales-primary);
   padding: 10px 14px;
   border-radius: 8px;
   margin-bottom: 18px;
   color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
+/* Title on the left */
 .sales-header h3 {
   margin: 0;
   font-size: 20px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
-.close-btn {
+/* Tabs + Close button container aligned right */
+.tabs-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Individual tab button */
+.tabs-header button {
+  padding: 6px 12px;
   border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  background: white; /* inactive bg */
+  color: black;
+  transition: all 0.2s;
+}
+
+/* Active tab */
+.tabs-header button.active-tab {
+  background: rgb(61, 142, 248);
+  color: white;
+}
+
+/* Close button inline with tabs */
+.tabs-header .close-btn-sales {
+  margin-left: 12px;
   background: white;
   color: black;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 15px;
+  border-radius: 10px;
   cursor: pointer;
+  flex-shrink: 0;
+  font-weight: 600;
+  transition: all 0.2s;
+  width:40px;
 }
 
-.close-btn:hover {
+/* Close button hover */
+.tabs-header .close-btn-sales:hover {
   color: red;
+  background: white;
 }
+
 
 /* ----------- SECTION ----------- */
 .sales-section {
@@ -73,6 +110,43 @@
   margin-bottom: 10px;
   font-size: 17px;
   font-weight: 600;
+}
+
+.tax-settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tax-row-single {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* radio left, input right */
+}
+
+/* Force all radio labels to same width for alignment */
+.tax-option {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+  font-weight: 600;
+  color: black;
+  min-width: 150px; /* same width for all labels */
+}
+
+
+.tax-inline-fields {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tax-inline-fields input {
+  width: 80px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: white;
 }
 
 /* ----------- LABELS ----------- */
@@ -100,14 +174,6 @@
 .sales-section select:focus {
   border-color: #4a90e2;
   box-shadow: 0 0 6px rgba(74,144,226,0.4);
-}
-
-/* ----------- RADIO BUTTON GROUP ----------- */
-.radio-group {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  margin-bottom: 10px;
 }
 
 /* ----------- FLEX ROWS ----------- */
@@ -165,6 +231,10 @@
 }
 
 /* ----------- TABLE ----------- */
+.sales-section h4{
+  font-size: 15px;
+  font-weight: 600;
+}
 .sales-table {
   width: 100%;
   border-collapse: collapse;
@@ -178,12 +248,20 @@
 .sales-table td {
   border: 1px solid #ddd;
   padding: 10px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .sales-table th {
   background: #3d96e9;
-  color: white;
+  color: rgb(0, 0, 0);
+}
+
+/* Total + Tax / Net amount */
+.total-amount {
+  margin-top: 10px;
+  font-weight: 500;
+  font-size: 15px;
+  text-align: right;
 }
 
 /* ----------- FOOTER ----------- */
@@ -225,29 +303,24 @@
 }
 
 /* ----------- NUMBER INPUT SPIN REMOVE ----------- */
-/* Chrome, Safari, Edge */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-/* Firefox */
 input[type=number] {
     -moz-appearance: textfield;
 }
 
-/* ----------- COMMON TAX CHECKBOX ----------- */
-.tax-row label input[type="checkbox"] {
-  margin-right: 6px;
-  transform: scale(1.1);
-  cursor: pointer;
+/* ----------- INLINE ERROR ----------- */
+.error {
+  color: red;
+  font-size: 12px;
+  margin-top: 2px;
 }
 
-.tax-row label {
-  font-weight: 500;
-}
-
+/* ----------- TAX COLUMN ----------- */
 .tax-column {
   display: flex;
   flex-direction: column;
@@ -267,11 +340,14 @@ input[type=number] {
 .tax-input-row select {
   width: 70px;
 }
-/* Style for inline error messages */
-/* Inline validation error messages */
-.error {
-  color: red;         /* Makes the error text red */
-  font-size: 12px;    /* Slightly smaller font */
-  margin-top: 2px;    /* Spacing below input or select */
-}
 
+
+.tax-inline-fields select {
+  width: 80px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: var(--sales-light);
+  margin-top: 4px;
+  color: black;
+}

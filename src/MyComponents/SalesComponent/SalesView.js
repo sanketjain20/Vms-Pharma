@@ -1,3 +1,4 @@
+// SalesView.js
 import React, { useEffect, useState } from "react";
 import "../../Styles/Sales/SalesView.css";
 
@@ -73,26 +74,6 @@ export default function SalesView({ uKey, onClose }) {
                 <span>{sales.createdAt}</span>
               </div>
 
-              <div className="sales-row">
-                <label>Total Amount :</label>
-                <span>₹{sales.totalAmount}</span>
-              </div>
-
-              <div className="sales-row">
-                <label>Total Tax :</label>
-                <span>₹{sales.totalTax}</span>
-              </div>
-
-              <div className="sales-row">
-                <label>Total Discount :</label>
-                <span>₹{sales.totalDiscount}</span>
-              </div>
-
-              <div className="sales-row" style={{ gridColumn: "1 / span 2" }}>
-                <label>Net Amount :</label>
-                <span><b>₹{sales.netAmount}</b></span>
-              </div>
-
             </div>
 
             {/* ITEMS TABLE */}
@@ -103,9 +84,10 @@ export default function SalesView({ uKey, onClose }) {
                 <tr>
                   <th>Product</th>
                   <th>Qty</th>
-                  <th>Selling Price</th>
-                  <th>Tax</th>
-                  <th>Subtotal</th>
+                  <th>Selling Price (Rs.)</th>
+                  <th>Item Amount (Rs.)</th>
+                  <th>Tax (Rs.)</th>
+                  <th>Amount(Incl. Tax) (Rs.)</th>
                 </tr>
               </thead>
 
@@ -114,13 +96,34 @@ export default function SalesView({ uKey, onClose }) {
                   <tr key={idx}>
                     <td>{item.product}</td>
                     <td>{item.quantity}</td>
-                    <td>₹{item.sellingPrice}</td>
-                    <td>₹{item.taxAmount}</td>
-                    <td>₹{item.subtotal}</td>
+                    <td>{item.sellingPrice}</td>
+                    <td>{(item.quantity * item.sellingPrice).toFixed(2)}</td>
+                    <td>{item.taxAmount}</td>
+                    <td>{(item.subtotal).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {/* TOTALS BELOW TABLE */}
+            <div className="sales-totals-right">
+              <div className="totals-row">
+                <span>Total Items Amount (Rs.)</span>
+                <span>{(sales.totalAmount).toFixed(2)}</span>
+              </div>
+              <div className="totals-row">
+                <span>Total Tax (Rs.)</span>
+                <span>{sales.totalTax}</span>
+              </div>
+              <div className="totals-row">
+                <span>Discount (Rs.)</span>
+                <span>{sales.totalDiscount}</span>
+              </div>
+              <div className="totals-row net-amount">
+                <span><b>Net Amount (Rs.)</b></span>
+                <span><b>{(sales.netAmount).toFixed(2)}</b></span>
+              </div>
+            </div>
 
           </div>
         </div>
