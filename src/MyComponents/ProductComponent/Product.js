@@ -22,6 +22,7 @@ PRODUCTS </h2>
     columns={columns}
     apiUrl="http://localhost:8080/api/Product/GetAllProductPaged"
     Module="Product"
+    ModuleId ="3"
   />
 
   {/* Toast container here */}

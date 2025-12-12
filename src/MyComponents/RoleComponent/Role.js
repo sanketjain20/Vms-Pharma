@@ -28,6 +28,7 @@ const columns = [
         columns={columns} 
         apiUrl="http://localhost:8080/api/Roles/GetAllPaged" 
         Module="Roles"
+        ModuleId ="6"
       />
       
       <ToastContainer position="top-center" autoClose={2000} />

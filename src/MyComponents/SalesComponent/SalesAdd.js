@@ -25,7 +25,7 @@ export default function SalesAdd({ onClose, onSubmit }) {
   const [taxMode, setTaxMode] = useState("COMMON");
 
   const [errors, setErrors] = useState({});
-  const [activeTab, setActiveTab] = useState("Tax"); // Active tab
+  const [activeTab, setActiveTab] = useState("Tax");
 
   useEffect(() => {
     fetch("http://localhost:8080/api/ProductType/GetAllProductType", {
@@ -38,7 +38,7 @@ export default function SalesAdd({ onClose, onSubmit }) {
         const list = json?.data?.productTypes ?? [];
         setProductTypes(Array.isArray(list) ? list : []);
       })
-      .catch(() => { });
+      .catch(() => {});
   }, []);
 
   const handleTypeChange = (e) => {
@@ -62,7 +62,7 @@ export default function SalesAdd({ onClose, onSubmit }) {
         const list = json?.data ?? [];
         setProducts(Array.isArray(list) ? list : []);
       })
-      .catch(() => { });
+      .catch(() => {});
   };
 
   const handleProductChange = (e) => {
@@ -83,7 +83,15 @@ export default function SalesAdd({ onClose, onSubmit }) {
         if (json.status === 200) setInventory(json.data);
         else setInventory(null);
       })
-      .catch(() => { });
+      .catch(() => {});
+  };
+
+  const safeJson = async (res) => {
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
   };
 
   const addItem = () => {
@@ -96,7 +104,8 @@ export default function SalesAdd({ onClose, onSubmit }) {
     if (!inventory && (!manualPrice || manualPrice <= 0))
       tempErrors.manualPrice = "Enter valid selling price";
 
-    let taxValue = taxMode === "COMMON" ? parseFloat(commonTax || 0) : parseFloat(taxInput || 0);
+    let taxValue =
+      taxMode === "COMMON" ? parseFloat(commonTax || 0) : parseFloat(taxInput || 0);
     if (taxValue < 0) tempErrors.taxInput = "Tax cannot be less than 0";
 
     setErrors(tempErrors);
@@ -105,7 +114,7 @@ export default function SalesAdd({ onClose, onSubmit }) {
     const product = products.find((p) => p.id === parseInt(selectedProduct));
 
     let taxAmount = 0;
-    if (taxType === "PERCENT") taxAmount = (price * parseInt(quantity) * taxValue) / 100;
+    if (taxType === "PERCENT") taxAmount = (price * quantity * taxValue) / 100;
     else taxAmount = taxValue;
 
     const item = {
@@ -125,9 +134,17 @@ export default function SalesAdd({ onClose, onSubmit }) {
     }
 
     setLineItems(updated);
+
+    // ------------------------------------------------------
+    // ✅ Reset fields after Add or Update
+    // ------------------------------------------------------
+    setSelectedType("");
+    setSelectedProduct("");
+    setProducts([]);
+    setInventory(null);
     setQuantity("");
-    setTaxInput("");
     setManualPrice("");
+    setTaxInput("");
   };
 
   const deleteItem = (index) => {
@@ -136,7 +153,10 @@ export default function SalesAdd({ onClose, onSubmit }) {
     setLineItems(updated);
   };
 
-  const editItem = (index) => {
+  // ------------------------------------------------------
+  // ✅ FULL AUTO-EDIT LOGIC (same as SalesEdit)
+  // ------------------------------------------------------
+  const editItem = async (index) => {
     const it = lineItems[index];
     setEditIndex(index);
 
@@ -144,10 +164,52 @@ export default function SalesAdd({ onClose, onSubmit }) {
     setQuantity(it.quantity);
     setManualPrice(it.sellingPrice);
     setTaxInput(it.taxAmount);
-
-    const prod = products.find((p) => p.id === it.productId);
-    if (prod) setSelectedType(prod.productTypeId);
     setErrors({});
+
+    // 1️⃣ Get product details to fetch productTypeId
+    const productRes = await fetch(
+      `http://localhost:8080/api/Product/GetProductById/${it.productId}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
+    const productJson = await safeJson(productRes);
+
+    if (productJson?.data) {
+      const typeId = productJson.data.productTypeId;
+
+      // 2️⃣ Set product type
+      setSelectedType(typeId);
+
+      // 3️⃣ Load products of that type
+      const listRes = await fetch(
+        `http://localhost:8080/api/Product/GetProdByProdId/${typeId}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+      const listJson = await safeJson(listRes);
+
+      if (Array.isArray(listJson?.data)) {
+        setProducts(listJson.data);
+      }
+
+      // 4️⃣ Load Inventory
+      const invRes = await fetch(
+        `http://localhost:8080/api/Inventory/GetInventoryByProdId/${it.productId}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+      const invJson = await safeJson(invRes);
+
+      if (invJson?.status === 200) {
+        setInventory(invJson.data);
+      }
+    }
   };
 
   const totalAmount = lineItems.reduce(
@@ -176,7 +238,11 @@ export default function SalesAdd({ onClose, onSubmit }) {
         ? (totalAmount * (discountInput || 0)) / 100
         : parseFloat(discountInput || 0);
 
-    const payload = { billingMode, totalDiscount: finalDiscount, items: lineItems };
+    const payload = {
+      billingMode,
+      totalDiscount: finalDiscount,
+      items: lineItems,
+    };
 
     try {
       const response = await fetch("http://localhost:8080/api/Sales/AddSales", {
@@ -192,7 +258,7 @@ export default function SalesAdd({ onClose, onSubmit }) {
         onSubmit();
         onClose();
       }
-    } catch (err) { }
+    } catch (err) {}
   };
 
   return (
@@ -200,7 +266,7 @@ export default function SalesAdd({ onClose, onSubmit }) {
       <div className="sales-container">
         <div className="sales-header">
           <h3>Add Sales</h3>
-          {/* Tabs inside header with close button at right */}
+
           <div className="tabs-header">
             <button
               className={activeTab === "Tax" ? "active-tab" : ""}
@@ -220,7 +286,9 @@ export default function SalesAdd({ onClose, onSubmit }) {
             >
               Billing
             </button>
-            <button className="close-btn-sales" onClick={onClose}>✖</button>
+            <button className="close-btn-sales" onClick={onClose}>
+              ✖
+            </button>
           </div>
         </div>
 
@@ -228,7 +296,6 @@ export default function SalesAdd({ onClose, onSubmit }) {
           <div className="sales-section">
             <h4>Tax Settings</h4>
             <div className="tax-settings-container">
-              {/* Common Tax Row */}
               <div className="tax-row-single">
                 <label className="tax-option">
                   <input
@@ -257,7 +324,6 @@ export default function SalesAdd({ onClose, onSubmit }) {
                 )}
               </div>
 
-              {/* Product-wise Tax Row */}
               <div className="tax-row-single">
                 <label className="tax-option">
                   <input
@@ -273,36 +339,51 @@ export default function SalesAdd({ onClose, onSubmit }) {
             </div>
           </div>
         )}
+
         {activeTab === "Product" && (
           <div className="sales-section">
             <h4>Select Product</h4>
+
             <div className="product-row">
               <div>
                 <label>Product Type</label>
                 <select value={selectedType} onChange={handleTypeChange}>
                   <option value="">-- Select Type --</option>
                   {productTypes.map((pt) => (
-                    <option key={pt.id} value={pt.id}>{pt.name}</option>
+                    <option key={pt.id} value={pt.id}>
+                      {pt.name}
+                    </option>
                   ))}
                 </select>
-                {errors.selectedType && <div className="error">{errors.selectedType}</div>}
+                {errors.selectedType && (
+                  <div className="error">{errors.selectedType}</div>
+                )}
               </div>
+
               <div>
                 <label>Product</label>
                 <select value={selectedProduct} onChange={handleProductChange}>
                   <option value="">-- Select Product --</option>
                   {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
                   ))}
                 </select>
-                {errors.selectedProduct && <div className="error">{errors.selectedProduct}</div>}
+                {errors.selectedProduct && (
+                  <div className="error">{errors.selectedProduct}</div>
+                )}
               </div>
             </div>
 
             {inventory ? (
               <div className="inv-box">
-                <div>Selling Price: <b>₹{inventory.unitSellingPrice}</b></div>
-                <div>Current Stock: <b>{inventory.currentQuantity}</b></div>
+                <div>
+                  Selling Price: <b>₹{inventory.unitSellingPrice}</b>
+                </div>
+                <div>
+                  Current Stock: <b>{inventory.currentQuantity}</b>
+                </div>
               </div>
             ) : selectedProduct ? (
               <div className="inv-box">
@@ -314,7 +395,9 @@ export default function SalesAdd({ onClose, onSubmit }) {
                   placeholder="Enter selling price"
                   min="0"
                 />
-                {errors.manualPrice && <div className="error">{errors.manualPrice}</div>}
+                {errors.manualPrice && (
+                  <div className="error">{errors.manualPrice}</div>
+                )}
               </div>
             ) : null}
 
@@ -327,7 +410,9 @@ export default function SalesAdd({ onClose, onSubmit }) {
                   onChange={(e) => setQuantity(e.target.value)}
                   min="1"
                 />
-                {errors.quantity && <div className="error">{errors.quantity}</div>}
+                {errors.quantity && (
+                  <div className="error">{errors.quantity}</div>
+                )}
               </div>
 
               {taxMode === "PRODUCT" && (
@@ -341,7 +426,9 @@ export default function SalesAdd({ onClose, onSubmit }) {
                       placeholder="Enter tax"
                       min="0"
                     />
-                    {errors.taxInput && <div className="error">{errors.taxInput}</div>}
+                    {errors.taxInput && (
+                      <div className="error">{errors.taxInput}</div>
+                    )}
                     <select value={taxType} onChange={(e) => setTaxType(e.target.value)}>
                       <option value="PERCENT">%</option>
                       <option value="FLAT">₹</option>
@@ -354,9 +441,10 @@ export default function SalesAdd({ onClose, onSubmit }) {
             <button className="add-btn" onClick={addItem}>
               {editIndex !== null ? "Update Item" : "Add Item"}
             </button>
-            {errors.lineItems && <div className="error">{errors.lineItems}</div>}
+            {errors.lineItems && (
+              <div className="error">{errors.lineItems}</div>
+            )}
 
-            {/* Added Items Table */}
             {lineItems.length > 0 && (
               <div className="sales-section">
                 <h4>Items</h4>
@@ -380,16 +468,43 @@ export default function SalesAdd({ onClose, onSubmit }) {
                         <td>{it.sellingPrice}</td>
                         <td>{(it.quantity * it.sellingPrice).toFixed(2)}</td>
                         <td>{it.taxAmount}</td>
-                        <td>{((it.quantity * it.sellingPrice) + it.taxAmount).toFixed(2)}</td>
-
-                        <td style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-                          <span onClick={() => editItem(idx)} title="Edit" style={{ cursor: "pointer" }}>
-                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000">
+                        <td>
+                          {(it.quantity * it.sellingPrice + it.taxAmount).toFixed(2)}
+                        </td>
+                        <td
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: "10px",
+                          }}
+                        >
+                          <span
+                            onClick={() => editItem(idx)}
+                            title="Edit"
+                            style={{ cursor: "pointer" }}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              height="24px"
+                              viewBox="0 -960 960 960"
+                              width="24px"
+                              fill="#000000"
+                            >
                               <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
                             </svg>
                           </span>
-                          <span onClick={() => deleteItem(idx)} title="Delete" style={{ cursor: "pointer" }}>
-                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000">
+                          <span
+                            onClick={() => deleteItem(idx)}
+                            title="Delete"
+                            style={{ cursor: "pointer" }}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              height="24px"
+                              viewBox="0 -960 960 960"
+                              width="24px"
+                              fill="#000000"
+                            >
                               <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
                             </svg>
                           </span>
@@ -399,7 +514,7 @@ export default function SalesAdd({ onClose, onSubmit }) {
                   </tbody>
                 </table>
                 <div className="total-amount">
-                  <b>Total Amount(Incl. Tax):  Rs {totalAmount.toFixed(2)}</b>
+                  <b>Total Amount(Incl. Tax): Rs {totalAmount.toFixed(2)}</b>
                 </div>
               </div>
             )}
@@ -421,16 +536,23 @@ export default function SalesAdd({ onClose, onSubmit }) {
                 <option value="PERCENT">%</option>
                 <option value="FLAT">₹</option>
               </select>
-              {errors.discountInput && <div className="error">{errors.discountInput}</div>}
+              {errors.discountInput && (
+                <div className="error">{errors.discountInput}</div>
+              )}
             </div>
 
             <label>Billing Mode</label>
-            <select value={billingMode} onChange={(e) => setBillingMode(e.target.value)}>
+            <select
+              value={billingMode}
+              onChange={(e) => setBillingMode(e.target.value)}
+            >
               <option value="">-- Select Billing Mode --</option>
               <option value="SIMPLE">SIMPLE</option>
               <option value="GST">GST</option>
             </select>
-            {errors.billingMode && <div className="error">{errors.billingMode}</div>}
+            {errors.billingMode && (
+              <div className="error">{errors.billingMode}</div>
+            )}
 
             <div className="total-amount">
               <b>Net Amount: Rs {netAmount.toFixed(2)}</b>
@@ -439,8 +561,12 @@ export default function SalesAdd({ onClose, onSubmit }) {
         )}
 
         <div className="sales-footer">
-          <button className="cancel-btn" onClick={onClose}>Cancel</button>
-          <button className="submit-btn" onClick={submitSales}>Submit Sales</button>
+          <button className="cancel-btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="submit-btn" onClick={submitSales}>
+            Submit Sales
+          </button>
         </div>
       </div>
     </div>

@@ -26,6 +26,7 @@ const columns = [
         columns={columns} 
         apiUrl="http://localhost:8080/api/Vendor/GetAllVendor" 
         Module="Vendor"
+        ModuleId ="5"
       />
     </div>
   );

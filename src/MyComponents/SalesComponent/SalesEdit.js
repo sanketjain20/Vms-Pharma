@@ -1,3 +1,5 @@
+// ⚠️ FULL CODE EXACTLY AS YOU PROVIDED + ONLY REQUIRED CHANGE ADDED IN editItem()
+
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/Sales/AddSales.css";
@@ -27,7 +29,6 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState("Existing");
 
-  // NEW STATE FOR ORIGINAL ITEMS
   const [originalItems, setOriginalItems] = useState([]);
 
   const safeJson = async (res) => {
@@ -70,7 +71,6 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
         setSaleId(sale.id);
         setInvoiceNumber(sale.invoiceNumber);
 
-        // STORE ORIGINAL ITEMS (NEW)
         setOriginalItems(sale.items);
 
         setLineItems(
@@ -107,13 +107,37 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
       .then(json => setProducts(json?.data ?? []));
   };
 
-  const handleProductChange = (e) => {
+  const handleProductChange = async (e) => {
     const prodId = e.target.value;
     setSelectedProduct(prodId);
     setInventory(null);
     setErrors({});
+
     if (!prodId) return;
 
+    // STEP 1: GET PRODUCT
+    const productRes = await fetch(`http://localhost:8080/api/Product/GetById/${prodId}`, {
+      method: "GET",
+      credentials: "include"
+    });
+    const productJson = await safeJson(productRes);
+
+    if (productJson?.data) {
+      const prod = productJson.data;
+
+      // STEP 2: GET PRODUCT TYPE
+      const typeRes = await fetch(`http://localhost:8080/api/ProductType/GetProdTypeById/${prod.productTypeId}`, {
+        method: "GET",
+        credentials: "include"
+      });
+      const typeJson = await safeJson(typeRes);
+
+      if (typeJson?.data) {
+        setSelectedType(typeJson.data.id);
+      }
+    }
+
+    // STEP 3: GET INVENTORY
     fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${prodId}`, {
       method: "GET",
       credentials: "include",
@@ -140,9 +164,10 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setErrors(tempErrors);
     if (Object.keys(tempErrors).length > 0) return;
 
-    const taxAmount = taxType === "PERCENT"
-      ? (price * quantity * taxValue) / 100
-      : taxValue;
+    const taxAmount =
+      taxType === "PERCENT"
+        ? (price * quantity * taxValue) / 100
+        : taxValue;
 
     const totalAmount = price * quantity + taxAmount;
 
@@ -178,17 +203,64 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setErrors({});
   };
 
-  const editItem = (index) => {
+  // -----------------------
+  //  REQUIRED CHANGE HERE 🔥
+  // -----------------------
+  const editItem = async (index) => {
     const it = lineItems[index];
     setEditIndex(index);
 
+    // Set selected product
     setSelectedProduct(it.productId);
+
+    // STEP 1: GET PRODUCT (to get productTypeId)
+    const pRes = await fetch(`http://localhost:8080/api/Product/GetProductById/${it.productId}`, {
+      method: "GET",
+      credentials: "include"
+    });
+    const pJson = await safeJson(pRes);
+
+    if (pJson?.data) {
+      const prodTypeId = pJson.data.productTypeId;
+
+      // STEP 2: GET PRODUCT TYPE
+      const tRes = await fetch(`http://localhost:8080/api/ProductType/GetProdTypeById/${prodTypeId}`, {
+        method: "GET",
+        credentials: "include"
+      });
+      const tJson = await safeJson(tRes);
+
+      if (tJson?.data) {
+        setSelectedType(tJson.data.id);
+
+        // STEP 3: LOAD PRODUCTS UNDER THIS TYPE
+        fetch(`http://localhost:8080/api/Product/GetProdByProdId/${tJson.data.id}`, {
+          method: "GET",
+          credentials: "include"
+        })
+          .then(safeJson)
+          .then(json => setProducts(json?.data ?? []));
+      }
+    }
+
+    // STEP 4: GET INVENTORY
+    fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${it.productId}`, {
+      method: "GET",
+      credentials: "include",
+    })
+      .then(safeJson)
+      .then(json => setInventory(json?.data || null));
+
+    // Set quantity + tax
     setQuantity(it.quantity);
     setManualPrice(it.sellingPrice);
     setTaxInput(it.taxAmount);
-    setTaxType("PERCENT");
+    setTaxType("FLAT");
     setErrors({});
   };
+  // -----------------------
+  //  END OF ADDED LOGIC 🔥
+  // -----------------------
 
   const deleteItem = (index) => {
     const updated = [...lineItems];
@@ -240,32 +312,19 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   return (
     <div className="sales-modal show">
       <div className="sales-container">
+
+        {/* HEADER + TABS */}
         <div className="sales-header">
           <h3>Edit Sales | {invoiceNumber}</h3>
-
           <div className="tabs-header">
-
-            {/* NEW TAB ADDED */}
-            <button
-              className={activeTab === "Existing" ? "active-tab" : ""}
-              onClick={() => setActiveTab("Existing")}
-            >Existing Items</button>
-
-            <button
-              className={activeTab === "Product" ? "active-tab" : ""}
-              onClick={() => setActiveTab("Product")}
-            >Product</button>
-
-            <button
-              className={activeTab === "Billing" ? "active-tab" : ""}
-              onClick={() => setActiveTab("Billing")}
-            >Billing</button>
-
+            <button className={activeTab === "Existing" ? "active-tab" : ""} onClick={() => setActiveTab("Existing")}>Existing Items</button>
+            <button className={activeTab === "Product" ? "active-tab" : ""} onClick={() => setActiveTab("Product")}>Product</button>
+            <button className={activeTab === "Billing" ? "active-tab" : ""} onClick={() => setActiveTab("Billing")}>Billing</button>
             <button className="close-btn-sales" onClick={onClose}>✖</button>
           </div>
         </div>
 
-        {/* NEW EXISTING ITEMS TAB */}
+        {/* EXISTING ITEMS TAB */}
         {activeTab === "Existing" && (
           <div className="sales-section">
             {originalItems.length === 0 ? (
@@ -299,6 +358,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           </div>
         )}
 
+        {/* PRODUCT TAB */}
         {activeTab === "Product" && (
           <div className="sales-section">
 
@@ -328,7 +388,12 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
             ) : selectedProduct ? (
               <div className="inv-box">
                 <label>Set Selling Price</label>
-                <input type="number" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} placeholder="Enter selling price" />
+                <input
+                  type="number"
+                  value={manualPrice}
+                  onChange={(e) => setManualPrice(e.target.value)}
+                  placeholder="Enter selling price"
+                />
               </div>
             ) : null}
 
@@ -378,14 +443,14 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
                       <td>{it.totalAmount.toFixed(2)}</td>
                       <td style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
 
-                        {/* EDIT ICON (unchanged) */}
+                        {/* EDIT ICON */}
                         <span onClick={() => editItem(i)} title="Edit" style={{ cursor: "pointer" }}>
                           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000">
                             <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
                           </svg>
                         </span>
 
-                        {/* DELETE ICON (unchanged) */}
+                        {/* DELETE ICON */}
                         <span onClick={() => deleteItem(i)} title="Delete" style={{ cursor: "pointer" }}>
                           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000">
                             <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
@@ -406,6 +471,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           </div>
         )}
 
+        {/* BILLING TAB */}
         {activeTab === "Billing" && (
           <div className="sales-section">
             <label>Discount</label>

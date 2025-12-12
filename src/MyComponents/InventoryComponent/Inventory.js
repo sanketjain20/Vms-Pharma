@@ -32,6 +32,7 @@ const columns = [
         columns={columns} 
         apiUrl="http://localhost:8080/api/Inventory/GetAllInventory"
         Module="Inventory"
+        ModuleId ="4"
       />
 
         <ToastContainer position="top-center" autoClose={2000} />

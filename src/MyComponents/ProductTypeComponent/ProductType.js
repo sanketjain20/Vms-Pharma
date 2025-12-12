@@ -23,6 +23,7 @@ PRODUCT TYPES</h2>
         columns={columns} 
         apiUrl="http://localhost:8080/api/ProductType/GetAllProductTypePaged" 
         Module="Product Type"
+        ModuleId ="2"
       />
 
       <ToastContainer position="top-center" autoClose={2000} />

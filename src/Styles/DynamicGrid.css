@@ -96,7 +96,8 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  width: 7%;
+  width: auto;
+  min-width: 7%;
   text-align: center;
 }
 
@@ -238,4 +239,12 @@
   font-weight: 500;          /* Medium weight */
   background-color: #f9f9f9; /* Light background to distinguish */
   border-top: 1px solid #e0e0e0; /* Optional top border like a row */
+}
+
+.tab {
+  display: inline-block;
+  width: auto;
+  padding: 6px 14px;
+  white-space: nowrap;  
+  /* prevents text from breaking */
 }

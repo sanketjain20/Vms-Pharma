@@ -26,6 +26,7 @@ SALES</h2>
         columns={columns} 
         apiUrl="http://localhost:8080/api/Sales/GetAllSales" 
         Module="Sales"
+        ModuleId ="5"
       />
     </div>
   );
