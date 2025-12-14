@@ -1,0 +1,163 @@
+:root {
+  --modal-bg: #acd0f1;
+}
+
+/* BACKDROP */
+.add-v-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* MODAL CONTAINER */
+.add-v-container {
+  width: 850px;
+  max-width: 95%;
+  max-height: 700px;
+  background: var(--modal-bg);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* HEADER */
+.add-v-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #3d96e9;
+  padding: 10px;
+  border-radius: 5px;
+  height:75px;
+}
+
+.add-v-title {
+  font-size: 25px;
+  color: black;
+}
+
+.add-v-header .add-v-close-btn {
+  margin-left: 12px;
+  background: white;
+  color: black;
+  border-radius: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-weight: 600;
+  transition: all 0.2s;
+  width:40px;
+  padding: 7px;
+}
+
+.add-v-close-btn:hover {
+  color: red;
+  background:rgb(167, 198, 243); /* subtle background on hover */
+}
+
+
+/* FORM */
+.add-v-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* FORM ROW (2 fields per row) */
+.add-v-form-row {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+/* FORM GROUP */
+.add-v-form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 40%;
+}
+
+.add-v-form-group.full-width {
+  flex: 1 1 100%;
+}
+
+.add-v-form-group.prefix {
+  width: 30%;
+}
+
+/* LABELS */
+.add-v-form-group label {
+  font-weight: 600;
+  font-size: 14px;
+  color: black;
+}
+
+/* INPUT / TEXTAREA / SELECT */
+.add-v-form-group input,
+.add-v-form-group textarea,
+.add-v-form-group select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+  width: 100%;
+  background-color: #f4f7fa;
+  color: #272626;
+}
+
+.add-v-form-group textarea {
+  resize: none;
+}
+
+.add-v-form-group input:focus,
+.add-v-form-group textarea:focus,
+.add-v-form-group select:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 6px rgba(74, 144, 226, 0.3);
+}
+
+/* ERROR TEXT */
+.add-v-error-text {
+  color: red;
+  font-size: 12px;
+}
+
+/* FOOTER BUTTONS */
+.add-v-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.add-v-btn-save {
+  padding: 8px 12px;
+  background: #3d96e9;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+.add-v-btn-cancel {
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  cursor: pointer;
+}

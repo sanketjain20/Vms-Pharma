@@ -109,8 +109,8 @@ export default function ProductForm({ onSubmit, onClose }) {
 
       if (response.ok && result.status === 200) {
         toast.success("Product added successfully");
-        onSubmit();
-        onClose();
+                onSubmit && onSubmit();
+                onClose && onClose();
       } else {
         toast.error(result.message || "Product creation failed");
       }

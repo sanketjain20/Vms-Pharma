@@ -1,0 +1,205 @@
+/* ============================
+   BACKDROP
+============================ */
+.view-v-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* ============================
+   CONTAINER
+============================ */
+.view-v-container {
+    background: #c5d2e0;
+    width: 780px;
+    max-width: 95%;
+    max-height: 500px;
+    border-radius: 10px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: view-v-fadeIn 0.25s ease-in-out;
+}
+
+/* ============================
+   HEADER
+============================ */
+.view-v-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: #1f2937;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.view-v-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.view-v-close-btn {
+    margin-left: 12px;
+  background: white;
+  color: black;
+  border-radius: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-weight: 600;
+  transition: all 0.2s;
+  width:40px;
+  padding: 7px;
+
+}
+
+.view-v-close-btn:hover {
+    color: #f87171;
+}
+
+/* ============================
+   FORM (SCROLLABLE)
+============================ */
+.view-v-form {
+    padding: 18px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Scrollbar styling */
+.view-v-form::-webkit-scrollbar {
+    width: 6px;
+}
+
+.view-v-form::-webkit-scrollbar-thumb {
+    background-color: #9ca3af;
+    border-radius: 6px;
+}
+
+.view-v-form::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* ============================
+   FORM ROWS
+============================ */
+.view-v-form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.view-v-form-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.view-v-form-group.full-width {
+    flex: 100%;
+}
+
+/* ============================
+   LABELS
+============================ */
+.view-v-form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #000000;
+}
+
+/* ============================
+   INPUTS (READ ONLY)
+============================ */
+.view-v-form-group input,
+.view-v-form-group textarea {
+    padding: 9px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    background-color: #f9fafb;
+    color: #111827;
+    cursor: not-allowed;
+}
+
+.view-v-form-group textarea {
+    resize: none;
+}
+
+/* ============================
+   STATUS COLORS
+============================ */
+.view-v-status-active {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.view-v-status-disabled {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* ============================
+   FOOTER
+============================ */
+.view-v-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 0 0;
+    flex-shrink: 0;
+}
+
+.view-v-btn-close {
+    padding: 8px 18px;
+    background-color: #374151;
+    border: none;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.view-v-btn-close:hover {
+    background-color: #1f2937;
+}
+
+/* ============================
+   LOADING / EMPTY
+============================ */
+.view-v-loading {
+    padding: 20px;
+    text-align: center;
+    font-size: 15px;
+    color: #374151;
+}
+
+/* ============================
+   ANIMATION
+============================ */
+@keyframes view-v-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================
+   RESPONSIVE
+============================ */
+@media (max-width: 640px) {
+    .view-v-form-row {
+        flex-direction: column;
+    }
+}
