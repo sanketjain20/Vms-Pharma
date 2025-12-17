@@ -1,0 +1,100 @@
+/* Dark background */
+.dashboard-container {
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+  min-height: 100vh;
+  color: #e0e0e0;
+}
+
+/* Header */
+.header-section h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+  color: #ffffff;
+}
+
+.header-section p {
+  font-size: 1rem;
+  color: #aaaaaa;
+  margin-bottom: 1rem;
+}
+
+.search-input-report {
+  padding: 0.6rem 1rem;
+  width: 300px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e0e0e0;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+.search-input-report::placeholder {
+  color: #888;
+}
+
+.search-input-report:focus {
+  outline: none;
+  box-shadow: 0 0 20px rgba(0,123,255,0.6);
+}
+
+/* Reports grid: 2 per row */
+.reports-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+/* Glassmorphism card */
+.report-glass-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 1.5rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height:50px;
+}
+
+.report-glass-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 30px rgba(0, 123, 255, 0.3);
+}
+
+.report-info h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.report-info p {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  color: #cccccc;
+}
+
+/* Button */
+.generate-btn {
+  padding: 0.5rem 1.2rem;
+  border-radius: 50px;
+  border: none;
+  background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.generate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(37, 117, 252, 0.5);
+}

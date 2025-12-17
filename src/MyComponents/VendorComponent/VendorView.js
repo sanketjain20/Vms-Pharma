@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "../../Styles/Vendor/VendorView.css";
 import { toast } from "react-toastify";
 
-export default function VendorView({ uKey, onClose}) {
+export default function VendorView({ uKey, onClose }) {
     const [vendor, setVendor] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -40,7 +40,9 @@ export default function VendorView({ uKey, onClose}) {
 
                 {/* Header */}
                 <div className="view-v-header">
-                    <h2 className="view-v-title">View Vendor | {vendor.vendorCode}</h2>
+                    <h2 className="view-v-title">
+                        View Vendor | {vendor.vendorCode}
+                    </h2>
                     <button className="view-v-close-btn" onClick={onClose}>
                         ✖
                     </button>
@@ -51,54 +53,63 @@ export default function VendorView({ uKey, onClose}) {
                     <div className="view-v-form-row">
                         <div className="view-v-form-group">
                             <label>Name</label>
-                            <input type="text" value={vendor.name} readOnly />
+                            <input type="text" value={vendor.name || ""} readOnly />
                         </div>
 
                         <div className="view-v-form-group">
                             <label>Email</label>
-                            <input type="text" value={vendor.email} readOnly />
+                            <input type="text" value={vendor.email || ""} readOnly />
                         </div>
                     </div>
 
                     <div className="view-v-form-row">
                         <div className="view-v-form-group">
                             <label>Phone</label>
-                            <input type="text" value={vendor.phone} readOnly />
+                            <input type="text" value={vendor.phone || ""} readOnly />
                         </div>
 
                         <div className="view-v-form-group">
                             <label>Role</label>
-                            <input type="text" value={vendor.roleName} readOnly />
+                            <input type="text" value={vendor.roleName || ""} readOnly />
                         </div>
                     </div>
 
                     <div className="view-v-form-row">
                         <div className="view-v-form-group">
                             <label>Shop Name</label>
-                            <input type="text" value={vendor.shopName} readOnly />
+                            <input type="text" value={vendor.shopName || ""} readOnly />
                         </div>
 
                         <div className="view-v-form-group">
                             <label>Vendor Code</label>
-                            <input type="text" value={vendor.vendorCode} readOnly />
+                            <input type="text" value={vendor.vendorCode || ""} readOnly />
+                        </div>
+                    </div>
+
+                    <div className="view-v-form-row">
+                        <div className="view-v-form-group">
+                            <label>Account Validity Till</label>
+                            <input
+                                type="text"
+                                value={vendor.expiryDate || "N/A"}
+                                readOnly
+                            />
+                        </div>
+
+                        <div className="view-v-form-group">
+                            <label>Status</label>
+                            <input
+                                type="text"
+                                value={vendor.disable === 1 ? "InActive  " : "Active"}
+                                readOnly
+                            />
                         </div>
                     </div>
 
                     <div className="view-v-form-row">
                         <div className="view-v-form-group full-width">
                             <label>Address</label>
-                            <textarea rows="2" value={vendor.address} readOnly />
-                        </div>
-                    </div>
-
-                    <div className="view-v-form-row">
-                        <div className="view-v-form-group">
-                            <label>Status</label>
-                            <input
-                                type="text"
-                                value={vendor.disable === 1 ? "Disabled" : "Active"}
-                                readOnly
-                            />
+                            <textarea rows="2" value={vendor.address || ""} readOnly />
                         </div>
                     </div>
 

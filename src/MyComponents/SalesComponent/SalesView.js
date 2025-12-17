@@ -34,6 +34,48 @@ export default function SalesView({ uKey, onClose }) {
       });
   }, [uKey]);
 
+  /* =======================
+     ✔ ADDED: PRINT HANDLER
+     (does NOT download)
+     ======================= */
+  const handlePrint = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/Invoice/GenerateInvoice/${sales.id}/1`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.status !== 200 || !result.data) {
+        throw new Error(result.message || "Failed to generate invoice");
+      }
+
+      // Base64 → HTML
+      const decodedHTML = atob(result.data);
+
+      // Open new window for print preview
+      const printWindow = window.open("", "_blank");
+
+      printWindow.document.open();
+      printWindow.document.write(decodedHTML);
+      printWindow.document.close();
+
+      printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+      };
+
+    } catch (err) {
+      console.error("Print error:", err);
+      alert("Failed to open print preview");
+    }
+  };
+
   if (!uKey) return null;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
   if (!sales) return <p>Loading...</p>;
@@ -128,7 +170,16 @@ export default function SalesView({ uKey, onClose }) {
           </div>
         </div>
 
-        <div className="modal-footer-fixed"></div>
+        {/* FOOTER */}
+        <div className="modal-footer-fixed sales-view-footer">
+          <button
+            className="sales-view-btn-print"
+            onClick={handlePrint}
+          >
+            🖨 Print
+          </button>
+        </div>
+
       </div>
     </div>
   );

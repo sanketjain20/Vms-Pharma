@@ -4,11 +4,12 @@
 .i-container {
   padding: 20px;
   color: #fff;
-  background: #000000fb;
+  background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
   min-height: 100vh;
   margin-top: 0px;
  font-family: 'Poppins', sans-serif;
  padding-top: 5px;
+ border-radius: 5px;
 }
 
 .i-title {

@@ -11,6 +11,7 @@ export default function VendorAdd({ onClose, onSubmit }) {
     const [roleId, setRoleId] = useState("");
     const [address, setAddress] = useState("");
     const [vendorPrefix, setVendorPrefix] = useState("");
+    const [expiryDate, setExpiryDate] = useState(""); // ✅ NEW
     const [roles, setRoles] = useState([]);
     const [errors, setErrors] = useState({});
 
@@ -29,6 +30,7 @@ export default function VendorAdd({ onClose, onSubmit }) {
 
     const validate = () => {
         let temp = {};
+
         if (!name.trim()) temp.name = "Name is required";
         if (!email.trim()) temp.email = "Email is required";
         if (!password.trim()) temp.password = "Password is required";
@@ -37,6 +39,7 @@ export default function VendorAdd({ onClose, onSubmit }) {
         if (!roleId) temp.roleId = "Please select a role";
         if (!address.trim()) temp.address = "Address is required";
         if (!vendorPrefix.trim()) temp.vendorPrefix = "Vendor prefix is required";
+        if (!expiryDate) temp.expiryDate = "Expiry date is required"; // ✅ NEW
 
         setErrors(temp);
         return Object.keys(temp).length === 0;
@@ -55,6 +58,7 @@ export default function VendorAdd({ onClose, onSubmit }) {
             roleId: Number(roleId),
             address,
             vendorPrefix,
+            expiryDate, // ✅ LocalDate compatible (yyyy-MM-dd)
         };
 
         try {
@@ -83,7 +87,8 @@ export default function VendorAdd({ onClose, onSubmit }) {
     return (
         <div className="add-v-backdrop">
             <div className="add-v-container">
-                {/* Header with Close Button */}
+
+                {/* Header */}
                 <div className="add-v-header">
                     <h2 className="add-v-title">Add Vendor</h2>
                     <button className="add-v-close-btn" onClick={onClose}>
@@ -92,6 +97,7 @@ export default function VendorAdd({ onClose, onSubmit }) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="add-v-form">
+
                     <div className="add-v-form-row">
                         <div className="add-v-form-group">
                             <label>Name</label>
@@ -101,10 +107,9 @@ export default function VendorAdd({ onClose, onSubmit }) {
                                 onChange={(e) => setName(e.target.value)}
                                 className={errors.name ? "add-v-input-error" : ""}
                             />
-                            {errors.name && (
-                                <div className="add-v-error-text">{errors.name}</div>
-                            )}
+                            {errors.name && <div className="add-v-error-text">{errors.name}</div>}
                         </div>
+
                         <div className="add-v-form-group">
                             <label>Email</label>
                             <input
@@ -116,12 +121,8 @@ export default function VendorAdd({ onClose, onSubmit }) {
                                 pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                                 required
                             />
-                            {errors.email && (
-                                <div className="add-v-error-text">{errors.email}</div>
-                            )}
+                            {errors.email && <div className="add-v-error-text">{errors.email}</div>}
                         </div>
-
-
                     </div>
 
                     <div className="add-v-form-row">
@@ -133,31 +134,25 @@ export default function VendorAdd({ onClose, onSubmit }) {
                                 onChange={(e) => setPassword(e.target.value)}
                                 className={errors.password ? "add-v-input-error" : ""}
                             />
-                            {errors.password && (
-                                <div className="add-v-error-text">{errors.password}</div>
-                            )}
+                            {errors.password && <div className="add-v-error-text">{errors.password}</div>}
                         </div>
+
                         <div className="add-v-form-group">
                             <label>Phone</label>
                             <input
                                 type="tel"
                                 value={phone}
                                 onChange={(e) => {
-                                    // Only allow numbers
                                     const value = e.target.value.replace(/\D/g, "");
-                                    // Limit to max 10 digits
                                     if (value.length <= 10) setPhone(value);
                                 }}
                                 className={errors.phone ? "add-v-input-error" : ""}
                                 placeholder="Enter 8-10 digit number"
-                                pattern="\d{8,10}" // validation pattern
+                                pattern="\d{8,10}"
                                 required
                             />
-                            {errors.phone && (
-                                <div className="add-v-error-text">{errors.phone}</div>
-                            )}
+                            {errors.phone && <div className="add-v-error-text">{errors.phone}</div>}
                         </div>
-
                     </div>
 
                     <div className="add-v-form-row">
@@ -169,10 +164,9 @@ export default function VendorAdd({ onClose, onSubmit }) {
                                 onChange={(e) => setShopName(e.target.value)}
                                 className={errors.shopName ? "add-v-input-error" : ""}
                             />
-                            {errors.shopName && (
-                                <div className="add-v-error-text">{errors.shopName}</div>
-                            )}
+                            {errors.shopName && <div className="add-v-error-text">{errors.shopName}</div>}
                         </div>
+
                         <div className="add-v-form-group">
                             <label>Select Role</label>
                             <select
@@ -187,9 +181,7 @@ export default function VendorAdd({ onClose, onSubmit }) {
                                     </option>
                                 ))}
                             </select>
-                            {errors.roleId && (
-                                <div className="add-v-error-text">{errors.roleId}</div>
-                            )}
+                            {errors.roleId && <div className="add-v-error-text">{errors.roleId}</div>}
                         </div>
                     </div>
 
@@ -201,15 +193,13 @@ export default function VendorAdd({ onClose, onSubmit }) {
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
                                 className={errors.address ? "add-v-input-error" : ""}
-                            ></textarea>
-                            {errors.address && (
-                                <div className="add-v-error-text">{errors.address}</div>
-                            )}
+                            />
+                            {errors.address && <div className="add-v-error-text">{errors.address}</div>}
                         </div>
                     </div>
 
                     <div className="add-v-form-row">
-                        <div className="add-v-form-group prefix">
+                        <div className="add-v-form-group">
                             <label>Vendor Prefix</label>
                             <input
                                 type="text"
@@ -217,24 +207,30 @@ export default function VendorAdd({ onClose, onSubmit }) {
                                 onChange={(e) => setVendorPrefix(e.target.value)}
                                 className={errors.vendorPrefix ? "add-v-input-error" : ""}
                             />
-                            {errors.vendorPrefix && (
-                                <div className="add-v-error-text">{errors.vendorPrefix}</div>
-                            )}
+                            {errors.vendorPrefix && <div className="add-v-error-text">{errors.vendorPrefix}</div>}
+                        </div>
+
+                        <div className="add-v-form-group">
+                            <label>Account Validity Till</label>
+                            <input
+                                type="date"
+                                value={expiryDate}
+                                onChange={(e) => setExpiryDate(e.target.value)}
+                                className={errors.expiryDate ? "add-v-input-error" : ""}
+                            />
+                            {errors.expiryDate && <div className="add-v-error-text">{errors.expiryDate}</div>}
                         </div>
                     </div>
 
                     <div className="add-v-footer">
-                        <button
-                            type="button"
-                            className="add-v-btn-cancel"
-                            onClick={onClose}
-                        >
+                        <button type="button" className="add-v-btn-cancel" onClick={onClose}>
                             Cancel
                         </button>
                         <button type="submit" className="add-v-btn-save">
                             Save Vendor
                         </button>
                     </div>
+
                 </form>
             </div>
         </div>

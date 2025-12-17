@@ -48,7 +48,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
           setAccessList(response.data);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [Module]);
 
   const refreshGrid = React.useCallback(() => {
@@ -64,8 +64,8 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
           const list = Array.isArray(dataObj)
             ? dataObj
             : typeof dataObj === "object" && dataObj !== null
-            ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
-            : [];
+              ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
+              : [];
           setData(list);
           setTotalPages(
             typeof dataObj === "object" && dataObj?.totalPages
@@ -118,9 +118,9 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
     .filter((row) =>
       searchText
         ? Object.values(row)
-            .join(" ")
-            .toLowerCase()
-            .includes(searchText.toLowerCase())
+          .join(" ")
+          .toLowerCase()
+          .includes(searchText.toLowerCase())
         : true
     );
 
@@ -182,27 +182,24 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
       {Module === "Sales" ? (
         <div className="status-filters">
           <span
-            className={`status-chip ${
-              selectedStatus === "all" ? "active" : ""
-            }`}
+            className={`status-chip ${selectedStatus === "all" ? "active" : ""
+              }`}
             onClick={() => setSelectedStatus("all")}
           >
             All
           </span>
 
           <span
-            className={`status-chip ${
-              selectedStatus === "payment_done" ? "active" : ""
-            }`}
+            className={`status-chip ${selectedStatus === "payment_done" ? "active" : ""
+              }`}
             onClick={() => setSelectedStatus("payment_done")}
           >
             Payment Done
           </span>
 
           <span
-            className={`status-chip ${
-              selectedStatus === "payment_pending" ? "active" : ""
-            }`}
+            className={`status-chip ${selectedStatus === "payment_pending" ? "active" : ""
+              }`}
             onClick={() => setSelectedStatus("payment_pending")}
           >
             Payment Pending
@@ -217,17 +214,15 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
             All
           </span>
           <span
-            className={`status-chip ${
-              selectedStatus === "active" ? "active" : ""
-            }`}
+            className={`status-chip ${selectedStatus === "active" ? "active" : ""
+              }`}
             onClick={() => setSelectedStatus("active")}
           >
             Active
           </span>
           <span
-            className={`status-chip ${
-              selectedStatus === "inactive" ? "active" : ""
-            }`}
+            className={`status-chip ${selectedStatus === "inactive" ? "active" : ""
+              }`}
             onClick={() => setSelectedStatus("inactive")}
           >
             Inactive
@@ -392,24 +387,24 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
 
                       const value = row[col.field];
 
+                      let displayValue = "";
+
+                      if (value !== undefined && value !== null) {
+                        if (typeof value === "number") {
+                          // ✅ FORCE 2 DECIMAL PLACES
+                          displayValue = value.toFixed(2);
+                        } else {
+                          displayValue =
+                            typeof value === "object" ? JSON.stringify(value) : String(value);
+                        }
+                      }
+
                       return (
-                        <td
-                          key={colIndex}
-                          title={
-                            value !== undefined && value !== null
-                              ? typeof value === "object"
-                                ? JSON.stringify(value)
-                                : String(value)
-                              : ""
-                          }
-                        >
-                          {value !== undefined && value !== null
-                            ? typeof value === "object"
-                              ? JSON.stringify(value)
-                              : String(value)
-                            : ""}
+                        <td key={colIndex} title={displayValue}>
+                          {displayValue}
                         </td>
                       );
+
                     })}
                   </tr>
                 ))

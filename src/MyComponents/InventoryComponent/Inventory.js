@@ -12,7 +12,7 @@ const columns = [
   { header: "Reorder Level", field: "reorderLevel", width: "140px" },
   { header: "Unit Cost Price (₹)", field: "unitCostPrice", width: "180px" },
   { header: "Unit Selling Price (₹)", field: "unitSellingPrice", width: "190px" },
-  { header: "Total Stock Value", field: "totalStockValue", width: "180px" },
+  { header: "Total Stock Value (₹)", field: "totalStockValue", width: "180px" },
   { header: "Actions", field: "Action", width: "120px" }
   // { header: "Last Stock In", field: "lastStockInDate", width: "150px" },
   // { header: "Last Stock Out", field: "lastStockOutDate", width: "150px" },

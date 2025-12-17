@@ -17,7 +17,7 @@ import LayoutModule from "./MyComponents/CommonComponent/LayoutModule";
 import Product from "./MyComponents/ProductComponent/Product";
 import ProductType from "./MyComponents/ProductTypeComponent/ProductType";
 import Vendor from "./MyComponents/VendorComponent/Vendor";
-import Reports from "./MyComponents/ReportComponent/Reports";
+import Report from "./MyComponents/ReportComponent/Reports";
 import Inventory from "./MyComponents/InventoryComponent/Inventory";
 import Sales from "./MyComponents/SalesComponent/Sales";
 import Role from "./MyComponents/RoleComponent/Role";
@@ -86,7 +86,7 @@ function App() {
           path="reports"
           element={
             <ModuleGuard moduleName="REPORTS">
-              <Reports />
+              <Report />
             </ModuleGuard>
           }
         />
