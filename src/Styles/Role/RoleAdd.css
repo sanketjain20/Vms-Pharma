@@ -209,10 +209,18 @@
 
 .role-permission-action {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  width: calc(25% - 6px); /* max 4 per row */
+  align-items: flex-start;
+  gap: 8px;
+
+  padding: 6px 8px;
 }
+.role-permission-action span {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+
 
 /* Footer buttons aligned to right with space */
 .role-modal-footer-fixed {

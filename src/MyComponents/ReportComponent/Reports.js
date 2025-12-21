@@ -1,27 +1,98 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../../Styles/Report/Report.css";
 
-const REPORTS = [
-  { id: "product-sales", title: "Product Sales Report", description: "View sales based on products, quantity, and revenue" },
-  { id: "vendor-sales", title: "Vendor Sales Report", description: "Analyze sales performance vendor-wise" },
-  { id: "overall-sales", title: "Overall Sales Report", description: "Complete overview of total sales and revenue" },
-  { id: "payment-report", title: "Payment Report", description: "Track paid, unpaid, and pending payments" },
-  { id: "date-wise", title: "Date-wise Report", description: "Filter reports by specific date range" },
-  { id: "custom", title: "Custom Report", description: "Create custom report with your own filters" },
-];
-
 export default function ReportsDashboard() {
-  const [search, setSearch] = useState("");
+  const moduleId = 7;
 
-  const filteredReports = REPORTS.filter((r) =>
-    r.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const apiUrl = "http://localhost:8080/api/Reports/GetAllReports";
+  const accessApi = `http://localhost:8080/api/Access/GetUserModuleAccess/${moduleId}`;
+
+  const [search, setSearch] = useState("");
+  const [reports, setReports] = useState([]);
+  const [allowedReportKeys, setAllowedReportKeys] = useState([]);
+
+  const navigate = useNavigate(); // ✅ ADDED
+
+  // 1️⃣ Fetch report access
+  useEffect(() => {
+    fetch(accessApi, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => res.json())
+      .then((response) => {
+        if (response.status === 200 && Array.isArray(response.data)) {
+          const splitPermissions = response.data
+            .flatMap((p) => p.split("/"))
+            .map((s) => s.toLowerCase());
+
+          setAllowedReportKeys(splitPermissions);
+        }
+      })
+      .catch((err) =>
+        console.error("Error fetching report access:", err)
+      );
+  }, [accessApi]);
+
+  // 2️⃣ Fetch all reports
+  useEffect(() => {
+    fetch(apiUrl, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
+      .then((response) => {
+        if (response.status === 200 && response.data) {
+          const dataObj = response.data;
+
+          const list =
+            Array.isArray(dataObj)
+              ? dataObj
+              : typeof dataObj === "object"
+              ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
+              : [];
+
+          const activeReports = list.filter((r) => !r.disabled);
+          setReports(activeReports);
+        }
+      })
+      .catch((error) =>
+        console.error("Error fetching reports:", error)
+      );
+  }, [apiUrl]);
+
+  // 3️⃣ Apply access + search filter
+  const filteredReports = reports.filter((r) => {
+    const reportName = r.name.toLowerCase();
+
+    const hasAccess =
+      allowedReportKeys.length === 0 ||
+      allowedReportKeys.some((key) => reportName.includes(key));
+
+    const matchesSearch = reportName.includes(search.toLowerCase());
+
+    return hasAccess && matchesSearch;
+  });
+
+  // ✅ ADDED: generate handler
+  const handleGenerate = (reportName) => {
+    navigate("/master/reports/generate", {
+      state: { reportName },
+    });
+  };
 
   return (
     <div className="dashboard-container">
       <div className="header-section">
-        <h1>Reports Dashboard</h1>
+        <h1>Reports</h1>
         <p>Explore and generate insights from various reports</p>
+
         <input
           type="text"
           placeholder="Search report..."
@@ -32,15 +103,24 @@ export default function ReportsDashboard() {
       </div>
 
       <div className="reports-list">
-        {filteredReports.map((report) => (
-          <div key={report.id} className="report-glass-card">
-            <div className="report-info">
-              <h2>{report.title}</h2>
-              <p>{report.description}</p>
+        {filteredReports.length === 0 ? (
+          <div className="state-text">No reports found</div>
+        ) : (
+          filteredReports.map((report) => (
+            <div key={report.reportCode} className="report-glass-card">
+              <div className="report-info">
+                <h2>{report.name}</h2>
+                <p>{report.description}</p>
+              </div>
+              <button
+                className="generate-btn"
+                onClick={() => handleGenerate(report.name)} // ✅ ONLY CHANGE
+              >
+                Open Report
+              </button>
             </div>
-            <button className="generate-btn">Generate</button>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

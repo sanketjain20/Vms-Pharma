@@ -291,7 +291,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
                                     height="24px"
                                     viewBox="0 -960 960 960"
                                     width="24px"
-                                    fill="#504f4fff"
+                                    fill="#141414ff"
                                   >
                                     <path d="M274-360q31 0 55.5-18t34.5-47l15-46q16-48-8-88.5T302-600H161l19 157q5 35 31.5 59t62.5 24Zm412 0q36 0 62.5-24t31.5-59l19-157H659q-45 0-69 41t-8 89l14 45q10 29 34.5 47t55.5 18Zm-412 80q-66 0-115.5-43.5T101-433L80-600H40v-80h262q44 0 80.5 21.5T440-600h81q21-37 57.5-58.5T659-680h261v80h-40l-21 167q-8 66-57.5 109.5T686-280q-57 0-102.5-32.5T520-399l-15-45q-2-7-4-14.5t-4-21.5h-34q-2 12-4 19.5t-4 14.5l-15 46q-18 54-63.5 87T274-280Z" />
                                   </svg>
@@ -324,7 +324,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
                                       height="24px"
                                       viewBox="0 -960 960 960"
                                       width="24px"
-                                      fill="#504f4fff"
+                                      fill="#141414ff"
                                     >
                                       <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
                                     </svg>
@@ -342,7 +342,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
                                     height="24px"
                                     viewBox="0 -960 960 960"
                                     width="24px"
-                                    fill="#504f4fff"
+                                    fill="#141414ff"
                                   >
                                     <path d="M274-360q31 0 55.5-18t34.5-47l15-46q16-48-8-88.5T302-600H161l19 157q5 35 31.5 59t62.5 24Zm412 0q36 0 62.5-24t31.5-59l19-157H659q-45 0-69 41t-8 89l14 45q10 29 34.5 47t55.5 18Zm-412 80q-66 0-115.5-43.5T101-433L80-600H40v-80h262q44 0 80.5 21.5T440-600h81q21-37 57.5-58.5T659-680h261v80h-40l-21 167q-8 66-57.5 109.5T686-280q-57 0-102.5-32.5T520-399l-15-45q-2-7-4-14.5t-4-21.5h-34q-2 12-4 19.5t-4 14.5l-15 46q-18 54-63.5 87T274-280Z" />
                                   </svg>
@@ -356,7 +356,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
                                     style={{ cursor: "pointer" }}
                                     dangerouslySetInnerHTML={{
                                       __html:
-                                        '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#504f4fff"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>',
+                                        '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fc6500ff"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>',
                                     }}
                                   />
                                 )}

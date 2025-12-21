@@ -62,19 +62,20 @@
 .hero-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: 15px;
   padding: 10px;
 }
 
 .hero-img {
-  width: 90px;
+  height:110px;
+  width: 110px;
   border-radius: 3px;
   box-shadow:  10px 10px 10px rgba(112, 112, 112, 0.6);
   transition: transform 0.35s;
 }
 
 .hero-img:hover {
-  transform: scale(1.03);
+  transform: scale(1.13);
 }
 
 

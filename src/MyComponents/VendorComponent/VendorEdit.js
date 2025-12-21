@@ -50,7 +50,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                     setShopName(v.shopName || "");
                     setPhone(v.phone || "");
                     setAddress(v.address || "");
-                    setVendorPrefix(v.vendorCode || "");
+                    setVendorPrefix(v.vendorPrefix || "");
                     setExpiryDate(v.expiryDate || "");
 
                     // Map roleName to roleId from roles list
@@ -238,6 +238,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                         </div>
                     </div>
 
+                    
                     <div className="add-v-footer">
                         <button type="button" className="add-v-btn-cancel" onClick={onClose}>
                             Cancel

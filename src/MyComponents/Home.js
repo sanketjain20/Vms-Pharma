@@ -1,6 +1,6 @@
 import React from "react";
 import "../Styles/Home.css";
-import dashBoardImage from "../Images/28439.jpg"
+import dashBoardImage from "../Images/28439.jpg";
 import img1 from "../Images/3741.jpg";
 import img2 from "../Images/4698.jpg";
 import img3 from "../Images/4862.jpg";
@@ -10,40 +10,66 @@ import img6 from "../Images/60261.jpg";
 import img7 from "../Images/2282382.jpg";
 import img8 from "../Images/O4WHN50.jpg";
 import img9 from "../Images/OQECWY0.jpg";
-
+import img10 from "../Images/8-bits-characters-gaming-assets.jpg";
+import img11 from "../Images/enhanced-large-preview.jpg";
+import img12 from "../Images/render.jpeg";
+import img13 from "../Images/vmsimg.jpg";
+import img14 from "../Images/variety-people-multitasking-3d-cartoon-scene.jpg";
+import img15 from "../Images/render-preview1.jpg";
+import img16 from "../Images/render-preview2.jpg";
+import img17 from "../Images/render-preview3.jpg";
+import img18 from "../Images/render-preview4.jpg";
+import img19 from "../Images/render-preview5.jpg";
+import img20 from "../Images/upload-preview6.jpg";
+import img21 from "../Images/upload-preview7.jpg";
 
 export default function Home() {
   const user = JSON.parse(localStorage.getItem("vmsUser")) || {};
   const name = user?.data?.name || "Vendors";
 
+  // Array of all 14 images
+  const allImages = [
+    img1, img2, img3, img4, img5, img6, img7,
+    img8, img9, img10, img11, img12, img13, img14,img15,img16,img17,img18,img19,img20,img21 
+  ];
+
+  // Helper function to get 9 random images
+  const getRandomImages = (images, count) => {
+    const shuffled = [...images].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+
+  const heroImages = getRandomImages(allImages, 9);
+
   return (
     <>
       <section className="hero">
-       <div className="hero-text">
-  <h1>
-    Namaste
-    <span className="namaste-icon" aria-hidden="true">
-     <svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#FFFFFF"><path d="M631-320v-102l-49-90q-18 2-29.5 15.5T541-465v227l96 158h-70l-86-141v-244q0-35 20-62.5t52-38.5l-66-122q-20-38-16.5-80t32.5-71l60-60 278 324 40 495h-61l-38-472-222-259-14 14q-14 14-17 33.5t6 36.5l156 290v117h-60Zm-361 0v-117l156-290q9-17 6-36.5T415-797l-14-14-222 259-38 472H80l40-495 278-324 60 60q29 29 32.5 71T474-688l-66 122q32 11 52 38.5t20 62.5v244L394-80h-70l96-158v-227q0-18-11.5-31.5T379-512l-49 90v102h-60Z"/></svg>
-    </span>
-    , {name}!
-    <br />
-    <span>Empower Your Shop.</span>
-  </h1>
+        <div className="hero-text">
+          <h1>
+            Namaste
+            <span className="namaste-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#FFFFFF">
+                <path d="M631-320v-102l-49-90q-18 2-29.5 15.5T541-465v227l96 158h-70l-86-141v-244q0-35 20-62.5t52-38.5l-66-122q-20-38-16.5-80t32.5-71l60-60 278 324 40 495h-61l-38-472-222-259-14 14q-14 14-17 33.5t6 36.5l156 290v117h-60Zm-361 0v-117l156-290q9-17 6-36.5T415-797l-14-14-222 259-38 472H80l40-495 278-324 60 60q29 29 32.5 71T474-688l-66 122q32 11 52 38.5t20 62.5v244L394-80h-70l96-158v-227q0-18-11.5-31.5T379-512l-49 90v102h-60Z"/>
+              </svg>
+            </span>
+            , {name}!
+            <br />
+            <span>Empower Your Shop.</span>
+          </h1>
 
-  <p>
-    Track products, monitor requests, generate reports, and take quick actions — all
-    in one place.
-  </p>
+          <p>
+            Track products, monitor requests, generate reports, and take quick actions — all
+            in one place.
+          </p>
 
-  <button className="btn-primary">Get Started</button>
-</div>
+          <button className="btn-primary">Get Started</button>
+        </div>
 
-<div className="hero-grid">
-  {[img1, img2, img3, img4, img5, img6, img7, img8, img9].map((src, index) => (
-    <img key={index} src={src} alt={`hero-${index}`} className="hero-img" />
-  ))}
-</div>
-
+        <div className="hero-grid">
+          {heroImages.map((src, index) => (
+            <img key={index} src={src} alt={`hero-${index}`} className="hero-img" />
+          ))}
+        </div>
       </section>
 
       <div className="cards-container">

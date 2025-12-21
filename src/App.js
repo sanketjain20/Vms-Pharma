@@ -22,6 +22,7 @@ import Inventory from "./MyComponents/InventoryComponent/Inventory";
 import Sales from "./MyComponents/SalesComponent/Sales";
 import Role from "./MyComponents/RoleComponent/Role";
 import Unauthorized from "./MyComponents/SecurityComponent/Unauthorized";
+import GenerateReport from "./MyComponents/ReportComponent/GenerateReport";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
@@ -87,6 +88,15 @@ function App() {
           element={
             <ModuleGuard moduleName="REPORTS">
               <Report />
+            </ModuleGuard>
+          }
+        />
+
+        <Route
+          path="reports/generate"
+          element={
+            <ModuleGuard moduleName="REPORTS">
+              <GenerateReport />
             </ModuleGuard>
           }
         />

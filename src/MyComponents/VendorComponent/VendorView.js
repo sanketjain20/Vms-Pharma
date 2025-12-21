@@ -107,10 +107,19 @@ export default function VendorView({ uKey, onClose }) {
                     </div>
 
                     <div className="view-v-form-row">
-                        <div className="view-v-form-group full-width">
+                         <div className="view-v-form-group">
                             <label>Address</label>
                             <textarea rows="2" value={vendor.address || ""} readOnly />
-                        </div>
+                            </div>
+
+                             <div className="view-v-form-group">
+                            <label>Vendor Prefix</label>
+                            <input
+                                type="text"
+                                value={vendor.vendorPrefix || "N/A"}
+                                readOnly
+                            />
+                            </div>
                     </div>
 
                     <div className="view-v-footer">

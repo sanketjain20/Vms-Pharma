@@ -1,10 +1,17 @@
-/* Dark background */
+/* Dark background for dashboard */
 .dashboard-container {
-  padding: 2rem;
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
-  min-height: 100vh;
-  color: #e0e0e0;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #1e1e2f;
+  border-radius: 12px;
+  color: #f0f0f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 500px;
 }
 
 /* Header */
@@ -61,7 +68,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(15px);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  min-height:50px;
+  min-height: 50px;
 }
 
 .report-glass-card:hover {
@@ -82,19 +89,102 @@
   color: #cccccc;
 }
 
-/* Button */
-.generate-btn {
-  padding: 0.5rem 1.2rem;
-  border-radius: 50px;
-  border: none;
-  background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
-  color: white;
-  font-weight: 500;
+/* Filters section */
+.filters-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: #2a2a40;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+/* Filter items */
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border-radius: 10px;
+  background: #1e1e2f;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.filter-item:hover {
+  background: #27274d;
+  transform: translateX(5px);
+}
+
+.filter-item label {
+  font-size: 16px;
+  color: #ffcc00;
+  margin-bottom: 5px;
+}
+
+.filter-item input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: #2a2a40;
+  color: #f0f0f0;
+}
+
+/* Right panel for report details */
+.report-panel {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.report-panel h1 {
+  font-size: 28px;
+  color: #ffcc00;
+  margin-bottom: 10px;
+}
+
+/* Run Report button */
+.generate-btn {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 10px;
+  background: #ffcc00;
+  color: #1e1e2f;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  width: fit-content;
 }
 
 .generate-btn:hover {
+  background: #e6b800;
   transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(37, 117, 252, 0.5);
+}
+
+/* Back button */
+.back-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: #444;
+  color: #fff;
+  cursor: pointer;
+  width: fit-content;
+  transition: background 0.2s;
+}
+
+.back-btn:hover {
+  background: #555;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .filters-section {
+    max-width: 100%;
+  }
 }
