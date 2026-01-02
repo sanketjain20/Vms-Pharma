@@ -165,6 +165,13 @@ export default function SalesView({ uKey, onClose }) {
                 <span><b>Net Amount (Rs.)</b></span>
                 <span><b>{(sales.netAmount).toFixed(2)}</b></span>
               </div>
+              {Number(sales.remainingAmount) > 0 && (
+                <div className="totals-row rem-amount">
+                  <span><b>Due Amount (Rs.)</b></span>
+                  <span><b>{Number(sales.remainingAmount).toFixed(2)}</b></span>
+                </div>
+              )}
+
             </div>
 
           </div>

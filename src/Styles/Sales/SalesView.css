@@ -189,6 +189,12 @@
   font-size: 18px;
   font-weight: 700;
 }
+
+.sales-totals-right .rem-amount {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 10px;
+}
 .sales-view-footer {
   display: flex;
   justify-content: flex-start;

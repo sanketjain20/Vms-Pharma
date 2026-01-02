@@ -19,13 +19,17 @@ export default function SalesAdd({ onClose, onSubmit }) {
   const [discountInput, setDiscountInput] = useState("");
   const [discountType, setDiscountType] = useState("PERCENT");
 
-  const [billingMode, setBillingMode] = useState("SIMPLE");
+  const [billingMode, setBillingMode] = useState("CASH");
   const [manualPrice, setManualPrice] = useState("");
   const [commonTax, setCommonTax] = useState("");
   const [taxMode, setTaxMode] = useState("COMMON");
 
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState("Tax");
+
+  const [paymentType, setPaymentType] = useState("FULL"); // FULL | PARTIAL
+const [amountPaid, setAmountPaid] = useState("");
+
 
   useEffect(() => {
     fetch("http://localhost:8080/api/ProductType/GetAllProductType", {
@@ -224,11 +228,22 @@ export default function SalesAdd({ onClose, onSubmit }) {
         : totalAmount - discountInput
       : totalAmount;
 
+      useEffect(() => {
+    if (paymentType === "FULL") {
+      setAmountPaid(netAmount.toFixed(2));
+    }
+  }, [paymentType, netAmount]);
+
   const submitSales = async () => {
     let tempErrors = {};
     if (lineItems.length === 0) tempErrors.lineItems = "Add at least one item";
     if (!billingMode) tempErrors.billingMode = "Select billing mode";
     if (discountInput < 0) tempErrors.discountInput = "Discount cannot be less than 0";
+
+     if (!amountPaid || amountPaid <= 0)
+      tempErrors.amountPaid = "Enter valid amount paid";
+    if (parseFloat(amountPaid) > netAmount)
+      tempErrors.amountPaid = "Amount paid cannot exceed net amount";
 
     setErrors(tempErrors);
     if (Object.keys(tempErrors).length > 0) return;
@@ -242,6 +257,8 @@ export default function SalesAdd({ onClose, onSubmit }) {
       billingMode,
       totalDiscount: finalDiscount,
       items: lineItems,
+      amountPaid: parseFloat(amountPaid),
+      remainingAmount: parseFloat((netAmount - amountPaid).toFixed(2))
     };
 
     try {
@@ -547,17 +564,54 @@ export default function SalesAdd({ onClose, onSubmit }) {
               onChange={(e) => setBillingMode(e.target.value)}
             >
               <option value="">-- Select Billing Mode --</option>
-              <option value="SIMPLE">SIMPLE</option>
-              <option value="GST">GST</option>
+              <option value="CASH">CASH</option>
+              <option value="ONLINE">ONLINE</option>
+              <option value="CARD">CARD</option>
+
             </select>
             {errors.billingMode && (
               <div className="error">{errors.billingMode}</div>
             )}
-
+ 
             <div className="total-amount">
               <b>Net Amount: Rs {netAmount.toFixed(2)}</b>
             </div>
+
+            {/* ===== ADDED UI ===== */}
+            <label>Payment Type</label>
+            <div style={{ display: "flex", gap: "20px" }}>
+              <label>
+                <input
+                  type="radio"
+                  checked={paymentType === "FULL"}
+                  onChange={() => setPaymentType("FULL")}
+                />{" "}
+                Full
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  checked={paymentType === "PARTIAL"}
+                  onChange={() => setPaymentType("PARTIAL")}
+                />{" "}
+                Partial
+              </label>
+            </div>
+
+            <label>Amount Paid</label>
+            <input
+              type="number"
+              value={amountPaid}
+              onChange={(e) => setAmountPaid(e.target.value)}
+              disabled={paymentType === "FULL"}
+              min="0"
+            />
+            {errors.amountPaid && <div className="error">{errors.amountPaid}</div>}
+            {/* ==================== */}
+
           </div>
+
+          
         )}
 
         <div className="sales-footer">

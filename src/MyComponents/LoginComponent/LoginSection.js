@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";   // 👈 for redirect
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "../../Styles/Toast.css";
 
 function LoginSection() {
   const navigate = useNavigate();
@@ -33,37 +36,42 @@ function LoginSection() {
     };
 
     try {
-      setLoading(true);
+  setLoading(true);
 
-      const response = await fetch("http://localhost:8080/api/auth/login", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+  const response = await fetch("http://localhost:8080/api/auth/login", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 
-      if (!response.ok) throw new Error("Login failed");
+  // ✅ Read API response always
+  const data = await response.json();
 
-      const data = await response.json();
-      console.log("Login Success:", data);
+  // ❌ If API status is not 200 → show API message
+  if (data.status !== 200) {
+    toast.error(data?.message);
+    return;
+  }
 
-      // ✅ Save data in localStorage so you can use it on Home page
-      localStorage.setItem("vmsUser", JSON.stringify(data));
+  // ✅ Success
+  console.log(data?.message);
 
-      // 🚀 Redirect to Home Page
-      navigate("/home");
+  localStorage.setItem("vmsUser", JSON.stringify(data));
+  navigate("/home");
 
-    } catch (error) {
-      alert("Invalid credentials or server error");
-    } finally {
-      setLoading(false);
-    }
-  };
+} catch (error) {
+  // ❌ Network / server crash case
+  toast.error("Server error. Please try again.");
+} finally {
+  setLoading(false);
+}};
+
 
   return (
     <div className="login-section">
       <h1 className="login-title">
-        Vendor Login</h1>
+        Login</h1>
 
       {step === "user" && (
         <div className="form-group">

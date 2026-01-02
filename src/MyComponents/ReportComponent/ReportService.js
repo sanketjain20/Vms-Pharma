@@ -8,7 +8,7 @@ export const runReportByModule = async (moduleId, filters) => {
   // Map moduleId to API URL
   switch (moduleId) {
     case VmsEntity.Vendor:
-      apiUrl = "http://localhost:8080/api/Vendor/GenerateReport";
+      apiUrl = "http://localhost:8080/api/Vendor/report";
       break;
     case VmsEntity.ProductType:
       apiUrl = "http://localhost:8080/api/ProductType/Report";
@@ -17,10 +17,10 @@ export const runReportByModule = async (moduleId, filters) => {
       apiUrl = "http://localhost:8080/api/Product/Report";
       break;
     case VmsEntity.Inventory:
-      apiUrl = "http://localhost:8080/api/Inventory/GenerateReport";
+      apiUrl = "http://localhost:8080/api/Inventory/Report";
       break;
     case VmsEntity.Sales:
-      apiUrl = "http://localhost:8080/api/Sales/GenerateReport";
+      apiUrl = "http://localhost:8080/api/Sales/Report";
       break;
     case VmsEntity.Roles:
       apiUrl = "http://localhost:8080/api/Roles/GenerateReport";

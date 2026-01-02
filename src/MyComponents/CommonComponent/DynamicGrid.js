@@ -6,17 +6,18 @@ import EditModal from "../CommonAEUDForm/EditModal";
 import ViewModal from "../CommonAEUDForm/ViewModal";
 import StatusModal from "../CommonAEUDForm/StatusModal";
 import DownlaodModal from "../CommonAEUDForm/DownloadModal";
+import { Status } from "../Enums/Status.js";
 import { toast } from "react-toastify";
 
 export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) {
   const [data, setData] = useState([]);
+  const [allData, setAllData] = useState([]);
+
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
 
-  // ⬇️ CHANGED DEFAULT: still "all" (not touching your logic)
   const [selectedStatus, setSelectedStatus] = useState("all");
-
   const [searchText, setSearchText] = useState("");
   const [emptyMsg, setEmptyMsg] = useState("");
 
@@ -31,7 +32,6 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
 
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [downloadId, setDownloadId] = useState(null);
-
   const [accessList, setAccessList] = useState([]);
 
   const can = (perm) => accessList.includes(perm);
@@ -47,15 +47,13 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
         if (response.status === 200 && Array.isArray(response.data)) {
           setAccessList(response.data);
         }
-      })
-      .catch(() => { });
+      });
   }, [Module]);
 
   const refreshGrid = React.useCallback(() => {
     fetch(`${apiUrl}/${page}/${size}`, {
       method: "GET",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
     })
       .then((res) => res.json())
       .then((response) => {
@@ -63,27 +61,14 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
           const dataObj = response.data;
           const list = Array.isArray(dataObj)
             ? dataObj
-            : typeof dataObj === "object" && dataObj !== null
-              ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
-              : [];
+            : Object.values(dataObj).find((v) => Array.isArray(v)) || [];
+
           setData(list);
-          setTotalPages(
-            typeof dataObj === "object" && dataObj?.totalPages
-              ? dataObj.totalPages
-              : 1
-          );
-          if (!list || list.length === 0) {
-            setEmptyMsg(response.message || "No records found.");
-          } else {
-            setEmptyMsg("");
-          }
+          setTotalPages(dataObj?.totalPages || 1);
+          setEmptyMsg(list.length ? "" : "No records found.");
         } else {
-          toast.error(response.message || "Something went wrong!");
+          toast.error(response.message);
         }
-      })
-      .catch((err) => {
-        console.error("Network or server error: ", err);
-        toast.error("Something went wrong! Please try again.");
       });
   }, [apiUrl, page, size]);
 
@@ -91,44 +76,54 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
     refreshGrid();
   }, [refreshGrid]);
 
-  const filteredData = data
-    ?.filter((row) => {
-      if (Module === "Sales") {
-        if (selectedStatus === "all") return true;
-        if (selectedStatus === "payment_done") {
-          return row.isPaymentComplete === 1;
-        }
-        if (selectedStatus === "payment_pending") {
-          return row.isPaymentComplete === 0;
-        }
-        return true;
-      }
-
-      // EXISTING STATUS FILTER (untouched)
-      if (selectedStatus === "all") return true;
-
-      let rowStatus = "";
-      if (row.status) {
-        rowStatus = row.status.toLowerCase();
-      } else if (row.disable !== undefined) {
-        rowStatus = row.disable === 0 ? "active" : "inactive";
-      }
-      return rowStatus === selectedStatus;
+  useEffect(() => {
+    fetch(`${apiUrl}/0/100000`, {
+      method: "GET",
+      credentials: "include",
     })
-    .filter((row) =>
-      searchText
-        ? Object.values(row)
-          .join(" ")
-          .toLowerCase()
-          .includes(searchText.toLowerCase())
-        : true
-    );
+      .then((res) => res.json())
+      .then((response) => {
+        const dataObj = response.data;
+        const list = Array.isArray(dataObj)
+          ? dataObj
+          : Object.values(dataObj).find((v) => Array.isArray(v)) || [];
+        setAllData(list);
+      });
+  }, [apiUrl]);
 
-  const computedWidths = () => {
-    return columns.map(
-      (c) => c.width || `${Math.floor(100 / columns.length)}%`
-    );
-  };
+  const searchSource = searchText ? allData : data;
+
+  const filteredData = searchSource.filter((row) => {
+    if (Module === "Sales") {
+      if (selectedStatus === "all") return true;
+      if (selectedStatus === "payment_done") return row.statusId === Status.PaymentDone;
+      if (selectedStatus === "payment_pending") return row.statusId === Status.PaymentPending;
+    } else {
+      if (selectedStatus === "all") return true;
+      if (row.disable !== undefined) {
+        return selectedStatus === (row.disable === 0 ? "active" : "inactive");
+      }
+    }
+    return true;
+  }).filter((row) =>
+    searchText
+      ? Object.values(row).join(" ").toLowerCase().includes(searchText.toLowerCase())
+      : true
+  );
+
+  const finalData = searchText
+    ? filteredData.slice(page * size, page * size + size)
+    : filteredData;
+
+  useEffect(() => {
+    if (searchText) {
+      setTotalPages(Math.ceil(filteredData.length / size) || 1);
+      setPage(0);
+    }
+  }, [searchText, size, filteredData.length]);
+
+  const computedWidths = () =>
+    columns.map((c) => c.width || `${Math.floor(100 / columns.length)}%`);
   const widths = computedWidths();
 
   const handleEdit = (row) => {
@@ -436,9 +431,9 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
               setPage(0);
             }}
           >
-            <option value={5}>5 / page</option>
             <option value={10}>10 / page</option>
-            <option value={20}>20 / page</option>
+            <option value={50}>50 / page</option>
+            <option value={100}>100 / page</option>
           </select>
         </div>
       </div>

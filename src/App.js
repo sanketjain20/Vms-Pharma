@@ -1,5 +1,9 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "./Styles/Toast.css";
+
 
 import "./App.css";
 
@@ -7,11 +11,13 @@ import "./App.css";
 import LoginSection from "./MyComponents/LoginComponent/LoginSection";
 import VMSSection from "./MyComponents/LoginComponent/VMSSection";
 import Home from "./MyComponents/Home";
+import Setting from "./MyComponents/Setting";
 import Footer from "./MyComponents/CommonComponent/Footer";
 
 // Layouts
 import Layout from "./MyComponents/CommonComponent/Layout";
 import LayoutModule from "./MyComponents/CommonComponent/LayoutModule";
+
 
 // Module Pages
 import Product from "./MyComponents/ProductComponent/Product";
@@ -23,12 +29,22 @@ import Sales from "./MyComponents/SalesComponent/Sales";
 import Role from "./MyComponents/RoleComponent/Role";
 import Unauthorized from "./MyComponents/SecurityComponent/Unauthorized";
 import GenerateReport from "./MyComponents/ReportComponent/GenerateReport";
+import VendorOnboarding from "./MyComponents/VendorOnboarding";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
 
 function App() {
   return (
+    <>
+    {/* 🔥 GLOBAL TOAST CONTAINER */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+      />
     <Routes>
       {/* LOGIN PAGE */}
       <Route
@@ -49,6 +65,13 @@ function App() {
         <Route index element={<Home />} />
       </Route>
 
+            <Route path="/onboarding" element={<Layout />}>
+        <Route index element={<VendorOnboarding />} />
+      </Route>
+
+      <Route path="/setting" element={<Layout />}>
+        <Route index element={<Setting />} />
+      </Route>
       {/* MODULE PAGES */}
       <Route path="/master" element={<LayoutModule />}>
 
@@ -135,6 +158,7 @@ function App() {
       {/* UNAUTHORIZED PAGE */}
       <Route path="/unauthorized" element={<Unauthorized />} />
     </Routes>
+    </>
   );
 }
 

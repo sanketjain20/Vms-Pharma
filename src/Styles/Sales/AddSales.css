@@ -351,3 +351,7 @@ input[type=number] {
   margin-top: 4px;
   color: black;
 }
+.Toastify__toast-container {
+  position: fixed !important;
+  z-index: 99999 !important;
+}

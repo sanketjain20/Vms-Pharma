@@ -43,38 +43,25 @@
   font-size: 16px;
   font-weight: 600;
   color: #fff;
-
-  /* Your same gradient */
   background: linear-gradient(90deg, #056dce, #06a2eb);
-
   border: none;
   border-radius: 10px;
   cursor: pointer;
   letter-spacing: 0.5px;
-
-  /* Smooth animation */
   transition: all 0.25s ease;
-
-  /* Elegant depth */
   box-shadow: 0 3px 8px rgba(0, 123, 255, 0.35);
-
-  /* Prevent shrink */
   min-width: 80px;
-
-  /* Make it feel clickable */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
 
-/* Hover – premium glow + float */
 .add-button:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 18px rgba(0, 123, 255, 0.55);
 }
 
-/* Press effect */
 .add-button:active {
   transform: scale(0.96);
   box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
@@ -96,7 +83,6 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  width: auto;
   min-width: 7%;
   text-align: center;
 }
@@ -104,6 +90,35 @@
 .status-chip.active {
   background-color: #2379ca;
   color: #fff;
+}
+
+/* ---------------------- Grid Container ---------------------- */
+.grid-container {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* ---------------------- Scroll Body (IMPORTANT) ---------------------- */
+.scroll-body {
+  max-height: 420px;          /* 👈 shows ~8–9 rows */
+  overflow-y: auto;           /* 👈 scrollbar appears when rows > 9 */
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+.scroll-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll-body::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+  border-radius: 4px;
+}
+
+.scroll-body::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
 }
 
 /* ---------------------- Grid Table ---------------------- */
@@ -114,10 +129,10 @@
 }
 
 /* Sticky header */
-.grid-table thead th{
+.grid-table thead th {
   position: sticky;
   top: 0;
-  background:#000000;
+  background: #000000;
   backdrop-filter: blur(8px);
   z-index: 10;
   border-radius: 4px;
@@ -127,41 +142,45 @@
 /* Header cells */
 .grid-table th {
   padding: 8px;
-  color:white;
+  color: white;
   font-weight: 650;
   text-align: center;
-  border-right: 1px solid rgba(255, 255, 255, 0.1); /* vertical line */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* horizontal line under header */
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Remove extra border on last header cell */
 .grid-table th:last-child {
   border-right: none;
 }
 
 .grid-table td {
   padding: 6px 8px;
-  color: #ddd;
+  color: inherit;
   text-align: center;
 }
 
-.grid-table tr:nth-child(even) {
-  background-color: #ffffff; 
-  color:rgb(3, 3, 3);   /* even rows */
-  font-weight: 500 ;
- }
-
-
-.grid-table tr:nth-child(odd) {
-  background-color: #badefc; 
-  color:black; 
-  font-weight: 500 ;  /* odd rows */
+/* Fixed row height for consistent 8–9 rows */
+.grid-table tbody tr {
+  height: 48px;
 }
 
+/* Row colors */
+.grid-table tr:nth-child(even) {
+  background-color: #ffffff;
+  color: rgb(3, 3, 3);
+  font-weight: 500;
+}
 
-/* Remove extra border on last cell */
-.grid-table td:last-child {
-  border-right: none;
+.grid-table tr:nth-child(odd) {
+  background-color: #badefc;
+  color: black;
+  font-weight: 500;
+}
+
+/* Hover */
+.grid-table tbody tr:hover {
+  border: 2px solid #056dce;
+  color: black;
 }
 
 /* Text truncation */
@@ -171,15 +190,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.grid-table td {
-  color: inherit;
-}
-.grid-table tbody tr:hover {
-  border: 2px solid #056dce;
-  color:black;
-}
 
-/* Action column icons */
+/* ---------------------- Action Column ---------------------- */
 .action-column {
   display: flex;
   gap: 10px;
@@ -198,7 +210,6 @@
   color: #050505;
 }
 
-
 /* ---------------------- Pagination ---------------------- */
 .grid-pagination {
   display: flex;
@@ -215,7 +226,7 @@
   border-radius: 4px;
   border: 1px solid #555;
   background-color: #111;
-  color: #fff;
+  color: #ffffff;
   cursor: pointer;
 }
 
@@ -224,27 +235,216 @@
 }
 
 .grid-pagination span {
-  color: #fff;
+  color: black;
   font-weight: 600;
 }
 
-/* DynamicGrid.css */
-
-/* Message when grid has no data */
+/* ---------------------- Empty Grid Message ---------------------- */
 .grid-empty-message {
-  text-align: center;        /* Center the text horizontally */
-  padding: 20px;             /* Give some spacing */
-  font-size: 16px;           /* Slightly bigger font */
-  color: #555;               /* Grey color */
-  font-weight: 500;          /* Medium weight */
-  background-color: #f9f9f9; /* Light background to distinguish */
-  border-top: 1px solid #e0e0e0; /* Optional top border like a row */
+  text-align: center;
+  padding: 20px;
+  font-size: 16px;
+  color: #555;
+  font-weight: 500;
+  background-color: #f9f9f9;
+  border-top: 1px solid #e0e0e0;
 }
 
+/* ---------------------- Misc ---------------------- */
 .tab {
   display: inline-block;
-  width: auto;
   padding: 6px 14px;
-  white-space: nowrap;  
-  /* prevents text from breaking */
+  white-space: nowrap;
+}
+
+/* =========================
+   TABLET / IPAD (769px–1024px)
+   ========================= */
+@media (min-width: 769px) and (max-width: 1024px) {
+
+  .search-add-container {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .search-wrapper {
+    flex: 1;
+  }
+
+  .search-input {
+    width: 100%;
+    font-size: 15px;
+  }
+
+  .search-icon {
+    right: 16px;
+  }
+
+  .add-button {
+    padding: 9px 18px;
+    font-size: 15px;
+  }
+
+  .status-filters {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .status-chip {
+    min-width: auto;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .scroll-body {
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .grid-table {
+    width: 100%;            /* important to show rows correctly */
+    table-layout: fixed;     /* align columns */
+    min-width: auto;         /* prevent unnecessary min-width */
+  }
+
+  .grid-table th,
+  .grid-table td {
+    font-size: 13px;
+    padding: 6px;
+  }
+}
+
+/* =========================
+   LARGE MOBILE / SMALL TABLET
+   ========================= */
+@media (min-width: 481px) and (max-width: 768px) {
+
+  .search-add-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-wrapper {
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    font-size: 14px;
+  }
+
+  .search-icon {
+    right: 14px;
+  }
+
+  .add-button {
+    width: 100%;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .status-filters {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .status-chip {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .scroll-body {
+    max-height: 320px;
+    overflow-y: auto;
+    overflow-x: auto;
+  }
+
+  .grid-container {
+    overflow-x: auto;
+  }
+
+.grid-table {
+    width: 100%;
+    table-layout: fixed;
+    min-width: auto;   /* override previous min-width: 700px */
+  }
+
+  .grid-table th,
+  .grid-table td {
+    font-size: 12px;
+    padding: 5px;
+  }
+
+  .grid-pagination {
+    justify-content: center;
+  }
+}
+
+/* =========================
+   MOBILE (≤480px)
+   ========================= */
+@media (max-width: 480px) {
+
+  .search-add-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-wrapper {
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+
+  .search-icon {
+    right: 12px;
+    font-size: 12px;
+  }
+
+  .add-button {
+    width: 100%;
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+
+  .status-filters {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .status-chip {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+
+  .scroll-body {
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  .grid-container {
+    overflow-x: auto;
+  }
+
+  .grid-table {
+    width: 100%;
+    table-layout: fixed;
+    min-width: auto;    /* override previous min-width */
+  }
+
+  .grid-table th,
+  .grid-table td {
+    font-size: 11px;
+    padding: 5px;
+  }
+
+  .grid-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
 }

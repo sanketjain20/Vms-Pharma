@@ -43,7 +43,7 @@ export default function Navbar({ sidebarOpen }) {
   };
 
   const handleSettings = () => {
-    navigate("/settings"); // ✅ use React Router navigation
+    navigate("/setting"); // ✅ use React Router navigation
   };
 
   return (

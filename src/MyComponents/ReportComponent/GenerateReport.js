@@ -30,7 +30,7 @@ function getModuleIdByReportName(reportName) {
 }
 
 /* =========================
-   CUSTOM DROPDOWN (SEARCHABLE FIXED)
+   CUSTOM DROPDOWN
 ========================= */
 function Dropdown({
   label,
@@ -44,7 +44,6 @@ function Dropdown({
   const ref = useRef();
   const [searchTerm, setSearchTerm] = useState("");
 
-  /* Close on outside click */
   useEffect(() => {
     const close = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
@@ -78,7 +77,7 @@ function Dropdown({
             type="text"
             placeholder={`Search ${label}...`}
             value={searchTerm}
-            onMouseDown={(e) => e.stopPropagation()} // Prevent closing when typing
+            onMouseDown={(e) => e.stopPropagation()}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="dropdown-search"
           />
@@ -129,7 +128,6 @@ export default function GenerateReport() {
   const [loading, setLoading] = useState(true);
   const [reportLoading, setReportLoading] = useState(false);
 
-  /* 🔥 SINGLE OPEN DROPDOWN */
   const [openKey, setOpenKey] = useState(null);
 
   const moduleId = getModuleIdByReportName(reportName);
@@ -206,57 +204,78 @@ export default function GenerateReport() {
      UI
   ========================= */
   return (
-    <div className="gen-dashboard-container">
-      <div className="gen-filters-section">
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          filters.map((f, i) => {
-            const key = toCamelCase(f);
+    <div className="r-container">
+      <div className="gen-dashboard-container">
+        <div className="gen-filters-section">
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            filters.map((f, i) => {
+              const key = toCamelCase(f);
 
-            return (
-              <div
-                key={i}
-                className={`gen-filter-item ${
-                  openKey === key ? "active" : ""
-                }`}
-              >
-                <label>{f}</label>
+              return (
+                <div
+                  key={i}
+                  className={`gen-filter-item ${openKey === key ? "active" : ""
+                    }`}
+                >
+                  <label>{f}</label>
 
-                {filterOptions[key] ? (
-                  <Dropdown
-                    label={f}
-                    options={filterOptions[key]}
-                    value={selectedFilters[key]}
-                    isOpen={openKey === key}
-                    dropdownKey={key}
-                    setOpenKey={setOpenKey}
-                    onChange={(v) => handleFilterChange(f, v)}
-                  />
-                ) : (
-                  <input
-                    value={selectedFilters[key] || ""}
-                    onChange={(e) => handleFilterChange(f, e.target.value)}
-                  />
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
+                  {filterOptions[key] ? (
+                    <Dropdown
+                      label={f}
+                      options={filterOptions[key]}
+                      value={selectedFilters[key]}
+                      isOpen={openKey === key}
+                      dropdownKey={key}
+                      setOpenKey={setOpenKey}
+                      onChange={(v) => handleFilterChange(f, v)}
+                    />
+                  ) : (
+                    <input
+                      type={f.toLowerCase().includes("date") ? "date" : "text"}
+                      value={
+                        f.toLowerCase().includes("date") && selectedFilters[key]
+                          ? selectedFilters[key].split("T")[0]
+                          : selectedFilters[key] || ""
+                      }
+                      onChange={(e) =>
+                        handleFilterChange(
+                          f,
+                          f.toLowerCase().includes("date") && e.target.value
+                            ? `${e.target.value}T00:00:00`
+                            : e.target.value
+                        )
+                      }
+                    />
 
-      <div className="gen-report-panel">
-        <h1>{reportName}</h1>
-        {reportLoading && <p>Generating Report...</p>}
 
-        <div className="gen-report-buttons">
-          <button className="gen-generate-btn" onClick={handleRunReport}>
-            Download
-          </button>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
 
-          <button className="gen-back-btn" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
+        <div className="gen-report-panel">
+          <h1>{reportName}</h1>
+          {reportLoading && <p>Generating Report...</p>}
+
+          <div className="gen-report-buttons">
+            <button
+              className="gen-generate-btn"
+              onClick={handleRunReport}
+            >
+              Download
+            </button>
+
+            <button
+              className="gen-back-btn"
+              onClick={() => navigate(-1)}
+            >
+              ← Back
+            </button>
+          </div>
         </div>
       </div>
     </div>

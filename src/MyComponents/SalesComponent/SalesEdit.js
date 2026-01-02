@@ -22,9 +22,12 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   const [discountInput, setDiscountInput] = useState("0");
   const [discountType, setDiscountType] = useState("FLAT");
-  const [billingMode, setBillingMode] = useState("SIMPLE");
+  const [billingMode, setBillingMode] = useState("CASH");
   const [saleId, setSaleId] = useState(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
+    const [paymentType, setPaymentType] = useState("FULL"); // FULL | PARTIAL
+  const [amountPaid, setAmountPaid] = useState(0);
+  const [remainingAmount, setRemainingAmount] = useState(0);
 
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState("Existing");
@@ -87,6 +90,8 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
         setDiscountInput(sale.totalDiscount || 0);
         setDiscountType("FLAT");
         setBillingMode(sale.billingMode || "SIMPLE");
+        setAmountPaid(sale.amountPaid || 0);
+        setRemainingAmount(sale.remainingAmount || 0);
       });
   };
 
@@ -275,6 +280,19 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     return total - discount;
   };
 
+  useEffect(() => {
+    const net = getNetAmount().toFixed(2);
+
+    if (paymentType === "FULL") {
+      setAmountPaid(net);
+      setRemainingAmount(0);
+    } else {
+      const paid = parseFloat(amountPaid || 0);
+      const remaining = net - paid;
+      setRemainingAmount(remaining < 0 ? 0 : remaining);
+    }
+  }, [paymentType, amountPaid, lineItems, discountInput]);
+
   const updateSale = () => {
     let tempErrors = {};
     if (lineItems.length === 0) tempErrors.lineItems = "Add at least one item";
@@ -283,11 +301,14 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
     const payload = {
       totalDiscount: parseFloat(discountInput || 0),
+      billingMode: billingMode,
+      amountPaid: parseFloat(amountPaid),
+      remainingAmount: parseFloat(remainingAmount),
       items: lineItems.map(it => ({
         productId: it.productId,
         quantity: it.quantity,
         sellingPrice: it.sellingPrice,
-        taxAmount: it.taxAmount
+        taxAmount: it.taxAmount,
       }))
     };
 
@@ -485,12 +506,48 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
             <label>Billing Mode</label>
             <select value={billingMode} onChange={(e) => setBillingMode(e.target.value)}>
-              <option value="SIMPLE">SIMPLE</option>
-              <option value="GST">GST</option>
+              <option value="CASH">CASH</option>
+              <option value="ONLINE">ONLINE</option>
+              <option value="CARD">CARD</option>
             </select>
 
             <div className="total-amount">
               <h4>Net Amount: ₹{getNetAmount().toFixed(2)}</h4>
+            </div>
+
+            {/* 🔥 ADDED PAYMENT TYPE */}
+            <label>Payment Type</label>
+            <div style={{ display: "flex", gap: "20px", marginBottom: "10px" }}>
+              <label>
+                <input
+                  type="radio"
+                  checked={paymentType === "FULL"}
+                  onChange={() => setPaymentType("FULL")}
+                />
+                Full
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  checked={paymentType === "PARTIAL"}
+                  onChange={() => setPaymentType("PARTIAL")}
+                />
+                Partial
+              </label>
+            </div>
+
+            {/* 🔥 ADDED AMOUNT PAID */}
+            <label>Amount Paid</label>
+            <input
+              type="number"
+              value={amountPaid}
+              disabled={paymentType === "FULL"}
+              onChange={(e) => setAmountPaid(e.target.value)}
+            />
+
+            {/* 🔥 ADDED REMAINING AMOUNT */}
+            <div className="total-amount">
+              <h4>Due Amount: ₹{remainingAmount.toFixed(2)}</h4>
             </div>
           </div>
         )}

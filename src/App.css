@@ -10,12 +10,12 @@
 
 html, body, #root {
   min-height: 100vh;
-  height: 100%;
   width: 100%;
   background: #181717;
   color: #fff;
   display: flex;
   flex-direction: column;
+  overflow: visible;
 }
 
 /* =========================
@@ -338,5 +338,150 @@ footer {
     bottom: 1.2rem;
     left: 1.2rem;
     font-size: 0.8rem;
+  }
+}
+
+/* =========================
+   TABLET / IPAD (769px–1024px)
+   ========================= */
+@media (min-width: 769px) and (max-width: 1024px) {
+
+  .container {
+    flex-direction: column;
+  }
+
+  .login-section,
+  .vms-section {
+    width: 100%;
+  }
+
+  .login-section {
+    padding: 2.5rem 2rem;
+  }
+
+  .vms-section {
+    padding: 2.5rem 0 3rem;
+    overflow: visible;
+  }
+
+  .vms-content h2 {
+    font-size: 2.6rem;
+  }
+
+  .vms-content p {
+    font-size: 1.1rem;
+  }
+
+  .vms-advantages {
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .adv-card {
+    width: 160px;
+    height: 150px;
+  }
+
+  footer {
+    margin-top: auto;
+    position: relative;
+  }
+}
+
+/* =========================
+   LARGE MOBILE / SMALL TABLET
+   ========================= */
+@media (min-width: 481px) and (max-width: 768px) {
+
+  .container {
+    flex-direction: column;
+  }
+
+  .login-section,
+  .vms-section {
+    width: 100%;
+  }
+
+  .login-section {
+    padding: 2rem 1.5rem;
+  }
+
+  .vms-section {
+    padding: 2rem 0;
+  }
+
+  .vms-content h2 {
+    font-size: 2.3rem;
+  }
+
+  .vms-content p {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .vms-advantages {
+    gap: 1.2rem;
+  }
+
+  .adv-card {
+    width: 150px;
+    height: 145px;
+  }
+
+  .contact-info {
+    position: static;
+    margin-top: 2rem;
+    text-align: center;
+  }
+}
+
+/* =========================
+   MOBILE (≤480px)
+   ========================= */
+@media (max-width: 480px) {
+
+  .container {
+    flex-direction: column;
+  }
+
+  .login-section,
+  .vms-section {
+    width: 100%;
+  }
+
+  .login-section {
+    padding: 1.8rem 1.2rem;
+  }
+
+  .login-section h1 {
+    font-size: 1.6rem;
+  }
+  .vms-section {
+    padding: 1.8rem 0;
+  }
+
+  .vms-content h2 {
+    font-size: 2rem;
+  }
+
+  .vms-content p {
+    font-size: 0.95rem;
+  }
+
+  .vms-advantages {
+    gap: 1rem;
+  }
+
+  .adv-card {
+    min-width: 130px;
+    height: 135px;
+  }
+
+  .adv-card p {
+    font-size: 0.8rem;
+  }
+
+  footer {
+    font-size: 0.75rem;
   }
 }

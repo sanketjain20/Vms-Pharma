@@ -1,7 +1,6 @@
 /* -------------------------------------- */
 /* SIDEBAR BASE */
 /* -------------------------------------- */
-
 .sidebar {
   position: fixed;
   top: 0;
@@ -10,7 +9,7 @@
   height: 100vh;
   background: #111;
   color: #fff;
-  transition: width 0.3s ease;
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
   box-shadow: 2px 0 8px rgba(0,0,0,0.2);
@@ -28,7 +27,7 @@
 .logo {
   width: 40px;
   height: 40px;
-  margin: 20px 0;
+  margin: 20px auto;
   transition: 0.3s ease;
   opacity: 0;
   transform: translateX(-20px);
@@ -41,6 +40,7 @@
 
 .nav-list {
   width: 100%;
+  flex: 1;
 }
 
 .nav-item {
@@ -49,18 +49,27 @@
   padding: 15px;
   position: relative;
   cursor: pointer;
+  transition: background 0.2s;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .nav-icon {
   min-width: 30px;
   text-align: center;
+  font-size: 18px;
+  transition: all 0.3s ease;
 }
 
-/* Text hidden in collapse */
+/* Text hidden in collapsed mode */
 .nav-text {
   margin-left: 10px;
   opacity: 0;
-  transition: opacity 0.3s;
+  white-space: nowrap;
+  display: inline-block;
+  transition: opacity 0.3s ease;
 }
 
 .sidebar.open .nav-text {
@@ -70,7 +79,6 @@
 /* -------------------------------------- */
 /* TOGGLE BUTTON */
 /* -------------------------------------- */
-
 .sidebar-toggle {
   position: fixed;
   top: 10px;
@@ -79,16 +87,16 @@
   cursor: pointer;
   z-index: 10001;
   font-size: 25px;
+  transition: all 0.3s ease;
 }
 
 /* -------------------------------------- */
 /* TOOLTIP */
 /* -------------------------------------- */
-
 .nav-item::after {
   content: attr(data-tooltip);
   position: absolute;
-  left: 50px;
+  left: 60px;
   top: 50%;
   transform: translateY(-50%);
   background: #4b4a4a;
@@ -104,13 +112,11 @@
   z-index: 99999;
 }
 
-/* Show tooltip only when collapsed */
 .sidebar:not(.open) .nav-item:hover::after {
   display: block;
   opacity: 1;
 }
 
-/* Tooltip Arrow */
 .nav-item::before {
   content: "";
   position: absolute;
@@ -127,25 +133,19 @@
   display: block;
   opacity: 1;
 }
-/* Submenu parent */
+
+/* -------------------------------------- */
+/* SUBMENU */
+/* -------------------------------------- */
 .submenu-parent {
   position: relative;
 }
 
-/* Parent item */
-.submenu-parent {
-  position: relative;
-}
-
-/* FULL HEIGHT RIGHT SIDEBAR */
-/* Keep all your existing CSS unchanged ... */
-
-/* FULL HEIGHT RIGHT SIDEBAR */
-/* Submenu positioning remains the same, we only override left dynamically via inline style */
 .submenu {
   display: none;
   position: fixed;
   top: 0;
+  left: 220px;
   width: 200px;
   height: 100vh;
   background: #121824;
@@ -153,6 +153,7 @@
   padding-top: 80px;
   z-index: 999;
   overflow-y: auto;
+  transition: all 0.3s ease;
 }
 
 .submenu-parent:hover .submenu {
@@ -166,16 +167,14 @@
   display: block;
 }
 
-
-
-/* submenu items styling */
+/* Submenu items */
 .submenu-item {
   padding: 15px;
   display: flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  transition: 0.2s;
+  transition: background 0.2s;
   color: white;
 }
 
@@ -183,7 +182,140 @@
   background: #333333;
 }
 
-.nav-item .nav-text {
-  white-space: nowrap;
-  display: inline-block;
+/* -------------------------------------- */
+/* RESPONSIVE STYLES */
+/* -------------------------------------- */
+
+/* Tablets (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 56px;
+  }
+
+  .sidebar.open {
+    width: 200px;
+  }
+
+  .nav-item {
+    padding: 14px;
+  }
+
+  .nav-icon {
+    min-width: 28px;
+    font-size: 16px;
+  }
+
+  .nav-text {
+    font-size: 14px;
+  }
+
+  .submenu {
+    width: 180px;
+    left: 200px;
+  }
+
+  .submenu-item {
+    padding: 14px;
+    font-size: 14px;
+  }
+
+  .sidebar-toggle {
+    font-size: 23px;
+  }
+}
+
+/* Small tablets (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .sidebar {
+    width: 52px;
+  }
+
+  .sidebar.open {
+    width: 180px;
+  }
+
+  .nav-item {
+    padding: 13px;
+  }
+
+  .nav-icon {
+    min-width: 26px;
+    font-size: 15px;
+  }
+
+  .nav-text {
+    font-size: 13px;
+  }
+
+  .submenu {
+    width: 170px;
+    left: 180px;
+  }
+
+  .submenu-item {
+    padding: 13px;
+    font-size: 13px;
+  }
+
+  /* Reduce tooltip size */
+  .nav-item::after {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+
+  .sidebar-toggle {
+    font-size: 22px;
+  }
+}
+
+/* Mobile (0px - 480px) */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 0;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.open {
+    width: 220px;
+    transform: translateX(0);
+  }
+
+  .nav-item {
+    padding: 14px;
+  }
+
+  .nav-icon {
+    min-width: 28px;
+    font-size: 16px;
+  }
+
+  .nav-text {
+    font-size: 14px;
+  }
+
+  /* Disable tooltip on mobile */
+  .nav-item::after,
+  .nav-item::before {
+    display: none !important;
+  }
+
+  .submenu {
+    position: fixed;
+    width: 100%;
+    left: 0 !important;
+    top: 0;
+    padding-top: 70px;
+  }
+
+  .submenu-item {
+    font-size: 14px;
+    padding: 14px;
+  }
+
+  .sidebar-toggle {
+    top: 12px;
+    left: 12px;
+    font-size: 24px;
+  }
 }

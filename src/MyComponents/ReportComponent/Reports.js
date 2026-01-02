@@ -88,6 +88,7 @@ export default function ReportsDashboard() {
   };
 
   return (
+    <div className="r-container">
     <div className="dashboard-container">
       <div className="header-section">
         <h1>Reports</h1>
@@ -122,6 +123,7 @@ export default function ReportsDashboard() {
           ))
         )}
       </div>
+    </div>
     </div>
   );
 }

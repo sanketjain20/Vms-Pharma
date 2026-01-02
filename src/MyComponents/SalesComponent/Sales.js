@@ -5,10 +5,8 @@ import "../../Styles/Inventory.css";
 export default function Product() {
 const columns = [
   { header: "Invoice No.", field: "invoiceNumber", width: "130px" },
-  { header: "Total Amount (₹)", field: "totalAmount", width: "150px" },
-  { header: "Total Tax (₹)", field: "totalTax", width: "110px" },
-  { header: "Total Discount (₹)", field: "totalDiscount", width: "160px" },
   { header: "Net Amount (₹)", field: "netAmount", width: "130px" },
+  { header: "Due Amount (₹)", field: "remainingAmount", width: "130px" },
   { header: "Billing Mode", field: "billingMode", width: "130px" },
   { header: "Date", field: "createdAt", width: "160px" },
   { header: "Actions", field: "Action", width: "120px" },

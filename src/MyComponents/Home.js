@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../Styles/Home.css";
 import dashBoardImage from "../Images/28439.jpg";
 import img1 from "../Images/3741.jpg";
@@ -24,16 +25,42 @@ import img20 from "../Images/upload-preview6.jpg";
 import img21 from "../Images/upload-preview7.jpg";
 
 export default function Home() {
+  const navigate = useNavigate();
+
   const user = JSON.parse(localStorage.getItem("vmsUser")) || {};
   const name = user?.data?.name || "Vendors";
+const isLoggedIn = !!user?.data;
 
-  // Array of all 14 images
+
+  /* =========================
+     DASHBOARD COUNTS
+  ========================= */
+  const [counts, setCounts] = useState({
+    vendors: 0,
+    products: 0,
+    requests: 0,
+    payments: 0
+  });
+
+  /* useEffect(() => {
+    fetch("http://localhost:8080/api/Dashboard/GetCounts", {
+      credentials: "include"
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.status === 200) setCounts(d.data);
+      });
+  }, []); */
+
+  /* =========================
+     HERO IMAGES
+  ========================= */
   const allImages = [
     img1, img2, img3, img4, img5, img6, img7,
-    img8, img9, img10, img11, img12, img13, img14,img15,img16,img17,img18,img19,img20,img21 
+    img8, img9, img10, img11, img12, img13, img14,
+    img15, img16, img17, img18, img19, img20, img21
   ];
 
-  // Helper function to get 9 random images
   const getRandomImages = (images, count) => {
     const shuffled = [...images].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
@@ -43,13 +70,14 @@ export default function Home() {
 
   return (
     <>
+      {/* ================= HERO ================= */}
       <section className="hero">
         <div className="hero-text">
           <h1>
             Namaste
             <span className="namaste-icon" aria-hidden="true">
               <svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#FFFFFF">
-                <path d="M631-320v-102l-49-90q-18 2-29.5 15.5T541-465v227l96 158h-70l-86-141v-244q0-35 20-62.5t52-38.5l-66-122q-20-38-16.5-80t32.5-71l60-60 278 324 40 495h-61l-38-472-222-259-14 14q-14 14-17 33.5t6 36.5l156 290v117h-60Zm-361 0v-117l156-290q9-17 6-36.5T415-797l-14-14-222 259-38 472H80l40-495 278-324 60 60q29 29 32.5 71T474-688l-66 122q32 11 52 38.5t20 62.5v244L394-80h-70l96-158v-227q0-18-11.5-31.5T379-512l-49 90v102h-60Z"/>
+                <path d="M631-320v-102l-49-90q-18 2-29.5 15.5T541-465v227l96 158h-70l-86-141v-244q0-35 20-62.5t52-38.5l-66-122q-20-38-16.5-80t32.5-71l60-60 278 324 40 495h-61l-38-472-222-259-14 14q-14 14-17 33.5t6 36.5l156 290v117h-60Zm-361 0v-117l156-290q9-17 6-36.5T415-797l-14-14-222 259-38 472H80l40-495 278-324 60 60q29 29 32.5 71T474-688l-66 122q32 11 52 38.5t20 62.5v244L394-80h-70l96-158v-227q0-18-11.5-31.5T379-512l-49 90v102h-60Z" />
               </svg>
             </span>
             , {name}!
@@ -62,118 +90,114 @@ export default function Home() {
             in one place.
           </p>
 
-          <button className="btn-primary">Get Started</button>
+          <button
+            className="btn-primary"
+            onClick={() => {
+              if (isLoggedIn) {
+                navigate("/onboarding");
+              } else {
+                navigate("/");
+              }
+            }}
+          >
+            Get Started
+          </button>
+
         </div>
 
         <div className="hero-grid">
           {heroImages.map((src, index) => (
-            <img key={index} src={src} alt={`hero-${index}`} className="hero-img" />
+            <img
+              key={index}
+              src={src}
+              alt={`hero-${index}`}
+              className="hero-img"
+            />
           ))}
         </div>
       </section>
 
+      {/* ================= METRIC CARDS ================= */}
       <div className="cards-container">
-        {/* card 1 */}
+        {/* Vendors */}
         <div className="card">
-          <div className="card-header">
+          <div
+            className="card-header clickable"
+            onClick={() => navigate("/master/vendor")}
+          >
             <h3>Vendors</h3>
             <span className="status boosted">Active</span>
           </div>
-          <div style={{ textAlign: "center", margin: "20px 0" }}>
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/6/6a/Vendor_icon.png"
-              width="60"
-              alt="Vendors"
-            />
-          </div>
           <div className="card-metrics">
-            <div>
-              <span style={{ fontSize: 24, fontWeight: 700 }}>58</span>
-              <div>Active Vendors</div>
-            </div>
+            <span>{counts.vendors}</span>
+            <div>Active Vendors</div>
           </div>
         </div>
 
-        {/* card 2 */}
+        {/* Products */}
         <div className="card">
-          <div className="card-header">
+          <div
+            className="card-header clickable"
+            onClick={() => navigate("/master/product")}
+          >
             <h3>Products</h3>
             <span className="status free">Available</span>
           </div>
-          <div style={{ textAlign: "center", margin: "20px 0" }}>
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/6/65/Box_icon.png"
-              width="60"
-              alt="Products"
-            />
-          </div>
           <div className="card-metrics">
-            <div>
-              <span style={{ fontSize: 24, fontWeight: 700 }}>142</span>
-              <div>Products</div>
-            </div>
+            <span>{counts.products}</span>
+            <div>Products</div>
           </div>
         </div>
 
-        {/* card 3 */}
+        {/* Requests */}
         <div className="card">
-          <div className="card-header">
-            <h3>Requests</h3>
-            <span className="status live">Pending</span>
-          </div>
-          <div style={{ textAlign: "center", margin: "20px 0" }}>
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/4/44/Clipboard_icon.png"
-              width="60"
-              alt="Requests"
-            />
+          <div
+            className="card-header clickable"
+            onClick={() => navigate("/master/reports")}
+          >
+            <h3>Reports</h3>
+            <span className="status live">Generated</span>
           </div>
           <div className="card-metrics">
-            <div>
-              <span style={{ fontSize: 24, fontWeight: 700 }}>23</span>
-              <div>Pending Requests</div>
-            </div>
+            <span>{counts.requests}</span>
+            <div>Generated Reports</div>
           </div>
         </div>
 
-        {/* card 4 */}
+        {/* Payments */}
         <div className="card">
-          <div className="card-header">
+          <div
+            className="card-header clickable"
+            onClick={() => navigate("/master/sales")}
+          >
             <h3>Payments</h3>
             <span className="status draft">Due</span>
           </div>
-          <div style={{ textAlign: "center", margin: "20px 0" }}>
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/8/88/Money_icon.png"
-              width="60"
-              alt="Payments"
-            />
-          </div>
           <div className="card-metrics">
-            <div>
-              <span style={{ fontSize: 24, fontWeight: 700 }}>12</span>
-              <div>Payments Due</div>
-            </div>
+            <span>{counts.payments}</span>
+            <div>Payments Due</div>
           </div>
         </div>
       </div>
 
-      {/* quick actions + favorites */}
+      {/* ================= QUICK ACTIONS + FAVORITES ================= */}
       <div className="cards-container quick-fav">
+        {/* Quick Actions */}
         <div className="panel card interactive quick-actions">
           <h3>Quick Actions</h3>
-          <button>Add Vendor</button>
-          <button>Add Product</button>
-          <button>Generate Report</button>
-          <button>Track Requests</button>
+          <button onClick={() => navigate("/vendors/add")}>Add Vendor</button>
+          <button onClick={() => navigate("/products/add")}>Add Product</button>
+          <button onClick={() => navigate("/reports")}>Generate Report</button>
+          <button onClick={() => navigate("/requests")}>Track Requests</button>
         </div>
 
+        {/* Favorites */}
         <div className="panel card interactive favorites">
           <h3>My Favorites</h3>
-          <button>Favorite Vendor 1</button>
-          <button>Favorite Product 1</button>
-          <button>Favorite Vendor 2</button>
-          <button>Favorite Product 2</button>
+          <button onClick={() => navigate("/vendors/1")}>Favorite Vendor 1</button>
+          <button onClick={() => navigate("/products/1")}>Favorite Product 1</button>
+          <button onClick={() => navigate("/vendors/2")}>Favorite Vendor 2</button>
+          <button onClick={() => navigate("/products/2")}>Favorite Product 2</button>
         </div>
       </div>
     </>
