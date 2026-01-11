@@ -17,7 +17,8 @@ export default function Navbar({ sidebarOpen }) {
     .slice(0, 2)
     .toUpperCase();
 
-  const vendorImage = user?.data?.vendorImage || null;
+ const profileImage = user?.data?.profilePhoto || null;
+  const shopLogo = user?.data?.shopLogo || null;
 
   const handleProfileClick = () => {
     setDropdownOpen(!dropdownOpen);
@@ -47,11 +48,12 @@ export default function Navbar({ sidebarOpen }) {
   };
 
   return (
+    console.log("Image profile",shopLogo),
     <header className={`topbar ${sidebarOpen ? "shifted" : ""}`}>
       <div className="logo-container">
         <span>VMS Digital</span>
-        {vendorImage ? (
-          <img src={vendorImage} alt={vendorShop} className="vendor-logo" />
+        {shopLogo ? (
+          <img src={shopLogo} className="vendor-logo" />
         ) : (
           <span className="vendor-name">{vendorShop}</span>
         )}
@@ -59,7 +61,15 @@ export default function Navbar({ sidebarOpen }) {
 
       <div className="topbar-right">
         <div className="profile" onClick={handleProfileClick}>
-          {initials}
+          {profileImage ? (
+            <img
+              src={profileImage}
+              alt="Profile"
+              className="profile-image"
+            />
+          ) : (
+            <span className="profile-initials">{initials}</span>
+          )}
           {dropdownOpen && (
             <div className="profile-dropdown">
               <div className="dropdown-item" onClick={handleSettings}>

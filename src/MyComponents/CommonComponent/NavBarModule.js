@@ -8,6 +8,7 @@ export default function NavBarModule({ sidebarOpen }) {
 
   const user = JSON.parse(localStorage.getItem("vmsUser")) || {};
   const vendorName = user?.data?.name || "Vendor";
+   const profileImage = user?.data?.profilePhoto || null;
 
   const initials = vendorName
     .split(" ")
@@ -47,7 +48,15 @@ export default function NavBarModule({ sidebarOpen }) {
     <header>
       <div className="topbar-right">
         <div className="profile" onClick={handleProfileClick}>
-          {initials}
+          {profileImage ? (
+            <img
+              src={profileImage}
+              alt="Profile"
+              className="profile-image"
+            />
+          ) : (
+            <span className="profile-initials">{initials}</span>
+          )}
           {dropdownOpen && (
             <div className="profile-dropdown">
               <div className="dropdown-item" onClick={handleSettings}>

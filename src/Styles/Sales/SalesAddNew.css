@@ -1,0 +1,334 @@
+/* ================= MODAL BACKDROP ================= */
+/* ================= ADD NEW SALES HEADER ================= */
+
+.main-sales-new {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px 24px;
+  background: #0b0b0b;
+  color: #e5e7eb;
+  box-sizing: border-box;
+}
+
+/* ================= PAGE TITLE ================= */
+
+.main-sales-new h1 {
+  padding: 14px 20px;
+margin-left: 40px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #f9fafb;
+}
+
+
+.sales-new-modal {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* ================= MAIN CONTAINER ================= */
+.sales-new-box {
+  width: 92%;
+  max-width: 1200px;
+  height: 87vh;
+  background: #0b0b0b;
+  border-radius: 14px;
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+  color: #e5e7eb;
+}
+
+/* ================= PANELS ================= */
+.left-panel,
+.right-panel {
+  flex: 1;
+  background: #111;
+  border-radius: 12px;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: inset 0 0 0 1px #1f1f1f;
+  max-height: 700px;
+}
+
+/* ================= HEADINGS ================= */
+.left-panel h3,
+.right-panel h3 {
+  margin-bottom: 14px;
+  font-size: 18px;
+  color: #ffffff;
+  border-bottom: 1px solid #1f1f1f;
+  padding-bottom: 8px;
+}
+
+/* ================= LABELS ================= */
+label {
+  display: block;
+  font-size: 13px;
+  color: #9ca3af;
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+
+/* ================= INPUTS & SELECT ================= */
+input{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #0b0b0b;
+  border: 1px solid #262626;
+  color: #e5e7eb;
+  font-size: 15px;
+  outline: none;
+}
+.sanslt{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #0b0b0b;
+  border: 1px solid #262626;
+  color: #e5e7eb;
+  font-size: 15px;
+  outline: none;
+}
+
+select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #0b0b0b;
+  border: 1px solid #262626;
+  color: #e5e7eb;
+  font-size: 15px;
+  outline: none;
+}
+
+input::placeholder {
+  color: #6b7280;
+}
+
+input:focus,
+select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* ================= ROW (TAX INPUT) ================= */
+.row {
+  display: flex;
+  gap: 10px;
+}
+
+.row input {
+  flex: 2;
+}
+
+.row select {
+  flex: 1;
+}
+
+/* ================= INFO BOX ================= */
+.info-box {
+  margin-top: 10px;
+  padding: 10px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #93c5fd;
+}
+
+/* ================= BUTTONS ================= */
+.sanbtn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 12px;
+  background: #2563eb;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+/* ================= RIGHT PANEL ================= */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+}
+.inp-mrgn{
+margin-top: 10px;
+}
+
+.item-list{
+    max-height: calc(5 * 60px); /* 5 rows * row height */
+  overflow-y: auto;           /* scroll appears after 5 rows */
+  border: 1px solid #ccc;     /* optional, for clarity */
+  padding: 5px;
+}
+/* ================= ITEM ROW (COMPACT SINGLE LINE) ================= */
+.item-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;   /* 🔥 THIS FIXES vertical issues */
+  gap: 12px;             /* 🔥 spacing between sections */
+  padding: 6px 10px;
+  border-bottom: 1px solid #222;
+  font-size: 13px;
+  min-height: 36px;
+}
+
+
+/* 🔹 REQUIRED: keeps name + qty on same row */
+.item-left {
+  display: flex;
+  align-items: center;     /* 🔥 aligns qty with name */
+  gap: 10px;
+  min-width: 0;
+}
+
+
+/* 🔹 REQUIRED: prevent wrapping */
+.item-left b,
+.item-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* Product Name (kept – not removed) */
+.item-row span:first-child {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ================= RIGHT SIDE CONTROLS ================= */
+.item-right {
+  display: flex;
+  align-items: center;     /* 🔥 aligns price properly */
+  gap: 10px;               /* 🔥 space between price & delete */
+}
+
+
+/* ================= QUANTITY CONTROLS ================= */
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qty-controls button {
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  padding: 0;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  line-height: 1;          /* 🔥 IMPORTANT */
+}
+
+.qty-controls span {
+  min-width: 16px;
+  text-align: center;
+  font-size: 13px;
+}
+
+/* ================= PRICE ================= */
+.item-price {
+  min-width: 60px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ae6b4;
+  line-height: 1;
+}
+
+
+/* ================= DELETE ================= */
+.delete-btn {
+  width: 20px;
+  height: 20px;
+  font-size: 13px;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid #a33;
+  background: #2a1212;
+  color: #ff6b6b;
+  line-height: 1;          /* 🔥 keeps it centered */
+}
+
+
+.delete-btn:hover {
+  background: #3a1515;
+}
+
+/* ================= DIVIDER ================= */
+.right-panel hr {
+  margin: 12px 0;
+  border: none;
+  border-top: 1px dashed #2a2a2a;
+}
+
+/* ================= TOTALS ================= */
+
+.right-panel b {
+  font-size: 18px;
+  color: #22c55e;
+  margin: 8px 0;
+}
+
+/* ================= SUBMIT BUTTON ================= */
+.right-panel .submit {
+  margin-top: auto;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.right-panel .submit:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+/* ================= SCROLLBAR ================= */
+.left-panel::-webkit-scrollbar,
+.right-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.left-panel::-webkit-scrollbar-thumb,
+.right-panel::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 10px;
+}
+
+.sub-head{
+  font-size: 16px;
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: #fdfdfd;
+}
+
+.options{
+  font-size: 14px;
+  color: #0a0a0a;
+}
+/* ================= RESPONSIVE ================= */
+@media (max-width: 900px) {
+  .sales-new-box {
+    flex-direction: column;
+    height: auto;
+    max-height: 95vh;
+  }
+}
+

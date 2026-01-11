@@ -71,6 +71,7 @@ const isLoggedIn = !!user?.data;
   return (
     <>
       {/* ================= HERO ================= */}
+      <div className="home-container">
       <section className="hero">
         <div className="hero-text">
           <h1>
@@ -123,14 +124,14 @@ const isLoggedIn = !!user?.data;
         <div className="card">
           <div
             className="card-header clickable"
-            onClick={() => navigate("/master/vendor")}
+            onClick={() => navigate("/master/salesshrt")}
           >
-            <h3>Vendors</h3>
+            <h3>Quick Sales</h3>
             <span className="status boosted">Active</span>
           </div>
           <div className="card-metrics">
             <span>{counts.vendors}</span>
-            <div>Active Vendors</div>
+            <div>Create Invoice</div>
           </div>
         </div>
 
@@ -180,25 +181,30 @@ const isLoggedIn = !!user?.data;
         </div>
       </div>
 
-      {/* ================= QUICK ACTIONS + FAVORITES ================= */}
-      <div className="cards-container quick-fav">
-        {/* Quick Actions */}
-        <div className="panel card interactive quick-actions">
-          <h3>Quick Actions</h3>
-          <button onClick={() => navigate("/vendors/add")}>Add Vendor</button>
-          <button onClick={() => navigate("/products/add")}>Add Product</button>
-          <button onClick={() => navigate("/reports")}>Generate Report</button>
-          <button onClick={() => navigate("/requests")}>Track Requests</button>
-        </div>
+      {/*
+================= QUICK ACTIONS + FAVORITES =================
+<div className="cards-container quick-fav">
+  
+  <div className="panel card interactive quick-actions">
+    <h3>Quick Actions</h3>
+    <button onClick={() => navigate("/vendors/add")}>Add Vendor</button>
+    <button onClick={() => navigate("/products/add")}>Add Product</button>
+    <button onClick={() => navigate("/reports")}>Generate Report</button>
+    <button onClick={() => navigate("/requests")}>Track Requests</button>
+  </div>
 
-        {/* Favorites */}
-        <div className="panel card interactive favorites">
-          <h3>My Favorites</h3>
-          <button onClick={() => navigate("/vendors/1")}>Favorite Vendor 1</button>
-          <button onClick={() => navigate("/products/1")}>Favorite Product 1</button>
-          <button onClick={() => navigate("/vendors/2")}>Favorite Vendor 2</button>
-          <button onClick={() => navigate("/products/2")}>Favorite Product 2</button>
-        </div>
+  <div className="panel card interactive favorites">
+    <h3>My Favorites</h3>
+    <button onClick={() => navigate("/vendors/1")}>Favorite Vendor 1</button>
+    <button onClick={() => navigate("/products/1")}>Favorite Product 1</button>
+    <button onClick={() => navigate("/vendors/2")}>Favorite Vendor 2</button>
+    <button onClick={() => navigate("/products/2")}>Favorite Product 2</button>
+  </div>
+
+</div>
+
+      </div>
+      */}
       </div>
     </>
   );

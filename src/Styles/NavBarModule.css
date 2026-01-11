@@ -44,7 +44,7 @@ header.shifted {
   font-weight: bold;
   font-size: 16px;
 
-  border-radius: 50%;
+  border-radius: 30%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -204,4 +204,22 @@ header.shifted {
     font-size: 12px;
     padding: 7px 10px;
   }
+}
+.profile-image {
+  width: 38px;
+  height: 38px;
+  border-radius: 30%;
+  object-fit: cover;
+}
+
+.profile-initials {
+  width: 38px;
+  height: 38px;
+  border-radius: 30%;
+  background: #144bc2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
 }

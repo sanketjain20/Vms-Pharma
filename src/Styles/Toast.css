@@ -30,8 +30,9 @@ background: linear-gradient(135deg, #f7f7f7, #ffffff);
 
 /* ===== INFO TOAST ===== */
 .Toastify__toast--info {
-  background: linear-gradient(135deg, #219ebc, #023047);
-  color: #ffffff;
+  background: linear-gradient(135deg, #f7f7f7, #ffffff);
+  color: #0c2c83;
+  font-size: 15px;
 }
 
 /* ===== PROGRESS BAR ===== */

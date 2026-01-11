@@ -221,12 +221,34 @@ const [amountPaid, setAmountPaid] = useState("");
     0
   );
 
-  const netAmount =
-    discountInput > 0
-      ? discountType === "PERCENT"
-        ? totalAmount - (totalAmount * discountInput) / 100
-        : totalAmount - discountInput
-      : totalAmount;
+// 1️⃣ Total of line items (sellingPrice * quantity)
+const lineTotal = lineItems.reduce(
+  (sum, i) => sum + i.sellingPrice * i.quantity,
+  0
+);
+
+// 2️⃣ Total tax from line items (product-wise tax)
+const lineTaxTotal = lineItems.reduce((sum, i) => sum + i.taxAmount, 0);
+
+// 3️⃣ Total before tax (apply discount)
+const discountedTotal =
+  discountInput > 0
+    ? discountType === "PERCENT"
+      ? lineTotal - (lineTotal * discountInput) / 100
+      : lineTotal - discountInput
+    : lineTotal;
+
+// 4️⃣ Common tax (if applicable)
+let commonTaxAmount = 0;
+if (taxMode === "COMMON" && commonTax > 0) {
+  commonTaxAmount =
+    taxType === "PERCENT" ? (discountedTotal * commonTax) / 100 : parseFloat(commonTax);
+}
+
+// 5️⃣ Final net amount including tax
+const netAmount = discountedTotal + (taxMode === "PRODUCT" ? lineTaxTotal : commonTaxAmount);
+
+
 
       useEffect(() => {
     if (paymentType === "FULL") {

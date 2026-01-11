@@ -30,6 +30,7 @@ import Role from "./MyComponents/RoleComponent/Role";
 import Unauthorized from "./MyComponents/SecurityComponent/Unauthorized";
 import GenerateReport from "./MyComponents/ReportComponent/GenerateReport";
 import VendorOnboarding from "./MyComponents/VendorOnboarding";
+import SalesAddNew from "./MyComponents/SalesComponent/SalesAddNew";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
@@ -153,8 +154,17 @@ function App() {
             </ModuleGuard>
           }
         />
-      </Route>
 
+         <Route
+          path="salesshrt"
+          element={
+            <ModuleGuard moduleName="SALES">
+              <SalesAddNew />
+            </ModuleGuard>
+          }
+        />
+      </Route>
+      
       {/* UNAUTHORIZED PAGE */}
       <Route path="/unauthorized" element={<Unauthorized />} />
     </Routes>

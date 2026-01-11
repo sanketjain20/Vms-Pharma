@@ -51,26 +51,49 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
   }, [Module]);
 
   const refreshGrid = React.useCallback(() => {
-    fetch(`${apiUrl}/${page}/${size}`, {
-      method: "GET",
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((response) => {
-        if (response.status === 200) {
-          const dataObj = response.data;
-          const list = Array.isArray(dataObj)
-            ? dataObj
-            : Object.values(dataObj).find((v) => Array.isArray(v)) || [];
+  /* =======================
+     1️⃣ PAGED DATA (GRID)
+     ======================= */
+  fetch(`${apiUrl}/${page}/${size}`, {
+    method: "GET",
+    credentials: "include",
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.status === 200) {
+        const dataObj = response.data;
+        const list = Array.isArray(dataObj)
+          ? dataObj
+          : Object.values(dataObj).find((v) => Array.isArray(v)) || [];
 
-          setData(list);
-          setTotalPages(dataObj?.totalPages || 1);
-          setEmptyMsg(list.length ? "" : "No records found.");
-        } else {
-          toast.error(response.message);
-        }
-      });
-  }, [apiUrl, page, size]);
+        setData(list);
+        setTotalPages(dataObj?.totalPages || 1);
+        setEmptyMsg(list.length ? "" : "No records found.");
+      } else {
+        toast.error(response.message);
+      }
+    });
+
+  /* =======================
+     2️⃣ FULL DATA (FILTERS / COUNTS)
+     ======================= */
+  fetch(`${apiUrl}/0/100000`, {
+    method: "GET",
+    credentials: "include",
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.status === 200) {
+        const dataObj = response.data;
+        const list = Array.isArray(dataObj)
+          ? dataObj
+          : Object.values(dataObj).find((v) => Array.isArray(v)) || [];
+
+        setAllData(list);
+      }
+    });
+}, [apiUrl, page, size]);
+
 
   useEffect(() => {
     refreshGrid();
@@ -91,36 +114,84 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
       });
   }, [apiUrl]);
 
-  const searchSource = searchText ? allData : data;
+  /* ===========================
+     ✅ COUNT LOGIC (UNCHANGED)
+     =========================== */
+  const counts = React.useMemo(() => {
+    const all = allData.length;
 
-  const filteredData = searchSource.filter((row) => {
     if (Module === "Sales") {
-      if (selectedStatus === "all") return true;
-      if (selectedStatus === "payment_done") return row.statusId === Status.PaymentDone;
-      if (selectedStatus === "payment_pending") return row.statusId === Status.PaymentPending;
-    } else {
-      if (selectedStatus === "all") return true;
-      if (row.disable !== undefined) {
-        return selectedStatus === (row.disable === 0 ? "active" : "inactive");
+      return {
+        all,
+        payment_done: allData.filter(
+          (r) => r.statusId === Status.PaymentDone
+        ).length,
+        payment_pending: allData.filter(
+          (r) => r.statusId === Status.PaymentPending
+        ).length,
+      };
+    }
+
+    return {
+      all,
+      active: allData.filter((r) => r.disable === 0).length,
+      inactive: allData.filter((r) => r.disable === 1).length,
+    };
+  }, [allData, Module]);
+
+  /* ===========================
+     🔥 FILTER FIRST (NEW LOGIC)
+     =========================== */
+  const filteredData = allData
+    .filter((row) => {
+      if (Module === "Sales") {
+        if (selectedStatus === "all") return true;
+        if (selectedStatus === "payment_done")
+          return row.statusId === Status.PaymentDone;
+        if (selectedStatus === "payment_pending")
+          return row.statusId === Status.PaymentPending;
+      } else {
+        if (selectedStatus === "all") return true;
+        if (row.disable !== undefined) {
+          return selectedStatus === (row.disable === 0 ? "active" : "inactive");
+        }
       }
-    }
-    return true;
-  }).filter((row) =>
-    searchText
-      ? Object.values(row).join(" ").toLowerCase().includes(searchText.toLowerCase())
-      : true
-  );
+      return true;
+    })
+    .filter((row) =>
+      searchText
+        ? Object.values(row)
+            .join(" ")
+            .toLowerCase()
+            .includes(searchText.toLowerCase())
+        : true
+    );
 
-  const finalData = searchText
-    ? filteredData.slice(page * size, page * size + size)
-    : filteredData;
+  /* ===========================
+     🔥 PAGINATE AFTER FILTER
+     =========================== */
+  const pagedData = React.useMemo(() => {
+    const start = page * size;
+    return filteredData.slice(start, start + size);
+  }, [filteredData, page, size]);
 
-  useEffect(() => {
-    if (searchText) {
-      setTotalPages(Math.ceil(filteredData.length / size) || 1);
-      setPage(0);
-    }
-  }, [searchText, size, filteredData.length]);
+  /* ===========================
+     🔥 TOTAL PAGES PER TAB
+     =========================== */
+useEffect(() => {
+  const pages = Math.ceil(filteredData.length / size) || 1;
+  setTotalPages(pages);
+
+  // 🔥 CRITICAL FIX
+  if (page >= pages) {
+    setPage(0);
+  }
+}, [filteredData.length, size]);
+
+useEffect(() => {
+  setPage(0);
+}, [selectedStatus]);
+
 
   const computedWidths = () =>
     columns.map((c) => c.width || `${Math.floor(100 / columns.length)}%`);
@@ -177,27 +248,28 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
       {Module === "Sales" ? (
         <div className="status-filters">
           <span
-            className={`status-chip ${selectedStatus === "all" ? "active" : ""
-              }`}
+            className={`status-chip ${selectedStatus === "all" ? "active" : ""}`}
             onClick={() => setSelectedStatus("all")}
           >
-            All
+            All ({counts.all})
           </span>
 
           <span
-            className={`status-chip ${selectedStatus === "payment_done" ? "active" : ""
-              }`}
+            className={`status-chip ${
+              selectedStatus === "payment_done" ? "active" : ""
+            }`}
             onClick={() => setSelectedStatus("payment_done")}
           >
-            Payment Done
+            Payment Done ({counts.payment_done})
           </span>
 
           <span
-            className={`status-chip ${selectedStatus === "payment_pending" ? "active" : ""
-              }`}
+            className={`status-chip ${
+              selectedStatus === "payment_pending" ? "active" : ""
+            }`}
             onClick={() => setSelectedStatus("payment_pending")}
           >
-            Payment Pending
+            Payment Pending ({counts.payment_pending})
           </span>
         </div>
       ) : (
@@ -206,21 +278,25 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
             className={`status-chip ${selectedStatus === "all" ? "active" : ""}`}
             onClick={() => setSelectedStatus("all")}
           >
-            All
+            All ({counts.all})
           </span>
+
           <span
-            className={`status-chip ${selectedStatus === "active" ? "active" : ""
-              }`}
+            className={`status-chip ${
+              selectedStatus === "active" ? "active" : ""
+            }`}
             onClick={() => setSelectedStatus("active")}
           >
-            Active
+            Active ({counts.active})
           </span>
+
           <span
-            className={`status-chip ${selectedStatus === "inactive" ? "active" : ""
-              }`}
+            className={`status-chip ${
+              selectedStatus === "inactive" ? "active" : ""
+            }`}
             onClick={() => setSelectedStatus("inactive")}
           >
-            Inactive
+            Inactive ({counts.inactive})
           </span>
         </div>
       )}
@@ -267,7 +343,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
                   </td>
                 </tr>
               ) : (
-                filteredData?.map((row, rowIndex) => (
+                  pagedData?.map((row, rowIndex) => (
                   <tr key={rowIndex}>
                     {columns.map((col, colIndex) => {
                       if (col.field === "Action") {
