@@ -1,183 +1,294 @@
 /* =========================
-   MAIN CONTAINER
+   BASE CONTAINER
 ========================= */
-.gen-dashboard-container {
-    display: flex;
-    gap: 30px;
-    max-width: 1100px;
-    margin: 20px auto;
-    min-height: 100%;
-    padding: 20px;
-    background: #1e1e2f;
-    border-radius: 12px;
-    color: #f0f0f0;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+.r-container {
+  padding: 24px;
+  background: #0f0f12;
+  min-height: 100vh;
+  color: #e5e7eb;
 }
 
 /* =========================
-   LEFT PANEL
+   TITLES & TEXT
 ========================= */
-.gen-filters-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    background: #2a2a40;
-    padding: 15px;
-    border-radius: 12px;
 
-    /* 🔥 CRITICAL */
-    overflow: visible;
+.gen-report-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.gen-loading-text {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.gen-error-text {
+  font-size: 14px;
+  color: #f87171;
+  background: #2a0f12;
+  padding: 12px;
+  border-radius: 6px;
 }
 
 /* =========================
-   FILTER ROW
+   TABLE WRAPPER
 ========================= */
-.gen-filter-item {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: #1e1e2f;
-    border-radius: 10px;
 
-    /* 🔥 each row has its own stacking context */
-    z-index: 1;
-}
-
-.gen-filter-item.active {
-    z-index: 50; /* 🔥 lift active dropdown row */
-}
-
-.gen-filter-item label {
-    min-width: 140px;
-    font-size: 14px;
-    color: #ffcc00;
+.gen-table-wrapper {
+  background: #16181d;
+  border-radius: 8px;
+  overflow-x: auto; /* horizontal scroll if needed */
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
 }
 
 /* =========================
-   INPUT
+   TABLE
 ========================= */
-.gen-filter-item input {
-    flex: 1;
-    padding: 5px 6px;
-    border-radius: 8px;
-    border: 1px solid #333;
-    background: #2a2a40;
-    color: #fff;
+
+.gen-table {
+  display: table;
+  width: 100%;                /* fill container width */
+  min-width: 100%;            /* ensures small tables stretch */
+  table-layout: fixed;         /* columns divide width evenly */
+  border-collapse: collapse;
 }
 
 /* =========================
-   CUSTOM DROPDOWN
+   TABLE ROWS
 ========================= */
-.custom-dropdown {
-    position: relative;
-    flex: 1;
-}
 
-/* Selected */
-.dropdown-selected {
-    background: #2a2a40;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #333;
-    cursor: pointer;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.dropdown-arrow {
-    font-size: 12px;
-    color: #aaa;
+.gen-table-header-row,
+.gen-table-body-row {
+  display: table-row;
 }
 
 /* =========================
-   DROPDOWN MENU
+   HEADER CELLS
 ========================= */
-.dropdown-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    width: 100%;
 
-    background: #2a2a40;
-    border-radius: 8px;
-
-    /* ✅ SHOW 5–6 ITEMS */
-    max-height: 220px;
-    overflow-y: auto;
-
-    box-shadow: 0 12px 25px rgba(0,0,0,0.6);
-
-    /* 🔥 ABSOLUTE TOP */
-    z-index: 9999;
+.gen-table-header-cell {
+  display: table-cell;
+  padding: 14px 20px;
+  background: #0b0d11;
+  color: #ffffff;
+  font-weight: 600;
+  white-space: nowrap;
+  border-right: 1px solid #2a2d34;
+  border-bottom: 1px solid #2a2d34;
+  width: 1%; /* ✅ makes columns expand evenly */
+  position: relative; /* allow absolute resizer inside */
 }
 
-/* Items */
-.dropdown-item {
-    padding: 10px 12px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.dropdown-item:hover {
-    background: #3b3b5e;
-}
-
-/* Clear */
-.dropdown-item.clear {
-    color: #ffcc00;
-    font-weight: bold;
-    border-bottom: 1px solid #3b3b5e;
+.gen-table-header-cell:last-child {
+  border-right: none;
 }
 
 /* =========================
-   SCROLLBAR
+   BODY CELLS
 ========================= */
-.dropdown-menu::-webkit-scrollbar {
-    width: 6px;
+
+.gen-table-body-cell {
+  display: table-cell;
+  padding: 14px 20px;
+  color: #9ca3af;
+  white-space: nowrap;
+  border-right: 1px solid #262a33;
+  border-bottom: 1px solid #262a33;
+  width: 1%; /* ✅ makes columns expand evenly */
 }
-.dropdown-menu::-webkit-scrollbar-thumb {
-    background: #ffcc00;
-    border-radius: 6px;
-}
-.dropdown-menu::-webkit-scrollbar-track {
-    background: #1e1e2f;
+
+.gen-table-body-cell:last-child {
+  border-right: none;
 }
 
 /* =========================
-   RIGHT PANEL
+   ROW HOVER
 ========================= */
-.gen-report-panel {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
+
+.gen-table-body-row:hover .gen-table-body-cell {
+  background: #1f2229;
+  color: #ffffff;
 }
 
-.gen-report-buttons {
-    margin-top: auto;
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
+/* =========================
+   SCROLLBAR (DARK)
+========================= */
+
+.gen-table-wrapper::-webkit-scrollbar {
+  height: 8px;
 }
 
-.gen-generate-btn {
-    background: #ffcc00;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-weight: bold;
-    cursor: pointer;
+.gen-table-wrapper::-webkit-scrollbar-track {
+  background: #0f0f12;
 }
 
-.gen-back-btn {
-    background: #444;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    color: white;
+.gen-table-wrapper::-webkit-scrollbar-thumb {
+  background: #2a2d34;
+  border-radius: 4px;
+}
+
+.gen-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #3a3f48;
+}
+
+/* =========================
+   RESIZER HANDLE (ADDED)
+========================= */
+
+.resizer {
+  width: 6px;
+  cursor: col-resize;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  user-select: none;
+}
+
+/* =========================
+   PAGINATION CONTROLS
+========================= */
+
+.gen-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  color: #e5e7eb;
+  font-size: 14px;
+}
+
+.gen-pagination button {
+  background: #16181d;
+  color: #e5e7eb;
+  border: 1px solid #2a2d34;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.gen-pagination button:hover:not(:disabled) {
+  background: #2a2d34;
+}
+
+.gen-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gen-pagination span {
+  min-width: 80px;
+  text-align: center;
+}
+
+.gen-pagination select {
+  background: #16181d;
+  color: #e5e7eb;
+  border: 1px solid #2a2d34;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+/* =========================
+   Modal Overlay
+========================= */
+.gen-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* =========================
+   Modal Content Box
+========================= */
+.gen-modal-content {
+  background-color: #292929;
+  padding: 20px;
+  border-radius: 12px;
+  width: 80%;
+  max-width: 1000px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+
+/* =========================
+   Close Button
+========================= */
+.gen-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: #f44336;
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.gen-modal-close:hover {
+  background-color: #d32f2f;
+}
+
+/* =========================
+   Modal Table
+========================= */
+.gen-modal-table {
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.gen--table th,
+.gen-modal-table td {
+  border: 1px solid #b8b8b8;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.gen-modal-table th {
+  background-color: #444343;
+  font-weight: bold;
+}
+
+.gen-modal-table tbody tr:nth-child(even) {
+  background-color: #1b1a1a;
+}
+
+/* =========================
+   Blur main table when modal is open
+========================= */
+.blurred {
+  filter: blur(3px);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .gen-table-header-cell,
+  .gen-table-body-cell {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
 }

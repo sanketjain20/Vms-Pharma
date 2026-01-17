@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/Product/ProductView.css"; // reuse existing CSS
+import "../../Styles/Product/ProductView.css"; // reuse modal CSS
 
 export default function InventoryView({ uKey, onClose }) {
   const [inventory, setInventory] = useState(null);
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("product"); // product / stock
 
   useEffect(() => {
     if (!uKey) return;
@@ -12,66 +14,156 @@ export default function InventoryView({ uKey, onClose }) {
       credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Fetched Inventory Data:", data);
-        if (data.status === 200) setInventory(data.data);
-        else console.error("Error fetching inventory:", data.message);
+      .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`HTTP ${res.status}: ${text || "No response body"}`);
+        }
+        return res.json();
       })
-      .catch((err) => console.error("Fetch error:", err));
+      .then((data) => {
+        if (data.status === 200) setInventory(data.data);
+        else setError(data.message || "Failed to fetch inventory");
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setError(err.message);
+      });
   }, [uKey]);
 
   if (!uKey) return null;
-  if (!inventory) return <p>Loading...</p>;
 
   return (
     <div className="modal-backdrop show">
       <div className="modal">
-        {/* Header */}
-        <div className="modal-header">
-          <div className="modal-title">
-            <h3>Inventory | {inventory.inventoryCode}</h3>
+        {/* ================= HEADER WITH TABS IN SAME ROW ================= */}
+        <div
+          className="modal-header"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap", // allow wrapping on smaller screens
+            gap: "10px",
+          }}
+        >
+          {/* Title */}
+          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <h3 style={{ margin: 0 }}>
+              View Inventory | {inventory?.inventoryCode}
+            </h3>
+
+            {/* Tabs */}
+            <div className="tab-row" style={{ display: "flex", gap: "10px" , marginLeft:"240px" }}>
+              <div
+                className={`tab ${activeTab === "product" ? "active" : ""}`}
+                onClick={() => setActiveTab("product")}
+              >
+                Product Info
+              </div>
+              <div
+                className={`tab ${activeTab === "stock" ? "active" : ""}`}
+                onClick={() => setActiveTab("stock")}
+              >
+                Stock & Pricing
+              </div>
+            </div>
           </div>
-          <div className="modal-controls">
-            <button className="btn-ghost" onClick={onClose} title="Close">
-              ✖
+
+          {/* Close Button */}
+          <button className="btn-ghost" onClick={onClose} title="Close">
+            ✖
+          </button>
+        </div>
+
+        {/* ================= BODY ================= */}
+        <div className="modal-body scrollable">
+          {error && <p style={{ color: "red" }}>{error}</p>}
+          {!inventory && !error && <p>Loading...</p>}
+
+          {inventory && activeTab === "product" && (
+            <div className="form-col scrollable">
+              <div className="form-grid">
+                <div>
+                  <label>Product Name</label>
+                  <input
+                    type="text"
+                    value={inventory.productName || inventory.productId || ""}
+                    readOnly
+                  />
+                </div>
+
+                <div>
+                  <label>Product ID</label>
+                  <input
+                    type="text"
+                    value={inventory.productId || ""}
+                    readOnly
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {inventory && activeTab === "stock" && (
+            <div className="form-col scrollable">
+              <div className="form-grid">
+                <div>
+                  <label>Current Quantity</label>
+                  <input
+                    type="text"
+                    value={inventory.currentQuantity || ""}
+                    readOnly
+                  />
+                </div>
+
+                <div>
+                  <label>Reorder Level</label>
+                  <input
+                    type="text"
+                    value={inventory.reorderLevel || ""}
+                    readOnly
+                  />
+                </div>
+
+                <div>
+                  <label>Unit Cost Price</label>
+                  <input
+                    type="text"
+                    value={`₹ ${inventory.unitCostPrice || ""}`}
+                    readOnly
+                  />
+                </div>
+
+                <div>
+                  <label>Unit Selling Price</label>
+                  <input
+                    type="text"
+                    value={`₹ ${inventory.unitSellingPrice || ""}`}
+                    readOnly
+                  />
+                </div>
+
+                <div>
+                  <label>Total Stock Value</label>
+                  <input
+                    type="text"
+                    value={`₹ ${inventory.totalStockValue || ""}`}
+                    readOnly
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ================= FOOTER ================= */}
+        <div className="modal-footer-fixed">
+          <div className="modal-actions">
+            <button className="btn-ghost" onClick={onClose}>
+              Close
             </button>
           </div>
-        </div>
-
-        {/* Body */}
-        <div className="modal-body scrollable">
-          <div className="product-view">
-            <div className="product-row">
-              <label>Product ID :</label>
-              <span>{inventory.productId}</span>
-            </div>
-            <div className="product-row">
-              <label>Current Quantity :</label>
-              <span>{inventory.currentQuantity}</span>
-            </div>
-            <div className="product-row">
-              <label>Reorder Level :</label>
-              <span>{inventory.reorderLevel}</span>
-            </div>
-            <div className="product-row">
-              <label>Unit Cost Price :</label>
-              <span>₹ {inventory.unitCostPrice}</span>
-            </div>
-            <div className="product-row">
-              <label>Unit Selling Price :</label>
-              <span>₹ {inventory.unitSellingPrice}</span>
-            </div>
-            <div className="product-row">
-              <label>Total Stock Value :</label>
-              <span>₹ {inventory.totalStockValue}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="modal-footer-fixed">
-          <div className="modal-actions"></div>
         </div>
       </div>
     </div>

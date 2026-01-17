@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/Product/ProductView.css";
+import "../../Styles/Product/ProductForm.css";
 
 export default function ProductTypeView({ uKey, onClose }) {
   const [productType, setProductType] = useState(null);
@@ -8,11 +8,14 @@ export default function ProductTypeView({ uKey, onClose }) {
   useEffect(() => {
     if (!uKey) return;
 
-    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByUkey/${uKey}`, {
-      method: "GET",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    })
+    fetch(
+      `http://localhost:8080/api/ProductType/GetProdTypeByUkey/${uKey}`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      }
+    )
       .then(async (res) => {
         if (!res.ok) {
           const text = await res.text();
@@ -24,7 +27,7 @@ export default function ProductTypeView({ uKey, onClose }) {
         if (data.status === 200) {
           setProductType(data.data);
         } else {
-          setError(data.message || "Failed to fetch");
+          setError(data.message || "Failed to fetch product type");
         }
       })
       .catch((err) => {
@@ -34,36 +37,65 @@ export default function ProductTypeView({ uKey, onClose }) {
   }, [uKey]);
 
   if (!uKey) return null;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
-  if (!productType) return <p>Loading...</p>;
 
   return (
     <div className="modal-backdrop show">
       <div className="modal">
+        {/* ---------- Header ---------- */}
         <div className="modal-header">
           <div className="modal-title">
-            <h3>Product Type | {productType.typeCode}</h3>
+            <h3>View Product Type | {productType?.typeCode}</h3>
           </div>
-          <div className="modal-controls">
-            <button className="btn-ghost" onClick={onClose}>✖</button>
-          </div>
+
+          <button className="btn-ghost" onClick={onClose} title="Close">
+            ✖
+          </button>
         </div>
 
-        <div className="modal-body scrollable">
-          <div className="product-view">
-            <div className="product-row">
-              <label>Name :</label>
-              <span>{productType.name}</span>
-            </div>
+        {/* ---------- Body ---------- */}
+        <div className="modal-body">
+          {error && <p style={{ color: "red" }}>{error}</p>}
+          {!productType && !error && <p>Loading...</p>}
 
-            <div className="product-row">
-              <label>Description :</label>
-              <span>{productType.description || "-"}</span>
+          {productType && (
+            <div className="form-col scrollable">
+              <div className="form-grid">
+
+                <div>
+                  <label>Name</label>
+                  <div className="view-value">
+                    <input
+                    type="text"
+                    value={productType.name || ""}
+                    readOnly
+                  />
+                  </div>
+                </div>
+
+                <div>
+                  <label>Description</label>
+                  <div className="view-value">
+                    <input
+                    type="text"
+                    value={productType.description || ""}
+                    readOnly
+                  />
+                  </div>
+                </div>
+
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        <div className="modal-footer-fixed"></div>
+        {/* ---------- Footer ---------- */}
+        <div className="modal-footer-fixed">
+          <div className="modal-actions">
+            <button className="btn-ghost" onClick={onClose}>
+              Close
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

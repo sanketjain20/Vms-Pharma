@@ -82,7 +82,7 @@ export default function ReportsDashboard() {
 
   // ✅ ADDED: generate handler
   const handleGenerate = (reportName) => {
-    navigate("/master/reports/generate", {
+    navigate("/master/reports/open", {
       state: { reportName },
     });
   };

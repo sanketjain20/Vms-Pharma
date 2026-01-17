@@ -28,6 +28,7 @@ import Inventory from "./MyComponents/InventoryComponent/Inventory";
 import Sales from "./MyComponents/SalesComponent/Sales";
 import Role from "./MyComponents/RoleComponent/Role";
 import Unauthorized from "./MyComponents/SecurityComponent/Unauthorized";
+import OpenReport from "./MyComponents/ReportComponent/OpenReport";
 import GenerateReport from "./MyComponents/ReportComponent/GenerateReport";
 import VendorOnboarding from "./MyComponents/VendorOnboarding";
 import SalesAddNew from "./MyComponents/SalesComponent/SalesAddNew";
@@ -117,6 +118,15 @@ function App() {
         />
 
         <Route
+          path="reports/open"
+          element={
+            <ModuleGuard moduleName="REPORTS">
+              <OpenReport />
+            </ModuleGuard>
+          }
+        />
+
+          <Route
           path="reports/generate"
           element={
             <ModuleGuard moduleName="REPORTS">
