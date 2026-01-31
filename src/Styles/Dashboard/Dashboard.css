@@ -1,0 +1,102 @@
+.dashboard-container {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* prevent overflow */
+  gap: 20px;
+  background: #141414;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .dashboard-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .dashboard-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ================= CARD ================= */
+.d-card {
+  background: #141414;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;              /* 🔥 prevents chart overflow */
+  display: flex;
+  flex-direction: column;
+  min-width: 550px;     
+  min-height: 450px;             /* 🔥 VERY IMPORTANT for grid children */
+}
+
+.d-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5);
+}
+
+/* ================= SUMMARY CARDS ================= */
+.summary-card {
+  text-align: center;
+  padding: 20px;
+}
+
+.summary-card h4 {
+  color: #94a3b8;
+  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.summary-card p {
+  font-size: 24px;
+  font-weight: bold;
+  color: #f1f5f9;
+  margin: 6px 0;
+  word-wrap: break-word;
+}
+
+.summary-card .sub-text {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* ================= GROWTH COLORS ================= */
+.positive {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.negative {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* ================= CHART FIXES ================= */
+
+/* Ensures chart wrapper never exceeds card */
+.d-card canvas {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* If CustomChart uses a div wrapper */
+.d- > div {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Prevent long labels from breaking layout */
+.d-card h3,
+.d-card h4 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

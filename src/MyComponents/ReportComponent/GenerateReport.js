@@ -13,7 +13,9 @@ export default function GenerateReport() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [modalInvoice, setModalInvoice] = useState(null);
+
   const tableRef = useRef(null);
+  const modalTableRef = useRef(null); // ✅ ADDED
 
   /* =========================
      FETCH FIELD NAMES
@@ -39,7 +41,10 @@ export default function GenerateReport() {
 
     const payload = {};
     Object.keys(initialFilters).forEach((key) => {
-      payload[key] = initialFilters[key] && initialFilters[key].trim() !== "" ? initialFilters[key] : null;
+      payload[key] =
+        initialFilters[key] && initialFilters[key].trim() !== ""
+          ? initialFilters[key]
+          : null;
     });
 
     payload.page = page;
@@ -72,7 +77,7 @@ export default function GenerateReport() {
   }, [moduleId, initialFilters, page, pageSize]);
 
   /* =========================
-     RESIZER LOGIC
+     RESIZER LOGIC (MAIN TABLE)
   ========================= */
   useEffect(() => {
     if (!tableRef.current) return;
@@ -111,6 +116,47 @@ export default function GenerateReport() {
     });
   }, [fields, reportData]);
 
+  /* =========================
+     RESIZER LOGIC (MODAL TABLE)
+     ✅ ADDED — DOES NOT TOUCH EXISTING CODE
+  ========================= */
+  useEffect(() => {
+    if (!modalInvoice || !modalTableRef.current) return;
+
+    const headers = modalTableRef.current.querySelectorAll(".gen-table-header-cell");
+
+    headers.forEach((header, index) => {
+      const resizer = document.createElement("div");
+      resizer.className = "resizer";
+      header.appendChild(resizer);
+
+      let startX, startWidth;
+
+      const onMouseMove = (e) => {
+        const newWidth = startWidth + (e.pageX - startX);
+        header.style.width = newWidth + "px";
+
+        const bodyCells = modalTableRef.current.querySelectorAll(
+          `.gen-table-body-cell:nth-child(${index + 1})`
+        );
+        bodyCells.forEach((cell) => (cell.style.width = newWidth + "px"));
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      };
+
+      resizer.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        startX = e.pageX;
+        startWidth = header.offsetWidth;
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+      });
+    });
+  }, [modalInvoice, fields]);
+
   if (!moduleId) {
     return (
       <div className="r-container">
@@ -121,38 +167,28 @@ export default function GenerateReport() {
     );
   }
 
-  /* =========================
-     DYNAMIC KEY HELPER
-     Converts header labels to camelCase for API keys
-  ========================= */
   const toCamelCase = (str) => {
     return str
       .replace(/\s(.)/g, (_, g) => g.toUpperCase())
       .replace(/\s/g, "")
       .replace(/^(.)/, (_, g) => g.toLowerCase())
-      .replace(/[()₹]/g, ""); // remove special chars
+      .replace(/[()₹]/g, "");
   };
 
-  /* =========================
-     GROUP DATA BY INVOICE NUMBER
-  ========================= */
   const invoiceMap = new Map();
   let lastInvoiceKey = null;
 
   reportData.forEach((row) => {
     let invoiceKey = row.invoiceNumber || lastInvoiceKey;
-    if (!invoiceKey) invoiceKey = `null-${Math.random()}`; // for first null row
+    if (!invoiceKey) invoiceKey = `null-${Math.random()}`;
     lastInvoiceKey = row.invoiceNumber || lastInvoiceKey;
 
-    if (!invoiceMap.has(invoiceKey)) {
-      invoiceMap.set(invoiceKey, []);
-    }
+    if (!invoiceMap.has(invoiceKey)) invoiceMap.set(invoiceKey, []);
     invoiceMap.get(invoiceKey).push(row);
   });
 
   const invoiceKeys = Array.from(invoiceMap.keys());
   const totalPages = Math.ceil(invoiceKeys.length / pageSize);
-
   const paginatedKeys = invoiceKeys.slice((page - 1) * pageSize, page * pageSize);
 
   const openModal = (invoiceItems) => setModalInvoice(invoiceItems);
@@ -168,7 +204,6 @@ export default function GenerateReport() {
         <>
           <div className={`gen-table-wrapper ${modalInvoice ? "blurred" : ""}`} ref={tableRef}>
             <div className="gen-table">
-              {/* Header */}
               <div className="gen-table-header-row">
                 {fields.map((field, i) => (
                   <div key={i} className="gen-table-header-cell" style={{ width: "170px" }}>
@@ -177,53 +212,39 @@ export default function GenerateReport() {
                 ))}
               </div>
 
-              {/* Body */}
               {paginatedKeys.length ? (
                 paginatedKeys.map((key, gIndex) => {
                   const items = invoiceMap.get(key);
                   const hasMultiple = items.length > 1;
-                  const invoiceNumber = items[0].invoiceNumber || "—";
 
                   return (
-                    <React.Fragment key={gIndex}>
-                      {/* Invoice Row */}
-                      <div
-                        className="gen-table-body-row invoice-row"
-                        style={{ fontWeight: "bold", cursor: hasMultiple ? "pointer" : "default" }}
-                        onClick={() => hasMultiple && openModal(items)}
-                      >
-                        {fields.map((field, fIndex) => {
-                          const keyField = toCamelCase(field);
-                          return (
-                            <div
-                              key={fIndex}
-                              className="gen-table-body-cell"
-                              style={{
-                                width: "170px",
-                                display: fIndex === 0 && hasMultiple ? "flex" : undefined,
-                                justifyContent: fIndex === 0 && hasMultiple ? "space-between" : undefined,
-                              }}
-                            >
-                              {fIndex === 0 && hasMultiple
-                                ? <>
-                                    {items[0][keyField] ?? "—"}
-                                    <span style={{ marginLeft: "auto" }}>▾</span>
-                                  </>
-                                : items[0][keyField] ?? "—"}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </React.Fragment>
+                    <div
+                      key={gIndex}
+                      className="gen-table-body-row invoice-row"
+                      style={{ fontWeight: "bold", cursor: hasMultiple ? "pointer" : "default" }}
+                      onClick={() => hasMultiple && openModal(items)}
+                    >
+                      {fields.map((field, fIndex) => {
+                        const keyField = toCamelCase(field);
+                        return (
+                          <div
+                            key={fIndex}
+                            className="gen-table-body-cell"
+                            style={{
+                              width: "170px",
+                              display: fIndex === 0 && hasMultiple ? "flex" : undefined,
+                              justifyContent: fIndex === 0 && hasMultiple ? "space-between" : undefined,
+                            }}
+                          >
+                            {items[0][keyField] ?? "—"}
+                            {fIndex === 0 && hasMultiple && <span>▾</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
                   );
                 })
-              ) : (
-                <div className="gen-table-body-row">
-                  {fields.map((_, i) => (
-                    <div key={i} className="gen-table-body-cell" style={{ width: "150px" }}>—</div>
-                  ))}
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -236,28 +257,43 @@ export default function GenerateReport() {
               {[5, 10, 20, 50].map((size) => (<option key={size} value={size}>{size} per page</option>))}
             </select>
           </div>
-
-          {/* Modal Popup for multiple items */}
           {modalInvoice && (
             <div className="gen-modal-overlay">
               <div className="gen-modal-content">
                 <h3>Invoice: {modalInvoice[0].invoiceNumber || "—"}</h3>
-                <table className="gen-modal-table">
-                  <thead>
-                    <tr>{fields.map((field, i) => <th key={i}>{field}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {modalInvoice.map((row, i) => (
-                      <tr key={i}>
-                        {fields.map((field, j) => {
+
+                <div className="gen-table-wrapper" ref={modalTableRef}>
+                  <div className="gen-table">
+                    <div className="gen-table-header-row">
+                      {fields.map((field, i) => (
+                        <div key={i} className="gen-table-header-cell" style={{ width: "170px" }}>
+                          {field}
+                        </div>
+                      ))}
+                    </div>
+
+                    {modalInvoice.map((row, rIndex) => (
+                      <div key={rIndex} className="gen-table-body-row">
+                        {fields.map((field, cIndex) => {
                           const keyField = toCamelCase(field);
-                          return <td key={j}>{row[keyField] ?? "—"}</td>;
+                          return (
+                            <div
+                              key={cIndex}
+                              className="gen-table-body-cell"
+                              style={{ width: "170px" }}
+                            >
+                              {row[keyField] ?? "—"}
+                            </div>
+                          );
                         })}
-                      </tr>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-                <button className="gen-modal-close" onClick={closeModal}>Close</button>
+                  </div>
+                </div>
+
+                <button className="gen-modal-close" onClick={closeModal}>
+                  Close
+                </button>
               </div>
             </div>
           )}

@@ -32,6 +32,7 @@ import OpenReport from "./MyComponents/ReportComponent/OpenReport";
 import GenerateReport from "./MyComponents/ReportComponent/GenerateReport";
 import VendorOnboarding from "./MyComponents/VendorOnboarding";
 import SalesAddNew from "./MyComponents/SalesComponent/SalesAddNew";
+import Dashboard from "./MyComponents/DashboardComponent/Dashboard"
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
@@ -170,6 +171,15 @@ function App() {
           element={
             <ModuleGuard moduleName="SALES">
               <SalesAddNew />
+            </ModuleGuard>
+          }
+        />
+
+        <Route
+          path="dashboard"
+          element={
+            <ModuleGuard moduleName="DASHBOARD">
+              <Dashboard />
             </ModuleGuard>
           }
         />
