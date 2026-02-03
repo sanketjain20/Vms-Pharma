@@ -5,9 +5,23 @@ import { toast } from "react-toastify";
 export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   const dropdownRef = useRef(null);
 
+  /* ================= NEW TYPE DROPDOWN REFS ================= */
+  const typeDropdownRef = useRef(null);
+  /* ========================================================== */
+
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  /* ================= NEW STATES ================= */
+  const [productTypes, setProductTypes] = useState([]);
+  const [productTypeId, setProductTypeId] = useState("");
+  const [typeSearch, setTypeSearch] = useState("");
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [allProducts, setAllProducts] = useState([]);
+  const isInitialLoad = useRef(true);
+
+  /* ============================================= */
 
   const [activeTab, setActiveTab] = useState("details");
   const [formData, setFormData] = useState({
@@ -26,6 +40,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   const apiUpdateInventoryBase =
     "http://localhost:8080/api/Inventory/UpdateInventory";
 
+  /* ================= FETCH ALL PRODUCTS ================= */
   useEffect(() => {
     fetch(apiGetAllProducts, {
       method: "GET",
@@ -36,6 +51,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
       .then((res) => {
         if (res.status === 200 && res.data && Array.isArray(res.data.products)) {
           setProducts(res.data.products);
+          setAllProducts(res.data.products); // NEW
         } else {
           toast.error("Failed to load products");
         }
@@ -46,8 +62,20 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
       });
   }, []);
 
+  /* ================= FETCH PRODUCT TYPES ================= */
+  useEffect(() => {
+    fetch("http://localhost:8080/api/ProductType/GetAllProductType", {
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(json => setProductTypes(json?.data?.productTypes || []));
+  }, []);
+  /* ======================================================= */
+
   useEffect(() => {
     if (products.length === 0) return;
+
+    if (!isInitialLoad.current) return;
 
     fetch(apiGetInventory, {
       method: "GET",
@@ -78,19 +106,63 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
         const matchedProduct = products.find((p) => p.id === inv.productId);
         if (matchedProduct) setSearchTerm(matchedProduct.name);
         else setSearchTerm("");
+
+        /* ===== NEW: SET PRODUCT TYPE FROM API RESPONSE ===== */
+        if (inv.productTypeId) {
+          setProductTypeId(inv.productTypeId);
+        }
+        isInitialLoad.current = false;
+
+        /* =================================================== */
       })
       .catch(() => toast.error("Error loading inventory"));
   }, [products]);
 
+  /* ================= CLICK OUTSIDE ================= */
   useEffect(() => {
     const clickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
       }
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) {
+        setTypeDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", clickOutside);
     return () => document.removeEventListener("mousedown", clickOutside);
   }, []);
+  /* ================================================= */
+
+  /* ================= PRODUCT → TYPE API CALL ================= */
+  useEffect(() => {
+    if (!formData.product_id) return;
+
+    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, {
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(json => {
+        if (json?.data?.id) {
+          setProductTypeId(json.data.id);
+        }
+      });
+  }, [formData.product_id]);
+  /* ========================================================== */
+
+  /* ================= TYPE → PRODUCTS FILTER ================= */
+  useEffect(() => {
+    if (!productTypeId) {
+      setProducts(allProducts);
+      return;
+    }
+
+    fetch(`http://localhost:8080/api/Product/GetProdByProdId/${productTypeId}`, {
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(json => setProducts(json?.data || []));
+  }, [productTypeId]);
+  /* ========================================================== */
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -129,16 +201,8 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
 
   const handleSubmit = () => {
     if (!validate()) return;
-
-    if (!detectChanges()) {
-      toast.info("No changes to update");
-      return;
-    }
-
-    if (!inventoryId) {
-      toast.error("Inventory ID missing");
-      return;
-    }
+    if (!detectChanges()) return toast.info("No changes to update");
+    if (!inventoryId) return toast.error("Inventory ID missing");
 
     const payload = {
       product_id: Number(formData.product_id),
@@ -159,12 +223,14 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
           toast.success("Inventory updated successfully");
           onSubmit();
           onClose();
-        } else {
-          toast.error(res.message || "Update failed");
-        }
+        } else toast.error(res.message || "Update failed");
       })
       .catch(() => toast.error("Error updating inventory"));
   };
+
+  const filteredTypes = productTypes.filter(pt =>
+    pt.name.toLowerCase().includes(typeSearch.toLowerCase())
+  );
 
   return (
     <div className="modal-backdrop show">
@@ -188,9 +254,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
               ))}
             </div>
 
-            <button className="btn-ghost" onClick={onClose}>
-              ✖
-            </button>
+            <button className="btn-ghost" onClick={onClose}>✖</button>
           </div>
         </div>
 
@@ -199,10 +263,44 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
             {activeTab === "details" && (
               <div className="form-grid">
 
-                {/* ✅ REPLACED DROPDOWN — EXACT CODE PROVIDED BY YOU */}
+                {/* 🔽 PRODUCT TYPE DROPDOWN */}
+                <div className="custom-select" ref={typeDropdownRef}>
+                  <label>Product Type</label>
+
+                  <div
+                    className={`select-box ${typeDropdownOpen ? "active" : ""}`}
+                    onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+                  >
+                    <div className="selected">
+                      {productTypes.find(t => t.id === productTypeId)?.name || "Select product type"}
+                    </div>
+
+                    {typeDropdownOpen && (
+                      <ul className="options">
+                        {filteredTypes.map(pt => (
+                          <li
+                            key={pt.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProductTypeId(pt.id);
+                              setTypeDropdownOpen(false);
+                            }}
+                          >
+                            {pt.name}
+                          </li>
+                        ))}
+                        {filteredTypes.length === 0 && (
+                          <li style={{ color: "#888" }}>No result found</li>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+
+                {/* ORIGINAL PRODUCT DROPDOWN (UNCHANGED) */}
                 <div className="custom-select" ref={dropdownRef}>
                   <label>Select Product</label>
-
                   <div
                     className={`select-box ${dropdownOpen ? "active" : ""}`}
                     onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -233,11 +331,9 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
                     <div className="error-msg">{errors.product_id}</div>
                   )}
                 </div>
-                {/* ✅ END OF REPLACEMENT */}
 
               </div>
             )}
-
             {activeTab === "stock" && (
               <div className="form-grid">
                 <div className="form-field">

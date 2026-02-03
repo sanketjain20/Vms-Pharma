@@ -54,7 +54,7 @@ export default function InventoryView({ uKey, onClose }) {
             </h3>
 
             {/* Tabs */}
-            <div className="tab-row" style={{ display: "flex", gap: "10px" , marginLeft:"240px" }}>
+            <div className="tab-row" style={{ display: "flex", gap: "10px", marginLeft: "240px" }}>
               <div
                 className={`tab ${activeTab === "product" ? "active" : ""}`}
                 onClick={() => setActiveTab("product")}
@@ -85,25 +85,26 @@ export default function InventoryView({ uKey, onClose }) {
             <div className="form-col scrollable">
               <div className="form-grid">
                 <div>
-                  <label>Product Name</label>
+                  <label>Product Type Name</label>
                   <input
                     type="text"
-                    value={inventory.productName || inventory.productId || ""}
+                    value={inventory.productTypeName || ""}
                     readOnly
                   />
                 </div>
 
                 <div>
-                  <label>Product ID</label>
+                  <label>Product Name</label>
                   <input
                     type="text"
-                    value={inventory.productId || ""}
+                    value={inventory.productName || ""}
                     readOnly
                   />
                 </div>
               </div>
             </div>
           )}
+
 
           {inventory && activeTab === "stock" && (
             <div className="form-col scrollable">

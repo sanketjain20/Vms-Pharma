@@ -62,9 +62,10 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
     .then((response) => {
       if (response.status === 200) {
         const dataObj = response.data;
-        const list = Array.isArray(dataObj)
-          ? dataObj
-          : Object.values(dataObj).find((v) => Array.isArray(v)) || [];
+ const list = Array.isArray(dataObj)
+  ? dataObj
+  : Object.values(dataObj ?? {}).find((v) => Array.isArray(v)) || [];
+
 
         setData(list);
         setTotalPages(dataObj?.totalPages || 1);
@@ -85,9 +86,10 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
     .then((response) => {
       if (response.status === 200) {
         const dataObj = response.data;
-        const list = Array.isArray(dataObj)
-          ? dataObj
-          : Object.values(dataObj).find((v) => Array.isArray(v)) || [];
+const list = Array.isArray(dataObj)
+  ? dataObj
+  : Object.values(dataObj ?? {}).find((v) => Array.isArray(v)) || [];
+setAllData(list);
 
         setAllData(list);
       }
@@ -107,9 +109,10 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
       .then((res) => res.json())
       .then((response) => {
         const dataObj = response.data;
-        const list = Array.isArray(dataObj)
-          ? dataObj
-          : Object.values(dataObj).find((v) => Array.isArray(v)) || [];
+const list = Array.isArray(dataObj)
+  ? dataObj
+  : Object.values(dataObj ?? {}).find((v) => Array.isArray(v)) || [];
+setAllData(list);
         setAllData(list);
       });
   }, [apiUrl]);

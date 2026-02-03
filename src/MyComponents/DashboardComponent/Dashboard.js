@@ -4,7 +4,7 @@ import "../../Styles/Dashboard/Dashboard.css";
 
 const Dashboard = () => {
   const [todayChartData, setTodayChartData] = useState([]);
-  const [DaywiseChartData, setDaywiseChartData] = useState([]); 
+  const [DaywiseChartData, setDaywiseChartData] = useState([]);
   const [weeklyApiChartData, setWeeklyApiChartData] = useState([]);
   const [monthlyChartData, setMonthlyChartData] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -15,6 +15,12 @@ const Dashboard = () => {
   const [weeklyChartType, setWeeklyChartType] = useState("bar");
   const [monthlyChartType, setMonthlyChartType] = useState("bar");
   const [orderStatusChartType, setOrderStatusChartType] = useState("bar");
+
+  const [orderStatusData, setOrderStatusData] = useState([]);
+  const [orderStatusType, setOrderStatusType] = useState("monthly");
+  const [orderStatusMonth, setOrderStatusMonth] = useState(new Date().getMonth() + 1);
+  const [orderStatusYear, setOrderStatusYear] = useState(new Date().getFullYear());
+
 
   const [summary, setSummary] = useState({
     todaySalesAmount: 0,
@@ -99,6 +105,31 @@ const Dashboard = () => {
         console.error("Monthly API failed:", err);
       });
   }, [selectedYear]);
+
+  useEffect(() => {
+    let monthParam = orderStatusMonth;
+    let yearParam = orderStatusYear;
+
+    // if monthly or yearly, month not required
+    if (orderStatusType === "monthly" || orderStatusType === "yearly") {
+      monthParam = 0;
+    }
+
+    fetch(`http://localhost:8080/api/Sales/orderStatusSummary/${orderStatusType}/${monthParam}/${yearParam}`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        const data = json?.data ?? [];
+        setOrderStatusData(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.error("Order Status API failed:", err);
+      });
+  }, [orderStatusType, orderStatusMonth, orderStatusYear]);
+
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-IN", {
@@ -218,23 +249,66 @@ const Dashboard = () => {
       </div>
 
       {/* Order Status */}
+      {/* Order Status */}
       <div className="d-card">
-        <ChartTypeSelector chartType={orderStatusChartType} setChartType={setOrderStatusChartType} />
+
+        {/* Filters */}
+        <div style={{ display: "flex", gap: "10px", marginBottom: "10px", alignItems: "center", flexWrap: "wrap" }}>
+
+          {/* Chart Type */}
+          <label>Chart:</label>
+          <select value={orderStatusChartType} onChange={(e) => setOrderStatusChartType(e.target.value)}>
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+            <option value="pie">Pie</option>
+          </select>
+
+          {/* Time Type */}
+          <label>View:</label>
+          <select value={orderStatusType} onChange={(e) => setOrderStatusType(e.target.value)}>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+
+          {/* Month (only for daily & weekly) */}
+          {(orderStatusType === "daily" || orderStatusType === "weekly") && (
+            <>
+              <label>Month:</label>
+              <select value={orderStatusMonth} onChange={(e) => setOrderStatusMonth(e.target.value)}>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {new Date(0, i).toLocaleString("default", { month: "short" })}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+
+          {/* Year */}
+          <label>Year:</label>
+          <select value={orderStatusYear} onChange={(e) => setOrderStatusYear(e.target.value)}>
+            {Array.from({ length: 5 }, (_, i) => {
+              const year = new Date().getFullYear() - i;
+              return <option key={year} value={year}>{year}</option>;
+            })}
+          </select>
+
+        </div>
+
         <CustomChart
-          data={[
-            { label: "Completed", value: 320 },
-            { label: "Pending", value: 120 },
-            { label: "Cancelled", value: 45 },
-          ]}
+          data={orderStatusData}
           xKey="label"
           yKey="value"
           xLabel="Status"
           yLabel="Orders"
-          chartTitle="Order Status"
+          chartTitle="Order Status Overview"
           barColor="#4e79a7"
           chartType={orderStatusChartType}
         />
       </div>
+
 
     </div>
   );

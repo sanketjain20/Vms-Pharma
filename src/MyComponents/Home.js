@@ -169,14 +169,14 @@ const isLoggedIn = !!user?.data;
         <div className="card">
           <div
             className="card-header clickable"
-            onClick={() => navigate("/master/sales")}
+            onClick={() => navigate("/master/dashboard")}
           >
-            <h3>Payments</h3>
+            <h3>Dashboard</h3>
             <span className="status draft">Due</span>
           </div>
           <div className="card-metrics">
             <span>{counts.payments}</span>
-            <div>Payments Due</div>
+            <div>Sales Info </div>
           </div>
         </div>
       </div>

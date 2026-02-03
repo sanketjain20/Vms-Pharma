@@ -38,22 +38,27 @@ const CustomChart = ({
           <BarChart data={data}>
             <XAxis
               dataKey={xKey}
+              axisLine={false} 
+              tickLine={false} 
+              style={{ fontWeight: "bold", fill: "#fff" }}
               label={{
                 value: xLabel,
                 position: "insideBottom",
                 offset: -18,
-                style: { fontWeight: "bold", fontSize: 16, fill: "#fefffd" },
+                style: { fontWeight: "bold", fontSize: 16, fill: "#fff" },
               }}
             />
             <YAxis
+              tick={false}       // hide numbers
+              axisLine={false}   // hide line
               label={{
-                value: yLabel,
+                value: yLabel,   // only show label
                 angle: -90,
                 position: "insideLeft",
-                offset: 3,
-                style: { fontWeight: "bold", fontSize: 16, fill: "#f8f4f4" },
+                style: { fontWeight: "bold", fontSize: 16, fill: "#fff" },
               }}
             />
+            <CartesianGrid vertical={false} horizontal={false} />
             <Tooltip
               formatter={(value) =>
                 new Intl.NumberFormat("en-IN", {
@@ -68,7 +73,7 @@ const CustomChart = ({
               }}
             />
             <Legend formatter={() => ""} />
-            <Bar dataKey={yKey} fill={barColor}>
+            <Bar dataKey={yKey} fill={barColor} radius={[6, 6, 0, 0]}>
               <LabelList
                 dataKey={yKey}
                 position="top"
@@ -80,22 +85,27 @@ const CustomChart = ({
           <LineChart data={data}>
             <XAxis
               dataKey={xKey}
+              axisLine={false} 
+              tickLine={false} 
+              style={{ fontWeight: "bold", fill: "#fff" }}
               label={{
                 value: xLabel,
                 position: "insideBottom",
                 offset: -18,
-                style: { fontWeight: "bold", fontSize: 16, fill: "#fefffd" },
+                style: { fontWeight: "bold", fontSize: 14, fill: "#fff" },
               }}
             />
             <YAxis
+              tick={false}       
+              axisLine={false}   
               label={{
-                value: yLabel,
+                value: yLabel,   
                 angle: -90,
                 position: "insideLeft",
-                offset: 3,
-                style: { fontWeight: "bold", fontSize: 16, fill: "#f8f4f4" },
+                style: { fontWeight: "bold", fontSize: 16, fill: "#fff" },
               }}
             />
+            <CartesianGrid vertical={false} horizontal={false} />
             <Tooltip
               formatter={(value) =>
                 new Intl.NumberFormat("en-IN", {
@@ -111,21 +121,15 @@ const CustomChart = ({
             />
             <Legend formatter={() => ""} />
             <Line
-              type="linear"
+              type="monotone"
               dataKey={yKey}
               stroke={barColor}
-              strokeWidth={2}
+              strokeWidth={3}
               dot={{ r: 5 }}
             >
-              <LabelList
-                dataKey={yKey}
-                position="top"
-                style={{ fill: "#fff", fontWeight: "bold" }}
-              />
             </Line>
           </LineChart>
         ) : (
-          // Pie Chart
           <PieChart>
             <Tooltip
               formatter={(value) =>

@@ -8,6 +8,15 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  /* ================= NEW ADDITIONS ================= */
+  const [allProducts, setAllProducts] = useState([]);
+  const [productTypes, setProductTypes] = useState([]);
+  const [typeSearch, setTypeSearch] = useState("");
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const typeDropdownRef = useRef(null);
+  const lastLoadedType = useRef(null);
+  /* ================================================= */
+
   const [activeTab, setActiveTab] = useState("details");
 
   const [formData, setFormData] = useState({
@@ -17,9 +26,12 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     unitSellingPrice: "",
   });
 
+  /* ================= NEW FIELD ADDED SAFELY ================= */
+  const [productTypeId, setProductTypeId] = useState("");
+  /* ========================================================== */
+
   const [errors, setErrors] = useState({});
 
-  // API to fetch all products
   const fetchUrl = "http://localhost:8080/api/Product/GetAllProduct";
 
   /** FETCH ALL PRODUCTS FOR DROPDOWN */
@@ -37,13 +49,23 @@ export default function InventoryAdd({ onSubmit, onClose }) {
             Array.isArray(dataObj)
               ? dataObj
               : typeof dataObj === "object"
-              ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
-              : [];
+                ? Object.values(dataObj).find((v) => Array.isArray(v)) || []
+                : [];
 
           setProducts(list);
+          setAllProducts(list); // NEW
         }
       })
       .catch((err) => console.error("Error fetching products:", err));
+  }, []);
+
+  /* ================= FETCH PRODUCT TYPES ================= */
+  useEffect(() => {
+    fetch("http://localhost:8080/api/ProductType/GetAllProductType", {
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(json => setProductTypes(json?.data?.productTypes || []));
   }, []);
 
   /** CLOSE DROPDOWN WHEN CLICK OUTSIDE */
@@ -52,6 +74,10 @@ export default function InventoryAdd({ onSubmit, onClose }) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
         setSearchTerm("");
+      }
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) {
+        setTypeDropdownOpen(false);
+        setTypeSearch("");
       }
     };
     document.addEventListener("mousedown", clickOutside);
@@ -75,14 +101,12 @@ export default function InventoryAdd({ onSubmit, onClose }) {
       e.reorderLevel = "Reorder level is required";
     if (!formData.unitSellingPrice)
       e.unitSellingPrice = "Unit selling price is required";
-
     return e;
   };
 
   /** SUBMIT FORM */
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const v = validate();
     if (Object.keys(v).length > 0) {
       setErrors(v);
@@ -127,6 +151,42 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  /* ================= NEW FILTERS ================= */
+  const filteredTypes = productTypes.filter(pt =>
+    pt.name.toLowerCase().includes(typeSearch.toLowerCase())
+  );
+
+  /* 🔥 LOAD PRODUCTS WHEN PRODUCT TYPE CHANGES */
+  useEffect(() => {
+    if (!productTypeId) {
+      setProducts(allProducts);
+      return;
+    }
+    if (lastLoadedType.current === productTypeId) return;
+    lastLoadedType.current = productTypeId;
+
+    fetch(`http://localhost:8080/api/Product/GetProdByProdId/${productTypeId}`, {
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(json => setProducts((json?.data || []).filter(p => p.disable === 0)));
+  }, [productTypeId, allProducts]);
+
+  /* 🔥 WHEN PRODUCT SELECTED → FETCH ITS PRODUCT TYPE FROM API */
+  useEffect(() => {
+    if (!formData.product_id) return;
+
+    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, {
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(json => {
+        const typeId = json?.data?.productTypeId || json?.data?.id;
+        if (typeId) setProductTypeId(typeId);
+      })
+      .catch(() => { });
+  }, [formData.product_id]);
+
   return (
     <div className="modal-backdrop show">
       <div className="modal">
@@ -159,14 +219,45 @@ export default function InventoryAdd({ onSubmit, onClose }) {
         {/* FORM BODY */}
         <form className="modal-body" onSubmit={handleSubmit}>
           <div className="form-col scrollable">
-            {/* TAB 1: PRODUCT SELECTION */}
             {activeTab === "details" && (
               <div className="form-grid">
+
+                {/* PRODUCT TYPE DROPDOWN */}
+                <div className="custom-select" ref={typeDropdownRef} style={{ width: "100%" }}>
+                  <label>Product Type</label>
+                  <div
+                    className={`select-box ${typeDropdownOpen ? "active" : ""}`}
+                    style={{ width: "100%" }}
+                    onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+                  >
+                    <input
+                      type="text"
+                      value={
+                        typeDropdownOpen
+                          ? typeSearch
+                          : productTypes.find(t => t.id === productTypeId)?.name || "Select product type"
+                      }
+                      onChange={(e) => setTypeSearch(e.target.value)}
+                      readOnly={!typeDropdownOpen}
+                      className="select-input"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                    />
+                    {typeDropdownOpen && (
+                      <ul className="options">
+                        {filteredTypes.map(pt => (
+                          <li key={pt.id} onClick={() => { setProductTypeId(pt.id); setTypeDropdownOpen(false); }}>
+                            {pt.name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
 
                 {/* PRODUCT DROPDOWN */}
                 <div className="custom-select" ref={dropdownRef}>
                   <label>Select Product</label>
-
                   <div
                     className={`select-box ${dropdownOpen ? "active" : ""}`}
                     onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -177,7 +268,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
                         dropdownOpen
                           ? searchTerm
                           : products.find((p) => p.id === formData.product_id)
-                              ?.name || "Choose a product"
+                            ?.name || "Choose a product"
                       }
                       onChange={(e) => setSearchTerm(e.target.value)}
                       onClick={(e) => {
@@ -221,7 +312,6 @@ export default function InventoryAdd({ onSubmit, onClose }) {
               </div>
             )}
 
-            {/* TAB 2: STOCK DETAILS */}
             {activeTab === "stock" && (
               <div className="form-grid">
                 <div>
@@ -266,13 +356,11 @@ export default function InventoryAdd({ onSubmit, onClose }) {
             )}
           </div>
 
-          {/* FOOTER */}
           <div className="modal-footer-fixed">
             <div className="modal-actions">
               <button className="btn-ghost" type="button" onClick={onClose}>
                 Cancel
               </button>
-
               <button type="submit" className="submit-button">
                 Save Inventory
               </button>
