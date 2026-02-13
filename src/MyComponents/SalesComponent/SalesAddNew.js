@@ -408,7 +408,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
                     setTypeDropdownOpen(true);
                   }}
                   readOnly={!typeDropdownOpen}
-                  className="select-input"
+                  className="new-select-input"
                 />
 
                 {typeDropdownOpen && (
@@ -456,7 +456,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
                     setDropdownOpen(true);
                   }}
                   readOnly={!dropdownOpen}
-                  className="select-input"
+                  className="new-select-input"
                 />
 
                 {dropdownOpen && (
@@ -580,7 +580,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
                     setBillingDropdownOpen(true);
                   }}
                   readOnly={!billingDropdownOpen}
-                  className="select-input"
+                  className="new-select-input"
                 />
 
                 {billingDropdownOpen && (

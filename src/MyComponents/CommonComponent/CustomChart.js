@@ -1,4 +1,3 @@
-// components/CustomChart.jsx
 import React from "react";
 import {
   ResponsiveContainer,
@@ -25,9 +24,21 @@ const CustomChart = ({
   yLabel = "",
   chartTitle = "",
   barColor = "#3d3c3c",
-  chartType = "bar", // "bar" | "line" | "pie"
-  pieColors = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f"], // standard 5 colors
+  chartType = "bar",
+  pieColors = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f"],
 }) => {
+
+  // 🔹 Calculate dynamic Y-axis max with +20% headroom
+  const maxValue = Math.max(...data.map(item => Number(item[yKey]) || 0));
+  const xAxisMaxValue = Math.max(...data.map(item => Number(item[xKey]) || 0));
+  const yAxisMax = Math.ceil(maxValue * 1.2);
+  const xAxisMax=  Math.ceil(xAxisMaxValue * 1.5);
+  const formatXAxis = (value) => {
+    if (!value) return "";
+    const str = String(value);
+    return str.length > 8 ? str.substring(0, 8) + "…" : str; // show first 8 chars
+  };
+
   return (
     <div style={{ width: "100%", height: 300 }}>
       {chartTitle && (
@@ -38,9 +49,14 @@ const CustomChart = ({
           <BarChart data={data}>
             <XAxis
               dataKey={xKey}
-              axisLine={false} 
-              tickLine={false} 
-              style={{ fontWeight: "bold", fill: "#fff" }}
+              tickFormatter={formatXAxis}
+              interval={0}
+              angle={-15}
+              padding={{ left: 20, right: 20 }}
+              textAnchor="end"
+              axisLine={false}
+              tickLine={false}
+              style={{ fontWeight: "bold", fill: "#fff", fontSize: 12 }}
               label={{
                 value: xLabel,
                 position: "insideBottom",
@@ -48,11 +64,13 @@ const CustomChart = ({
                 style: { fontWeight: "bold", fontSize: 16, fill: "#fff" },
               }}
             />
+
             <YAxis
-              tick={false}       // hide numbers
-              axisLine={false}   // hide line
+              domain={[0, yAxisMax]}   // ✅ Added dynamic max
+              tick={false}
+              axisLine={false}
               label={{
-                value: yLabel,   // only show label
+                value: yLabel,
                 angle: -90,
                 position: "insideLeft",
                 style: { fontWeight: "bold", fontSize: 16, fill: "#fff" },
@@ -85,21 +103,28 @@ const CustomChart = ({
           <LineChart data={data}>
             <XAxis
               dataKey={xKey}
-              axisLine={false} 
-              tickLine={false} 
-              style={{ fontWeight: "bold", fill: "#fff" }}
+              tickFormatter={formatXAxis}
+              interval={0}
+              angle={-15}
+              padding={{ left: 20, right: 20 }}
+              textAnchor="end"
+              axisLine={false}
+              tickLine={false}
+              style={{ fontWeight: "bold", fill: "#fff", fontSize: 12 }}
               label={{
                 value: xLabel,
                 position: "insideBottom",
                 offset: -18,
-                style: { fontWeight: "bold", fontSize: 14, fill: "#fff" },
+                style: { fontWeight: "bold", fontSize: 16, fill: "#fff" },
               }}
             />
+
             <YAxis
-              tick={false}       
-              axisLine={false}   
+              domain={[0, yAxisMax]}   // ✅ Added dynamic max
+              tick={false}
+              axisLine={false}
               label={{
-                value: yLabel,   
+                value: yLabel,
                 angle: -90,
                 position: "insideLeft",
                 style: { fontWeight: "bold", fontSize: 16, fill: "#fff" },
@@ -126,8 +151,7 @@ const CustomChart = ({
               stroke={barColor}
               strokeWidth={3}
               dot={{ r: 5 }}
-            >
-            </Line>
+            />
           </LineChart>
         ) : (
           <PieChart>
@@ -152,7 +176,6 @@ const CustomChart = ({
               cx="50%"
               cy="50%"
               outerRadius={80}
-              fill={barColor}
               label={({ name, percent }) =>
                 `${name}: ${(percent * 100).toFixed(0)}%`
               }

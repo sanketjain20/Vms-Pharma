@@ -258,3 +258,22 @@
   font-weight: 600;
   color: #fff;
 }
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  height: 40px;   /* adjust as needed */
+  width: auto;
+  object-fit: contain;
+  border-radius: 7px;
+}
+
+.vendor-logo {
+  height: 32px;
+  width: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+}

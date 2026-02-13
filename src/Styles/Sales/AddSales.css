@@ -355,3 +355,41 @@ input[type=number] {
   position: fixed !important;
   z-index: 99999 !important;
 }
+
+.select-input {
+  background: white !important;
+}
+
+.select-input::-ms-clear,
+.select-input::-ms-reveal {
+  display: none;
+}
+
+.custom-select {
+  position: relative;
+}
+
+.options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  z-index: 1000;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 4px;
+  list-style: none;
+  padding: 0;
+}
+
+.options li {
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.options li:hover {
+  background: #f2f2f2;
+}

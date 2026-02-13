@@ -1,0 +1,39 @@
+.stock-screen {
+  padding: 10px 5px;
+}
+
+.stock-screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.stock-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.stock-card {
+  background: #1f1f1f;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 25px 10px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 28px;
+  transition: all 0.2s ease;
+  color: #fff;
+}
+
+.stock-card span {
+  display: block;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.stock-card:hover {
+  background: #2c2c2c;
+  transform: translateY(-2px);
+}

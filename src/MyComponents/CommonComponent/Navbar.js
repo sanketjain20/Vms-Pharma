@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/Navbar.css";
+import udoyralogo from "../../Images/udoyraname.png"; 
 
 export default function Navbar({ sidebarOpen }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -51,12 +52,13 @@ export default function Navbar({ sidebarOpen }) {
     console.log("Image profile",shopLogo),
     <header className={`topbar ${sidebarOpen ? "shifted" : ""}`}>
       <div className="logo-container">
-        <span>VMS Digital</span>
-        {shopLogo ? (
+       {/* <span>Udoyra</span> */}
+        <img src={udoyralogo} alt="Udoyra Logo" className="brand-logo" />
+        { /*{shopLogo ? (
           <img src={shopLogo} className="vendor-logo" />
         ) : (
           <span className="vendor-name">{vendorShop}</span>
-        )}
+        )} */}
       </div>
 
       <div className="topbar-right">

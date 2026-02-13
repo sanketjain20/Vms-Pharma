@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/NavBarModule.css";
+import udoyralogo from "../../Images/udoyraname.png"; 
 
 export default function NavBarModule({ sidebarOpen }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -9,6 +10,8 @@ export default function NavBarModule({ sidebarOpen }) {
   const user = JSON.parse(localStorage.getItem("vmsUser")) || {};
   const vendorName = user?.data?.name || "Vendor";
    const profileImage = user?.data?.profilePhoto || null;
+   const shopLogo = user?.data?.shopLogo || null;
+   const vendorShop = user?.data?.shopName || "";
 
   const initials = vendorName
     .split(" ")
@@ -45,7 +48,16 @@ export default function NavBarModule({ sidebarOpen }) {
   };
 
   return (
-    <header>
+    <header className={`topbar ${sidebarOpen ? "shifted" : ""}`}>
+      <div className="logo-container">
+       {/* <span>Udoyra</span> */}
+        <img src={udoyralogo} alt="Udoyra Logo" className="brand-logo" />
+       { /* {shopLogo ? (
+          <img src={shopLogo} className="vendor-logo" />
+        ) : (
+          <span className="vendor-name">{vendorShop}</span>
+        )} */}
+      </div>
       <div className="topbar-right">
         <div className="profile" onClick={handleProfileClick}>
           {profileImage ? (

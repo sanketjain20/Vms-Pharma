@@ -1,12 +1,12 @@
-// ⚠️ FULL CODE EXACTLY AS YOU PROVIDED + ONLY REQUIRED CHANGE ADDED IN editItem()
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/Sales/AddSales.css";
 
 export default function SalesEdit({ uKey, onClose, onSubmit }) {
   const [productTypes, setProductTypes] = useState([]);
   const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]); // ✅ CASCADE
+  const lastLoadedType = useRef(null); // ✅ CASCADE
   const [inventory, setInventory] = useState(null);
 
   const [selectedType, setSelectedType] = useState("");
@@ -25,14 +25,22 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   const [billingMode, setBillingMode] = useState("CASH");
   const [saleId, setSaleId] = useState(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
-    const [paymentType, setPaymentType] = useState("FULL"); // FULL | PARTIAL
+  const [paymentType, setPaymentType] = useState("FULL");
   const [amountPaid, setAmountPaid] = useState(0);
   const [remainingAmount, setRemainingAmount] = useState(0);
 
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState("Existing");
-
   const [originalItems, setOriginalItems] = useState([]);
+
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
+  const [typeSearch, setTypeSearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+
+  const typeDropdownRef = useRef(null);
+  const productDropdownRef = useRef(null);
+
 
   const safeJson = async (res) => {
     try {
@@ -42,6 +50,31 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
       return null;
     }
   };
+
+  // ✅ LOAD ALL PRODUCTS ONCE
+  useEffect(() => {
+    fetch("http://localhost:8080/api/Product/GetAllProduct", {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then(res => res.json())
+      .then(json => {
+        const dataObj = json?.data;
+        const list =
+          Array.isArray(dataObj)
+            ? dataObj
+            : typeof dataObj === "object"
+              ? Object.values(dataObj).find(v => Array.isArray(v)) || []
+              : [];
+        setAllProducts(list);
+        setProducts(list);
+      })
+      .catch(() => {
+        setAllProducts([]);
+        setProducts([]);
+      });
+  }, []);
 
   useEffect(() => {
     fetch("http://localhost:8080/api/ProductType/GetAllProductType", {
@@ -73,7 +106,6 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
         setSaleId(sale.id);
         setInvoiceNumber(sale.invoiceNumber);
-
         setOriginalItems(sale.items);
 
         setLineItems(
@@ -95,14 +127,18 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
       });
   };
 
+  // ✅ TYPE CHANGE CASCADE
   const handleTypeChange = (e) => {
     const typeId = e.target.value;
     setSelectedType(typeId);
     setSelectedProduct("");
     setInventory(null);
-    setProducts([]);
     setErrors({});
-    if (!typeId) return;
+
+    if (!typeId) {
+      setProducts(allProducts);
+      return;
+    }
 
     fetch(`http://localhost:8080/api/Product/GetProdByProdId/${typeId}`, {
       method: "GET",
@@ -112,6 +148,36 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
       .then(json => setProducts(json?.data ?? []));
   };
 
+  // ✅ PRODUCT → AUTO TYPE
+  useEffect(() => {
+    if (!selectedProduct) return;
+
+    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByProductId/${selectedProduct}`, {
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(json => {
+        const typeId = json?.data?.productTypeId || json?.data?.id;
+        if (typeId && typeId !== selectedType) {
+          setSelectedType(typeId);
+
+          if (lastLoadedType.current !== typeId) {
+            lastLoadedType.current = typeId;
+            fetch(`http://localhost:8080/api/Product/GetProdByProdId/${typeId}`, {
+              credentials: "include",
+            })
+              .then(res => res.json())
+              .then(json => {
+                const list = json?.data ?? [];
+                setProducts(Array.isArray(list) ? list : []);
+              });
+          }
+        }
+      })
+      .catch(() => { });
+  }, [selectedProduct]);
+
+  // 🔥 PRODUCT CHANGE (INVENTORY ONLY)
   const handleProductChange = async (e) => {
     const prodId = e.target.value;
     setSelectedProduct(prodId);
@@ -120,29 +186,6 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
     if (!prodId) return;
 
-    // STEP 1: GET PRODUCT
-    const productRes = await fetch(`http://localhost:8080/api/Product/GetById/${prodId}`, {
-      method: "GET",
-      credentials: "include"
-    });
-    const productJson = await safeJson(productRes);
-
-    if (productJson?.data) {
-      const prod = productJson.data;
-
-      // STEP 2: GET PRODUCT TYPE
-      const typeRes = await fetch(`http://localhost:8080/api/ProductType/GetProdTypeById/${prod.productTypeId}`, {
-        method: "GET",
-        credentials: "include"
-      });
-      const typeJson = await safeJson(typeRes);
-
-      if (typeJson?.data) {
-        setSelectedType(typeJson.data.id);
-      }
-    }
-
-    // STEP 3: GET INVENTORY
     fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${prodId}`, {
       method: "GET",
       credentials: "include",
@@ -208,60 +251,24 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setErrors({});
   };
 
-  // -----------------------
-  //  REQUIRED CHANGE HERE 🔥
-  // -----------------------
+  // ✅ EDIT ITEM CASCADE
   const editItem = async (index) => {
     const it = lineItems[index];
     setEditIndex(index);
 
-    // Set selected product
     setSelectedProduct(it.productId);
-
-    // STEP 1: GET PRODUCT (to get productTypeId)
-    const pRes = await fetch(`http://localhost:8080/api/Product/GetProductById/${it.productId}`, {
-      method: "GET",
-      credentials: "include"
-    });
-    const pJson = await safeJson(pRes);
-
-    if (pJson?.data) {
-      const prodTypeId = pJson.data.productTypeId;
-
-      // STEP 2: GET PRODUCT TYPE
-      const tRes = await fetch(`http://localhost:8080/api/ProductType/GetProdTypeById/${prodTypeId}`, {
-        method: "GET",
-        credentials: "include"
-      });
-      const tJson = await safeJson(tRes);
-
-      if (tJson?.data) {
-        setSelectedType(tJson.data.id);
-
-        // STEP 3: LOAD PRODUCTS UNDER THIS TYPE
-        fetch(`http://localhost:8080/api/Product/GetProdByProdId/${tJson.data.id}`, {
-          method: "GET",
-          credentials: "include"
-        })
-          .then(safeJson)
-          .then(json => setProducts(json?.data ?? []));
-      }
-    }
-
-    // STEP 4: GET INVENTORY
-    fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${it.productId}`, {
-      method: "GET",
-      credentials: "include",
-    })
-      .then(safeJson)
-      .then(json => setInventory(json?.data || null));
-
-    // Set quantity + tax
     setQuantity(it.quantity);
     setManualPrice(it.sellingPrice);
     setTaxInput(it.taxAmount);
     setTaxType("FLAT");
     setErrors({});
+
+    const invRes = await fetch(
+      `http://localhost:8080/api/Inventory/GetInventoryByProdId/${it.productId}`,
+      { method: "GET", credentials: "include" }
+    );
+    const invJson = await safeJson(invRes);
+    if (invJson?.data) setInventory(invJson.data);
   };
   // -----------------------
   //  END OF ADDED LOGIC 🔥
@@ -330,6 +337,30 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   const totalAmount = lineItems.reduce((sum, i) => sum + i.totalAmount, 0);
 
+  const filteredTypes = productTypes.filter(t =>
+    t.name.toLowerCase().includes(typeSearch.toLowerCase())
+  );
+
+  const filteredProducts = products.filter(p =>
+    p.name.toLowerCase().includes(productSearch.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) {
+        setTypeDropdownOpen(false);
+        setTypeSearch("");
+      }
+      if (productDropdownRef.current && !productDropdownRef.current.contains(e.target)) {
+        setProductDropdownOpen(false);
+        setProductSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+
   return (
     <div className="sales-modal show">
       <div className="sales-container">
@@ -384,21 +415,88 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           <div className="sales-section">
 
             <div className="product-row">
-              <div>
+
+              {/* PRODUCT TYPE SEARCHABLE */}
+              <div className="custom-select" ref={typeDropdownRef}>
                 <label>Product Type</label>
-                <select value={selectedType} onChange={handleTypeChange}>
-                  <option value="">-- Select Type --</option>
-                  {productTypes.map(pt => <option key={pt.id} value={pt.id}>{pt.name}</option>)}
-                </select>
+                <div
+                  className={`select-box ${typeDropdownOpen ? "active" : ""}`}
+                  onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+                >
+                  <input
+                    type="text"
+                    value={
+                      typeDropdownOpen
+                        ? typeSearch
+                        : productTypes.find((t) => t.id === selectedType)?.name || "Select product type"
+                    }
+                    onChange={(e) => setTypeSearch(e.target.value)}
+                    readOnly={!typeDropdownOpen}
+                    className="select-input"
+                  />
+
+                  {typeDropdownOpen && (
+                    <ul className="options scroll-options">
+                      {filteredTypes.map((t) => (
+                        <li
+                          key={t.id}
+                          onClick={() => {
+                            handleTypeChange({ target: { value: t.id } });
+                            setTypeDropdownOpen(false);
+                            setTypeSearch("");
+                          }}
+                        >
+                          {t.name}
+                        </li>
+                      ))}
+                      {filteredTypes.length === 0 && <li>No result found</li>}
+                    </ul>
+                  )}
+                </div>
+                {errors.selectedType && <div className="error">{errors.selectedType}</div>}
               </div>
 
-              <div>
+
+              {/* PRODUCT SEARCHABLE */}
+              <div className="custom-select" ref={productDropdownRef}>
                 <label>Product</label>
-                <select value={selectedProduct} onChange={handleProductChange}>
-                  <option value="">-- Select Product --</option>
-                  {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
+                <div
+                  className={`select-box ${productDropdownOpen ? "active" : ""}`}
+                  onClick={() => setProductDropdownOpen(!productDropdownOpen)}
+                >
+                  <input
+                    type="text"
+                    value={
+                      productDropdownOpen
+                        ? productSearch
+                        : products.find((p) => p.id === selectedProduct)?.name || "Select product"
+                    }
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    readOnly={!productDropdownOpen}
+                    className="select-input"
+                  />
+
+                  {productDropdownOpen && (
+                    <ul className="options scroll-options">
+                      {filteredProducts.map((p) => (
+                        <li
+                          key={p.id}
+                          onClick={() => {
+                            handleProductChange({ target: { value: p.id } });
+                            setProductDropdownOpen(false);
+                            setProductSearch("");
+                          }}
+                        >
+                          {p.name}
+                        </li>
+                      ))}
+                      {filteredProducts.length === 0 && <li>No result found</li>}
+                    </ul>
+                  )}
+                </div>
+                {errors.selectedProduct && <div className="error">{errors.selectedProduct}</div>}
               </div>
+
             </div>
 
             {inventory ? (

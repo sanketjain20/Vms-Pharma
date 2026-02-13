@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/Sales/AddSales.css";
 
 export default function SalesAdd({ onClose, onSubmit }) {
@@ -28,7 +28,23 @@ export default function SalesAdd({ onClose, onSubmit }) {
   const [activeTab, setActiveTab] = useState("Tax");
 
   const [paymentType, setPaymentType] = useState("FULL"); // FULL | PARTIAL
-const [amountPaid, setAmountPaid] = useState("");
+  const [amountPaid, setAmountPaid] = useState("");
+
+  /* ================= NEW CASCADING STATES ================= */
+  const [allProducts, setAllProducts] = useState([]);
+  const lastLoadedType = useRef(null);
+  /* ======================================================== */
+
+  // 🔍 Searchable dropdown states
+  const [typeSearch, setTypeSearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
+
+  const typeDropdownRef = useRef(null);
+  const productDropdownRef = useRef(null);
+
 
 
   useEffect(() => {
@@ -42,8 +58,39 @@ const [amountPaid, setAmountPaid] = useState("");
         const list = json?.data?.productTypes ?? [];
         setProductTypes(Array.isArray(list) ? list : []);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
+
+  /* ================= LOAD ALL PRODUCTS INITIALLY ================= */
+  useEffect(() => {
+    fetch("http://localhost:8080/api/Product/GetAllProduct", {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then(res => res.json())
+      .then(json => {
+        const dataObj = json?.data;
+
+        // 🔥 Extract array safely even if backend wraps it
+        const list =
+          Array.isArray(dataObj)
+            ? dataObj
+            : typeof dataObj === "object"
+              ? Object.values(dataObj).find(v => Array.isArray(v)) || []
+              : [];
+
+        setAllProducts(list);
+        setProducts(list); // THIS makes all products show initially
+      })
+      .catch(() => {
+        setAllProducts([]);
+        setProducts([]);
+      });
+  }, []);
+
+  /* =============================================================== */
+
 
   const handleTypeChange = (e) => {
     const id = e.target.value;
@@ -66,7 +113,7 @@ const [amountPaid, setAmountPaid] = useState("");
         const list = json?.data ?? [];
         setProducts(Array.isArray(list) ? list : []);
       })
-      .catch(() => {});
+      .catch(() => { });
   };
 
   const handleProductChange = (e) => {
@@ -87,8 +134,40 @@ const [amountPaid, setAmountPaid] = useState("");
         if (json.status === 200) setInventory(json.data);
         else setInventory(null);
       })
-      .catch(() => {});
+      .catch(() => { });
   };
+
+  /* ================= AUTO SET PRODUCT TYPE WHEN PRODUCT CHANGES ================= */
+  useEffect(() => {
+    if (!selectedProduct) return;
+
+    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByProductId/${selectedProduct}`, {
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(json => {
+        const typeId = json?.data?.productTypeId || json?.data?.id;
+        if (typeId && typeId !== selectedType) {
+          setSelectedType(typeId);
+
+          // Load products of that detected type
+          if (lastLoadedType.current !== typeId) {
+            lastLoadedType.current = typeId;
+            fetch(`http://localhost:8080/api/Product/GetProdByProdId/${typeId}`, {
+              credentials: "include",
+            })
+              .then(res => res.json())
+              .then(json => {
+                const list = json?.data ?? [];
+                setProducts(Array.isArray(list) ? list : []);
+              });
+          }
+        }
+      })
+      .catch(() => { });
+  }, [selectedProduct]);
+  /* ============================================================================== */
+
 
   const safeJson = async (res) => {
     try {
@@ -144,7 +223,7 @@ const [amountPaid, setAmountPaid] = useState("");
     // ------------------------------------------------------
     setSelectedType("");
     setSelectedProduct("");
-    setProducts([]);
+    setProducts(allProducts); // restored full list
     setInventory(null);
     setQuantity("");
     setManualPrice("");
@@ -170,7 +249,6 @@ const [amountPaid, setAmountPaid] = useState("");
     setTaxInput(it.taxAmount);
     setErrors({});
 
-    // 1️⃣ Get product details to fetch productTypeId
     const productRes = await fetch(
       `http://localhost:8080/api/Product/GetProductById/${it.productId}`,
       {
@@ -182,11 +260,9 @@ const [amountPaid, setAmountPaid] = useState("");
 
     if (productJson?.data) {
       const typeId = productJson.data.productTypeId;
-
-      // 2️⃣ Set product type
       setSelectedType(typeId);
+      lastLoadedType.current = typeId;
 
-      // 3️⃣ Load products of that type
       const listRes = await fetch(
         `http://localhost:8080/api/Product/GetProdByProdId/${typeId}`,
         {
@@ -200,7 +276,6 @@ const [amountPaid, setAmountPaid] = useState("");
         setProducts(listJson.data);
       }
 
-      // 4️⃣ Load Inventory
       const invRes = await fetch(
         `http://localhost:8080/api/Inventory/GetInventoryByProdId/${it.productId}`,
         {
@@ -221,36 +296,36 @@ const [amountPaid, setAmountPaid] = useState("");
     0
   );
 
-// 1️⃣ Total of line items (sellingPrice * quantity)
-const lineTotal = lineItems.reduce(
-  (sum, i) => sum + i.sellingPrice * i.quantity,
-  0
-);
+  // 1️⃣ Total of line items (sellingPrice * quantity)
+  const lineTotal = lineItems.reduce(
+    (sum, i) => sum + i.sellingPrice * i.quantity,
+    0
+  );
 
-// 2️⃣ Total tax from line items (product-wise tax)
-const lineTaxTotal = lineItems.reduce((sum, i) => sum + i.taxAmount, 0);
+  // 2️⃣ Total tax from line items (product-wise tax)
+  const lineTaxTotal = lineItems.reduce((sum, i) => sum + i.taxAmount, 0);
 
-// 3️⃣ Total before tax (apply discount)
-const discountedTotal =
-  discountInput > 0
-    ? discountType === "PERCENT"
-      ? lineTotal - (lineTotal * discountInput) / 100
-      : lineTotal - discountInput
-    : lineTotal;
+  // 3️⃣ Total before tax (apply discount)
+  const discountedTotal =
+    discountInput > 0
+      ? discountType === "PERCENT"
+        ? lineTotal - (lineTotal * discountInput) / 100
+        : lineTotal - discountInput
+      : lineTotal;
 
-// 4️⃣ Common tax (if applicable)
-let commonTaxAmount = 0;
-if (taxMode === "COMMON" && commonTax > 0) {
-  commonTaxAmount =
-    taxType === "PERCENT" ? (discountedTotal * commonTax) / 100 : parseFloat(commonTax);
-}
+  // 4️⃣ Common tax (if applicable)
+  let commonTaxAmount = 0;
+  if (taxMode === "COMMON" && commonTax > 0) {
+    commonTaxAmount =
+      taxType === "PERCENT" ? (discountedTotal * commonTax) / 100 : parseFloat(commonTax);
+  }
 
-// 5️⃣ Final net amount including tax
-const netAmount = discountedTotal + (taxMode === "PRODUCT" ? lineTaxTotal : commonTaxAmount);
+  // 5️⃣ Final net amount including tax
+  const netAmount = discountedTotal + (taxMode === "PRODUCT" ? lineTaxTotal : commonTaxAmount);
 
 
 
-      useEffect(() => {
+  useEffect(() => {
     if (paymentType === "FULL") {
       setAmountPaid(netAmount.toFixed(2));
     }
@@ -262,7 +337,7 @@ const netAmount = discountedTotal + (taxMode === "PRODUCT" ? lineTaxTotal : comm
     if (!billingMode) tempErrors.billingMode = "Select billing mode";
     if (discountInput < 0) tempErrors.discountInput = "Discount cannot be less than 0";
 
-     if (!amountPaid || amountPaid <= 0)
+    if (!amountPaid || amountPaid <= 0)
       tempErrors.amountPaid = "Enter valid amount paid";
     if (parseFloat(amountPaid) > netAmount)
       tempErrors.amountPaid = "Amount paid cannot exceed net amount";
@@ -297,8 +372,32 @@ const netAmount = discountedTotal + (taxMode === "PRODUCT" ? lineTaxTotal : comm
         onSubmit();
         onClose();
       }
-    } catch (err) {}
+    } catch (err) { }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) {
+        setTypeDropdownOpen(false);
+        setTypeSearch("");
+      }
+      if (productDropdownRef.current && !productDropdownRef.current.contains(e.target)) {
+        setProductDropdownOpen(false);
+        setProductSearch("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredTypes = productTypes.filter((t) =>
+    t.name.toLowerCase().includes(typeSearch.toLowerCase())
+  );
+
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(productSearch.toLowerCase())
+  );
 
   return (
     <div className="sales-modal show">
@@ -384,35 +483,85 @@ const netAmount = discountedTotal + (taxMode === "PRODUCT" ? lineTaxTotal : comm
             <h4>Select Product</h4>
 
             <div className="product-row">
-              <div>
+              <div className="custom-select" ref={typeDropdownRef}>
                 <label>Product Type</label>
-                <select value={selectedType} onChange={handleTypeChange}>
-                  <option value="">-- Select Type --</option>
-                  {productTypes.map((pt) => (
-                    <option key={pt.id} value={pt.id}>
-                      {pt.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.selectedType && (
-                  <div className="error">{errors.selectedType}</div>
-                )}
+                <div
+                  className={`select-box ${typeDropdownOpen ? "active" : ""}`}
+                  onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+                >
+                  <input
+                    type="text"
+                    value={
+                      typeDropdownOpen
+                        ? typeSearch
+                        : productTypes.find((t) => t.id === selectedType)?.name || "Select product type"
+                    }
+                    onChange={(e) => setTypeSearch(e.target.value)}
+                    readOnly={!typeDropdownOpen}
+                    className="select-input"
+                  />
+
+                  {typeDropdownOpen && (
+                    <ul className="options scroll-options">
+                      {filteredTypes.map((t) => (
+                        <li
+                          key={t.id}
+                          onClick={() => {
+                            handleTypeChange({ target: { value: t.id } });
+                            setTypeDropdownOpen(false);
+                            setTypeSearch("");
+                          }}
+                        >
+                          {t.name}
+                        </li>
+                      ))}
+                      {filteredTypes.length === 0 && <li>No result found</li>}
+                    </ul>
+                  )}
+                </div>
+                {errors.selectedType && <div className="error">{errors.selectedType}</div>}
               </div>
 
-              <div>
+
+              <div className="custom-select" ref={productDropdownRef}>
                 <label>Product</label>
-                <select value={selectedProduct} onChange={handleProductChange}>
-                  <option value="">-- Select Product --</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.selectedProduct && (
-                  <div className="error">{errors.selectedProduct}</div>
-                )}
+                <div
+                  className={`select-box ${productDropdownOpen ? "active" : ""}`}
+                  onClick={() => setProductDropdownOpen(!productDropdownOpen)}
+                >
+                  <input
+                    type="text"
+                    value={
+                      productDropdownOpen
+                        ? productSearch
+                        : products.find((p) => p.id === selectedProduct)?.name || "Select product"
+                    }
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    readOnly={!productDropdownOpen}
+                    className="select-input"
+                  />
+
+                  {productDropdownOpen && (
+                    <ul className="options scroll-options">
+                      {filteredProducts.map((p) => (
+                        <li
+                          key={p.id}
+                          onClick={() => {
+                            handleProductChange({ target: { value: p.id } });
+                            setProductDropdownOpen(false);
+                            setProductSearch("");
+                          }}
+                        >
+                          {p.name}
+                        </li>
+                      ))}
+                      {filteredProducts.length === 0 && <li>No result found</li>}
+                    </ul>
+                  )}
+                </div>
+                {errors.selectedProduct && <div className="error">{errors.selectedProduct}</div>}
               </div>
+
             </div>
 
             {inventory ? (
@@ -594,7 +743,7 @@ const netAmount = discountedTotal + (taxMode === "PRODUCT" ? lineTaxTotal : comm
             {errors.billingMode && (
               <div className="error">{errors.billingMode}</div>
             )}
- 
+
             <div className="total-amount">
               <b>Net Amount: Rs {netAmount.toFixed(2)}</b>
             </div>
@@ -633,7 +782,7 @@ const netAmount = discountedTotal + (taxMode === "PRODUCT" ? lineTaxTotal : comm
 
           </div>
 
-          
+
         )}
 
         <div className="sales-footer">

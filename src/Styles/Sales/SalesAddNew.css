@@ -105,6 +105,9 @@ select {
   outline: none;
 }
 
+.new-select-input{
+  background-color: #0a0a0a;
+}
 input::placeholder {
   color: #6b7280;
 }

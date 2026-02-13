@@ -1,0 +1,76 @@
+.grid-select {
+  position: relative;
+  min-width: 200px;
+}
+
+.grid-label-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* space between label and dropdown */
+}
+
+.grid-label-dropdown label {
+  font-weight: 500;
+  white-space: nowrap;
+  color: white; /* optional: white for dark mode */
+}
+
+.grid-display {
+  border: 1px solid #555;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #000; /* black background */
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.grid-dropdown {
+  position: absolute;
+  top: 10%;
+  left: 0;
+  background: #000;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.grid-box {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* <-- change here: 3 items per row */
+  gap: 8px;
+  background-color: #000;
+}
+
+.grid-item {
+  padding: 8px;
+  text-align: center;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #222;
+  color: white;
+  font-size: 14px;
+}
+
+.grid-item:hover {
+  background: #444;
+}
+
+.grid-item.active {
+  background: #4e79a7;
+  color: white;
+  font-weight: bold;
+}
+
+.grid-nav {
+  grid-column: span 3; /* match number of columns */
+  text-align: center;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 5px;
+  color: white;
+}
