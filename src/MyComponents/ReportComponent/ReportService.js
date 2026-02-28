@@ -1,5 +1,5 @@
 // src/MyComponents/Services/reportServices.js
-import { VmsEntity } from "../Enums/VmsEntity";
+import { ReportEntity } from "../Enums/ReportEntity";
 
 // Each function constructs payload and calls the respective API
 export const runReportByModule = async (moduleId, filters) => {
@@ -7,26 +7,31 @@ export const runReportByModule = async (moduleId, filters) => {
   
   // Map moduleId to API URL
   switch (moduleId) {
-    case VmsEntity.Vendor:
+    case ReportEntity.Vendor:
       apiUrl = "http://localhost:8080/api/Vendor/report";
       break;
-    case VmsEntity.ProductType:
+    case ReportEntity.ProductType:
       apiUrl = "http://localhost:8080/api/ProductType/Report";
       break;
-    case VmsEntity.Product:
+    case ReportEntity.Product:
       apiUrl = "http://localhost:8080/api/Product/Report";
       break;
-    case VmsEntity.Inventory:
+    case ReportEntity.Inventory:
       apiUrl = "http://localhost:8080/api/Inventory/Report";
       break;
-    case VmsEntity.Sales:
+    case ReportEntity.Sales:
       apiUrl = "http://localhost:8080/api/Sales/Report";
       break;
-    case VmsEntity.Roles:
+    case ReportEntity.Roles:
       apiUrl = "http://localhost:8080/api/Roles/GenerateReport";
       break;
-    case VmsEntity.Reports:
+    case ReportEntity.Reports:
       apiUrl = "http://localhost:8080/api/Reports/GenerateReport";
+      break;
+    case ReportEntity.Revenue:
+      apiUrl = "http://localhost:8080/api/Reports/RevenueReport";
+    case ReportEntity.StockMovement:
+      apiUrl = "http://localhost:8080/api/Inventory/InvMovementFileReport";
       break;
     default:
       throw new Error("Invalid module ID");

@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import CustomChart from "../CommonComponent/CustomChart";
 import "../../Styles/Dashboard/Dashboard.css";
 import GridSelect from "../CommonComponent/YearMonthGrid";
+import { FaRupeeSign, FaShoppingCart } from "react-icons/fa";
+import { MdTrendingUp, MdTrendingDown } from "react-icons/md";
 
 const Dashboard = () => {
   const [todayChartData, setTodayChartData] = useState([]);
@@ -27,6 +29,21 @@ const Dashboard = () => {
   const [weeklyYear, setWeeklyYear] = useState(new Date().getFullYear());
 
   const [openFilter, setOpenFilter] = useState(null);
+
+  const [topProduct, setTopProduct] = useState(null);
+const [lowStock, setLowStock] = useState([]);
+
+const [deadStockData, setDeadStockData] = useState([]);
+const [showDeadStock, setShowDeadStock] = useState(false);
+
+const [showLowStockList, setShowLowStockList] = useState(false);
+
+// ⭐ SMART INSIGHT SETTINGS
+const [topProductPeriod, setTopProductPeriod] = useState("MONTHLY");
+const [insightSettingsOpen, setInsightSettingsOpen] = useState(false);
+
+const totalLowStock = lowStock.length;
+const worstLowStock = lowStock[0]; // smallest qty if backend sorted
 
   const [summary, setSummary] = useState({
   todaySalesAmount: 0,
@@ -162,33 +179,172 @@ useEffect(() => {
       .then(json => setOrderStatusData(json?.data || []));
   }, [orderStatusMonth, orderStatusYear]);
 
+useEffect(() => {
+  fetch(`http://localhost:8080/api/Sales/TopSaleProduct/${topProductPeriod}`, {
+    credentials: "include"
+  })
+    .then(res => res.json())
+    .then(json => setTopProduct(json?.data || null));
+}, [topProductPeriod]);
+
+useEffect(() => {
+  fetch("http://localhost:8080/api/Product/DeadStock", { credentials: "include" })
+    .then(res => res.json())
+    .then(json => {
+      setDeadStockData(json?.data || []);
+    });
+}, []);
+
+useEffect(() => {
+  fetch("http://localhost:8080/api/Inventory/LowStockProduct", { credentials: "include" })
+    .then(res => res.json())
+    .then(json => setLowStock(json?.data || []));
+}, []);
+
   return (
     <div className="dashboard-container">
 {/* 🔥 SUMMARY CARDS */}
 <div className="summary-wrapper">
-  <div className="summary-card">
+
+  {/* SALES */}
+  <div className="summary-card salessummary">
+    <div className="summary-icon">
+      <FaRupeeSign />
+    </div>
     <h3>Today's Sales</h3>
     <p>{formatCurrency(summary.todaySalesAmount)}</p>
     <span>Total revenue earned today</span>
   </div>
 
-  <div className="summary-card">
+  {/* ORDERS */}
+  <div className="summary-card salessummary">
+    <div className="summary-icon">
+      <FaShoppingCart />
+    </div>
     <h3>Today's Orders</h3>
     <p>{summary.todayOrders}</p>
     <span>Orders placed today</span>
   </div>
 
-  <div className="summary-card">
+  {/* GROWTH */}
+  <div className="summary-card salessummary">
+    <div className="summary-icon">
+      {summary.orderGrowthPercentage >= 0 ? (
+        <MdTrendingUp className="icon-green" />
+      ) : (
+        <MdTrendingDown className="icon-red" />
+      )}
+    </div>
+
     <h3>Order Growth</h3>
     <p className={summary.orderGrowthPercentage >= 0 ? "positive" : "negative"}>
+      {summary.orderGrowthPercentage >= 0 ? "+" : ""}
       {summary.orderGrowthPercentage}%
     </p>
     <span>Compared to previous period</span>
   </div>
+
 </div>
 
+{/* 🚀 SMART INSIGHTS */}
+<div className="summary-wrapper smart-insights">
+
+  {/* 🏆 TOP SELLING PRODUCT */}
+ <div className="summary-card highlight-card">
+
+  {/* ⚙️ SETTINGS INSIDE CARD */}
+<div className="top-product-settings">
+    <FilterMenu id="top-product-settings">
+      <label>Period</label>
+      <select
+        value={topProductPeriod}
+        onChange={(e) => setTopProductPeriod(e.target.value)}
+      >
+        <option value="MONTHLY">Monthly</option>
+        <option value="YEARLY">Yearly</option>
+      </select>
+    </FilterMenu>
+  </div>
+
+  <div className="summary-icon">🏆</div>
+
+  <h3>
+    Top Product ({topProductPeriod === "MONTHLY" ? "This Month" : "This Year"})
+  </h3>
+
+  <p>{topProduct?.productName || "No Data"}</p>
+
+  <span>
+    {topProduct
+      ? `${topProduct.totalSold} units sold`
+      : "No sales yet"}
+  </span>
+</div>
+
+  {/* ⚠️ DEAD STOCK */}
+<div className="summary-card dead-stock-card">
+  <div className="summary-icon">
+    📉
+  </div>
+
+  <h3>Dead Stock</h3>
+  <p>{deadStockData.length}</p>
+  <span>Products with low sales</span>
+
+  <button
+    className="view-deadbtn"
+    onClick={() => setShowDeadStock(!showDeadStock)}
+  >
+    {showDeadStock ? "Hide Details" : "View Details"}
+  </button>
+
+  {/* EXPANDABLE LIST */}
+  {showDeadStock && (
+    <div className="dead-stock-list">
+      {deadStockData.map((item, i) => (
+        <div key={i} className="dead-stock-row">
+          <span>{item.productName}</span>
+          <span className="sold">Sold: {item.totalSold}</span>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+
+
+  {/* ⚠️ LOW STOCK */}
+<div className="summary-card warning-card">
+  <div className="summary-icon">⚠️</div>
+
+  <h3>Low Stock Alerts</h3>
+  <p>{lowStock.length}</p>
+  <span>Items below reorder level</span>
+
+  <button
+    className="view-deadbtn"
+    onClick={() => setShowLowStockList(!showLowStockList)}
+  >
+    {showLowStockList ? "Hide Details" : "View Details"}
+  </button>
+
+  {/* EXPANDABLE LIST (same as dead stock) */}
+  {showLowStockList && (
+    <div className="dead-stock-list">
+      {lowStock.map((item, i) => (
+        <div key={i} className="dead-stock-row">
+          <span>{item.productName}</span>
+          <span className="sold">
+            Quantity: {item.currentQuantity} / Reorder Level: {item.reorderLevel}
+          </span>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+
+</div>
       {/* TODAY */}
-      <div className="d-card">
+      <div className="d-card d-border">
         <FilterMenu id="today">
           <label>Chart Type</label>
           <select value={todayChartType} onChange={e => setTodayChartType(e.target.value)}>
@@ -201,7 +357,7 @@ useEffect(() => {
       </div>
 
       {/* DAYWISE */}
-      <div className="d-card">
+      <div className="d-card d-border">
         <FilterMenu id="daywise">
           <label>Chart Type</label>
           <select value={daywiseChartType} onChange={e => setDaywiseChartType(e.target.value)}>
@@ -216,7 +372,7 @@ useEffect(() => {
       </div>
 
       {/* WEEKLY */}
-      <div className="d-card">
+      <div className="d-card d-border">
         <FilterMenu id="weekly">
           <label>Chart Type</label>
           <select value={weeklyChartType} onChange={e => setWeeklyChartType(e.target.value)}>
@@ -231,7 +387,7 @@ useEffect(() => {
       </div>
 
       {/* MONTHLY */}
-      <div className="d-card">
+      <div className="d-card d-border">
         <FilterMenu id="monthly">
           <label>Chart Type</label>
           <select value={monthlyChartType} onChange={e => setMonthlyChartType(e.target.value)}>
@@ -245,7 +401,7 @@ useEffect(() => {
       </div>
 
       {/* ORDER STATUS */}
-      <div className="d-card">
+      <div className="d-card d-border">
         <FilterMenu id="status">
           <label>Chart Type</label>
           <select value={orderStatusChartType} onChange={e => setOrderStatusChartType(e.target.value)}>

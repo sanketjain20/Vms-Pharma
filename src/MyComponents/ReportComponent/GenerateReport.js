@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import "../../Styles/Report/GenerateReport.css";
-import { VmsEntity } from "../Enums/VmsEntity.js";
+import { ReportEntity } from "../Enums/ReportEntity.js";
 
 export default function GenerateReport() {
   const location = useLocation();
@@ -13,6 +13,8 @@ export default function GenerateReport() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [modalInvoice, setModalInvoice] = useState(null);
+  const [summary, setSummary] = useState(null);
+
 
   const tableRef = useRef(null);
   const modalTableRef = useRef(null); // ✅ ADDED
@@ -52,13 +54,15 @@ export default function GenerateReport() {
 
     let apiUrl = "";
     switch (moduleId) {
-      case VmsEntity.Vendor: apiUrl = "http://localhost:8080/api/Vendor/GetVendorReport"; break;
-      case VmsEntity.ProductType: apiUrl = "http://localhost:8080/api/ProductType/GetProductTypeReport"; break;
-      case VmsEntity.Product: apiUrl = "http://localhost:8080/api/Product/GetProductReport"; break;
-      case VmsEntity.Inventory: apiUrl = "http://localhost:8080/api/Inventory/GetInventoryReport"; break;
-      case VmsEntity.Sales: apiUrl = "http://localhost:8080/api/Sales/GetSaleReport"; break;
-      case VmsEntity.Roles: apiUrl = "http://localhost:8080/api/Roles/GetRoleReport"; break;
-      case VmsEntity.Reports: apiUrl = "http://localhost:8080/api/Reports/GetReportData"; break;
+      case ReportEntity.Vendor: apiUrl = "http://localhost:8080/api/Vendor/GetVendorReport"; break;
+      case ReportEntity.ProductType: apiUrl = "http://localhost:8080/api/ProductType/GetProductTypeReport"; break;
+      case ReportEntity.Product: apiUrl = "http://localhost:8080/api/Product/GetProductReport"; break;
+      case ReportEntity.Inventory: apiUrl = "http://localhost:8080/api/Inventory/GetInventoryReport"; break;
+      case ReportEntity.Sales: apiUrl = "http://localhost:8080/api/Sales/GetSaleReport"; break;
+      case ReportEntity.Roles: apiUrl = "http://localhost:8080/api/Roles/GetRoleReport"; break;
+      case ReportEntity.Reports: apiUrl = "http://localhost:8080/api/Reports/GetReportData"; break;
+      case ReportEntity.Revenue : apiUrl = "http://localhost:8080/api/Reports/RevenueReportData"; break;
+      case ReportEntity.StockMovement : apiUrl = "http://localhost:8080/api/Inventory/GetInvMovementReport"; break;
       default: apiUrl = ""; break;
     }
 
@@ -72,8 +76,16 @@ export default function GenerateReport() {
     })
       .then((r) => r.json())
       .then((d) => {
-        if (d.status === 200) setReportData(d.data);
-      });
+  if (d.status !== 200) return;
+
+  // 🟡 Revenue special handling
+  if (moduleId === ReportEntity.Revenue) {
+    setSummary(d.data.summaryDto);
+    setReportData(d.data.revenueDto || []);
+  } else {
+    setReportData(d.data);
+  }
+});
   }, [moduleId, initialFilters, page, pageSize]);
 
   /* =========================
@@ -197,6 +209,17 @@ export default function GenerateReport() {
   return (
     <div className="r-container">
       <h1 className="gen-report-title">{reportName}</h1>
+{moduleId === ReportEntity.Revenue && summary && (
+  <div className="rev-summary">
+    <div className="rev-card">Revenue(₹): {summary.totalRevenue}</div>
+    <div className="rev-card">Profit(₹): {summary.totalProfit}</div>
+    <div className="rev-card">Discount(₹): {summary.totalDiscount}</div>
+    <div className="rev-card">Tax(₹): {summary.totalTax}</div>
+    <div className="rev-card">Net Profit(₹): {summary.netProfit}</div>
+    <div className="rev-card">Profit Margin: {summary.profitMargin}%</div>
+    <div className="rev-card">Net Margin: {summary.netProfitMargin}%</div>
+  </div>
+)}
 
       {loading ? (
         <p className="gen-loading-text">Loading columns...</p>

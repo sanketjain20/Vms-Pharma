@@ -3,16 +3,16 @@
 ========================= */
 .gen-dashboard-container {
     display: flex;
-    gap: 30px;
+    gap: 26px;
     max-width: 1100px;
     margin: 20px auto;
-    min-height: 100%;
-    padding: 20px;
-    background: #1e1e2f;
-    border-radius: 12px;
-    color: #f0f0f0;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 22px;
+    background: #0a0a0a;
+    border-radius: 16px;
+    color: #e5e5e5;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    font-family: Inter, Segoe UI, sans-serif;
+    border: 1px solid #1f1f1f;
 }
 
 /* =========================
@@ -22,13 +22,11 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    background: #2a2a40;
-    padding: 5px;
+    gap: 14px;
+    background: #050505;
+    padding: 10px;
     border-radius: 12px;
-
-    /* 🔥 CRITICAL */
-    overflow: visible;
+    border: 1px solid #1a1a1a;
 }
 
 /* =========================
@@ -39,24 +37,20 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 2px;
-    padding-left: 15px;
-    padding-right: 10px;
-    background: #1e1e2f;
+    padding: 6px 12px;
+    background: #0c0c0c;
     border-radius: 10px;
-
-    /* 🔥 each row has its own stacking context */
-    z-index: 1;
+    border: 1px solid #1a1a1a;
 }
 
 .gen-filter-item.active {
-    z-index: 50; /* 🔥 lift active dropdown row */
+    z-index: 50;
 }
 
 .gen-filter-item label {
-    min-width: 140px;
-    font-size: 14px;
-    color: #ffcc00;
+    min-width: 130px;
+    font-size: 13px;
+    color: #888;
 }
 
 /* =========================
@@ -64,12 +58,19 @@
 ========================= */
 .gen-filter-item input {
     flex: 1;
-    padding: 5px 6px;
+    padding: 6px 8px;
     border-radius: 8px;
-    border: 1px solid #333;
-    background: #2a2a40;
+    border: 1px solid #222;
+    background: #0e0d0d;
     color: #fff;
-    height: 30px;
+    height: 32px;
+    transition: 0.2s;
+}
+
+.gen-filter-item input:focus {
+    outline: none;
+    border-color: #444;
+    background: #000;
 }
 
 /* =========================
@@ -83,22 +84,25 @@
 
 /* Selected */
 .dropdown-selected {
-    background: #2a2a40;
-    padding: 10px 12px;
+    background: #050505;
+    padding: 8px 10px;
     border-radius: 8px;
-    border: 1px solid #333;
+    border: 1px solid #222;
     cursor: pointer;
-
     display: flex;
     justify-content: space-between;
     align-items: center;
-    min-width: 50px;
-    height: 30px;
+    height: 32px;
+    transition: 0.2s;
+}
+
+.dropdown-selected:hover {
+    border-color: #333;
 }
 
 .dropdown-arrow {
-    font-size: 12px;
-    color: #aaa;
+    font-size: 11px;
+    color: #666;
 }
 
 /* =========================
@@ -109,17 +113,12 @@
     top: calc(100% + 6px);
     left: 0;
     width: 100%;
-
-    background: #2a2a40;
-    border-radius: 8px;
-
-    /* ✅ SHOW 5–6 ITEMS */
+    background: #0a0a0a;
+    border-radius: 10px;
     max-height: 220px;
     overflow-y: auto;
-
-    box-shadow: 0 12px 25px rgba(0,0,0,0.6);
-
-    /* 🔥 ABSOLUTE TOP */
+    border: 1px solid #1f1f1f;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.9);
     z-index: 9999;
 }
 
@@ -127,18 +126,21 @@
 .dropdown-item {
     padding: 10px 12px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
+    color: #ccc;
+    transition: 0.15s;
 }
 
 .dropdown-item:hover {
-    background: #3b3b5e;
+    background: #141414;
+    color: #fff;
 }
 
 /* Clear */
 .dropdown-item.clear {
-    color: #ffcc00;
-    font-weight: bold;
-    border-bottom: 1px solid #3b3b5e;
+    color: #3b82f6;
+    font-weight: 600;
+    border-bottom: 1px solid #1f1f1f;
 }
 
 /* =========================
@@ -148,11 +150,11 @@
     width: 6px;
 }
 .dropdown-menu::-webkit-scrollbar-thumb {
-    background: #ffcc00;
+    background: #333;
     border-radius: 6px;
 }
 .dropdown-menu::-webkit-scrollbar-track {
-    background: #1e1e2f;
+    background: transparent;
 }
 
 /* =========================
@@ -164,6 +166,9 @@
     flex-direction: column;
 }
 
+/* =========================
+   BUTTONS
+========================= */
 .gen-report-buttons {
     margin-top: auto;
     display: flex;
@@ -171,19 +176,42 @@
     justify-content: flex-end;
 }
 
+/* ✨ SHINY GENERATE BUTTON */
 .gen-generate-btn {
-    background: #ffcc00;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
     border: none;
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-weight: bold;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: white;
     cursor: pointer;
+    transition: 0.25s;
 }
 
+.gen-generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(59,130,246,0.5);
+}
+
+/* Back button */
 .gen-back-btn {
-    background: #444;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    color: white;
+    background: #111;
+    border: 1px solid #2a2a2a;
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: #ddd;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+/* Make text white */
+.r-calender {
+  color: white;
+  background: #1e1e2f;
+}
+
+/* Change calendar icon color */
+.r-calender::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* makes icon white */
+  cursor: pointer;
 }

@@ -1,210 +1,141 @@
-.r-container {
-  padding: 20px;
-  color: #fff;
-  background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+/* ================= BASE ================= */
+.ai-wrapper {
   min-height: 100vh;
-  margin-top: 0px;
- font-family: 'Poppins', sans-serif;
- padding-top: 5px;
- border-radius: 5px;
-}
-/* Dark background for dashboard */
-.dashboard-container {
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-
-  min-width: 1100px;        /* ✅ use max-width instead of min-width */
-  width: 100%;              /* ✅ responsive */
-        /* ✅ CENTER horizontally */
-  padding: 20px;
-  margin-top: 20px;
-  min-height: 600px;
-
-  background: #1e1e2f;
-  border-radius: 12px;
-  color: #f0f0f0;
-
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
-  min-height: 500px;
-
-  justify-content: center;  /* ✅ center inner items horizontally */     /* ✅ center inner items vertically */
+  padding: 28px;
+  background: #000; /* PURE BLACK */
+  font-family: Inter, Poppins, sans-serif;
+  color: #e5e5e5;
 }
 
-
-/* Header */
-.header-section h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 0.3rem;
-  color: #ffffff;
+/* ================= CONTAINER ================= */
+.ai-dashboard {
+  max-width: 1300px;
+  margin: auto;
+  padding: 28px;
+  border-radius: 18px;
+  background: #0a0a0a;
+  border: 1px solid #1f1f1f;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
 }
 
-.header-section p {
-  font-size: 1rem;
-  color: #aaaaaa;
-  margin-bottom: 1rem;
-}
-
-.search-input-report {
-  padding: 0.6rem 1rem;
-  width: 300px;
-  border-radius: 20px;
-  border: none;
-  background: rgba(255, 255, 255, 0.05);
-  color: #e0e0e0;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-}
-
-.search-input-report::placeholder {
-  color: #888;
-}
-
-.search-input-report:focus {
-  outline: none;
-  box-shadow: 0 0 20px rgba(0,123,255,0.6);
-}
-
-/* Reports grid: 2 per row */
-.reports-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-/* Glassmorphism card */
-.report-glass-card {
+/* ================= HEADER ================= */
+.ai-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.2rem 1.5rem;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  min-height: 50px;
+  flex-wrap: wrap;
 }
 
-.report-glass-card:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 8px 30px rgba(0, 123, 255, 0.3);
-}
-
-.report-info h2 {
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 600;
+.ai-title {
+  font-size: 34px;
+  font-weight: 700;
   color: #ffffff;
+  letter-spacing: -0.3px;
 }
 
-.report-info p {
-  margin: 0.3rem 0 0;
-  font-size: 0.9rem;
-  color: #cccccc;
+.ai-subtitle {
+  color: #8a8a8a;
+  font-size: 14px;
+  margin-top: 6px;
 }
 
-/* Filters section */
-.filters-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  background: #2a2a40;
-  padding: 20px;
-  border-radius: 12px;
-}
-
-/* Filter items */
-.filter-item {
-  display: flex;
-  flex-direction: column;
-  padding: 12px;
+/* ================= SEARCH ================= */
+.ai-search {
+  width: 260px;
+  padding: 11px 14px;
   border-radius: 10px;
-  background: #1e1e2f;
-  cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  border: 1px solid #222;
+  background: #050505;
+  color: #e5e5e5;
+  transition: 0.2s;
 }
 
-.filter-item:hover {
-  background: #27274d;
-  transform: translateX(5px);
+.ai-search::placeholder {
+  color: #666;
 }
 
-.filter-item label {
-  font-size: 16px;
-  color: #ffcc00;
-  margin-bottom: 5px;
+.ai-search:focus {
+  outline: none;
+  border-color: #444;
+  background: #000;
 }
 
-.filter-item input {
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: none;
-  background: #2a2a40;
-  color: #f0f0f0;
-}
-
-/* Right panel for report details */
-.report-panel {
-  flex: 2;
-  display: flex;
-  flex-direction: column;
+/* ================= GRID ================= */
+.ai-grid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 20px;
 }
 
-.report-panel h1 {
-  font-size: 28px;
-  color: #ffcc00;
-  margin-bottom: 10px;
+/* ================= CARDS ================= */
+.ai-card {
+  padding: 20px;
+  border-radius: 14px;
+  background: #050505;
+  border: 1px solid #1a1a1a;
+  transition: 0.25s ease;
+  position: relative;
 }
 
-/* Run Report button */
-.generate-btn {
-  padding: 14px 24px;
-  border: none;
-  border-radius: 10px;
-  background: #ffcc00;
-  color: #1e1e2f;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
-  width: fit-content;
+/* subtle hover */
+.ai-card:hover {
+  transform: translateY(-4px);
+  border-color: #333;
+  background: #080808;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.9);
 }
 
-.generate-btn:hover {
-  background: #e6b800;
-  transform: translateY(-2px);
-}
-
-/* Back button */
-.back-btn {
-  padding: 10px 20px;
-  border-radius: 10px;
-  border: none;
-  background: #444;
+/* ================= TEXT ================= */
+.ai-card-title {
+  font-size: 18px;
+  font-weight: 600;
   color: #fff;
+}
+
+.ai-card-desc {
+  font-size: 13px;
+  color: #888;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* ================= BUTTON ================= */
+.ai-open-btn {
+  margin-top: 16px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  color: white;
+  font-weight: 600;
   cursor: pointer;
-  width: fit-content;
-  transition: background 0.2s;
+  transition: 0.25s;
 }
 
-.back-btn:hover {
-  background: #555;
+.ai-open-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(59,130,246,0.5);
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .dashboard-container {
+/* ================= EMPTY ================= */
+.ai-empty {
+  padding: 40px;
+  text-align: center;
+  border-radius: 12px;
+  background: #050505;
+  border: 1px dashed #222;
+  color: #666;
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 600px) {
+  .ai-header {
     flex-direction: column;
+    align-items: flex-start;
   }
 
-  .filters-section {
-    max-width: 100%;
+  .ai-search {
+    width: 100%;
   }
 }

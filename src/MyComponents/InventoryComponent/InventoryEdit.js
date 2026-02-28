@@ -267,7 +267,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
 
     if (stockActionType === "reduce") {
       if (qty > current) return toast.error("Cannot reduce more than current stock");
-      movementType = "ADJUSTMENT";
+      movementType = "SALE";
     }
 
     if (stockActionType === "damaged") {

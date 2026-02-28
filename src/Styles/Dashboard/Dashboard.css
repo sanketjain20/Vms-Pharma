@@ -112,7 +112,7 @@
 .summary-card {
   flex: 1;
   min-width: 220px;
-  background: #799ba8;
+  background: #a071f7;
   padding: 18px;
   border-radius: 10px;
   border: 1px solid #222;
@@ -138,3 +138,134 @@
 
 .positive { color: #4caf50; }
 .negative { color: #f44336; }
+
+.d-border {
+  position: relative;
+}
+
+.d-border {
+  position: relative;
+}
+
+/* TOP CORNERS */
+.d-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    /* Top Left */
+    linear-gradient(#f3f2f0, #f3f2f0) left top / 40px 3px no-repeat,
+    linear-gradient(#f7f5f3, #f7f5f3) left top / 3px 40px no-repeat,
+
+    /* Top Right */
+    linear-gradient(#f3f2f0, #f3f2f0) right top / 40px 3px no-repeat,
+    linear-gradient(#f7f5f3, #f7f5f3) right top / 3px 40px no-repeat;
+}
+
+/* BOTTOM CORNERS */
+.d-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    /* Bottom Left */
+    linear-gradient(#f3f2f0, #f3f2f0) left bottom / 40px 3px no-repeat,
+    linear-gradient(#f7f5f3, #f7f5f3) left bottom / 3px 40px no-repeat,
+
+    /* Bottom Right */
+    linear-gradient(#f3f2f0, #f3f2f0) right bottom / 40px 3px no-repeat,
+    linear-gradient(#f7f5f3, #f7f5f3) right bottom / 3px 40px no-repeat;
+}
+.salessummary{
+   border-left: 6px solid #f8f6f3;
+}
+/* Dead stock special styling */
+.dead-stock-card {
+  border-left: 6px solid #ee1515;
+}
+.warning-card{
+  border-left: 6px solid #f3f025;
+}
+.highlight-card{
+  border-left: 6px solid #106e13;
+  position: relative;   /* ⭐ REQUIRED for settings icon */
+  overflow: visible;
+}
+/* ⚙️ Top Product Settings Position */
+.top-product-settings {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+}
+/* View button */
+.view-deadbtn{
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: #222;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+.view-deadbtn:hover {
+  background: #333;
+}
+
+/* Expand list */
+.dead-stock-list {
+  margin-top: 10px;
+  background: #111;
+  border-radius: 8px;
+  padding: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  color: white;
+}
+
+.dead-stock-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 4px;
+  border-bottom: 1px solid #222;
+  font-size: 13px;
+  color: white;
+}
+
+.dead-stock-row:last-child {
+  border-bottom: none;
+}
+
+.dead-stock-row .sold {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.dead-stock-row span{
+  color:white;
+}
+
+/* Premium gear button */
+.filter-menu button {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  border-radius: 8px;
+  padding: 6px;
+  transition: all 0.2s ease;
+}
+
+.filter-menu button:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: rotate(15deg) scale(1.05);
+}
+.filter-menu {
+  position: relative;
+}

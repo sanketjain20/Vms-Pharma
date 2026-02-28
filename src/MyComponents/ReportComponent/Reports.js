@@ -88,34 +88,44 @@ export default function ReportsDashboard() {
   };
 
   return (
-    <div className="r-container">
-    <div className="dashboard-container">
-      <div className="header-section">
-        <h1>Reports</h1>
-        <p>Explore and generate insights from various reports</p>
+  <div className="ai-wrapper">
+    <div className="ai-dashboard">
 
-        <input
-          type="text"
-          placeholder="Search report..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="search-input-report"
-        />
+      {/* Header */}
+      <div className="ai-header">
+        <div>
+          <h1 className="ai-title">Reports</h1>
+          <p className="ai-subtitle">
+            Explore and generate insights from your data
+          </p>
+        </div>
+
+        <div className="ai-search-box">
+          <input
+            type="text"
+            placeholder="Search reports..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="ai-search"
+          />
+        </div>
       </div>
 
-      <div className="reports-list">
+      {/* Reports Grid */}
+      <div className="ai-grid">
         {filteredReports.length === 0 ? (
-          <div className="state-text">No reports found</div>
+          <div className="ai-empty">No reports found</div>
         ) : (
           filteredReports.map((report) => (
-            <div key={report.reportCode} className="report-glass-card">
-              <div className="report-info">
-                <h2>{report.name}</h2>
-                <p>{report.description}</p>
+            <div key={report.reportCode} className="ai-card">
+              <div className="ai-card-content">
+                <h3 className="ai-card-title">{report.name}</h3>
+                <p className="ai-card-desc">{report.description}</p>
               </div>
+
               <button
-                className="generate-btn"
-                onClick={() => handleGenerate(report.name)} // ✅ ONLY CHANGE
+                className="ai-open-btn"
+                onClick={() => handleGenerate(report.name)}
               >
                 Open Report
               </button>
@@ -124,6 +134,6 @@ export default function ReportsDashboard() {
         )}
       </div>
     </div>
-    </div>
-  );
+  </div>
+);
 }

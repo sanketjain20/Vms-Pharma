@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { VmsEntity } from "../Enums/VmsEntity.js";
+import { ReportEntity } from "../Enums/ReportEntity.js";
 import { runReportByModule } from "./ReportService.js";
 import "../../Styles/Report/OpenReport.css";
 
@@ -18,13 +18,14 @@ function getModuleIdByReportName(reportName) {
   if (!reportName) return null;
   const name = reportName.toLowerCase();
 
-  if (name.includes("vendor")) return VmsEntity.Vendor;
-  if (name.includes("producttype")) return VmsEntity.ProductType;
-  if (name.includes("product")) return VmsEntity.Product;
-  if (name.includes("inventory")) return VmsEntity.Inventory;
-  if (name.includes("sales")) return VmsEntity.Sales;
-  if (name.includes("role")) return VmsEntity.Roles;
-  if (name.includes("report")) return VmsEntity.Reports;
+  if (name.includes("vendor")) return ReportEntity.Vendor;
+  if (name.includes("producttype")) return ReportEntity.ProductType;
+  if (name.includes("product")) return ReportEntity.Product;
+  if (name.includes("inventory")) return ReportEntity.Inventory;
+  if (name.includes("sales")) return ReportEntity.Sales;
+  if (name.includes("role")) return ReportEntity.Roles;
+  if (name.includes("revenue-profit")) return ReportEntity.Revenue
+  if (name.includes("stock")) return ReportEntity.StockMovement;
 
   return null;
 }
@@ -154,9 +155,9 @@ export default function GenerateReport() {
   ========================= */
   useEffect(() => {
     const map = {
-      [VmsEntity.Product]:
+      [ReportEntity.Product]:
         "http://localhost:8080/api/Product/GetFilterData",
-      [VmsEntity.ProductType]:
+      [ReportEntity.ProductType]:
         "http://localhost:8080/api/ProductType/GetFilterData"
     };
 
@@ -232,7 +233,7 @@ export default function GenerateReport() {
                       onChange={(v) => handleFilterChange(f, v)}
                     />
                   ) : (
-                    <input
+                    <input className="r-calender"
                       type={f.toLowerCase().includes("date") ? "date" : "text"}
                       value={
                         f.toLowerCase().includes("date") && selectedFilters[key]
