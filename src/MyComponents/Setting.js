@@ -143,13 +143,8 @@ export default function Settings() {
       return;
     }
 
-    if (currentPassword === newPassword) {
-      toast.error("New password must be different");
-      return;
-    }
-
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("New and Confirm passwords do not match");
       return;
     }
 

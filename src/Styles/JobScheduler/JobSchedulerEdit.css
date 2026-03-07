@@ -1,0 +1,293 @@
+/* ================================
+   ROOT VARIABLES (Same as View)
+================================ */
+:root {
+  --accent-blue: #00d2ff;
+  --accent-purple: #9aa0ff;
+  --glass: rgba(255, 255, 255, 0.03);
+  --border: rgba(255, 255, 255, 0.08);
+}
+
+/* ================================
+   PAGE
+================================ */
+.ed-page {
+  background: radial-gradient(circle at 0% 0%, #111421 0%, #050505 100%);
+  min-height: 100vh;
+  padding: 40px 60px;
+  color: #eaeaea;
+  font-family: 'Inter', sans-serif;
+  perspective: 1500px;
+}
+
+.ed-wrapper {
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* ================================
+   HEADER
+================================ */
+.ed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  animation: slideDown 0.6s ease-out;
+}
+
+.ed-header h1 {
+  margin: 0;
+  font-size: 32px;
+  background: linear-gradient(to right, #fff, var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+.ed-job-sub {
+  font-size: 14px;
+  color: #aaa;
+}
+
+/* ================================
+   SECTIONS (3D Glass)
+================================ */
+.ed-section {
+  width: 100%;
+  background: var(--glass);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 30px;
+  border: 1px solid var(--border);
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
+  transform-style: preserve-3d;
+  animation: fadeInUp 0.7s ease-out forwards;
+  opacity: 0;
+}
+
+.ed-section:nth-child(2) { animation-delay: 0.1s; }
+.ed-section:nth-child(3) { animation-delay: 0.2s; }
+.ed-section:nth-child(4) { animation-delay: 0.3s; }
+
+.ed-section:hover {
+  transform: translateZ(15px) rotateX(1deg);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4),
+              0 0 20px rgba(154, 160, 255, 0.05);
+  border-color: rgba(154, 160, 255, 0.3);
+}
+
+.ed-section h2 {
+  font-size: 13px;
+  color: var(--accent-purple);
+  text-transform: uppercase;
+  margin-bottom: 25px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  border-left: 3px solid var(--accent-purple);
+  padding-left: 15px;
+}
+
+/* ================================
+   GRID
+================================ */
+.ed-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.ed-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.ed-field.ed-full {
+  grid-column: span 2;
+}
+
+.ed-field label {
+  font-size: 10px;
+  color: #666;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* ================================
+   INPUTS (Premium Glass)
+================================ */
+.ed-input {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #fff;
+  outline: none;
+  transition: 0.3s;
+  font-size: 14px;
+}
+
+.ed-input:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 10px rgba(154,160,255,0.3);
+}
+
+textarea.ed-input {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ================================
+   BADGES
+================================ */
+.ed-badge {
+  padding: 6px 16px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.ed-badge.on {
+  background: rgba(0, 255, 170, 0.1);
+  color: #00ffaa;
+  border: 1px solid #00ffaa;
+  box-shadow: 0 0 15px rgba(0, 255, 170, 0.2);
+}
+
+.ed-badge.off {
+  background: rgba(255, 70, 70, 0.1);
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  box-shadow: 0 0 15px rgba(255, 70, 70, 0.2);
+}
+
+/* ================================
+   DAY SELECTOR
+================================ */
+.ed-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ed-day {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.ed-day:hover {
+  background: rgba(154,160,255,0.15);
+}
+
+.ed-day.active {
+  background: var(--accent-purple);
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(154,160,255,0.6);
+}
+
+/* ================================
+   BUTTONS
+================================ */
+.ed-btn {
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ed-btn:hover {
+  background: var(--accent-purple);
+  color: #000;
+  transform: translateY(-2px);
+}
+
+.ed-save {
+  background: var(--accent-purple);
+  color: #000;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.ed-save:hover {
+  box-shadow: 0 0 20px rgba(154,160,255,0.6);
+  transform: translateY(-3px);
+}
+
+select.ed-input {
+  background-color: radial-gradient(circle at 0% 0%, #111421 0%, #050505 100%);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Dropdown options (important for some browsers) */
+select.ed-input option {
+  background-color: #000;
+  color: #fff;
+}
+/* ================================
+   ANIMATIONS
+================================ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px) rotateX(-10deg); }
+  to { opacity: 1; transform: translateY(0) rotateX(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+@media (max-width: 1024px) {
+  .ed-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ed-field.ed-full {
+    grid-column: span 2;
+  }
+}
+.ed-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  z-index: 9999;
+  animation: fadeIn 0.9s ease-in-out;
+}
+
+.ed-toast.success {
+  background: #28a745;
+}
+
+.ed-toast.error {
+  background: #dc3545;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

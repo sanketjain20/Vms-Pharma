@@ -33,6 +33,9 @@ import GenerateReport from "./MyComponents/ReportComponent/GenerateReport";
 import VendorOnboarding from "./MyComponents/VendorOnboarding";
 import SalesAddNew from "./MyComponents/SalesComponent/SalesAddNew";
 import Dashboard from "./MyComponents/DashboardComponent/Dashboard"
+import JobScheduler from "./MyComponents/JobScheduler/JobScheduler";
+import JobView from "./MyComponents/JobScheduler/JobSchedulerView";
+import JobEdit from "./MyComponents/JobScheduler/JobSchedulerEdit";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
@@ -180,6 +183,34 @@ function App() {
           element={
             <ModuleGuard moduleName="DASHBOARD">
               <Dashboard />
+            </ModuleGuard>
+          }
+        />
+
+                {/* JOB SCHEDULER */}
+        <Route
+          path="job-scheduler"
+          element={
+            <ModuleGuard moduleName="JOB_SCHEDULER">
+              <JobScheduler />
+            </ModuleGuard>
+          }
+        />
+        
+          <Route
+          path="job-scheduler/view/:id"
+          element={
+            <ModuleGuard moduleName="JOB_SCHEDULER">
+              <JobView/>
+            </ModuleGuard>
+          }
+        />
+
+        <Route
+          path="job-scheduler/edit/:id"
+          element={
+            <ModuleGuard moduleName="JOB_SCHEDULER">
+              <JobEdit/>
             </ModuleGuard>
           }
         />

@@ -190,14 +190,14 @@ export default function SalesAddNew({ onClose, onSubmit }) {
 
   const increaseQty = (index) => {
     const updated = [...items];
-    updated[index].quantity += 1;
+    updated[index].quantity = Number(updated[index].quantity) + 1;
     setItems(updated);
   };
 
   const decreaseQty = (index) => {
     const updated = [...items];
-    if (updated[index].quantity > 1) {
-      updated[index].quantity -= 1;
+    if (Number(updated[index].quantity) > 1) {
+      updated[index].quantity = Number(updated[index].quantity) - 1;
       setItems(updated);
     }
   };
@@ -386,8 +386,6 @@ export default function SalesAddNew({ onClose, onSubmit }) {
           {/* LEFT */}
           <div className="left-panel">
             <h3>Add Item</h3>
-
-            <label>Product Type</label>
             <div className="custom-select" ref={typeDropdownRef}>
               <label>Product Type</label>
 
@@ -505,8 +503,20 @@ export default function SalesAddNew({ onClose, onSubmit }) {
               type="number"
               value={quantity}
               min="1"
-              onChange={(e) => setQuantity(e.target.value)}
               placeholder="Quantity"
+              onChange={(e) => {
+                let val = e.target.value;
+
+                // remove leading zeros
+                val = val.replace(/^0+/, "");
+
+                // if empty or 0, set to 1
+                if (val === "" || Number(val) < 1) {
+                  setQuantity(1);
+                } else {
+                  setQuantity(Number(val));
+                }
+              }}
             />
 
             <label>Common Tax</label>
@@ -541,19 +551,38 @@ export default function SalesAddNew({ onClose, onSubmit }) {
             <div className="items-list">
               {items.map((i, idx) => (
                 <div key={idx} className="item-row">
-                  <div className="item-left">
-                    <b className="item-name">{i.productName}</b>
-                    <div className="qty-controls">
-                      <button onClick={() => decreaseQty(idx)}>−</button>
-                      <span>{i.quantity}</span>
-                      <button onClick={() => increaseQty(idx)}>+</button>
-                    </div>
-                  </div>
-                  <div className="item-right">
-                    ₹{(i.price * i.quantity).toFixed(2)}
-                    <button className="delete-btn" onClick={() => deleteItem(idx)}>🗑️</button>
-                  </div>
-                </div>
+  <div className="item-left">
+
+    <b className="item-name">{i.productName}</b>
+
+    {/* UNIT SELLING PRICE */}
+    <div className="unit-price">
+      Unit Price: ₹{i.price}
+    </div>
+
+    {/* QUANTITY */}
+    <div className="qty-controls">
+      <button onClick={() => decreaseQty(idx)}>−</button>
+      <span>{i.quantity}</span>
+      <button onClick={() => increaseQty(idx)}>+</button>
+    </div>
+
+  </div>
+
+  <div className="item-right">
+
+    {/* TOTAL PRICE */}
+    <b>₹{(i.price * i.quantity).toFixed(2)}</b>
+
+    <button
+      className="delete-btn"
+      onClick={() => deleteItem(idx)}
+    >
+      🗑️
+    </button>
+
+  </div>
+</div>
               ))}
             </div>
             <div className="sub-head">Sub Total: ₹{subTotal.toFixed(2)}</div>
