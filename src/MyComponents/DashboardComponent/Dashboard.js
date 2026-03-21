@@ -31,27 +31,21 @@ const Dashboard = () => {
   const [openFilter, setOpenFilter] = useState(null);
 
   const [topProduct, setTopProduct] = useState(null);
-const [lowStock, setLowStock] = useState([]);
-
-const [deadStockData, setDeadStockData] = useState([]);
-const [showDeadStock, setShowDeadStock] = useState(false);
-
-const [showLowStockList, setShowLowStockList] = useState(false);
-
-// ⭐ SMART INSIGHT SETTINGS
-const [topProductPeriod, setTopProductPeriod] = useState("MONTHLY");
-const [insightSettingsOpen, setInsightSettingsOpen] = useState(false);
-
-const totalLowStock = lowStock.length;
-const worstLowStock = lowStock[0]; // smallest qty if backend sorted
+  const [lowStock, setLowStock] = useState([]);
+  const [deadStockData, setDeadStockData] = useState([]);
+  const [showDeadStock, setShowDeadStock] = useState(false);
+  const [showLowStockList, setShowLowStockList] = useState(false);
+  const [topProductPeriod, setTopProductPeriod] = useState("MONTHLY");
 
   const [summary, setSummary] = useState({
-  todaySalesAmount: 0,
-  todayOrders: 0,
-  yesterdaySalesAmount: 0,
-  orderGrowthPercentage: 0,
-});
+    todaySalesAmount: 0,
+    todayOrders: 0,
+    yesterdaySalesAmount: 0,
+    orderGrowthPercentage: 0,
+  });
 
+  const canvasRef = useRef(null);
+  const animFrameRef = useRef(null);
 
   const monthOptions = [
     { label: "Jan", value: 1 }, { label: "Feb", value: 2 },
@@ -65,356 +59,467 @@ const worstLowStock = lowStock[0]; // smallest qty if backend sorted
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 
-  // ================= GLOBAL CLOSE HANDLERS =================
+  /* 3D CANVAS BACKGROUND */
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (!e.target.closest(".filter-menu")) {
-        setOpenFilter(null);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const orbs = Array.from({ length: 5 }, (_, i) => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: 120 + Math.random() * 200,
+      vx: (Math.random() - 0.5) * 0.22,
+      vy: (Math.random() - 0.5) * 0.22,
+      hue: [215, 225, 205, 235, 210][i],
+      alpha: 0.022 + Math.random() * 0.03,
+    }));
+
+    let tick = 0;
+
+    const draw = () => {
+      tick++;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Perspective grid
+      const horizon = canvas.height * 0.5;
+      const vanishX = canvas.width / 2;
+      const gridCount = 14;
+      const speed = (tick * 0.25) % (canvas.height / gridCount);
+
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      ctx.strokeStyle = "#3b82f6";
+      ctx.lineWidth = 0.5;
+
+      for (let i = 0; i <= gridCount; i++) {
+        const y = horizon + speed + (i * (canvas.height - horizon)) / gridCount;
+        if (y > canvas.height) continue;
+        const spread = ((y - horizon) / (canvas.height - horizon)) * canvas.width * 1.4;
+        ctx.beginPath();
+        ctx.moveTo(vanishX - spread / 2, y);
+        ctx.lineTo(vanishX + spread / 2, y);
+        ctx.stroke();
       }
+
+      for (let i = 0; i <= 18; i++) {
+        const t = i / 18;
+        const bx = vanishX - canvas.width * 0.7 + t * canvas.width * 1.4;
+        ctx.beginPath();
+        ctx.moveTo(vanishX, horizon);
+        ctx.lineTo(bx, canvas.height + 10);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      orbs.forEach((orb) => {
+        orb.x += orb.vx;
+        orb.y += orb.vy;
+        if (orb.x < -orb.r) orb.x = canvas.width + orb.r;
+        if (orb.x > canvas.width + orb.r) orb.x = -orb.r;
+        if (orb.y < -orb.r) orb.y = canvas.height + orb.r;
+        if (orb.y > canvas.height + orb.r) orb.y = -orb.r;
+
+        const g = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.r);
+        g.addColorStop(0, `hsla(${orb.hue}, 75%, 55%, ${orb.alpha})`);
+        g.addColorStop(1, "transparent");
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+      });
+
+      for (let y = 0; y < canvas.height; y += 4) {
+        ctx.fillStyle = "rgba(0,0,0,0.032)";
+        ctx.fillRect(0, y, canvas.width, 1);
+      }
+
+      const vig = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.1,
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.9
+      );
+      vig.addColorStop(0, "rgba(0,0,0,0)");
+      vig.addColorStop(1, "rgba(0,0,0,0.75)");
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      animFrameRef.current = requestAnimationFrame(draw);
     };
 
-    const handleEsc = (e) => {
-      if (e.key === "Escape") setOpenFilter(null);
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEsc);
-
+    draw();
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEsc);
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(animFrameRef.current);
     };
   }, []);
 
-  // ================= FILTER MENU =================
+  /* CLOSE FILTER ON OUTSIDE CLICK */
+  useEffect(() => {
+    const handle = (e) => { if (!e.target.closest(".filter-menu")) setOpenFilter(null); };
+    const esc = (e) => { if (e.key === "Escape") setOpenFilter(null); };
+    document.addEventListener("mousedown", handle);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", handle); document.removeEventListener("keydown", esc); };
+  }, []);
+
+  /* FILTER MENU COMPONENT */
   const FilterMenu = ({ id, children }) => (
-    <div className="filter-menu" style={{ position: "relative" }}>
-      <button
-        onClick={() => setOpenFilter(openFilter === id ? null : id)}
-        style={{
-          background: "#222",
-          border: "1px solid #555",
-          borderRadius: "8px",
-          padding: "6px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg"
-          height="20px"
-          viewBox="0 -960 960 960"
-          width="20px"
-          fill="#ffffff">
+    <div className="filter-menu">
+      <button className="filter-gear-btn" onClick={() => setOpenFilter(openFilter === id ? null : id)}>
+        <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor">
           <path d="M440-520v-280h440v280H440ZM80-160v-280h400v280H80Zm0-360v-280h280v280H80Zm440-80h280v-120H520v120ZM160-240h240v-120H160v120Zm0-360h120v-120H160v120Zm360 0ZM400-360ZM280-600ZM680-80l-12-60q-12-5-22.5-10.5T624-164l-58 18-40-68 46-40q-2-13-2-26t2-26l-46-40 40-68 58 18q11-8 21.5-13.5T668-420l12-60h80l12 60q12 5 22.5 10.5T816-396l58-18 40 68-46 40q2 13 2 26t-2 26l46 40-40 68-58-18q-11 8-21.5 13.5T772-140l-12 60h-80Zm96.5-143.5Q800-247 800-280t-23.5-56.5Q753-360 720-360t-56.5 23.5Q640-313 640-280t23.5 56.5Q687-200 720-200t56.5-23.5Z" />
         </svg>
       </button>
-
-
-      <div
-        style={{
-          position: "absolute",
-          top: "42px",
-          left: "50",
-          background: "#111",
-          border: "1px solid #444",
-          borderRadius: "8px",
-          padding: "12px",
-          zIndex: 100,
-          minWidth: "190px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          opacity: openFilter === id ? 1 : 0,
-          transform: openFilter === id ? "translateY(0px)" : "translateY(-8px)",
-          pointerEvents: openFilter === id ? "auto" : "none",
-          transition: "all 0.25s ease"
-        }}
-      >
+      <div className={`filter-panel ${openFilter === id ? "open" : ""}`}>
         {children}
       </div>
     </div>
   );
 
-  // ================= API CALLS (UNCHANGED) =================
-useEffect(() => {
-  fetch("http://localhost:8080/api/Sales/dashboard", { credentials: "include" })
-    .then(res => res.json())
-    .then(json => {
-      const data = json?.data;
-      setTodayChartData(data?.chartData || []);
-
-      // 🔥 summary card data
-      setSummary({
-        todaySalesAmount: data?.totalSalesAmount ?? 0,
-        todayOrders: data?.totalOrders ?? 0,
-        yesterdaySalesAmount: data?.previousPeriodSales ?? 0,
-        orderGrowthPercentage: data?.growthPercentage ?? 0,
+  /* API CALLS */
+  useEffect(() => {
+    fetch("http://localhost:8080/api/Sales/dashboard", { credentials: "include" })
+      .then(r => r.json())
+      .then(json => {
+        const data = json?.data;
+        setTodayChartData(data?.chartData || []);
+        setSummary({
+          todaySalesAmount: data?.totalSalesAmount ?? 0,
+          todayOrders: data?.totalOrders ?? 0,
+          yesterdaySalesAmount: data?.previousPeriodSales ?? 0,
+          orderGrowthPercentage: data?.growthPercentage ?? 0,
+        });
       });
-    });
-}, []);
+  }, []);
 
   useEffect(() => {
     fetch(`http://localhost:8080/api/Sales/dashboardDayWise/${daywiseMonth}/${daywiseYear}`, { credentials: "include" })
-      .then(res => res.json())
-      .then(json => setDaywiseChartData(json?.data || []));
+      .then(r => r.json()).then(json => setDaywiseChartData(json?.data || []));
   }, [daywiseMonth, daywiseYear]);
 
   useEffect(() => {
     fetch(`http://localhost:8080/api/Sales/dashboardWeekly/${weeklyMonth}/${weeklyYear}`, { credentials: "include" })
-      .then(res => res.json())
-      .then(json => setWeeklyApiChartData(json?.data || []));
+      .then(r => r.json()).then(json => setWeeklyApiChartData(json?.data || []));
   }, [weeklyMonth, weeklyYear]);
 
   useEffect(() => {
     fetch(`http://localhost:8080/api/Sales/dashboardMonthly/${selectedYear}`, { credentials: "include" })
-      .then(res => res.json())
-      .then(json => setMonthlyChartData(json?.data || []));
+      .then(r => r.json()).then(json => setMonthlyChartData(json?.data || []));
   }, [selectedYear]);
 
   useEffect(() => {
     fetch(`http://localhost:8080/api/Sales/orderStatusSummary/weekly/${orderStatusMonth}/${orderStatusYear}`, { credentials: "include" })
-      .then(res => res.json())
-      .then(json => setOrderStatusData(json?.data || []));
+      .then(r => r.json()).then(json => setOrderStatusData(json?.data || []));
   }, [orderStatusMonth, orderStatusYear]);
 
-useEffect(() => {
-  fetch(`http://localhost:8080/api/Sales/TopSaleProduct/${topProductPeriod}`, {
-    credentials: "include"
-  })
-    .then(res => res.json())
-    .then(json => setTopProduct(json?.data || null));
-}, [topProductPeriod]);
+  useEffect(() => {
+    fetch(`http://localhost:8080/api/Sales/TopSaleProduct/${topProductPeriod}`, { credentials: "include" })
+      .then(r => r.json()).then(json => setTopProduct(json?.data || null));
+  }, [topProductPeriod]);
 
-useEffect(() => {
-  fetch("http://localhost:8080/api/Product/DeadStock", { credentials: "include" })
-    .then(res => res.json())
-    .then(json => {
-      setDeadStockData(json?.data || []);
-    });
-}, []);
+  useEffect(() => {
+    fetch("http://localhost:8080/api/Product/DeadStock", { credentials: "include" })
+      .then(r => r.json()).then(json => setDeadStockData(json?.data || []));
+  }, []);
 
-useEffect(() => {
-  fetch("http://localhost:8080/api/Inventory/LowStockProduct", { credentials: "include" })
-    .then(res => res.json())
-    .then(json => setLowStock(json?.data || []));
-}, []);
+  useEffect(() => {
+    fetch("http://localhost:8080/api/Inventory/LowStockProduct", { credentials: "include" })
+      .then(r => r.json()).then(json => setLowStock(json?.data || []));
+  }, []);
 
   return (
     <div className="dashboard-container">
-{/* 🔥 SUMMARY CARDS */}
-<div className="summary-wrapper">
+      {/* 3D Canvas BG */}
+      <canvas ref={canvasRef} className="dash-bg-canvas" />
+      <div className="dash-noise" />
+      <div className="dash-top-beam" />
 
-  {/* SALES */}
-  <div className="summary-card salessummary">
-    <div className="summary-icon">
-      <FaRupeeSign />
-    </div>
-    <h3>Today's Sales</h3>
-    <p>{formatCurrency(summary.todaySalesAmount)}</p>
-    <span>Total revenue earned today</span>
-  </div>
+      <div className="dash-content">
 
-  {/* ORDERS */}
-  <div className="summary-card salessummary">
-    <div className="summary-icon">
-      <FaShoppingCart />
-    </div>
-    <h3>Today's Orders</h3>
-    <p>{summary.todayOrders}</p>
-    <span>Orders placed today</span>
-  </div>
-
-  {/* GROWTH */}
-  <div className="summary-card salessummary">
-    <div className="summary-icon">
-      {summary.orderGrowthPercentage >= 0 ? (
-        <MdTrendingUp className="icon-green" />
-      ) : (
-        <MdTrendingDown className="icon-red" />
-      )}
-    </div>
-
-    <h3>Order Growth</h3>
-    <p className={summary.orderGrowthPercentage >= 0 ? "positive" : "negative"}>
-      {summary.orderGrowthPercentage >= 0 ? "+" : ""}
-      {summary.orderGrowthPercentage}%
-    </p>
-    <span>Compared to previous period</span>
-  </div>
-
-</div>
-
-{/* 🚀 SMART INSIGHTS */}
-<div className="summary-wrapper smart-insights">
-
-  {/* 🏆 TOP SELLING PRODUCT */}
- <div className="summary-card highlight-card">
-
-  {/* ⚙️ SETTINGS INSIDE CARD */}
-<div className="top-product-settings">
-    <FilterMenu id="top-product-settings">
-      <label>Period</label>
-      <select
-        value={topProductPeriod}
-        onChange={(e) => setTopProductPeriod(e.target.value)}
-      >
-        <option value="MONTHLY">Monthly</option>
-        <option value="YEARLY">Yearly</option>
-      </select>
-    </FilterMenu>
-  </div>
-
-  <div className="summary-icon">🏆</div>
-
-  <h3>
-    Top Product ({topProductPeriod === "MONTHLY" ? "This Month" : "This Year"})
-  </h3>
-
-  <p>{topProduct?.productName || "No Data"}</p>
-
-  <span>
-    {topProduct
-      ? `${topProduct.totalSold} units sold`
-      : "No sales yet"}
-  </span>
-</div>
-
-  {/* ⚠️ DEAD STOCK */}
-<div className="summary-card dead-stock-card">
-  <div className="summary-icon">
-    📉
-  </div>
-
-  <h3>Dead Stock</h3>
-  <p>{deadStockData.length}</p>
-  <span>Products with low sales</span>
-
-  <button
-    className="view-deadbtn"
-    onClick={() => setShowDeadStock(!showDeadStock)}
-  >
-    {showDeadStock ? "Hide Details" : "View Details"}
-  </button>
-
-  {/* EXPANDABLE LIST */}
-  {showDeadStock && (
-    <div className="dead-stock-list">
-      {deadStockData.map((item, i) => (
-        <div key={i} className="dead-stock-row">
-          <span>{item.productName}</span>
-          <span className="sold">Sold: {item.totalSold}</span>
+        {/* ── PAGE HEADER ── */}
+        <div className="dash-page-header">
+          <div className="dash-header-left">
+            <div className="dash-badge">
+              <span className="dash-badge-dot" />
+              Analytics Overview
+            </div>
+            <h1 className="dash-title">
+              <span className="dash-title-acc"></span> DASHBOARD
+            </h1>
+          </div>
+          <div className="dash-header-rule" />
         </div>
-      ))}
-    </div>
-  )}
-</div>
 
+        {/* ── SUMMARY CARDS ROW ── */}
+        <div className="summary-row">
 
-  {/* ⚠️ LOW STOCK */}
-<div className="summary-card warning-card">
-  <div className="summary-icon">⚠️</div>
+          {/* Sales */}
+          <div className="s-card s-blue" style={{ animationDelay: "0s" }}>
+            <div className="s-card-top-line" />
+            <div className="s-card-corner tl" /><div className="s-card-corner tr" />
+            <div className="s-card-corner bl" /><div className="s-card-corner br" />
+            <div className="s-icon-wrap blue-glow">
+              <FaRupeeSign />
+            </div>
+            <div className="s-body">
+              <span className="s-label">Today's Sales</span>
+              <span className="s-value">{formatCurrency(summary.todaySalesAmount)}</span>
+              <span className="s-sub">Total revenue earned today</span>
+            </div>
+          </div>
 
-  <h3>Low Stock Alerts</h3>
-  <p>{lowStock.length}</p>
-  <span>Items below reorder level</span>
+          {/* Orders */}
+          <div className="s-card s-violet" style={{ animationDelay: "0.08s" }}>
+            <div className="s-card-top-line" />
+            <div className="s-card-corner tl" /><div className="s-card-corner tr" />
+            <div className="s-card-corner bl" /><div className="s-card-corner br" />
+            <div className="s-icon-wrap violet-glow">
+              <FaShoppingCart />
+            </div>
+            <div className="s-body">
+              <span className="s-label">Today's Orders</span>
+              <span className="s-value">{summary.todayOrders}</span>
+              <span className="s-sub">Orders placed today</span>
+            </div>
+          </div>
 
-  <button
-    className="view-deadbtn"
-    onClick={() => setShowLowStockList(!showLowStockList)}
-  >
-    {showLowStockList ? "Hide Details" : "View Details"}
-  </button>
+          {/* Growth */}
+          <div className={`s-card ${summary.orderGrowthPercentage >= 0 ? "s-green" : "s-red"}`} style={{ animationDelay: "0.16s" }}>
+            <div className="s-card-top-line" />
+            <div className="s-card-corner tl" /><div className="s-card-corner tr" />
+            <div className="s-card-corner bl" /><div className="s-card-corner br" />
+            <div className={`s-icon-wrap ${summary.orderGrowthPercentage >= 0 ? "green-glow" : "red-glow"}`}>
+              {summary.orderGrowthPercentage >= 0 ? <MdTrendingUp /> : <MdTrendingDown />}
+            </div>
+            <div className="s-body">
+              <span className="s-label">Order Growth</span>
+              <span className={`s-value ${summary.orderGrowthPercentage >= 0 ? "positive" : "negative"}`}>
+                {summary.orderGrowthPercentage >= 0 ? "+" : ""}{summary.orderGrowthPercentage}%
+              </span>
+              <span className="s-sub">Compared to previous period</span>
+            </div>
+          </div>
 
-  {/* EXPANDABLE LIST (same as dead stock) */}
-  {showLowStockList && (
-    <div className="dead-stock-list">
-      {lowStock.map((item, i) => (
-        <div key={i} className="dead-stock-row">
-          <span>{item.productName}</span>
-          <span className="sold">
-            Quantity: {item.currentQuantity} / Reorder Level: {item.reorderLevel}
-          </span>
+          {/* Top Product */}
+          <div className="s-card s-amber insight-card" style={{ animationDelay: "0.24s" }}>
+            <div className="s-card-top-line" />
+            <div className="s-card-corner tl" /><div className="s-card-corner tr" />
+            <div className="s-card-corner bl" /><div className="s-card-corner br" />
+            <div className="insight-gear">
+              <FilterMenu id="top-product-settings">
+                <label>Period</label>
+                <select value={topProductPeriod} onChange={(e) => setTopProductPeriod(e.target.value)}>
+                  <option value="MONTHLY">Monthly</option>
+                  <option value="YEARLY">Yearly</option>
+                </select>
+              </FilterMenu>
+            </div>
+            <div className="s-icon-wrap amber-glow">🏆</div>
+            <div className="s-body">
+              <span className="s-label">Top Product · {topProductPeriod === "MONTHLY" ? "Month" : "Year"}</span>
+              <span className="s-value small-val">{topProduct?.productName || "No Data"}</span>
+              <span className="s-sub">{topProduct ? `${topProduct.totalSold} units sold` : "No sales yet"}</span>
+            </div>
+          </div>
+
+          {/* Dead Stock */}
+          <div className="s-card s-rose expand-card" style={{ animationDelay: "0.32s" }}>
+            <div className="s-card-top-line" />
+            <div className="s-card-corner tl" /><div className="s-card-corner tr" />
+            <div className="s-card-corner bl" /><div className="s-card-corner br" />
+            <div className="s-icon-wrap rose-glow">📉</div>
+            <div className="s-body">
+              <span className="s-label">Dead Stock</span>
+              <span className="s-value">{deadStockData.length}</span>
+              <span className="s-sub">Products with low sales</span>
+              <button className="s-expand-btn" onClick={() => setShowDeadStock(!showDeadStock)}>
+                {showDeadStock ? "Hide" : "View Details"}
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d={showDeadStock ? "M2 7L5 4L8 7" : "M2 4L5 7L8 4"} stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            {showDeadStock && (
+              <div className="s-expand-list">
+                {deadStockData.map((item, i) => (
+                  <div key={i} className="s-expand-row">
+                    <span>{item.productName}</span>
+                    <span className="s-expand-badge rose">Sold: {item.totalSold}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Low Stock */}
+          <div className="s-card s-yellow expand-card" style={{ animationDelay: "0.4s" }}>
+            <div className="s-card-top-line" />
+            <div className="s-card-corner tl" /><div className="s-card-corner tr" />
+            <div className="s-card-corner bl" /><div className="s-card-corner br" />
+            <div className="s-icon-wrap yellow-glow">⚠️</div>
+            <div className="s-body">
+              <span className="s-label">Low Stock Alerts</span>
+              <span className="s-value">{lowStock.length}</span>
+              <span className="s-sub">Items below reorder level</span>
+              <button className="s-expand-btn" onClick={() => setShowLowStockList(!showLowStockList)}>
+                {showLowStockList ? "Hide" : "View Details"}
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d={showLowStockList ? "M2 7L5 4L8 7" : "M2 4L5 7L8 4"} stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            {showLowStockList && (
+              <div className="s-expand-list">
+                {lowStock.map((item, i) => (
+                  <div key={i} className="s-expand-row">
+                    <span>{item.productName}</span>
+                    <span className="s-expand-badge yellow">Qty: {item.currentQuantity} / {item.reorderLevel}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
-      ))}
-    </div>
-  )}
-</div>
 
-</div>
-      {/* TODAY */}
-      <div className="d-card d-border">
-        <FilterMenu id="today">
-          <label>Chart Type</label>
-          <select value={todayChartType} onChange={e => setTodayChartType(e.target.value)}>
-            <option value="bar">Bar</option>
-            <option value="line">Line</option>
-            <option value="pie">Pie</option>
-          </select>
-        </FilterMenu>
-        <CustomChart data={todayChartData} xKey="label" yKey="value" xLabel="Hour" yLabel="Sales (₹)" chartTitle="Today's Sales Trend" barColor="yellow" chartType={todayChartType} />
+        {/* ── CHART SECTION HEADER ── */}
+        <div className="charts-section-header">
+          <div className="section-label">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <rect x="1" y="6" width="2" height="5" rx="0.5" fill="currentColor"/>
+              <rect x="5" y="3" width="2" height="8" rx="0.5" fill="currentColor"/>
+              <rect x="9" y="1" width="2" height="10" rx="0.5" fill="currentColor"/>
+            </svg>
+            Analytics Charts
+          </div>
+        </div>
+
+        {/* ── CHARTS GRID ── */}
+        <div className="charts-grid">
+
+          {/* TODAY */}
+          <div className="d-card" style={{ animationDelay: "0.1s" }}>
+            <div className="d-card-header">
+              <div className="d-card-title-row">
+                <span className="d-card-dot blue" />
+                <span className="d-card-label">Today's Trend</span>
+              </div>
+              <FilterMenu id="today">
+                <label>Chart Type</label>
+                <select value={todayChartType} onChange={e => setTodayChartType(e.target.value)}>
+                  <option value="bar">Bar</option>
+                  <option value="line">Line</option>
+                  <option value="pie">Pie</option>
+                </select>
+              </FilterMenu>
+            </div>
+            <div className="d-card-body">
+              <CustomChart data={todayChartData} xKey="label" yKey="value" xLabel="Hour" yLabel="Sales (₹)" chartTitle="Today's Sales Trend" barColor="#3b82f6" chartType={todayChartType} />
+            </div>
+          </div>
+
+          {/* DAYWISE */}
+          <div className="d-card" style={{ animationDelay: "0.18s" }}>
+            <div className="d-card-header">
+              <div className="d-card-title-row">
+                <span className="d-card-dot amber" />
+                <span className="d-card-label">Day-Wise Sales</span>
+              </div>
+              <FilterMenu id="daywise">
+                <label>Chart Type</label>
+                <select value={daywiseChartType} onChange={e => setDaywiseChartType(e.target.value)}>
+                  <option value="bar">Bar</option>
+                  <option value="line">Line</option>
+                  <option value="pie">Pie</option>
+                </select>
+                <GridSelect label="Month" type="month" value={daywiseMonth} onChange={setDaywiseMonth} options={monthOptions} />
+                <GridSelect label="Year" type="year" value={daywiseYear} onChange={setDaywiseYear} />
+              </FilterMenu>
+            </div>
+            <div className="d-card-body">
+              <CustomChart data={DaywiseChartData} xKey="label" yKey="value" xLabel="Day" yLabel="Sales (₹)" chartTitle="Day-Wise Sales" barColor="#f59e0b" chartType={daywiseChartType} />
+            </div>
+          </div>
+
+          {/* WEEKLY */}
+          <div className="d-card" style={{ animationDelay: "0.26s" }}>
+            <div className="d-card-header">
+              <div className="d-card-title-row">
+                <span className="d-card-dot green" />
+                <span className="d-card-label">Weekly Sales</span>
+              </div>
+              <FilterMenu id="weekly">
+                <label>Chart Type</label>
+                <select value={weeklyChartType} onChange={e => setWeeklyChartType(e.target.value)}>
+                  <option value="bar">Bar</option>
+                  <option value="line">Line</option>
+                  <option value="pie">Pie</option>
+                </select>
+                <GridSelect label="Month" type="month" value={weeklyMonth} onChange={setWeeklyMonth} options={monthOptions} />
+                <GridSelect label="Year" type="year" value={weeklyYear} onChange={setWeeklyYear} />
+              </FilterMenu>
+            </div>
+            <div className="d-card-body">
+              <CustomChart data={weeklyApiChartData} xKey="label" yKey="value" xLabel="Week" yLabel="Sales (₹)" chartTitle="Weekly Sales" barColor="#10b981" chartType={weeklyChartType} />
+            </div>
+          </div>
+
+          {/* MONTHLY */}
+          <div className="d-card" style={{ animationDelay: "0.34s" }}>
+            <div className="d-card-header">
+              <div className="d-card-title-row">
+                <span className="d-card-dot violet" />
+                <span className="d-card-label">Monthly Overview</span>
+              </div>
+              <FilterMenu id="monthly">
+                <label>Chart Type</label>
+                <select value={monthlyChartType} onChange={e => setMonthlyChartType(e.target.value)}>
+                  <option value="bar">Bar</option>
+                  <option value="line">Line</option>
+                  <option value="pie">Pie</option>
+                </select>
+                <GridSelect label="Year" type="year" value={selectedYear} onChange={setSelectedYear} />
+              </FilterMenu>
+            </div>
+            <div className="d-card-body">
+              <CustomChart data={monthlyChartData} xKey="label" yKey="value" xLabel="Month" yLabel="Revenue (₹)" chartTitle="Monthly Overview" barColor="#8b5cf6" chartType={monthlyChartType} />
+            </div>
+          </div>
+
+          {/* ORDER STATUS */}
+          <div className="d-card" style={{ animationDelay: "0.42s" }}>
+            <div className="d-card-header">
+              <div className="d-card-title-row">
+                <span className="d-card-dot sky" />
+                <span className="d-card-label">Order Status</span>
+              </div>
+              <FilterMenu id="status">
+                <label>Chart Type</label>
+                <select value={orderStatusChartType} onChange={e => setOrderStatusChartType(e.target.value)}>
+                  <option value="bar">Bar</option>
+                  <option value="line">Line</option>
+                  <option value="pie">Pie</option>
+                </select>
+                <GridSelect label="Month" type="month" value={orderStatusMonth} onChange={setOrderStatusMonth} options={monthOptions} />
+                <GridSelect label="Year" type="year" value={orderStatusYear} onChange={setOrderStatusYear} />
+              </FilterMenu>
+            </div>
+            <div className="d-card-body">
+              <CustomChart data={orderStatusData} xKey="label" yKey="value" xLabel="Status" yLabel="Orders" chartTitle="Order Status Overview" barColor="#06b6d4" chartType={orderStatusChartType} />
+            </div>
+          </div>
+
+        </div>
       </div>
-
-      {/* DAYWISE */}
-      <div className="d-card d-border">
-        <FilterMenu id="daywise">
-          <label>Chart Type</label>
-          <select value={daywiseChartType} onChange={e => setDaywiseChartType(e.target.value)}>
-            <option value="bar">Bar</option>
-            <option value="line">Line</option>
-            <option value="pie">Pie</option>
-          </select>
-          <GridSelect label="Month" type="month" value={daywiseMonth} onChange={setDaywiseMonth} options={monthOptions} />
-          <GridSelect label="Year" type="year" value={daywiseYear} onChange={setDaywiseYear} />
-        </FilterMenu>
-        <CustomChart data={DaywiseChartData} xKey="label" yKey="value" xLabel="Day" yLabel="Sales (₹)" chartTitle="Day-Wise Sales" barColor="#f28e2b" chartType={daywiseChartType} />
-      </div>
-
-      {/* WEEKLY */}
-      <div className="d-card d-border">
-        <FilterMenu id="weekly">
-          <label>Chart Type</label>
-          <select value={weeklyChartType} onChange={e => setWeeklyChartType(e.target.value)}>
-            <option value="bar">Bar</option>
-            <option value="line">Line</option>
-            <option value="pie">Pie</option>
-          </select>
-          <GridSelect label="Month" type="month" value={weeklyMonth} onChange={setWeeklyMonth} options={monthOptions} />
-          <GridSelect label="Year" type="year" value={weeklyYear} onChange={setWeeklyYear} />
-        </FilterMenu>
-        <CustomChart data={weeklyApiChartData} xKey="label" yKey="value" xLabel="Week" yLabel="Sales (₹)" chartTitle="Weekly Sales" barColor="#59a14f" chartType={weeklyChartType} />
-      </div>
-
-      {/* MONTHLY */}
-      <div className="d-card d-border">
-        <FilterMenu id="monthly">
-          <label>Chart Type</label>
-          <select value={monthlyChartType} onChange={e => setMonthlyChartType(e.target.value)}>
-            <option value="bar">Bar</option>
-            <option value="line">Line</option>
-            <option value="pie">Pie</option>
-          </select>
-          <GridSelect label="Year" type="year" value={selectedYear} onChange={setSelectedYear} />
-        </FilterMenu>
-        <CustomChart data={monthlyChartData} xKey="label" yKey="value" xLabel="Month" yLabel="Revenue (₹)" chartTitle="Monthly Overview" barColor="#af7aa1" chartType={monthlyChartType} />
-      </div>
-
-      {/* ORDER STATUS */}
-      <div className="d-card d-border">
-        <FilterMenu id="status">
-          <label>Chart Type</label>
-          <select value={orderStatusChartType} onChange={e => setOrderStatusChartType(e.target.value)}>
-            <option value="bar">Bar</option>
-            <option value="line">Line</option>
-            <option value="pie">Pie</option>
-          </select>
-          <GridSelect label="Month" type="month" value={orderStatusMonth} onChange={setOrderStatusMonth} options={monthOptions} />
-          <GridSelect label="Year" type="year" value={orderStatusYear} onChange={setOrderStatusYear} />
-        </FilterMenu>
-        <CustomChart data={orderStatusData} xKey="label" yKey="value" xLabel="Status" yLabel="Orders" chartTitle="Order Status Overview" barColor="#328ae7" chartType={orderStatusChartType} />
-      </div>
-
     </div>
   );
 };

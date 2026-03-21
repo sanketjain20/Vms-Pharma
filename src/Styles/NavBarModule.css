@@ -1,225 +1,341 @@
-/* NAVBAR MODULE */
-header {
-  position:static;
-  top: 0;
-  left: 0;
+/* ============================================================
+   NavBarModule.css  ·  VMS Cinematic Dark UI
+   Module variant — no center nav links (used inside app pages)
+   Matches Navbar.css + Home.css + VendorOnboarding.css
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+--nbm-cyan:   #ffffff;
+--nbm-purple: #666666;
+--nbm-pink:   #ff5078;
+  --nbm-h:      62px;
+  --font-hud:   'Orbitron', monospace;
+  --font-body:  'Inter', sans-serif;
+}
+
+/* ── Shell ────────────────────────────────────────────────── */
+.nbm-bar {
+  position: static;
+  top: 0; left: 0;
   width: 100%;
-    height: 65px;
-  min-height: 60px;
+  height: var(--nbm-h);
+  min-height: var(--nbm-h);
   flex-shrink: 0;
 
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* right side for profile */
-  background: #000;          /* pure black */
-  color: #fff;
-  border-bottom: 1px solid #222;
+  justify-content: space-between;
+  padding: 0 22px;
+  gap: 16px;
 
-  padding: 0 20px;
+  /* Glassmorphism — matches Navbar.css */
+ background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: #fff;
   z-index: 1000;
 
-  transition: left 0.3s, width 0.3s;
+  transition: left 0.3s ease, width 0.3s ease,
+              box-shadow 0.3s ease, background 0.3s ease;
+  position: relative;       /* for scanline + dropdown positioning */
+  overflow: visible;
 }
 
-/* Shift navbar when sidebar is open */
-header.shifted {
-  left: 200px; /* width of expanded sidebar */
+/* Scrolled state */
+.nbm-bar.scrolled {
+ background: rgba(0, 0, 0, 0.96);
+  box-shadow: 0 4px 36px rgba(0, 0, 0, 0.65),
+              0 1px 0 rgba(0, 220, 255, 0.12);
+}
+
+/* Sidebar shift */
+.nbm-bar.shifted {
+  left: 200px;
   width: calc(100% - 200px);
 }
 
-/* Right section containing profile */
-.topbar-right {
+/* ── Scanline sweep ───────────────────────────────────────── */
+.nbm-scan {
+  position: absolute;
+  top: -100%; left: 0; right: 0;
+  height: 200%;
+  background: linear-gradient(
+    to bottom,
+    transparent 44%,
+    rgba(0, 220, 255, 0.025) 50%,
+    transparent 56%
+  );
+  animation: nbmScan 6s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes nbmScan { to { top: 100%; } }
+
+/* ── Left — Logo + Shop pill ──────────────────────────────── */
+.nbm-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 1;
+  margin-left: 50px;
+}
+
+.nbm-logo {
+  height: 34px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 6px;
+  filter: brightness(1.05);
+}
+
+.nbm-shop-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+background: rgba(255,255,255,0.05);
+border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+.nbm-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--nbm-cyan);
+  box-shadow: 0 0 6px var(--nbm-cyan);
+  animation: nbmDotBlink 2s ease-in-out infinite;
+}
+@keyframes nbmDotBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+.nbm-shop-name {
+  font-family: var(--font-hud);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(0, 220, 255, 0.65);
+  text-transform: uppercase;
+}
+
+/* ── Right — Greeting + Avatar ───────────────────────────── */
+.nbm-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1;
+}
+
+.nbm-greeting {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.3;
+}
+.nbm-hi {
+  font-size: 9px;
+  color: rgba(160, 195, 255, 0.32);
+  letter-spacing: 1px;
+}
+.nbm-name {
+  font-family: var(--font-hud);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: rgba(0, 220, 255, 0.8);
+}
+
+/* ── Avatar ───────────────────────────────────────────────── */
+.nbm-profile-wrap {
+  position: relative;
+  cursor: pointer;
+}
+
+.nbm-avatar {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+background: linear-gradient(135deg,
+  rgba(255,255,255,0.08),
+  rgba(120,120,120,0.08));
+  border: 1px solid rgba(0, 220, 255, 0.22);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.nbm-avatar:hover,
+.nbm-avatar.open {
+  border-color: rgba(0, 220, 255, 0.55);
+  box-shadow: 0 0 16px rgba(0, 220, 255, 0.25);
+}
+
+/* Pulse ring */
+.nbm-avatar-ring {
+  position: absolute; inset: -4px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 220, 255, 0.18);
+  animation: nbmRing 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes nbmRing {
+  0%,100% { transform: scale(1);   opacity: 0.5; }
+  50%      { transform: scale(1.12); opacity: 0; }
+}
+
+.nbm-avatar-img {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+.nbm-avatar-initials {
+  font-family: var(--font-hud);
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  position: relative; z-index: 1;
+}
+
+/* ── Dropdown ─────────────────────────────────────────────── */
+.nbm-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 210px;
+
+  background: rgba(0, 0, 0, 0.96);
+  border: 1px solid rgba(0, 220, 255, 0.14);
+  border-radius: 16px;
+  overflow: hidden;
+  backdrop-filter: blur(22px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75),
+              0 0 0 1px rgba(0, 220, 255, 0.05);
+
+  /* Animated reveal */
+  opacity: 0;
+  transform: translateY(-10px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 1002;
+}
+.nbm-dropdown.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+/* HUD corner accents */
+.nbm-dropdown::before,
+.nbm-dropdown::after {
+  content: '';
+  position: absolute;
+  width: 11px; height: 11px;
+  pointer-events: none;
+}
+.nbm-dropdown::before {
+  top: 8px; left: 8px;
+  border-top:  1px solid rgba(0, 220, 255, 0.38);
+  border-left: 1px solid rgba(0, 220, 255, 0.38);
+  border-radius: 2px 0 0 0;
+}
+.nbm-dropdown::after {
+  bottom: 8px; right: 8px;
+  border-bottom: 1px solid rgba(0, 220, 255, 0.38);
+  border-right:  1px solid rgba(0, 220, 255, 0.38);
+  border-radius: 0 0 2px 0;
+}
+
+/* User info row */
+.nbm-dd-user {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 16px 16px 12px;
+}
+.nbm-dd-avatar-sm {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg,
+    rgba(0, 220, 255, 0.18),
+    rgba(160, 60, 255, 0.18));
+  border: 1px solid rgba(0, 220, 255, 0.18);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.nbm-dd-avatar-sm img  { width: 34px; height: 34px; border-radius: 10px; object-fit: cover; }
+.nbm-dd-avatar-sm span {
+  font-family: var(--font-hud);
+  font-size: 11px; font-weight: 700; color: #fff;
+}
+.nbm-dd-info { overflow: hidden; }
+.nbm-dd-name {
+  font-family: var(--font-hud);
+  font-size: 11px; font-weight: 700;
+  color: #fff; letter-spacing: 0.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nbm-dd-shop {
+  font-size: 10px;
+  color: rgba(0, 220, 255, 0.5);
+  letter-spacing: 0.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 2px;
 }
 
-/* Profile circle with initials */
-.profile {
-  width: 38px;
-  height: 38px;
+/* Divider */
+.nbm-dd-divider {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent, rgba(0, 220, 255, 0.14), transparent);
+  margin: 0 12px;
+}
 
-  background: #0369ee;   /* orange theme */
-  color: #000;
-  font-weight: bold;
-  font-size: 16px;
-
-  border-radius: 30%;
+/* Items */
+.nbm-dd-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+ color: rgba(200,200,200,0.7);
+  font-family: var(--font-body);
+  font-size: 13px; font-weight: 500;
   cursor: pointer;
-  transition: 0.3s ease;
+  text-align: left;
+  transition: background 0.2s, color 0.2s;
 }
-
-/* Hover effect */
-.profile:hover {
-  background: #40a1e2;
-}
-
-/* Optional: Vendor name next to profile */
-.vendor-name {
-  margin-left: 10px;
-  font-size: 16px;
-  color: #a2e0f8;
-  font-weight: 500;
-}
-
-/* Optional: Vendor image next to profile */
-.vendor-logo {
-  margin-left: 10px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.profile-dropdown {
-  position: absolute;
-  top: 50px; /* below profile circle */
-  right: 0;
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 6px;
-  width: 140px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  z-index: 1001;
-}
-
-.dropdown-item {
-  padding: 10px 15px;
+.nbm-dd-item:last-child { margin-bottom: 4px; }
+.nbm-dd-item svg { flex-shrink: 0; opacity: 0.65; transition: opacity 0.2s; }
+.nbm-dd-item:hover {
+  background: rgba(0, 220, 255, 0.07);
   color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  transition: 0.2s;
+}
+.nbm-dd-item:hover svg { opacity: 1; }
+
+.nbm-dd-logout:hover {
+  background: rgba(255, 80, 120, 0.08);
+  color: rgba(255, 140, 160, 0.9);
+}
+.nbm-dd-logout:hover svg { color: rgba(255, 80, 120, 0.8); opacity: 1; }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .nbm-bar { padding: 0 16px; }
 }
 
-.dropdown-item:hover {
-  background: #40a1e2;
-  color: #000;
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
-  header {
-    height: 58px;
-    padding: 0 16px;
-  }
-
-  .profile {
-    width: 34px;
-    height: 34px;
-    font-size: 15px;
-  }
-
-  .vendor-name {
-    font-size: 15px;
-  }
-
-  .vendor-logo {
-    width: 26px;
-    height: 26px;
-  }
-
-  .profile-dropdown {
-    top: 46px;
-    width: 130px;
-  }
-
-  .dropdown-item {
-    font-size: 13px;
-    padding: 9px 14px;
-  }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-  header {
-    height: 54px;
-    padding: 0 14px;
-  }
-
-  .topbar-right {
-    gap: 8px;
-  }
-
-  .profile {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-  }
-
-  .vendor-name {
-    font-size: 14px;
-  }
-
-  .vendor-logo {
-    width: 24px;
-    height: 24px;
-  }
-
-  .profile-dropdown {
-    top: 44px;
-    width: 120px;
-  }
-
-  .dropdown-item {
-    font-size: 13px;
-    padding: 8px 12px;
-  }
+@media (max-width: 768px) {
+  .nbm-bar.shifted { left: 0; width: 100%; }
+  .nbm-greeting { display: none; }
 }
 
 @media (max-width: 480px) {
-  header {
-    height: 50px;
-    padding: 0 12px;
-  }
-
-  .topbar-right {
-    gap: 6px;
-  }
-
-  .profile {
-    width: 30px;
-    height: 30px;
-    font-size: 13px;
-  }
-
-  .vendor-name {
-    font-size: 13px;
-    margin-left: 6px;
-  }
-
-  .vendor-logo {
-    width: 22px;
-    height: 22px;
-    margin-left: 6px;
-  }
-
-  .profile-dropdown {
-    top: 42px;
-    width: 115px;
-  }
-
-  .dropdown-item {
-    font-size: 12px;
-    padding: 7px 10px;
-  }
-}
-.profile-image {
-  width: 38px;
-  height: 38px;
-  border-radius: 30%;
-  object-fit: cover;
-}
-
-.profile-initials {
-  width: 38px;
-  height: 38px;
-  border-radius: 30%;
-  background: #144bc2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  color: #fff;
+  .nbm-bar    { padding: 0 12px; height: 54px; }
+  .nbm-logo   { height: 28px; }
+  .nbm-shop-pill { display: none; }
+  .nbm-avatar { width: 36px; height: 36px; border-radius: 10px; }
+  .nbm-avatar-initials { font-size: 12px; }
+  .nbm-dropdown { width: 190px; right: -4px; }
 }

@@ -36,6 +36,7 @@ import Dashboard from "./MyComponents/DashboardComponent/Dashboard"
 import JobScheduler from "./MyComponents/JobScheduler/JobScheduler";
 import JobView from "./MyComponents/JobScheduler/JobSchedulerView";
 import JobEdit from "./MyComponents/JobScheduler/JobSchedulerEdit";
+import ForgotPassword from "./MyComponents/LoginComponent/ForgotPassword";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
@@ -65,6 +66,19 @@ function App() {
           </>
         }
       />
+
+<Route
+  path="/forgotpassword"
+  element={
+    <>
+      <div className="container">
+        <ForgotPassword />
+      </div>
+      <Footer />
+    </>
+  }
+/>
+
 
       {/* HOME PAGE */}
       <Route path="/home" element={<Layout />}>

@@ -30,6 +30,7 @@ export const runReportByModule = async (moduleId, filters) => {
       break;
     case ReportEntity.Revenue:
       apiUrl = "http://localhost:8080/api/Reports/RevenueReport";
+      break;
     case ReportEntity.StockMovement:
       apiUrl = "http://localhost:8080/api/Inventory/InvMovementFileReport";
       break;
@@ -38,10 +39,17 @@ export const runReportByModule = async (moduleId, filters) => {
   }
 
   // Convert empty string values to null
-  const payload = {};
-  Object.keys(filters).forEach((key) => {
-    payload[key] = filters[key] && filters[key].trim() !== "" ? filters[key] : null;
-  });
+const payload = {};
+
+Object.keys(filters).forEach((key) => {
+  const value = filters[key];
+
+  if (value === "" || value === undefined) {
+    payload[key] = null;
+  } else {
+    payload[key] = value;
+  }
+});
 
   const res = await fetch(apiUrl, {
     method: "POST",

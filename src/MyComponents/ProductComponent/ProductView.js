@@ -34,6 +34,7 @@ export default function ProductView({ uKey, onClose }) {
         <div className="modal-header">
           <div className="modal-title">
             <h3>View Product | {product.productCode}</h3>
+            <div className="small-muted">Read-only product record</div>
           </div>
 
           <div className="modal-controls">

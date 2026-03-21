@@ -6,10 +6,10 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function ProductType() {
 const columns = [
-  { header: "ProductType Code", field: "typeCode", width: "170px" },
-  { header: "Name", field: "name", width: "180px" },
-  { header: "Description", field: "description", width: "260px" },
-  { header: "Actions", field: "Action", width: "120px" },
+  { header: "ProductType Code", field: "typeCode", width: "240px" },
+  { header: "Name", field: "name", width: "260px" },
+  { header: "Description", field: "description", width: "500px" },
+  { header: "Actions", field: "Action", width: "160px" },
 ];
 
   return (

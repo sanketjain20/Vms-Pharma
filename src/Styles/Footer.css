@@ -1,9 +1,172 @@
-footer {
+/* ============================================================
+   Footer.css  ·  VMS Cinematic Dark UI
+   Matches Navbar.css + NavBarModule.css + Home.css
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;500&display=swap');
+
+:root {
+  --ft-cyan:   #00dcff;
+  --ft-purple: #a03cff;
+  --font-hud:  'Orbitron', monospace;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* ── Shell ────────────────────────────────────────────────── */
+.vms-footer {
   position: static;
   width: 100%;
-  background: #0a0a0a;
-  color: #d5e5f1;
-  text-align: center;
-  padding: 1rem;
-  z-index: 1000;
+  max-height: 70px;
+  flex-shrink: 0;
+
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+  color: #fff;
+  z-index: 100;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Top glow line ────────────────────────────────────────── */
+.footer-glow-line {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+rgba(255,255,255,0.4),
+rgba(120,120,120,0.4),
+    transparent 100%
+  );
+}
+.footer-glow-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  filter: blur(3px);
+  opacity: 0.5;
+}
+
+/* ── Scanline ─────────────────────────────────────────────── */
+.footer-scan {
+  position: absolute;
+  top: -100%; left: 0; right: 0;
+  height: 200%;
+  background: linear-gradient(
+    to bottom,
+    transparent 44%,
+    rgba(0, 220, 255, 0.02) 50%,
+    transparent 56%
+  );
+  animation: ftScan 7s linear infinite;
+  pointer-events: none;
+}
+@keyframes ftScan { to { top: 100%; } }
+
+/* ── Inner layout ─────────────────────────────────────────── */
+.footer-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  gap: 16px;
+}
+
+/* ── Left — Brand ─────────────────────────────────────────── */
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.footer-logo-text {
+  font-family: var(--font-hud);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  background: linear-gradient(90deg, var(--ft-cyan), var(--ft-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.footer-tagline {
+  font-family: var(--font-hud);
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: rgba(160, 195, 255, 0.35);
+  text-transform: uppercase;
+}
+
+/* ── Center — Copyright ───────────────────────────────────── */
+.footer-copy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(160, 195, 255, 0.45);
+  letter-spacing: 0.5px;
+}
+.footer-dot {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: rgba(0, 220, 255, 0.35);
+  flex-shrink: 0;
+}
+
+/* ── Right — Status ───────────────────────────────────────── */
+.footer-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 3px 5px;
+  font-size: 5px;
+}
+.status-pulse {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255,255,255,0.6);
+  animation: ftPulse 2s ease-in-out infinite;
+}
+@keyframes ftPulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.3; transform: scale(0.8); }
+}
+
+.f-status-text {
+  font-family: var(--font-hud);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.65);
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px 20px;
+    gap: 10px;
+  }
+  .footer-brand { align-items: center; }
+  .footer-copy  { justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .footer-inner { padding: 14px 16px; gap: 8px; }
+  .footer-logo-text { font-size: 11px; letter-spacing: 3px; }
+  .footer-tagline   { display: none; }
+  .footer-copy      { font-size: 11px; }
+  .footer-dot       { display: none; }
+  .f-status-text      { font-size: 6px; letter-spacing: 1.5px; }
 }

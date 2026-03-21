@@ -2,286 +2,274 @@ import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/Sales/AddSales.css";
 
-export default function SalesEdit({ uKey, onClose, onSubmit }) {
-  const [productTypes, setProductTypes] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [allProducts, setAllProducts] = useState([]); // ✅ CASCADE
-  const lastLoadedType = useRef(null); // ✅ CASCADE
-  const [inventory, setInventory] = useState(null);
+/* ─────────────────────────────────────────
+   GST RATES
+───────────────────────────────────────── */
+const GST_RATES = [0, 5, 12, 18, 28];
 
-  const [selectedType, setSelectedType] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState("");
+/* ─────────────────────────────────────────
+   SEARCHABLE DROPDOWN (reused component)
+───────────────────────────────────────── */
+const SearchableDropdown = ({
+  label, options, selectedId, onSelect,
+  search, setSearch, open, setOpen,
+  placeholder, dropdownRef, error
+}) => {
+  // Loose comparison — handles number vs string IDs
+  const selectedOption = options.find(o => String(o.id) === String(selectedId));
+  const displayValue   = open ? search : (selectedOption?.name ?? "");
 
-  const [quantity, setQuantity] = useState("");
-  const [taxInput, setTaxInput] = useState("");
-  const [taxType, setTaxType] = useState("PERCENT");
+  const filtered = options.filter(o =>
+    o.name.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const [manualPrice, setManualPrice] = useState("");
-  const [lineItems, setLineItems] = useState([]);
-  const [editIndex, setEditIndex] = useState(null);
-
-  const [discountInput, setDiscountInput] = useState("0");
-  const [discountType, setDiscountType] = useState("FLAT");
-  const [billingMode, setBillingMode] = useState("CASH");
-  const [saleId, setSaleId] = useState(null);
-  const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [paymentType, setPaymentType] = useState("FULL");
-  const [amountPaid, setAmountPaid] = useState(0);
-  const [remainingAmount, setRemainingAmount] = useState(0);
-
-  const [errors, setErrors] = useState({});
-  const [activeTab, setActiveTab] = useState("Existing");
-  const [originalItems, setOriginalItems] = useState([]);
-
-  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
-  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
-  const [typeSearch, setTypeSearch] = useState("");
-  const [productSearch, setProductSearch] = useState("");
-
-  const typeDropdownRef = useRef(null);
-  const productDropdownRef = useRef(null);
-
-
-  const safeJson = async (res) => {
-    try {
-      const text = await res.text();
-      return text ? JSON.parse(text) : null;
-    } catch {
-      return null;
-    }
+  const handleOpen = (e) => {
+    e.stopPropagation();
+    if (!open) setSearch(""); // reset filter when opening
+    setOpen(true);
   };
 
-  // ✅ LOAD ALL PRODUCTS ONCE
+  return (
+    <div className="custom-select" ref={dropdownRef}>
+      <label>{label}</label>
+      <div
+        className={`select-box ${open ? "active" : ""}`}
+        onClick={handleOpen}
+      >
+        <input
+          type="text"
+          value={displayValue}
+          placeholder={placeholder}
+          onChange={e => setSearch(e.target.value)}
+          onClick={handleOpen}
+          className="select-input"
+        />
+        {open && (
+          <ul className="options scroll-options">
+            {filtered.map(o => (
+              <li
+                key={o.id}
+                onMouseDown={e => {
+                  e.preventDefault();
+                  onSelect(o.id);
+                  setOpen(false);
+                  setSearch("");
+                }}
+                style={String(o.id) === String(selectedId) ? { color: "#93c5fd", background: "rgba(59,130,246,0.1)" } : {}}
+              >
+                {o.name}
+              </li>
+            ))}
+            {filtered.length === 0 && (
+              <li style={{ color: "#525667", fontStyle: "italic" }}>No results found</li>
+            )}
+          </ul>
+        )}
+      </div>
+      {error && <div className="error">{error}</div>}
+    </div>
+  );
+};
+
+export default function SalesEdit({ uKey, onClose, onSubmit }) {
+  const [productTypes, setProductTypes] = useState([]);
+  const [products, setProducts]         = useState([]);
+  const [allProducts, setAllProducts]   = useState([]);
+  const lastLoadedType                  = useRef(null);
+  const [inventory, setInventory]       = useState(null);
+
+  const [selectedType, setSelectedType]       = useState("");
+  const [selectedProduct, setSelectedProduct] = useState("");
+
+  const [quantity, setQuantity]   = useState("");
+  const [taxInput, setTaxInput]   = useState("");
+  const [taxType, setTaxType]     = useState("PERCENT");
+
+  const [manualPrice, setManualPrice] = useState("");
+  const [lineItems, setLineItems]     = useState([]);
+  const [editIndex, setEditIndex]     = useState(null);
+
+  const [discountInput, setDiscountInput] = useState("0");
+  const [discountType, setDiscountType]   = useState("FLAT");
+  const [billingMode, setBillingMode]     = useState("CASH");
+  const [saleId, setSaleId]               = useState(null);
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [paymentType, setPaymentType]     = useState("FULL");
+  const [amountPaid, setAmountPaid]       = useState(0);
+  const [remainingAmount, setRemainingAmount] = useState(0);
+
+  const [errors, setErrors]         = useState({});
+  const [activeTab, setActiveTab]   = useState("Existing");
+  const [originalItems, setOriginalItems] = useState([]);
+
+  const [typeSearch, setTypeSearch]             = useState("");
+  const [productSearch, setProductSearch]       = useState("");
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
+
+  const typeDropdownRef    = useRef(null);
+  const productDropdownRef = useRef(null);
+
+  const safeJson = async (res) => {
+    try { const text = await res.text(); return text ? JSON.parse(text) : null; }
+    catch { return null; }
+  };
+
+  /* ── FETCH ALL PRODUCTS ── */
   useEffect(() => {
     fetch("http://localhost:8080/api/Product/GetAllProduct", {
-      method: "GET",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
     })
-      .then(res => res.json())
+      .then(r => r.json())
       .then(json => {
         const dataObj = json?.data;
-        const list =
-          Array.isArray(dataObj)
-            ? dataObj
-            : typeof dataObj === "object"
-              ? Object.values(dataObj).find(v => Array.isArray(v)) || []
-              : [];
-        setAllProducts(list);
-        setProducts(list);
+        const list = Array.isArray(dataObj) ? dataObj
+          : typeof dataObj === "object" ? Object.values(dataObj).find(v => Array.isArray(v)) || [] : [];
+        setAllProducts(list); setProducts(list);
       })
-      .catch(() => {
-        setAllProducts([]);
-        setProducts([]);
-      });
+      .catch(() => { setAllProducts([]); setProducts([]); });
   }, []);
 
+  /* ── FETCH PRODUCT TYPES ── */
   useEffect(() => {
     fetch("http://localhost:8080/api/ProductType/GetAllProductType", {
-      method: "GET",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" }
+      method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
     })
       .then(safeJson)
-      .then(json => {
-        const list = json?.data?.productTypes ?? [];
-        setProductTypes(Array.isArray(list) ? list : []);
-      });
+      .then(json => { const list = json?.data?.productTypes ?? []; setProductTypes(Array.isArray(list) ? list : []); });
   }, []);
 
-  useEffect(() => {
-    if (uKey) fetchSaleByUkey();
-  }, [uKey]);
+  /* ── FETCH SALE ── */
+  useEffect(() => { if (uKey) fetchSaleByUkey(); }, [uKey]);
 
   const fetchSaleByUkey = () => {
     fetch(`http://localhost:8080/api/Sales/GetSalesByUkey/${uKey}`, {
-      method: "GET",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" }
+      method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
     })
       .then(safeJson)
       .then(json => {
         if (!json?.data) return toast.error("Sale not found");
         const sale = json.data;
-
         setSaleId(sale.id);
         setInvoiceNumber(sale.invoiceNumber);
         setOriginalItems(sale.items);
-
-        setLineItems(
-          sale.items.map(i => ({
-            productId: i.productId,
-            productName: i.product,
-            quantity: i.quantity,
-            sellingPrice: i.sellingPrice,
-            taxAmount: i.taxAmount,
-            totalAmount: i.sellingPrice * i.quantity + i.taxAmount
-          }))
-        );
-
+        setLineItems(sale.items.map(i => ({
+          productId: i.productId,
+          productName: i.product,
+          quantity: i.quantity,
+          sellingPrice: i.sellingPrice,
+          taxAmount: i.taxAmount,
+          totalAmount: i.sellingPrice * i.quantity + i.taxAmount,
+        })));
         setDiscountInput(sale.totalDiscount || 0);
         setDiscountType("FLAT");
-        setBillingMode(sale.billingMode || "SIMPLE");
+        setBillingMode(sale.billingMode || "CASH");
         setAmountPaid(sale.amountPaid || 0);
         setRemainingAmount(sale.remainingAmount || 0);
       });
   };
 
-  // ✅ TYPE CHANGE CASCADE
+  /* ── TYPE CHANGE ── */
   const handleTypeChange = (e) => {
     const typeId = e.target.value;
-    setSelectedType(typeId);
-    setSelectedProduct("");
-    setInventory(null);
-    setErrors({});
-
-    if (!typeId) {
-      setProducts(allProducts);
-      return;
-    }
-
-    fetch(`http://localhost:8080/api/Product/GetProdByProdId/${typeId}`, {
-      method: "GET",
-      credentials: "include",
-    })
-      .then(safeJson)
-      .then(json => setProducts(json?.data ?? []));
+    setSelectedType(typeId); setSelectedProduct(""); setInventory(null); setErrors({});
+    if (!typeId) { setProducts(allProducts); return; }
+    fetch(`http://localhost:8080/api/Product/GetProdByProdId/${typeId}`, { method: "GET", credentials: "include" })
+      .then(safeJson).then(json => setProducts(json?.data ?? []));
   };
 
-  // ✅ PRODUCT → AUTO TYPE
+  /* ── AUTO SET TYPE WHEN PRODUCT CHANGES ── */
   useEffect(() => {
     if (!selectedProduct) return;
-
-    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByProductId/${selectedProduct}`, {
-      credentials: "include",
-    })
-      .then(res => res.json())
+    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByProductId/${selectedProduct}`, { credentials: "include" })
+      .then(r => r.json())
       .then(json => {
         const typeId = json?.data?.productTypeId || json?.data?.id;
         if (typeId && typeId !== selectedType) {
           setSelectedType(typeId);
-
           if (lastLoadedType.current !== typeId) {
             lastLoadedType.current = typeId;
-            fetch(`http://localhost:8080/api/Product/GetProdByProdId/${typeId}`, {
-              credentials: "include",
-            })
-              .then(res => res.json())
-              .then(json => {
-                const list = json?.data ?? [];
-                setProducts(Array.isArray(list) ? list : []);
-              });
+            fetch(`http://localhost:8080/api/Product/GetProdByProdId/${typeId}`, { credentials: "include" })
+              .then(r => r.json())
+              .then(json => { const list = json?.data ?? []; setProducts(Array.isArray(list) ? list : []); });
           }
         }
-      })
-      .catch(() => { });
+      }).catch(() => {});
   }, [selectedProduct]);
 
-  // 🔥 PRODUCT CHANGE (INVENTORY ONLY)
-  const handleProductChange = async (e) => {
+  /* ── PRODUCT CHANGE ── */
+  const handleProductChange = (e) => {
     const prodId = e.target.value;
-    setSelectedProduct(prodId);
-    setInventory(null);
-    setErrors({});
-
+    setSelectedProduct(prodId); setInventory(null); setErrors({});
     if (!prodId) return;
-
-    fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${prodId}`, {
-      method: "GET",
-      credentials: "include",
-    })
-      .then(safeJson)
-      .then(json => setInventory(json?.data || null));
+    fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${prodId}`, { method: "GET", credentials: "include" })
+      .then(safeJson).then(json => setInventory(json?.data || null));
   };
 
+  /* ── CLICK OUTSIDE ── */
+  useEffect(() => {
+    const handler = (e) => {
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) { setTypeDropdownOpen(false); setTypeSearch(""); }
+      if (productDropdownRef.current && !productDropdownRef.current.contains(e.target)) { setProductDropdownOpen(false); setProductSearch(""); }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  /* ── ADD / UPDATE ITEM ── */
   const addOrUpdateItem = () => {
     let tempErrors = {};
     if (!selectedType) tempErrors.selectedType = "Select product type";
     if (!selectedProduct) tempErrors.selectedProduct = "Select product";
     if (!quantity || quantity <= 0) tempErrors.quantity = "Enter valid quantity";
-
     const product = products.find(p => p.id === parseInt(selectedProduct));
     if (!product) tempErrors.selectedProduct = tempErrors.selectedProduct || "Invalid product";
-
     let price = inventory ? inventory.unitSellingPrice : parseFloat(manualPrice);
     if (!price) tempErrors.manualPrice = "Enter valid price";
-
     let taxValue = parseFloat(taxInput || 0);
-    if (taxValue < 0) tempErrors.taxInput = "Tax cannot be less than 0";
-
+    if (taxValue < 0) tempErrors.taxInput = "Tax cannot be negative";
     setErrors(tempErrors);
     if (Object.keys(tempErrors).length > 0) return;
 
-    const taxAmount =
-      taxType === "PERCENT"
-        ? (price * quantity * taxValue) / 100
-        : taxValue;
-
-    const totalAmount = price * quantity + taxAmount;
-
+    const taxAmount = taxType === "PERCENT" ? (price * quantity * taxValue) / 100 : taxValue;
     const item = {
       productId: parseInt(selectedProduct),
       productName: product.name,
       quantity: parseInt(quantity),
       sellingPrice: price,
       taxAmount,
-      totalAmount
+      totalAmount: price * quantity + taxAmount,
     };
 
     let updated = [...lineItems];
-    if (editIndex !== null) {
-      updated[editIndex] = item;
-      setEditIndex(null);
-    } else {
-      updated.push(item);
-    }
+    if (editIndex !== null) { updated[editIndex] = item; setEditIndex(null); }
+    else updated.push(item);
     setLineItems(updated);
     clearForm();
     toast.success("Item saved");
   };
 
   const clearForm = () => {
-    setSelectedType("");
-    setSelectedProduct("");
-    setQuantity("");
-    setTaxInput("");
-    setManualPrice("");
-    setInventory(null);
-    setTaxType("PERCENT");
-    setErrors({});
+    setSelectedType(""); setSelectedProduct(""); setQuantity("");
+    setTaxInput(""); setManualPrice(""); setInventory(null);
+    setTaxType("PERCENT"); setErrors({});
   };
 
-  // ✅ EDIT ITEM CASCADE
   const editItem = async (index) => {
     const it = lineItems[index];
     setEditIndex(index);
-
-    setSelectedProduct(it.productId);
-    setQuantity(it.quantity);
-    setManualPrice(it.sellingPrice);
-    setTaxInput(it.taxAmount);
-    setTaxType("FLAT");
-    setErrors({});
-
-    const invRes = await fetch(
-      `http://localhost:8080/api/Inventory/GetInventoryByProdId/${it.productId}`,
-      { method: "GET", credentials: "include" }
-    );
-    const invJson = await safeJson(invRes);
-    if (invJson?.data) setInventory(invJson.data);
+    setSelectedProduct(it.productId); setQuantity(it.quantity);
+    setManualPrice(it.sellingPrice);  setTaxInput(it.taxAmount);
+    setTaxType("FLAT");               setErrors({});
+    const iRes  = await fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET", credentials: "include" });
+    const iJson = await safeJson(iRes);
+    if (iJson?.data) setInventory(iJson.data);
   };
-  // -----------------------
-  //  END OF ADDED LOGIC 🔥
-  // -----------------------
 
-  const deleteItem = (index) => {
-    const updated = [...lineItems];
-    updated.splice(index, 1);
-    setLineItems(updated);
-  };
+  const deleteItem = (i) => { const u = [...lineItems]; u.splice(i, 1); setLineItems(u); };
 
   const getNetAmount = () => {
-    let total = lineItems.reduce((acc, it) => acc + it.totalAmount, 0);
+    let total    = lineItems.reduce((s, i) => s + i.totalAmount, 0);
     let discount = parseFloat(discountInput || 0);
     if (discountType === "PERCENT") discount = (total * discount) / 100;
     return total - discount;
@@ -289,214 +277,158 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   useEffect(() => {
     const net = getNetAmount().toFixed(2);
-
-    if (paymentType === "FULL") {
-      setAmountPaid(net);
-      setRemainingAmount(0);
-    } else {
+    if (paymentType === "FULL") { setAmountPaid(net); setRemainingAmount(0); }
+    else {
       const paid = parseFloat(amountPaid || 0);
-      const remaining = net - paid;
-      setRemainingAmount(remaining < 0 ? 0 : remaining);
+      const rem  = net - paid;
+      setRemainingAmount(rem < 0 ? 0 : rem);
     }
   }, [paymentType, amountPaid, lineItems, discountInput]);
 
   const updateSale = () => {
     let tempErrors = {};
     if (lineItems.length === 0) tempErrors.lineItems = "Add at least one item";
+    if (!billingMode) tempErrors.billingMode = "Select billing mode";
+    if (discountInput < 0) tempErrors.discountInput = "Discount cannot be negative";
+    const net = getNetAmount();
+    if (!amountPaid || amountPaid <= 0) tempErrors.amountPaid = "Enter valid amount paid";
+    if (parseFloat(amountPaid) > net) tempErrors.amountPaid = "Amount paid cannot exceed net amount";
     setErrors(tempErrors);
     if (Object.keys(tempErrors).length > 0) return;
-
-    const payload = {
-      totalDiscount: parseFloat(discountInput || 0),
-      billingMode: billingMode,
-      amountPaid: parseFloat(amountPaid),
-      remainingAmount: parseFloat(remainingAmount),
-      items: lineItems.map(it => ({
-        productId: it.productId,
-        quantity: it.quantity,
-        sellingPrice: it.sellingPrice,
-        taxAmount: it.taxAmount,
-      }))
-    };
 
     fetch(`http://localhost:8080/api/Sales/UpdateSales/${saleId}`, {
       method: "PUT",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        totalDiscount: parseFloat(discountInput || 0),
+        billingMode,
+        amountPaid: parseFloat(amountPaid),
+        remainingAmount: parseFloat(remainingAmount),
+        items: lineItems.map(it => ({
+          productId: it.productId,
+          quantity: it.quantity,
+          sellingPrice: it.sellingPrice,
+          taxAmount: it.taxAmount,
+        })),
+      }),
     })
       .then(safeJson)
       .then(json => {
-        if (json?.status === 200 || json?.success) {
-          toast.success("Sales updated");
-          onSubmit();
-          onClose();
-        } else toast.error(json?.message || "Update failed");
+        if (json?.status === 200 || json?.success) { toast.success("Sales updated"); onSubmit(); onClose(); }
+        else toast.error(json?.message || "Update failed");
       });
   };
 
-  const totalAmount = lineItems.reduce((sum, i) => sum + i.totalAmount, 0);
-
-  const filteredTypes = productTypes.filter(t =>
-    t.name.toLowerCase().includes(typeSearch.toLowerCase())
-  );
-
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(productSearch.toLowerCase())
-  );
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) {
-        setTypeDropdownOpen(false);
-        setTypeSearch("");
-      }
-      if (productDropdownRef.current && !productDropdownRef.current.contains(e.target)) {
-        setProductDropdownOpen(false);
-        setProductSearch("");
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
+  const totalAmount = lineItems.reduce((s, i) => s + i.totalAmount, 0);
 
   return (
     <div className="sales-modal show">
       <div className="sales-container">
 
-        {/* HEADER + TABS */}
+        {/* ── HEADER ── */}
         <div className="sales-header">
-          <h3>Edit Sales | {invoiceNumber}</h3>
+          <div className="sales-header-left">
+            <div className="sales-eyebrow">
+              <span className="sales-eyebrow-dot" />
+              EDIT TRANSACTION
+            </div>
+            <h3>Edit Sale {invoiceNumber && `· ${invoiceNumber}`}</h3>
+          </div>
+
           <div className="tabs-header">
-            <button className={activeTab === "Existing" ? "active-tab" : ""} onClick={() => setActiveTab("Existing")}>Existing Items</button>
-            <button className={activeTab === "Product" ? "active-tab" : ""} onClick={() => setActiveTab("Product")}>Product</button>
-            <button className={activeTab === "Billing" ? "active-tab" : ""} onClick={() => setActiveTab("Billing")}>Billing</button>
-            <button className="close-btn-sales" onClick={onClose}>✖</button>
+            {["Existing", "Product", "Billing"].map(tab => (
+              <button
+                key={tab}
+                className={activeTab === tab ? "active-tab" : ""}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === "Existing" ? "Original Items" : tab}
+              </button>
+            ))}
+            <button className="close-btn-sales" onClick={onClose} title="Close">✕</button>
           </div>
         </div>
 
-        {/* EXISTING ITEMS TAB */}
+        {/* ══════════════ EXISTING ITEMS TAB ══════════════ */}
         {activeTab === "Existing" && (
           <div className="sales-section">
+            <h4>Original Line Items</h4>
+
             {originalItems.length === 0 ? (
-              <p>No existing items</p>
+              <div style={{
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
+                padding: "32px 0", fontFamily: "var(--sl-font-m)", fontSize: 11,
+                letterSpacing: "0.08em", color: "var(--sl-text-2)",
+              }}>
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                  <circle cx="14" cy="14" r="12" stroke="rgba(59,130,246,0.2)" strokeWidth="1.5"/>
+                  <path d="M10 14h8" stroke="rgba(59,130,246,0.3)" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                No existing items
+              </div>
             ) : (
-              <table className="sales-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Qty</th>
-                    <th>Price (Rs.)</th>
-                    <th>Item Amount (Rs.)</th>
-                    <th>Tax (Rs.)</th>
-                    <th>Amount(Incl. Tax) (Rs.)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {originalItems.map((it, i) => (
-                    <tr key={i}>
-                      <td>{it.product}</td>
-                      <td>{it.quantity}</td>
-                      <td>{it.sellingPrice}</td>
-                      <td>{(it.sellingPrice * it.quantity).toFixed(2)}</td>
-                      <td>{it.taxAmount.toFixed(2)}</td>
-                      <td>{((it.sellingPrice * it.quantity) + it.taxAmount).toFixed(2)}</td>
+              <>
+                <table className="sales-table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Qty</th>
+                      <th>Price (₹)</th>
+                      <th>Line Amt (₹)</th>
+                      <th>GST (₹)</th>
+                      <th>Total (₹)</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {originalItems.map((it, i) => (
+                      <tr key={i}>
+                        <td>{it.product}</td>
+                        <td>{it.quantity}</td>
+                        <td>{it.sellingPrice}</td>
+                        <td>{(it.sellingPrice * it.quantity).toFixed(2)}</td>
+                        <td>{it.taxAmount.toFixed(2)}</td>
+                        <td>{(it.sellingPrice * it.quantity + it.taxAmount).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="total-amount">
+                  Original Total (incl. GST): ₹{originalItems.reduce((s, i) => s + i.sellingPrice * i.quantity + i.taxAmount, 0).toFixed(2)}
+                </div>
+              </>
             )}
           </div>
         )}
 
-        {/* PRODUCT TAB */}
+        {/* ══════════════ PRODUCT TAB ══════════════ */}
         {activeTab === "Product" && (
           <div className="sales-section">
+            <h4>Update Products</h4>
 
             <div className="product-row">
-
-              {/* PRODUCT TYPE SEARCHABLE */}
-              <div className="custom-select" ref={typeDropdownRef}>
-                <label>Product Type</label>
-                <div
-                  className={`select-box ${typeDropdownOpen ? "active" : ""}`}
-                  onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
-                >
-                  <input
-                    type="text"
-                    value={
-                      typeDropdownOpen
-                        ? typeSearch
-                        : productTypes.find((t) => t.id === selectedType)?.name || "Select product type"
-                    }
-                    onChange={(e) => setTypeSearch(e.target.value)}
-                    readOnly={!typeDropdownOpen}
-                    className="select-input"
-                  />
-
-                  {typeDropdownOpen && (
-                    <ul className="options scroll-options">
-                      {filteredTypes.map((t) => (
-                        <li
-                          key={t.id}
-                          onClick={() => {
-                            handleTypeChange({ target: { value: t.id } });
-                            setTypeDropdownOpen(false);
-                            setTypeSearch("");
-                          }}
-                        >
-                          {t.name}
-                        </li>
-                      ))}
-                      {filteredTypes.length === 0 && <li>No result found</li>}
-                    </ul>
-                  )}
-                </div>
-                {errors.selectedType && <div className="error">{errors.selectedType}</div>}
-              </div>
-
-
-              {/* PRODUCT SEARCHABLE */}
-              <div className="custom-select" ref={productDropdownRef}>
-                <label>Product</label>
-                <div
-                  className={`select-box ${productDropdownOpen ? "active" : ""}`}
-                  onClick={() => setProductDropdownOpen(!productDropdownOpen)}
-                >
-                  <input
-                    type="text"
-                    value={
-                      productDropdownOpen
-                        ? productSearch
-                        : products.find((p) => p.id === selectedProduct)?.name || "Select product"
-                    }
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    readOnly={!productDropdownOpen}
-                    className="select-input"
-                  />
-
-                  {productDropdownOpen && (
-                    <ul className="options scroll-options">
-                      {filteredProducts.map((p) => (
-                        <li
-                          key={p.id}
-                          onClick={() => {
-                            handleProductChange({ target: { value: p.id } });
-                            setProductDropdownOpen(false);
-                            setProductSearch("");
-                          }}
-                        >
-                          {p.name}
-                        </li>
-                      ))}
-                      {filteredProducts.length === 0 && <li>No result found</li>}
-                    </ul>
-                  )}
-                </div>
-                {errors.selectedProduct && <div className="error">{errors.selectedProduct}</div>}
-              </div>
-
+              <SearchableDropdown
+                label="Product Type"
+                options={productTypes}
+                selectedId={selectedType}
+                onSelect={id => handleTypeChange({ target: { value: id } })}
+                search={typeSearch} setSearch={setTypeSearch}
+                open={typeDropdownOpen} setOpen={setTypeDropdownOpen}
+                placeholder="Select product type"
+                dropdownRef={typeDropdownRef}
+                error={errors.selectedType}
+              />
+              <SearchableDropdown
+                label="Product"
+                options={products}
+                selectedId={selectedProduct}
+                onSelect={id => handleProductChange({ target: { value: id } })}
+                search={productSearch} setSearch={setProductSearch}
+                open={productDropdownOpen} setOpen={setProductDropdownOpen}
+                placeholder="Select product"
+                dropdownRef={productDropdownRef}
+                error={errors.selectedProduct}
+              />
             </div>
 
             {inventory ? (
@@ -507,153 +439,151 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
             ) : selectedProduct ? (
               <div className="inv-box">
                 <label>Set Selling Price</label>
-                <input
-                  type="number"
-                  value={manualPrice}
-                  onChange={(e) => setManualPrice(e.target.value)}
-                  placeholder="Enter selling price"
-                />
+                <input type="number" value={manualPrice} onChange={e => setManualPrice(e.target.value)} placeholder="Enter selling price" />
+                {errors.manualPrice && <div className="error">{errors.manualPrice}</div>}
               </div>
             ) : null}
 
             <div className="quantity-tax-row">
               <div>
                 <label>Quantity</label>
-                <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+                <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="Enter qty" />
+                {errors.quantity && <div className="error">{errors.quantity}</div>}
               </div>
 
               <div className="tax-column">
-                <label>Tax</label>
+                <label>GST Rate (%)</label>
                 <div className="tax-input-row">
-                  <input type="number" value={taxInput} onChange={(e) => setTaxInput(e.target.value)} placeholder="Enter tax" />
-                  <select value={taxType} onChange={(e) => setTaxType(e.target.value)}>
-                    <option value="PERCENT">%</option>
-                    <option value="FLAT">₹</option>
+                  {taxType === "PERCENT" ? (
+                    <select value={taxInput} onChange={e => setTaxInput(e.target.value)}>
+                      <option value="">Select GST rate</option>
+                      {GST_RATES.map(r => (
+                        <option key={r} value={r}>{r}%{r === 18 ? " (Standard)" : r === 0 ? " (Exempt)" : ""}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input type="number" value={taxInput} onChange={e => setTaxInput(e.target.value)} placeholder="GST amount (₹)" />
+                  )}
+                  <select value={taxType} onChange={e => setTaxType(e.target.value)} style={{ width: "90px" }}>
+                    <option value="PERCENT">% Rate</option>
+                    <option value="FLAT">₹ Flat</option>
                   </select>
                 </div>
+                {errors.taxInput && <div className="error">{errors.taxInput}</div>}
               </div>
             </div>
 
             <button className="add-btn" onClick={addOrUpdateItem}>
-              {editIndex !== null ? "Update Item" : "Add Item"}
+              {editIndex !== null ? "✓ Update Item" : "+ Add Item"}
             </button>
+            {errors.lineItems && <div className="error">{errors.lineItems}</div>}
 
             {lineItems.length > 0 && (
-              <table className="sales-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Qty</th>
-                    <th>Price (Rs.)</th>
-                    <th>Item Amount (Rs.)</th>
-                    <th>Tax (Rs.)</th>
-                    <th>Amount (Incl. Tax) (Rs.)</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lineItems.map((it, i) => (
-                    <tr key={i}>
-                      <td>{it.productName}</td>
-                      <td>{it.quantity}</td>
-                      <td>{it.sellingPrice}</td>
-                      <td>{(it.sellingPrice * it.quantity).toFixed(2)}</td>
-                      <td>{it.taxAmount}</td>
-                      <td>{it.totalAmount.toFixed(2)}</td>
-                      <td style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-
-                        {/* EDIT ICON */}
-                        <span onClick={() => editItem(i)} title="Edit" style={{ cursor: "pointer" }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000">
-                            <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
-                          </svg>
-                        </span>
-
-                        {/* DELETE ICON */}
-                        <span onClick={() => deleteItem(i)} title="Delete" style={{ cursor: "pointer" }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000">
-                            <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
-                          </svg>
-                        </span>
-
-                      </td>
+              <>
+                <table className="sales-table" style={{ marginTop: 14 }}>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Qty</th>
+                      <th>Price (₹)</th>
+                      <th>Line Amt (₹)</th>
+                      <th>GST (₹)</th>
+                      <th>Total (₹)</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {lineItems.map((it, i) => (
+                      <tr key={i}>
+                        <td>{it.productName}</td>
+                        <td>{it.quantity}</td>
+                        <td>{it.sellingPrice}</td>
+                        <td>{(it.sellingPrice * it.quantity).toFixed(2)}</td>
+                        <td>{it.taxAmount}</td>
+                        <td>{it.totalAmount.toFixed(2)}</td>
+                        <td>
+                          <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                            <button className="sl-action-btn edit" onClick={() => editItem(i)} title="Edit">
+                              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor">
+                                <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z"/>
+                              </svg>
+                            </button>
+                            <button className="sl-action-btn delete" onClick={() => deleteItem(i)} title="Delete">
+                              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor">
+                                <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360Z"/>
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="total-amount">Updated Total (incl. GST): ₹{totalAmount.toFixed(2)}</div>
+              </>
             )}
-
-            {lineItems.length > 0 && (
-              <div className="total-amount"><b>Amount(Incl. Tax): Rs {totalAmount.toFixed(2)}</b></div>
-            )}
-
           </div>
         )}
 
-        {/* BILLING TAB */}
+        {/* ══════════════ BILLING TAB ══════════════ */}
         {activeTab === "Billing" && (
           <div className="sales-section">
+            <h4>Billing & Payment</h4>
+
             <label>Discount</label>
             <div className="tax-row">
-              <input type="number" value={discountInput} onChange={(e) => setDiscountInput(e.target.value)} />
-              <select value={discountType} onChange={(e) => setDiscountType(e.target.value)}>
+              <input type="number" value={discountInput} onChange={e => setDiscountInput(e.target.value)} placeholder="0" />
+              <select value={discountType} onChange={e => setDiscountType(e.target.value)}>
                 <option value="FLAT">₹</option>
                 <option value="PERCENT">%</option>
               </select>
             </div>
+            {errors.discountInput && <div className="error">{errors.discountInput}</div>}
 
             <label>Billing Mode</label>
-            <select value={billingMode} onChange={(e) => setBillingMode(e.target.value)}>
-              <option value="CASH">CASH</option>
-              <option value="ONLINE">ONLINE</option>
-              <option value="CARD">CARD</option>
+            <select value={billingMode} onChange={e => setBillingMode(e.target.value)}>
+              <option value="CASH">Cash</option>
+              <option value="ONLINE">Online / UPI</option>
+              <option value="CARD">Card</option>
             </select>
+            {errors.billingMode && <div className="error">{errors.billingMode}</div>}
 
-            <div className="total-amount">
-              <h4>Net Amount: ₹{getNetAmount().toFixed(2)}</h4>
-            </div>
+            <div className="total-amount">Net Amount: ₹{getNetAmount().toFixed(2)}</div>
 
-            {/* 🔥 ADDED PAYMENT TYPE */}
             <label>Payment Type</label>
-            <div style={{ display: "flex", gap: "20px", marginBottom: "10px" }}>
-              <label>
-                <input
-                  type="radio"
-                  checked={paymentType === "FULL"}
-                  onChange={() => setPaymentType("FULL")}
-                />
-                Full
+            <div className="radio-group">
+              <label className={`radio-option ${paymentType === "FULL" ? "checked" : ""}`}>
+                <input type="radio" checked={paymentType === "FULL"} onChange={() => setPaymentType("FULL")} />
+                Full Payment
               </label>
-              <label>
-                <input
-                  type="radio"
-                  checked={paymentType === "PARTIAL"}
-                  onChange={() => setPaymentType("PARTIAL")}
-                />
-                Partial
+              <label className={`radio-option ${paymentType === "PARTIAL" ? "checked" : ""}`}>
+                <input type="radio" checked={paymentType === "PARTIAL"} onChange={() => setPaymentType("PARTIAL")} />
+                Partial Payment
               </label>
             </div>
 
-            {/* 🔥 ADDED AMOUNT PAID */}
-            <label>Amount Paid</label>
+            <label>Amount Paid (₹)</label>
             <input
               type="number"
               value={amountPaid}
+              onChange={e => setAmountPaid(e.target.value)}
               disabled={paymentType === "FULL"}
-              onChange={(e) => setAmountPaid(e.target.value)}
+              placeholder="0.00"
             />
+            {errors.amountPaid && <div className="error">{errors.amountPaid}</div>}
 
-            {/* 🔥 ADDED REMAINING AMOUNT */}
-            <div className="total-amount">
-              <h4>Due Amount: ₹{remainingAmount.toFixed(2)}</h4>
+            <div className="total-amount" style={{ borderColor: "rgba(239,68,68,0.2)", color: "#fca5a5" }}>
+              Due Amount: ₹{parseFloat(remainingAmount || 0).toFixed(2)}
             </div>
           </div>
         )}
 
+        {/* ── FOOTER ── */}
         <div className="sales-footer">
           <button className="cancel-btn" onClick={onClose}>Cancel</button>
           <button className="submit-btn" onClick={updateSale}>Update Sale</button>
         </div>
+
       </div>
     </div>
   );

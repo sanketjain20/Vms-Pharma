@@ -1,71 +1,342 @@
-/* ----------- Inventory Page Wrapper ----------- */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+/* =========================
+   FONTS
+========================= */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Oxanium:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
 
+/* =========================
+   VARIABLES
+========================= */
+:root {
+  --inv-bg:          #000000;
+  --inv-surface:     rgba(6, 7, 12, 0.92);
+  --inv-border:      rgba(255, 255, 255, 0.045);
+  --inv-border-mid:  rgba(255, 255, 255, 0.07);
+  --inv-border-hi:   rgba(255, 255, 255, 0.12);
+  --inv-accent:      #3b82f6;
+  --inv-accent-dim:  rgba(59, 130, 246, 0.1);
+  --inv-accent-glow: rgba(59, 130, 246, 0.28);
+  --inv-text-1:      #e4e6f0;
+  --inv-text-2:      #525667;
+  --inv-text-3:      #272838;
+  --inv-success:     #10b981;
+  --inv-amber:       #f59e0b;
+  --inv-font-d:      'Oxanium', sans-serif;
+  --inv-font-b:      'Space Grotesk', sans-serif;
+  --inv-font-m:      'JetBrains Mono', monospace;
+  --inv-r-sm:        8px;
+  --inv-r-md:        12px;
+  --inv-r-lg:        18px;
+  --inv-ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --inv-tr:          0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =========================
+   PAGE CONTAINER
+========================= */
 .i-container {
-  padding: 20px;
-  color: #fff;
-  background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+  position: relative;
+  padding: 32px 28px 48px;
+  color: var(--inv-text-1);
+  background: var(--inv-bg);
   min-height: 100vh;
-  margin-top: 0px;
- font-family: 'Poppins', sans-serif;
- padding-top: 5px;
- border-radius: 5px;
+  font-family: var(--inv-font-b);
+  overflow-x: hidden;
+  animation: invPageIn 0.6s var(--inv-ease-out) both;
 }
 
+@keyframes invPageIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Fixed top beam */
+.i-container::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(59, 130, 246, 0.4) 20%,
+    rgba(147, 197, 253, 0.75) 50%,
+    rgba(59, 130, 246, 0.4) 80%,
+    transparent
+  );
+  z-index: 100;
+  animation: invBeam 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes invBeam {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+
+/* =========================
+   PAGE TITLE AREA
+========================= */
+.i-header {
+  margin-bottom: 28px;
+  animation: invHeaderIn 0.65s var(--inv-ease-out) 0.08s both;
+}
+
+@keyframes invHeaderIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Badge */
+.i-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--inv-font-m);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--inv-accent);
+  background: rgba(59, 130, 246, 0.07);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  padding: 5px 12px;
+  border-radius: 100px;
+  margin-bottom: 14px;
+}
+
+.i-badge-dot {
+  width: 5px; height: 5px;
+  background: var(--inv-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 5px var(--inv-accent);
+  animation: invDotBlink 2s ease-in-out infinite;
+}
+
+@keyframes invDotBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* Title */
 .i-title {
-  font-size: 26px;          /* Size of heading */
-  font-weight: 900;         /* Extra bold */
-  margin-bottom: 25px;
-  font-family: "Cornerstone", "Arial Black", "Impact", sans-serif; /* Fallback fonts */
-  text-transform: uppercase; /* All caps like the image */
-  letter-spacing: 2px;      /* Slight spacing between letters */
-  color: #fffdfd;              /* Dark, modern color *//* Optional gradient effect */
-  display: inline-block;
-  padding: 3px 3px;       /* Small padding for visual emphasis */
+  font-family: var(--inv-font-d);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--inv-text-1);
+  margin: 0 0 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
+.i-title-accent {
+  color: var(--inv-accent);
+  opacity: 0.45;
+  font-weight: 300;
+}
 
-/* ----------- Stats Cards (optional if you add later) ----------- */
+/* Rule under title */
+.i-title-rule {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(59, 130, 246, 0.55),
+    rgba(59, 130, 246, 0.12) 55%,
+    transparent
+  );
+  animation: invRuleExpand 0.9s var(--inv-ease-out) 0.3s both;
+  transform-origin: left;
+}
+
+@keyframes invRuleExpand {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+/* =========================
+   STATS CARDS ROW
+========================= */
 .inventory-stats {
   display: flex;
-  gap: 15px;
-  margin-bottom: 25px;
+  gap: 12px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
+  perspective: 1000px;
 }
 
 .inventory-card {
-  background: rgba(255, 255, 255, 0.04);
-  padding: 18px 22px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  width: 180px;
-  box-shadow: 0 3px 15px rgba(255, 138, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  background: rgba(6, 7, 12, 0.92);
+  border: 1px solid var(--inv-border);
+  border-radius: var(--inv-r-md);
+  padding: 18px 20px 16px;
+  min-width: 160px;
+  flex: 1;
+  max-width: 220px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.015);
+
+  transform: perspective(700px) rotateX(8deg) translateY(16px) scale(0.94);
+  opacity: 0;
+  animation: invCardIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.25s ease,
+    box-shadow 0.3s ease;
+}
+
+@keyframes invCardIn {
+  from {
+    opacity: 0;
+    transform: perspective(700px) rotateX(18deg) translateY(28px) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(700px) rotateX(0deg) translateY(0) scale(1);
+  }
+}
+
+.inventory-card:hover {
+  transform: perspective(700px) rotateX(-4deg) translateY(-5px) scale(1.02);
+  border-color: var(--inv-accent);
+  box-shadow:
+    0 28px 60px rgba(0, 0, 0, 0.85),
+    0 0 0 1px var(--inv-accent),
+    0 0 28px -8px var(--inv-accent-glow);
+}
+
+/* Top color stripe */
+.inventory-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(to right, var(--inv-accent), transparent);
+  opacity: 0.8;
+}
+
+/* Corner brackets */
+.inventory-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 10px; height: 10px;
+  border-top: 1px solid rgba(59, 130, 246, 0.35);
+  border-left: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: var(--inv-r-md) 0 0 0;
+  transition: border-color 0.25s;
+}
+
+.inventory-card:hover::after {
+  border-color: rgba(59, 130, 246, 0.7);
 }
 
 .inventory-card-title {
-  font-size: 14px;
-  color: #bbb;
+  font-family: var(--inv-font-m);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--inv-text-2);
+  margin-bottom: 8px;
 }
 
 .inventory-card-value {
-  margin-top: 5px;
+  font-family: var(--inv-font-d);
   font-size: 22px;
-  font-weight: 600;
-  color: #ff8a00;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--inv-text-1);
+  line-height: 1;
 }
 
-/* ----------- Grid Container ----------- */
+/* Optional color variants for stat cards */
+.inventory-card.inv-blue  .inventory-card-value { color: #93c5fd; }
+.inventory-card.inv-green .inventory-card-value { color: #6ee7b7; }
+.inventory-card.inv-amber .inventory-card-value { color: #fcd34d; }
+.inventory-card.inv-rose  .inventory-card-value { color: #fda4af; }
 
+.inventory-card.inv-blue::before  { background: linear-gradient(to right, #3b82f6, transparent); }
+.inventory-card.inv-green::before { background: linear-gradient(to right, #10b981, transparent); }
+.inventory-card.inv-amber::before { background: linear-gradient(to right, #f59e0b, transparent); }
+.inventory-card.inv-rose::before  { background: linear-gradient(to right, #f43f5e, transparent); }
 
+/* =========================
+   TOAST OVERRIDES
+========================= */
 .Toastify__toast {
-  width: 500px !important;
-  height:30px;
-  position: relative;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  width: 420px !important;
+  min-height: 48px !important;
+  background: rgba(4, 5, 12, 0.97) !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  font-family: var(--inv-font-m) !important;
+  font-size: 12px !important;
+  letter-spacing: 0.04em !important;
+  color: var(--inv-text-1) !important;
+}
+
+.Toastify__toast--success {
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+
+.Toastify__toast--error {
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+.Toastify__toast--warning {
+  border-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+.Toastify__progress-bar {
+  background: var(--inv-accent) !important;
+  height: 2px !important;
+  border-radius: 0 0 10px 10px !important;
+}
+
+.Toastify__progress-bar--success { background: #10b981 !important; }
+.Toastify__progress-bar--error   { background: #ef4444 !important; }
+.Toastify__progress-bar--warning { background: #f59e0b !important; }
+
+.Toastify__close-button {
+  color: var(--inv-text-2) !important;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.Toastify__close-button:hover { opacity: 1; }
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 900px) {
+  .i-container { padding: 22px 16px 36px; }
+  .i-title { font-size: 24px; }
+  .inventory-stats { gap: 10px; }
+  .inventory-card { min-width: 140px; }
+}
+
+@media (max-width: 600px) {
+  .inventory-stats { flex-direction: column; }
+  .inventory-card { max-width: 100%; }
+  .i-title { font-size: 20px; }
+}
+
+/* =========================
+   UTILITY
+========================= */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }

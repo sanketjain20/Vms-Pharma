@@ -1,69 +1,379 @@
-/* Overlay */
-.modal-overlay {
+/* =========================
+   FONTS
+========================= */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Oxanium:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+/* =========================
+   OVERLAY
+========================= */
+.mm-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* darker overlay for focus */
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(14px) saturate(0.5);
+  -webkit-backdrop-filter: blur(14px) saturate(0.5);
+  animation: mmOverlayIn 0.22s ease both;
+  padding: 20px;
 }
 
-/* Modal container */
-.modal-container {
-  background: #2b2929; /* light background */
-  border-radius: 16px;
-  padding: 30px 40px;
-  width: 800px;
-  max-width: 95%;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+@keyframes mmOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* =========================
+   MODAL CONTAINER
+========================= */
+.mm-container {
+  position: relative;
+  background: rgba(4, 5, 11, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 28px 32px 28px;
+  width: 820px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  position: relative;
-  font-family: 'Inter', sans-serif;
-  height: 450px;
+  gap: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  color: #e4e6f0;
+
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 60px 120px rgba(0, 0, 0, 1),
+    0 24px 60px rgba(0, 0, 0, 0.85),
+    0 0 50px rgba(59, 130, 246, 0.04);
+
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+
+  animation: mmContainerIn 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-/* Header */
-.modal-header {
+@keyframes mmContainerIn {
+  from {
+    opacity: 0;
+    transform: perspective(1200px) rotateX(16deg) rotateY(-4deg) translateY(40px) scale(0.87);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1200px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1);
+  }
+}
+
+/* Scrollbar */
+.mm-container::-webkit-scrollbar { width: 3px; }
+.mm-container::-webkit-scrollbar-track { background: transparent; }
+.mm-container::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.2); border-radius: 4px; }
+.mm-container::-webkit-scrollbar-thumb:hover { background: rgba(59,130,246,0.35); }
+
+/* =========================
+   TOP BEAM
+========================= */
+.mm-top-beam {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 5%,
+    rgba(59, 130, 246, 0.5) 30%,
+    rgba(147, 197, 253, 0.8) 50%,
+    rgba(59, 130, 246, 0.5) 70%,
+    transparent 95%
+  );
+  border-radius: 20px 20px 0 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* =========================
+   CORNER BRACKETS
+========================= */
+.mm-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(59, 130, 246, 0.3);
+  border-style: solid;
+  pointer-events: none;
+  z-index: 1;
+  transition: border-color 0.25s;
+}
+
+.mm-tl { top: 0;  left: 0;  border-width: 1px 0 0 1px; border-radius: 20px 0 0 0; }
+.mm-tr { top: 0;  right: 0; border-width: 1px 1px 0 0; border-radius: 0 20px 0 0; }
+.mm-bl { bottom: 0; left: 0;  border-width: 0 0 1px 1px; border-radius: 0 0 0 20px; }
+.mm-br { bottom: 0; right: 0; border-width: 0 1px 1px 0; border-radius: 0 0 20px 0; }
+
+/* =========================
+   HEADER
+========================= */
+.mm-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 16px;
 }
 
-.modal-header h2 {
+.mm-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Eyebrow */
+.mm-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.07);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  padding: 4px 11px;
+  border-radius: 100px;
+  width: fit-content;
+}
+
+.mm-eyebrow-dot {
+  width: 5px; height: 5px;
+  background: #3b82f6;
+  border-radius: 50%;
+  box-shadow: 0 0 5px #3b82f6;
+  animation: mmDotBlink 2s ease-in-out infinite;
+}
+
+@keyframes mmDotBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* Title */
+.mm-title {
+  font-family: 'Oxanium', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #e4e6f0;
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.close-btn {
-  background: transparent;
-  border: none;
-  font-size: 10px;
-  font-weight: bold;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   line-height: 1;
-  color: #6b7280;
 }
 
-/* Modal body */
-.modal-body {
+.mm-title-acc {
+  color: #3b82f6;
+  opacity: 0.4;
+  font-weight: 300;
+}
+
+/* Close button */
+.mm-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  color: rgba(252, 165, 165, 0.8);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.mm-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.15);
+}
+
+.mm-close:active { transform: translateY(0); }
+
+/* =========================
+   DIVIDER
+========================= */
+.mm-divider {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(59, 130, 246, 0.3),
+    rgba(59, 130, 246, 0.08) 60%,
+    transparent
+  );
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 2;
+}
+
+/* =========================
+   BODY
+========================= */
+.mm-body {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .modal-container {
-    width: 90%;
-    padding: 20px 25px;
-    height: auto;
+/* =========================
+   NO FORM STATE
+========================= */
+.mm-no-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: rgba(82, 86, 103, 0.9);
+  text-align: center;
+}
+
+.mm-no-form strong {
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+/* =========================
+   FORM ELEMENTS INSIDE MODAL
+   (global overrides for child forms)
+========================= */
+.mm-body input,
+.mm-body select,
+.mm-body textarea {
+  background: rgba(0, 0, 0, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 8px !important;
+  color: #e4e6f0 !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 13px !important;
+  outline: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.mm-body input:focus,
+.mm-body select:focus,
+.mm-body textarea:focus {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.07) !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+.mm-body input::placeholder,
+.mm-body textarea::placeholder {
+  color: rgba(82, 86, 103, 0.7) !important;
+}
+
+.mm-body label {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.13em !important;
+  text-transform: uppercase !important;
+  color: rgba(82, 86, 103, 0.9) !important;
+}
+
+/* Submit / primary button inside forms */
+.mm-body button[type="submit"],
+.mm-body .submit-btn,
+.mm-body .form-submit {
+  background: #3b82f6 !important;
+  border: 1px solid rgba(59, 130, 246, 0.5) !important;
+  border-radius: 8px !important;
+  color: #fff !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  padding: 10px 22px !important;
+  cursor: pointer !important;
+  transition: all 0.22s ease !important;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25) !important;
+}
+
+.mm-body button[type="submit"]:hover,
+.mm-body .submit-btn:hover,
+.mm-body .form-submit:hover {
+  background: #2563eb !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 28px rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Cancel / secondary buttons inside forms */
+.mm-body button[type="button"],
+.mm-body .cancel-btn {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  color: rgba(180, 185, 200, 0.8) !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 0.06em !important;
+  padding: 10px 18px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.mm-body button[type="button"]:hover,
+.mm-body .cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #e4e6f0 !important;
+}
+
+/* Select option color */
+.mm-body select option {
+  background: #070810;
+  color: #e4e6f0;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 860px) {
+  .mm-container {
+    padding: 22px 20px 24px;
+    border-radius: 16px;
   }
+  .mm-title { font-size: 20px; }
+}
+
+@media (max-width: 520px) {
+  .mm-container { padding: 18px 14px 20px; }
+  .mm-header { flex-wrap: wrap; gap: 12px; }
+  .mm-close { align-self: flex-end; }
+}
+
+/* =========================
+   LEGACY CLASS PASSTHROUGH
+   (keeps old .modal-body working if child forms use it)
+========================= */
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }

@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function Vendor() {
 const columns = [
-  { header: "Vendor Code", field: "vendorCode",width:"150px" },
+  { header: "Vendor Code", field: "vendorCode",width:"140px" },
   { header: "Vendor Name", field: "name",width:"180px" },
   { header: "Email", field: "email",width:"150px" },
   { header: "Shop Name", field: "shopName",width:"160px" },

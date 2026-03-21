@@ -4,12 +4,12 @@ import "../../Styles/Inventory.css";
 
 export default function Product() {
 const columns = [
-  { header: "Invoice No.", field: "invoiceNumber", width: "130px" },
-  { header: "Net Amount (₹)", field: "netAmount", width: "130px" },
-  { header: "Due Amount (₹)", field: "remainingAmount", width: "130px" },
-  { header: "Billing Mode", field: "billingMode", width: "130px" },
-  { header: "Date", field: "createdAt", width: "160px" },
-  { header: "Actions", field: "Action", width: "120px" },
+  { header: "Invoice No.", field: "invoiceNumber", width: "200px" },
+  { header: "Net Amount (₹)", field: "netAmount", width: "205px" },
+  { header: "Due Amount (₹)", field: "remainingAmount", width: "205px" },
+  { header: "Billing Mode", field: "billingMode", width: "205px" },
+  { header: "Date", field: "createdAt", width: "205px" },
+  { header: "Actions", field: "Action", width: "140px" },
 ];
 
 

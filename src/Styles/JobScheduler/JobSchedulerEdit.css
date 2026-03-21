@@ -1,293 +1,307 @@
-/* ================================
-   ROOT VARIABLES (Same as View)
-================================ */
+/* ============================================================
+   JobSchedulerEdit.css  ·  VMS Cinematic Dark UI
+   Black bg, NO canvas/orb animations, clean glassmorphism
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
 :root {
-  --accent-blue: #00d2ff;
-  --accent-purple: #9aa0ff;
-  --glass: rgba(255, 255, 255, 0.03);
-  --border: rgba(255, 255, 255, 0.08);
+  --jse-cyan:   #00dcff;
+  --jse-purple: #a03cff;
+  --jse-green:  #00ff8c;
+  --jse-red:    #ff5078;
+  --jse-amber:  #ffaa00;
+  --font-hud:   'Orbitron', monospace;
+  --font-body:  'Inter', sans-serif;
 }
 
-/* ================================
-   PAGE
-================================ */
-.ed-page {
-  background: radial-gradient(circle at 0% 0%, #111421 0%, #050505 100%);
+/* ── Page ─────────────────────────────────────────────────── */
+.jse-page {
+  position: relative;
   min-height: 100vh;
-  padding: 40px 60px;
-  color: #eaeaea;
-  font-family: 'Inter', sans-serif;
-  perspective: 1500px;
+  background: #000;
+  font-family: var(--font-body);
+  color: #fff;
+  overflow-x: hidden;
 }
 
-.ed-wrapper {
+/* ── Subtle grid bg (no animation) ───────────────────────── */
+.jse-grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,200,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.018) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Inner ────────────────────────────────────────────────── */
+.jse-inner {
+  position: relative;
+  z-index: 1;
   max-width: 1200px;
-  margin: auto;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
 }
 
-/* ================================
-   HEADER
-================================ */
-.ed-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  animation: slideDown 0.6s ease-out;
+/* ── Center (loading/not found) ───────────────────────────── */
+.jse-center {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 18px; position: relative; z-index: 1;
+}
+.jse-spin {
+  display: block;
+  width: 36px; height: 36px;
+  border: 2.5px solid rgba(0,220,255,.12);
+  border-top-color: var(--jse-cyan);
+  border-radius: 50%;
+  animation: jseSpin .8s linear infinite;
+}
+.jse-spin-sm { width: 13px; height: 13px; border-width: 2px; }
+@keyframes jseSpin { to { transform: rotate(360deg); } }
+.jse-loading-text {
+  font-family: var(--font-hud); font-size: 10px; letter-spacing: 3px;
+  color: rgba(0,220,255,0.45);
 }
 
-.ed-header h1 {
-  margin: 0;
-  font-size: 32px;
-  background: linear-gradient(to right, #fff, var(--accent-purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 800;
+/* ── Header ───────────────────────────────────────────────── */
+.jse-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 24px; margin-bottom: 28px;
+  animation: jseHeaderIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes jseHeaderIn {
+  from { opacity:0; transform: translateY(-18px); }
+  to   { opacity:1; transform: translateY(0); }
 }
 
-.ed-job-sub {
-  font-size: 14px;
-  color: #aaa;
+.jse-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-hud); font-size: 9px; letter-spacing: 4px;
+  color: rgba(0,220,255,0.6); text-transform: uppercase;
+  background: rgba(0,220,255,0.05); border: 1px solid rgba(0,220,255,0.13);
+  padding: 5px 14px; border-radius: 20px; margin-bottom: 14px; width: fit-content;
+}
+.jse-eyebrow-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--jse-cyan); box-shadow: 0 0 6px var(--jse-cyan);
+  animation: jseBlink 2s ease-in-out infinite;
+}
+@keyframes jseBlink { 0%,100%{opacity:1}50%{opacity:.2} }
+
+.jse-title {
+  font-family: var(--font-hud);
+  font-size: clamp(22px, 3vw, 32px); font-weight: 900; line-height: 1.15;
+  margin-bottom: 14px;
+}
+.jse-title-dim {
+  background: linear-gradient(90deg,#fff 30%,var(--jse-cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-right: 10px;
 }
 
-/* ================================
-   SECTIONS (3D Glass)
-================================ */
-.ed-section {
-  width: 100%;
-  background: var(--glass);
-  backdrop-filter: blur(15px);
+.jse-sub-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.jse-code-pill {
+  font-family: var(--font-hud); font-size: 10px; letter-spacing: 2px;
+  color: var(--jse-cyan); background: rgba(0,220,255,0.07);
+  border: 1px solid rgba(0,220,255,0.2); padding: 5px 14px; border-radius: 20px;
+}
+.jse-job-name { font-size: 14px; color: rgba(160,195,255,0.5); letter-spacing: .3px; }
+
+/* ── Cancel button ────────────────────────────────────────── */
+.jse-cancel-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-hud); font-size: 9px; letter-spacing: 2px;
+  padding: 11px 20px; border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent; color: rgba(160,195,255,0.5);
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+}
+.jse-cancel-btn:hover { border-color: rgba(255,255,255,0.28); color: #fff; }
+
+/* ── Divider ──────────────────────────────────────────────── */
+.jse-divider {
+  height: 1px;
+  background: linear-gradient(90deg,transparent,rgba(0,220,255,0.2),transparent);
+  margin-bottom: 28px;
+}
+
+/* ── Section ──────────────────────────────────────────────── */
+.jse-section {
+  background: rgba(4,8,24,0.88);
+  border: 1px solid rgba(0,220,255,0.09);
   border-radius: 20px;
-  padding: 30px;
-  margin-bottom: 30px;
-  border: 1px solid var(--border);
-  transition: transform 0.5s ease, box-shadow 0.5s ease;
+  padding: 26px 24px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 14px 45px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04);
   transform-style: preserve-3d;
-  animation: fadeInUp 0.7s ease-out forwards;
+  transition: transform .4s ease, border-color .3s, box-shadow .3s;
   opacity: 0;
+  animation: jseSectionIn 0.65s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+@keyframes jseSectionIn {
+  from { opacity:0; transform: translateY(24px) rotateX(-5deg); }
+  to   { opacity:1; transform: translateY(0)  rotateX(0); }
+}
+.jse-section:hover {
+  transform: translateZ(10px) rotateX(1deg);
+  border-color: rgba(0,220,255,0.18);
+  box-shadow: 0 20px 55px rgba(0,0,0,0.7), 0 0 24px rgba(0,220,255,0.04), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
-.ed-section:nth-child(2) { animation-delay: 0.1s; }
-.ed-section:nth-child(3) { animation-delay: 0.2s; }
-.ed-section:nth-child(4) { animation-delay: 0.3s; }
-
-.ed-section:hover {
-  transform: translateZ(15px) rotateX(1deg);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4),
-              0 0 20px rgba(154, 160, 255, 0.05);
-  border-color: rgba(154, 160, 255, 0.3);
+.jse-section-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 20px; padding-bottom: 14px;
+  border-bottom: 1px solid rgba(0,220,255,0.06);
+}
+.jse-section-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(0,220,255,0.07); border: 1px solid rgba(0,220,255,0.14);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--jse-cyan); flex-shrink: 0;
+}
+.jse-section-title {
+  font-family: var(--font-hud); font-size: 9px; letter-spacing: 3px;
+  color: rgba(0,220,255,0.55); text-transform: uppercase;
 }
 
-.ed-section h2 {
-  font-size: 13px;
-  color: var(--accent-purple);
-  text-transform: uppercase;
-  margin-bottom: 25px;
-  letter-spacing: 2px;
-  font-weight: 700;
-  border-left: 3px solid var(--accent-purple);
-  padding-left: 15px;
-}
-
-/* ================================
-   GRID
-================================ */
-.ed-grid {
+/* ── Grid ─────────────────────────────────────────────────── */
+.jse-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
+  gap: 20px;
+}
+.jse-field { display: flex; flex-direction: column; gap: 7px; }
+.jse-field-full { grid-column: span 2; }
+
+.jse-label {
+  font-family: var(--font-hud); font-size: 8px; letter-spacing: 2.5px;
+  color: rgba(160,195,255,0.3); text-transform: uppercase;
 }
 
-.ed-field {
-  display: flex;
-  flex-direction: column;
+/* Read-only value */
+.jse-value {
+  font-size: 13px; font-weight: 500;
+  color: rgba(200,220,255,0.7);
+  padding: 10px 14px;
+  background: rgba(2,6,18,0.6);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 11px;
+  min-height: 40px;
+  display: flex; align-items: center;
 }
 
-.ed-field.ed-full {
-  grid-column: span 2;
-}
-
-.ed-field label {
-  font-size: 10px;
-  color: #666;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-/* ================================
-   INPUTS (Premium Glass)
-================================ */
-.ed-input {
+/* ── Inputs ───────────────────────────────────────────────── */
+.jse-input {
   width: 100%;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 10px;
-  padding: 10px 12px;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(0,220,255,0.12);
+  background: rgba(2,6,18,0.88);
   color: #fff;
+  font-family: var(--font-body);
+  font-size: 13px;
   outline: none;
-  transition: 0.3s;
-  font-size: 14px;
+  transition: border-color .25s, box-shadow .25s;
+}
+.jse-input::placeholder { color: rgba(160,195,255,0.2); }
+.jse-input:focus {
+  border-color: rgba(0,220,255,0.42);
+  box-shadow: 0 0 0 3px rgba(0,220,255,0.07);
 }
 
-.ed-input:focus {
-  border-color: var(--accent-purple);
-  box-shadow: 0 0 10px rgba(154,160,255,0.3);
+textarea.jse-input { min-height: 84px; resize: vertical; line-height: 1.6; }
+
+/* Select */
+.jse-select { cursor: pointer; }
+.jse-select option { background: #0a0f22; color: #fff; }
+
+/* Time input */
+input[type="time"].jse-input { color-scheme: dark; }
+
+/* Number input */
+input[type="number"].jse-input::-webkit-inner-spin-button { opacity: 0.4; }
+
+/* ── Status badge ─────────────────────────────────────────── */
+.jse-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-hud); font-size: 9px; letter-spacing: 1.5px;
+  padding: 7px 14px; border-radius: 20px; border: 1px solid;
+  width: fit-content;
+}
+.jse-badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+.jse-badge-on  { color:rgba(0,255,140,0.85); background:rgba(0,255,140,0.08); border-color:rgba(0,255,140,0.25); }
+.jse-badge-on  .jse-badge-dot { background:var(--jse-green); box-shadow:0 0 6px var(--jse-green); animation:jseBlink 2s ease-in-out infinite; }
+.jse-badge-off { color:rgba(255,80,120,0.85); background:rgba(255,80,120,0.08); border-color:rgba(255,80,120,0.25); }
+.jse-badge-off .jse-badge-dot { background:var(--jse-red); }
+
+/* ── Day selector ─────────────────────────────────────────── */
+.jse-days { display: flex; flex-wrap: wrap; gap: 8px; }
+.jse-day {
+  font-family: var(--font-hud); font-size: 9px; letter-spacing: 1.5px;
+  padding: 8px 14px; border-radius: 20px;
+  background: rgba(2,6,18,0.7);
+  border: 1px solid rgba(0,220,255,0.1);
+  cursor: pointer; color: rgba(160,195,255,0.4);
+  transition: border-color .2s, background .2s, color .2s, box-shadow .2s;
+  user-select: none;
+}
+.jse-day:hover { border-color: rgba(0,220,255,0.35); color: rgba(0,220,255,0.8); background: rgba(0,220,255,0.06); }
+.jse-day.active {
+  background: rgba(0,220,255,0.14); border-color: rgba(0,220,255,0.55);
+  color: var(--jse-cyan); font-weight: 700;
+  box-shadow: 0 0 10px rgba(0,220,255,0.18);
 }
 
-textarea.ed-input {
-  min-height: 80px;
-  resize: vertical;
+/* ── Save bar ─────────────────────────────────────────────── */
+.jse-save-bar {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 12px; margin-top: 8px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0,220,255,0.07);
 }
 
-/* ================================
-   BADGES
-================================ */
-.ed-badge {
-  padding: 6px 16px;
-  border-radius: 30px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1px;
+.jse-save-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-hud); font-size: 10px; letter-spacing: 2px;
+  padding: 13px 28px; border-radius: 13px;
+  border: 1px solid rgba(0,220,255,0.4);
+  background: linear-gradient(135deg,rgba(0,220,255,0.12),rgba(160,60,255,0.12));
+  color: #fff; cursor: pointer;
+  transition: border-color .25s, box-shadow .25s, background .25s, letter-spacing .25s;
 }
+.jse-save-btn:hover {
+  border-color: var(--jse-cyan);
+  background: linear-gradient(135deg,rgba(0,220,255,0.18),rgba(160,60,255,0.18));
+  box-shadow: 0 0 22px rgba(0,220,255,0.22);
+  letter-spacing: 2.8px;
+}
+.jse-save-btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
 
-.ed-badge.on {
-  background: rgba(0, 255, 170, 0.1);
-  color: #00ffaa;
-  border: 1px solid #00ffaa;
-  box-shadow: 0 0 15px rgba(0, 255, 170, 0.2);
-}
-
-.ed-badge.off {
-  background: rgba(255, 70, 70, 0.1);
-  color: #ff6b6b;
-  border: 1px solid #ff6b6b;
-  box-shadow: 0 0 15px rgba(255, 70, 70, 0.2);
-}
-
-/* ================================
-   DAY SELECTOR
-================================ */
-.ed-days {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.ed-day {
-  padding: 8px 14px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s ease;
-}
-
-.ed-day:hover {
-  background: rgba(154,160,255,0.15);
-}
-
-.ed-day.active {
-  background: var(--accent-purple);
-  color: #000;
-  font-weight: 700;
-  box-shadow: 0 0 10px rgba(154,160,255,0.6);
-}
-
-/* ================================
-   BUTTONS
-================================ */
-.ed-btn {
-  background: var(--glass);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border);
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.ed-btn:hover {
-  background: var(--accent-purple);
-  color: #000;
-  transform: translateY(-2px);
-}
-
-.ed-save {
-  background: var(--accent-purple);
-  color: #000;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.ed-save:hover {
-  box-shadow: 0 0 20px rgba(154,160,255,0.6);
-  transform: translateY(-3px);
-}
-
-select.ed-input {
-  background-color: radial-gradient(circle at 0% 0%, #111421 0%, #050505 100%);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.2);
-}
-
-/* Dropdown options (important for some browsers) */
-select.ed-input option {
-  background-color: #000;
-  color: #fff;
-}
-/* ================================
-   ANIMATIONS
-================================ */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(40px) rotateX(-10deg); }
-  to { opacity: 1; transform: translateY(0) rotateX(0); }
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ================================
-   RESPONSIVE
-================================ */
+/* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .ed-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .ed-field.ed-full {
-    grid-column: span 2;
-  }
+  .jse-grid { grid-template-columns: repeat(2,1fr); }
+  .jse-field-full { grid-column: span 2; }
+  .jse-inner { padding: 36px 24px 60px; }
 }
-.ed-toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 20px;
-  border-radius: 6px;
-  color: white;
-  font-weight: 600;
-  z-index: 9999;
-  animation: fadeIn 0.9s ease-in-out;
+@media (max-width: 768px) {
+  .jse-header { flex-direction: column; align-items: flex-start; }
+  .jse-inner  { padding: 28px 18px 50px; }
+  .jse-section { padding: 20px 16px; }
+  .jse-save-bar { flex-direction: column-reverse; }
+  .jse-save-btn, .jse-cancel-btn { width: 100%; justify-content: center; }
 }
-
-.ed-toast.success {
-  background: #28a745;
-}
-
-.ed-toast.error {
-  background: #dc3545;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+@media (max-width: 480px) {
+  .jse-grid { grid-template-columns: 1fr; }
+  .jse-field-full { grid-column: span 1; }
+  .jse-inner { padding: 20px 14px 40px; }
+  .jse-title { font-size: 20px; }
 }

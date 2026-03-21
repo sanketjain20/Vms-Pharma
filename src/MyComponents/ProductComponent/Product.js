@@ -8,10 +8,10 @@ export default function Product() {
 const columns = [
 { header: "Product Code", field: "productCode", width: "160px" },
 { header: "Name", field: "name", width: "170px" },
-{ header: "Description", field: "description", width: "200px" },
+{ header: "Description", field: "description", width: "250px" },
 { header: "Price (₹)", field: "price", width: "130px" },
 { header: "Unit", field: "unit", width: "120px" },
-{ header: "Product Type", field: "productType", width: "180px" },
+{ header: "Product Type", field: "productType", width: "210px" },
 { header: "Actions", field: "Action", width: "120px" },
 ];
 

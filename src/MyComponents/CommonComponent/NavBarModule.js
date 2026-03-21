@@ -1,85 +1,141 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/NavBarModule.css";
-import udoyralogo from "../../Images/udoyraname.png"; 
+import udoyralogo from "../../Images/udoyraname.png";
+import udyorawingslogo from "../../Images/udyora_wings.svg";
 
 export default function NavBarModule({ sidebarOpen }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const navigate = useNavigate();
+  const [scrolled, setScrolled]         = useState(false);
+  const navigate    = useNavigate();
+  const profileRef  = useRef(null);
 
-  const user = JSON.parse(localStorage.getItem("vmsUser")) || {};
-  const vendorName = user?.data?.name || "Vendor";
-   const profileImage = user?.data?.profilePhoto || null;
-   const shopLogo = user?.data?.shopLogo || null;
-   const vendorShop = user?.data?.shopName || "";
+  const user         = JSON.parse(localStorage.getItem("vmsUser")) || {};
+  const vendorName   = user?.data?.name      || "Vendor";
+  const vendorShop   = user?.data?.shopName  || "";
+  const profileImage = user?.data?.profilePhoto || null;
 
   const initials = vendorName
     .split(" ")
-    .map(n => n[0])
+    .map((n) => n[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
 
-  const handleProfileClick = () => {
-    setDropdownOpen(!dropdownOpen);
-  };
+  /* scroll shadow */
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* close on outside click */
+  useEffect(() => {
+    const handler = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target))
+        setDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/auth/logout", {
+      const res = await fetch("http://localhost:8080/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
-
-      if (response.ok) {
+      if (res.ok) {
         localStorage.removeItem("vmsUser");
         navigate("/");
       } else {
         alert("Logout failed");
       }
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch (err) {
+      console.error("Logout error:", err);
       alert("An error occurred during logout");
     }
   };
 
-  const handleSettings = () => {
-    navigate("/setting");
-  };
-
   return (
-    <header className={`topbar ${sidebarOpen ? "shifted" : ""}`}>
-      <div className="logo-container">
-       {/* <span>Udoyra</span> */}
-        <img src={udoyralogo} alt="Udoyra Logo" className="brand-logo" />
-       { /* {shopLogo ? (
-          <img src={shopLogo} className="vendor-logo" />
-        ) : (
-          <span className="vendor-name">{vendorShop}</span>
-        )} */}
+    <header className={`nbm-bar ${sidebarOpen ? "shifted" : ""} ${scrolled ? "scrolled" : ""}`}>
+
+      {/* scanline */}
+      <div className="nbm-scan" />
+
+      {/* ── LEFT: Logo ─────────────────────────────────────── */}
+      <div className="nbm-left">
+        <img src={udoyralogo} alt="Udoyra" className="nbm-logo" />
+
+        {vendorShop && (
+          <div className="nbm-shop-pill">
+            <span className="nbm-dot" />
+            <span className="nbm-shop-name">{vendorShop}</span>
+          </div>
+        )}
       </div>
-      <div className="topbar-right">
-        <div className="profile" onClick={handleProfileClick}>
-          {profileImage ? (
-            <img
-              src={profileImage}
-              alt="Profile"
-              className="profile-image"
-            />
-          ) : (
-            <span className="profile-initials">{initials}</span>
-          )}
-          {dropdownOpen && (
-            <div className="profile-dropdown">
-              <div className="dropdown-item" onClick={handleSettings}>
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M600-120h240v-33q-25-23-56-35t-64-12q-33 0-64 12t-56 35v33Zm120-120q25 0 42.5-17.5T780-300q0-25-17.5-42.5T720-360q-25 0-42.5 17.5T660-300q0 25 17.5 42.5T720-240ZM480-480Zm2-140q-58 0-99 41t-41 99q0 48 27 84t71 50q0-23 .5-44t8.5-38q-14-8-20.5-22t-6.5-30q0-25 17.5-42.5T482-540q15 0 28.5 7.5T533-512q11-5 23-7t24-2h36q-13-43-49.5-71T482-620ZM370-80l-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-85 65H696q-1-5-2-10.5t-3-10.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q24 25 54 42t65 22v184h-70Zm210 40q-25 0-42.5-17.5T520-100v-280q0-25 17.5-42.5T580-440h280q25 0 42.5 17.5T920-380v280q0 25-17.5 42.5T860-40H580Z"/></svg>
-                 Settings 
+
+      {/* ── RIGHT: Greeting + Avatar ────────────────────────── */}
+      <div className="nbm-right">
+
+        <div className="nbm-greeting">
+          <span className="nbm-hi">Hello,</span>
+          <span className="nbm-name">{vendorName.split(" ")[0]}</span>
+        </div>
+
+        <div className="nbm-profile-wrap" ref={profileRef} onClick={() => setDropdownOpen(!dropdownOpen)}>
+
+          {/* Avatar */}
+          <div className={`nbm-avatar ${dropdownOpen ? "open" : ""}`}>
+            {profileImage
+              ? <img src={profileImage} alt="Profile" className="nbm-avatar-img" />
+              : <span className="nbm-avatar-initials">{initials}</span>
+            }
+            <span className="nbm-avatar-ring" />
+          </div>
+
+          {/* Dropdown */}
+          <div className={`nbm-dropdown ${dropdownOpen ? "show" : ""}`}>
+
+            {/* User info header */}
+            <div className="nbm-dd-user">
+              <div className="nbm-dd-avatar-sm">
+                {profileImage
+                  ? <img src={profileImage} alt="" />
+                  : <span>{initials}</span>
+                }
               </div>
-              <div className="dropdown-item" onClick={handleLogout}>
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>Logout
+              <div className="nbm-dd-info">
+                <div className="nbm-dd-name">{vendorName}</div>
+                {vendorShop && <div className="nbm-dd-shop">{vendorShop}</div>}
               </div>
             </div>
-          )}
+
+            <div className="nbm-dd-divider" />
+
+            {/* Settings */}
+            <button
+              className="nbm-dd-item"
+              onClick={(e) => { e.stopPropagation(); setDropdownOpen(false); navigate("/setting"); }}
+            >
+              <svg width="15" height="15" viewBox="0 -960 960 960" fill="currentColor">
+                <path d="M370-80l-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-1 13.5l103 78-110 190-119-50q-11 8-23 15t-24 12L590-80H370Zm112-260q58 0 99-41t41-99q0-58-41-99t-99-41q-58 0-99 41t-41 99q0 58 41 99t99 41Z"/>
+              </svg>
+              <span>Settings</span>
+            </button>
+
+            {/* Logout */}
+            <button
+              className="nbm-dd-item nbm-dd-logout"
+              onClick={(e) => { e.stopPropagation(); handleLogout(); }}
+            >
+              <svg width="15" height="15" viewBox="0 -960 960 960" fill="currentColor">
+                <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/>
+              </svg>
+              <span>Logout</span>
+            </button>
+
+          </div>
         </div>
       </div>
     </header>

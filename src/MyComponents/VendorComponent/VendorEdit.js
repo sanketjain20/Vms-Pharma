@@ -8,59 +8,56 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
     const [password, setPassword] = useState("");
     const [shopName, setShopName] = useState("");
     const [phone, setPhone] = useState("");
-    const [roleId, setRoleId] = useState(""); // Will map from roleName
+    const [roleId, setRoleId] = useState("");
     const [address, setAddress] = useState("");
     const [vendorPrefix, setVendorPrefix] = useState("");
     const [expiryDate, setExpiryDate] = useState("");
     const [roles, setRoles] = useState([]);
     const [errors, setErrors] = useState({});
     const [vendorId, setVendorId] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [showPass, setShowPass] = useState(false);
 
-    // Fetch all roles first
+    const clearError = (field) => setErrors(p => ({ ...p, [field]: "" }));
+
+    /* ── FETCH ROLES ── */
     useEffect(() => {
         fetch("http://localhost:8080/api/Roles/getAll", {
             method: "GET",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
         })
-            .then((res) => res.json())
-            .then((res) => {
-                if (res.status === 200) setRoles(res.data);
-            })
-            .catch((err) => console.log(err));
+            .then(r => r.json())
+            .then(res => { if (res.status === 200) setRoles(res.data); })
+            .catch(err => console.log(err));
     }, []);
 
-    // Fetch vendor details
+    /* ── FETCH VENDOR ── */
     useEffect(() => {
         if (!uKey) return;
-
         fetch(`http://localhost:8080/api/Vendor/GetVendorByUkey/${uKey}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
         })
-            .then((res) => res.json())
-            .then((res) => {
+            .then(r => r.json())
+            .then(res => {
                 if (res.status === 200 && res.data) {
                     const v = res.data;
                     setVendorId(v.id || v.uKey);
                     setName(v.name || "");
                     setEmail(v.email || "");
-                    setPassword(""); // optional
+                    setPassword("");
                     setShopName(v.shopName || "");
                     setPhone(v.phone || "");
                     setAddress(v.address || "");
                     setVendorPrefix(v.vendorPrefix || "");
                     setExpiryDate(v.expiryDate || "");
-
-                    // Map roleName to roleId from roles list
                     if (roles.length > 0 && v.roleName) {
-                        const matchedRole = roles.find((r) => r.roleName === v.roleName);
-                        if (matchedRole) setRoleId(matchedRole.id);
+                        const matched = roles.find(r => r.roleName === v.roleName);
+                        if (matched) setRoleId(matched.id);
                     }
-                } else {
-                    toast.error(res.message || "Failed to fetch vendor");
-                }
+                } else { toast.error(res.message || "Failed to fetch vendor"); }
             })
             .catch(() => toast.error("Network error"));
     }, [uKey, roles]);
@@ -81,87 +78,113 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
+        setLoading(true);
 
-        const payload = {
-            name,
-            email,
-            password,
-            shopName,
-            phone,
-            roleId: Number(roleId),
-            address,
-            expiryDate,
-        };
+        const payload = { name, email, password, shopName, phone, roleId: Number(roleId), address, expiryDate };
 
         try {
-            const response = await fetch(
-                `http://localhost:8080/api/Vendor/UpdateVendor/${vendorId}`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify(payload),
-                }
-            );
+            const response = await fetch(`http://localhost:8080/api/Vendor/UpdateVendor/${vendorId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(payload),
+            });
             const result = await response.json();
             if (response.ok && result.status === 200) {
                 toast.success("Vendor updated successfully");
-                onSubmit && onSubmit();
-                onClose && onClose();
-            } else {
-                toast.error(result.message || "Vendor update failed");
-            }
+                onSubmit?.(); onClose?.();
+            } else { toast.error(result.message || "Vendor update failed"); }
         } catch (error) {
             console.log(error);
             toast.error("Network error. Please try again!");
-        }
+        } finally { setLoading(false); }
     };
 
     return (
-        <div className="add-v-backdrop">
-            <div className="add-v-container">
-                <div className="add-v-header">
-                    <h2 className="add-v-title">Edit Vendor | {vendorPrefix}</h2>
-                    <button className="add-v-close-btn" onClick={onClose}>✖</button>
+        <div className="vd-backdrop">
+
+            {/* ── LOADING OVERLAY ── */}
+            {loading && (
+                <div className="vd-loader-overlay">
+                    <div className="vd-loader-ring">
+                        <div /><div /><div /><div />
+                    </div>
+                    <span className="vd-loader-label">Updating vendor…</span>
+                </div>
+            )}
+
+            <div className="vd-modal">
+                {/* Top beam */}
+                <div className="vd-top-beam" />
+                {/* Corners */}
+                <div className="vd-corner vd-tl" /><div className="vd-corner vd-tr" />
+                <div className="vd-corner vd-bl" /><div className="vd-corner vd-br" />
+
+                {/* ── HEADER ── */}
+                <div className="vd-header">
+                    <div className="vd-header-left">
+                        <div className="vd-eyebrow">
+                            <span className="vd-eyebrow-dot" />
+                            EDIT VENDOR
+                        </div>
+                        <h2 className="vd-title">
+                            <span className="vd-title-acc">//</span>
+                            {vendorPrefix ? `Vendor · ${vendorPrefix}` : "Edit Vendor"}
+                        </h2>
+                    </div>
+                    <button className="vd-close" onClick={onClose} title="Close">
+                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                            <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                        </svg>
+                        ESC
+                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="add-v-form">
-                    <div className="add-v-form-row">
-                        <div className="add-v-form-group">
+                {/* ── FORM ── */}
+                <form className="vd-form" onSubmit={handleSubmit} noValidate>
+
+                    {/* Row 1 — Name / Email */}
+                    <div className="vd-row">
+                        <div className="vd-group">
                             <label>Name</label>
                             <input
                                 type="text"
                                 value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className={errors.name ? "add-v-input-error" : ""}
+                                onChange={e => { setName(e.target.value); clearError("name"); }}
+                                placeholder="Full name"
+                                className={errors.name ? "vd-input-err" : ""}
                             />
-                            {errors.name && <div className="add-v-error-text">{errors.name}</div>}
+                            {errors.name && <span className="vd-err">{errors.name}</span>}
                         </div>
 
-                        <div className="add-v-form-group">
+                        <div className="vd-group">
                             <label>Email</label>
                             <input
                                 type="email"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className={errors.email ? "add-v-input-error" : ""}
+                                onChange={e => { setEmail(e.target.value); clearError("email"); }}
+                                placeholder="email@domain.com"
+                                className={errors.email ? "vd-input-err" : ""}
                             />
-                            {errors.email && <div className="add-v-error-text">{errors.email}</div>}
+                            {errors.email && <span className="vd-err">{errors.email}</span>}
                         </div>
                     </div>
 
-                    <div className="add-v-form-row">
-                        <div className="add-v-form-group">
-                            <label>Password</label>
+                    {/* Row 3 — Shop Name / Role */}
+                    <div className="vd-row">
+                        <div className="vd-group">
+                            <label>Shop Name</label>
                             <input
                                 type="text"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Leave blank to keep current"
+                                value={shopName}
+                                onChange={e => { setShopName(e.target.value); clearError("shopName"); }}
+                                placeholder="Shop / business name"
+                                className={errors.shopName ? "vd-input-err" : ""}
                             />
+                            {errors.shopName && <span className="vd-err">{errors.shopName}</span>}
                         </div>
 
-                        <div className="add-v-form-group">
+                        <div className="vd-group">
                             <label>Phone</label>
                             <input
                                 type="tel"
@@ -175,78 +198,69 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                             />
                             {errors.phone && <div className="add-v-error-text">{errors.phone}</div>}
                         </div>
+
                     </div>
 
-                    <div className="add-v-form-row">
-                        <div className="add-v-form-group">
-                            <label>Shop Name</label>
-                            <input
-                                type="text"
-                                value={shopName}
-                                onChange={(e) => setShopName(e.target.value)}
-                                className={errors.shopName ? "add-v-input-error" : ""}
-                            />
-                            {errors.shopName && <div className="add-v-error-text">{errors.shopName}</div>}
-                        </div>
-
-                        <div className="add-v-form-group">
+                    {/* Row 4 — Address (full) */}
+                    <div className="vd-row">
+                        <div className="vd-group">
                             <label>Select Role</label>
                             <select
                                 value={roleId}
-                                onChange={(e) => setRoleId(e.target.value)}
-                                className={errors.roleId ? "add-v-input-error" : ""}
+                                onChange={e => { setRoleId(e.target.value); clearError("roleId"); }}
+                                className={errors.roleId ? "vd-input-err" : ""}
                             >
-                                <option value="">-- Select Role --</option>
-                                {roles.map((r) => (
-                                    <option key={r.id} value={r.id}>
-                                        {r.roleName}
-                                    </option>
+                                <option value="">— Select Role —</option>
+                                {roles.map(r => (
+                                    <option key={r.id} value={r.id}>{r.roleName}</option>
                                 ))}
                             </select>
-                            {errors.roleId && <div className="add-v-error-text">{errors.roleId}</div>}
+                            {errors.roleId && <span className="vd-err">{errors.roleId}</span>}
                         </div>
-                    </div>
 
-                    <div className="add-v-form-row">
-                        <div className="add-v-form-group full-width">
+                        <div className="vd-group">
                             <label>Address</label>
                             <textarea
-                                rows="2"
+                                rows={2}
                                 value={address}
-                                onChange={(e) => setAddress(e.target.value)}
-                                className={errors.address ? "add-v-input-error" : ""}
+                                onChange={e => { setAddress(e.target.value); clearError("address"); }}
+                                placeholder="Full business address"
+                                className={errors.address ? "vd-input-err" : ""}
                             />
-                            {errors.address && <div className="add-v-error-text">{errors.address}</div>}
+                            {errors.address && <span className="vd-err">{errors.address}</span>}
                         </div>
                     </div>
 
-                    <div className="add-v-form-row">
-                        <div className="add-v-form-group">
+                    {/* Row 5 — Vendor Prefix (readonly) / Expiry */}
+                    <div className="vd-row">
+                        <div className="vd-group">
                             <label>Vendor Prefix</label>
-                            <input type="text" value={vendorPrefix} readOnly />
+                            <div className="vd-readonly-wrap">
+                                <input type="text" value={vendorPrefix} readOnly />
+                                <span className="vd-readonly-tag">READ ONLY</span>
+                            </div>
                         </div>
 
-                        <div className="add-v-form-group">
+                        <div className="vd-group">
                             <label>Account Validity Till</label>
                             <input
                                 type="date"
                                 value={expiryDate}
-                                onChange={(e) => setExpiryDate(e.target.value)}
-                                className={errors.expiryDate ? "add-v-input-error" : ""}
+                                onChange={e => { setExpiryDate(e.target.value); clearError("expiryDate"); }}
+                                className={errors.expiryDate ? "vd-input-err" : ""}
                             />
-                            {errors.expiryDate && <div className="add-v-error-text">{errors.expiryDate}</div>}
+                            {errors.expiryDate && <span className="vd-err">{errors.expiryDate}</span>}
                         </div>
                     </div>
 
-                    
-                    <div className="add-v-footer">
-                        <button type="button" className="add-v-btn-cancel" onClick={onClose}>
-                            Cancel
-                        </button>
-                        <button type="submit" className="add-v-btn-save">
-                            Update Vendor
+                    {/* ── FOOTER ── */}
+                    <div className="vd-footer">
+                        <button type="button" className="vd-btn-cancel" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="vd-btn-save" disabled={loading}>
+                            {loading ? "Updating…" : "Update Vendor"}
                         </button>
                     </div>
+
                 </form>
             </div>
         </div>

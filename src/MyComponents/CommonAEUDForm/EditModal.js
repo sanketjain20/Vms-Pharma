@@ -1,41 +1,26 @@
 import React from "react";
-import "../../Styles/ModuleModal.css";
+import ReactDOM from "react-dom";
 
-// Import all module forms
-import ProductEdit from "../ProductComponent/ProductEdit";
-import VendorEdit from "../VendorComponent/VendorEdit";
-import InventoryEdit from "../InventoryComponent/InventoryEdit";
-import SalesEdit from "../SalesComponent/SalesEdit";
+import ProductEdit     from "../ProductComponent/ProductEdit";
+import VendorEdit      from "../VendorComponent/VendorEdit";
+import InventoryEdit   from "../InventoryComponent/InventoryEdit";
+import SalesEdit       from "../SalesComponent/SalesEdit";
 import ProductTypeEdit from "../ProductTypeComponent/ProductTypeEdit";
-import RoleEdit from "../RoleComponent/RoleEdit";
+import RoleEdit        from "../RoleComponent/RoleEdit";
 
 export default function EditModal({ isOpen, onClose, moduleName, uKey, onSubmit }) {
   if (!isOpen) return null;
 
-  const renderForm = () => {
-    switch (moduleName) {
-      case "Product":
-        return <ProductEdit uKey={uKey} onClose={onClose} onSubmit={onSubmit} />;
-      case "Vendor":
-        return <VendorEdit uKey={uKey} onClose={onClose} onSubmit={onSubmit} />;
-      case "Inventory":
-        return <InventoryEdit uKey={uKey} onClose={onClose} onSubmit={onSubmit} />;
-      case "Sales":
-        return <SalesEdit uKey={uKey} onClose={onClose} onSubmit={onSubmit} />;
-      case "Product Type":
-        return <ProductTypeEdit uKey={uKey} onSubmit={onSubmit} onClose={onClose} />;
-      case "Roles":
-        return <RoleEdit uKey={uKey} onSubmit={onSubmit} onClose={onClose} />;
-      default:
-        return <p>No form available for {moduleName}</p>;
-    }
-  };
+  let content = null;
+  switch (moduleName) {
+    case "Product":      content = <ProductEdit     uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
+    case "Vendor":       content = <VendorEdit      uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
+    case "Inventory":    content = <InventoryEdit   uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
+    case "Sales":        content = <SalesEdit       uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
+    case "Product Type": content = <ProductTypeEdit uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
+    case "Roles":        content = <RoleEdit        uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
+    default:             return null;
+  }
 
-  return (
-
-
-    <div className="modal-body">
-      {renderForm()}
-    </div>
-  );
+  return ReactDOM.createPortal(content, document.body);
 }

@@ -5,15 +5,15 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 export default function Role() {
 const columns = [
-  { header: "Role Code", field: "roleCode", width: "130px" },
-  { header: "Role Name", field: "roleName", width: "150px" },
+  { header: "Role Code", field: "roleCode", width: "240px" },
+  { header: "Role Name", field: "roleName", width: "260px" },
   { 
     header: "Permissions", 
     field: "permissions", 
-    width: "400px",
+    width: "500px",
     render: (row) => row.permissions.map(p => `${p.module}:${p.action}`).join(", ")
   },
-  { header: "Actions", field: "Action", width: "120px" },
+  { header: "Actions", field: "Action", width: "160px" },
 ];
 
 

@@ -1,205 +1,471 @@
-/* ============================
+/* =========================
+   FONTS
+========================= */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Oxanium:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+/* =========================
+   VARIABLES
+========================= */
+:root {
+  --vv-accent:      #3b82f6;
+  --vv-accent-dim:  rgba(59,130,246,0.1);
+  --vv-surface:     rgba(4,5,11,0.97);
+  --vv-border:      rgba(255,255,255,0.045);
+  --vv-border-mid:  rgba(255,255,255,0.08);
+  --vv-border-hi:   rgba(255,255,255,0.13);
+  --vv-text-1:      #e4e6f0;
+  --vv-text-2:      #f0f1f7;
+  --vv-text-3:      #f1f2f7;
+  --vv-success:     #10b981;
+  --vv-danger:      #ef4444;
+  --vv-font-d:      'Oxanium', sans-serif;
+  --vv-font-b:      'Space Grotesk', sans-serif;
+  --vv-font-m:      'JetBrains Mono', monospace;
+  --vv-r-sm:        8px;
+  --vv-r-md:        12px;
+  --vv-r-lg:        18px;
+  --vv-r-xl:        22px;
+  --vv-ease-out:    cubic-bezier(0.16,1,0.3,1);
+  --vv-ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+  --vv-tr:          0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* =========================
    BACKDROP
-============================ */
-.view-v-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
+========================= */
+.vv-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.86);
+  backdrop-filter: blur(14px) saturate(0.4);
+  -webkit-backdrop-filter: blur(14px) saturate(0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: vvOverlayIn 0.22s ease both;
 }
 
-/* ============================
-   CONTAINER
-============================ */
-.view-v-container {
-    background: #c5d2e0;
-    width: 780px;
-    max-width: 95%;
-    max-height: 500px;
-    border-radius: 10px;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    animation: view-v-fadeIn 0.25s ease-in-out;
+@keyframes vvOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* ============================
+/* =========================
+   MODAL
+========================= */
+.vv-modal {
+  position: relative;
+  width: 820px;
+  max-width: 95vw;
+  max-height: 88vh;
+  background: var(--vv-surface);
+  border: 1px solid var(--vv-border-mid);
+  border-radius: var(--vv-r-xl);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--vv-font-b);
+  color: var(--vv-text-1);
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03),
+    0 60px 120px rgba(0,0,0,1),
+    0 24px 60px rgba(0,0,0,0.85),
+    0 0 50px rgba(59,130,246,0.04);
+
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  animation: vvModalIn 0.42s var(--vv-ease-spring) both;
+}
+
+@keyframes vvModalIn {
+  from {
+    opacity: 0;
+    transform: perspective(1200px) rotateX(16deg) rotateY(-4deg) translateY(40px) scale(0.87);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1200px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1);
+  }
+}
+
+/* =========================
+   TOP BEAM + CORNERS
+========================= */
+.vv-top-beam {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 5%,
+    rgba(59,130,246,0.5) 30%,
+    rgba(147,197,253,0.8) 50%,
+    rgba(59,130,246,0.5) 70%,
+    transparent 95%
+  );
+  border-radius: var(--vv-r-xl) var(--vv-r-xl) 0 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.vv-corner {
+  position: absolute;
+  width: 14px; height: 14px;
+  border-color: rgba(59,130,246,0.28);
+  border-style: solid;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.vv-tl { top:0; left:0;   border-width:1px 0 0 1px; border-radius:var(--vv-r-xl) 0 0 0; }
+.vv-tr { top:0; right:0;  border-width:1px 1px 0 0; border-radius:0 var(--vv-r-xl) 0 0; }
+.vv-bl { bottom:0; left:0;  border-width:0 0 1px 1px; border-radius:0 0 0 var(--vv-r-xl); }
+.vv-br { bottom:0; right:0; border-width:0 1px 1px 0; border-radius:0 0 var(--vv-r-xl) 0; }
+
+/* =========================
    HEADER
-============================ */
-.view-v-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    background: #1f2937;
-    color: #ffffff;
-    flex-shrink: 0;
-}
-
-.view-v-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-}
-
-.view-v-close-btn {
-    margin-left: 12px;
-  background: white;
-  color: black;
-  border-radius: 10px;
-  cursor: pointer;
+========================= */
+.vv-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 28px 16px;
+  border-bottom: 1px solid var(--vv-border);
+  background: rgba(0,0,0,0.35);
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.vv-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Eyebrow */
+.vv-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--vv-font-m);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--vv-accent);
+  background: rgba(59,130,246,0.07);
+  border: 1px solid rgba(59,130,246,0.18);
+  padding: 4px 11px;
+  border-radius: 100px;
+  width: fit-content;
+}
+
+.vv-eyebrow-dot {
+  width: 5px; height: 5px;
+  background: var(--vv-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 5px var(--vv-accent);
+  animation: vvDotBlink 2s ease-in-out infinite;
+}
+
+@keyframes vvDotBlink {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.3; }
+}
+
+/* Title */
+.vv-title {
+  font-family: var(--vv-font-d);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--vv-text-1);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vv-title-acc {
+  color: var(--vv-accent);
+  opacity: 0.4;
+  font-weight: 300;
+  font-family: var(--vv-font-m);
+  font-size: 14px;
+}
+
+/* Close button */
+.vv-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: rgba(239,68,68,0.07);
+  border: 1px solid rgba(239,68,68,0.18);
+  border-radius: var(--vv-r-sm);
+  color: rgba(252,165,165,0.8);
+  font-family: var(--vv-font-m);
+  font-size: 10px;
   font-weight: 600;
-  transition: all 0.2s;
-  width:40px;
-  padding: 7px;
-
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all var(--vv-tr);
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
-.view-v-close-btn:hover {
-    color: #f87171;
+.vv-close:hover {
+  background: rgba(239,68,68,0.14);
+  border-color: rgba(239,68,68,0.4);
+  color: #fca5a5;
+  transform: translateY(-1px);
 }
 
-/* ============================
-   FORM (SCROLLABLE)
-============================ */
-.view-v-form {
-    padding: 18px;
-    overflow-y: auto;
-    flex: 1;
+.vv-close:active { transform: translateY(0); }
+
+/* =========================
+   BODY
+========================= */
+.vv-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 28px 20px;
+  position: relative;
+  z-index: 2;
 }
 
-/* Scrollbar styling */
-.view-v-form::-webkit-scrollbar {
-    width: 6px;
+.vv-body::-webkit-scrollbar { width: 3px; }
+.vv-body::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.2); border-radius: 4px; }
+
+/* =========================
+   LOADING
+========================= */
+.vv-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--vv-font-m);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--vv-text-2);
+  padding: 30px 0;
 }
 
-.view-v-form::-webkit-scrollbar-thumb {
-    background-color: #9ca3af;
-    border-radius: 6px;
+.vv-loader-ring {
+  position: relative;
+  width: 22px; height: 22px;
+  flex-shrink: 0;
 }
 
-.view-v-form::-webkit-scrollbar-track {
-    background: transparent;
+.vv-loader-ring div {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  animation: vvRing 1.2s cubic-bezier(0.5,0,0.5,1) infinite;
 }
 
-/* ============================
-   FORM ROWS
-============================ */
-.view-v-form-row {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 14px;
+.vv-loader-ring div:nth-child(1) { border-top-color: var(--vv-accent); animation-delay:-0.45s; }
+.vv-loader-ring div:nth-child(2) { border-right-color: rgba(59,130,246,0.4); animation-delay:-0.3s; inset:3px; }
+.vv-loader-ring div:nth-child(3) { border-bottom-color: rgba(59,130,246,0.18); animation-delay:-0.15s; inset:6px; }
+.vv-loader-ring div:nth-child(4) { border-left-color: rgba(59,130,246,0.07); inset:9px; }
+
+@keyframes vvRing {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.view-v-form-group {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+/* =========================
+   EMPTY STATE
+========================= */
+.vv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 0;
+  font-family: var(--vv-font-m);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  color: var(--vv-text-2);
 }
 
-.view-v-form-group.full-width {
-    flex: 100%;
+/* =========================
+   STATUS ROW
+========================= */
+.vv-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  animation: vvFadeUp 0.3s var(--vv-ease-out) both;
 }
 
-/* ============================
-   LABELS
-============================ */
-.view-v-form-group label {
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 5px;
-    color: #000000;
+@keyframes vvFadeUp {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 
-/* ============================
-   INPUTS (READ ONLY)
-============================ */
-.view-v-form-group input,
-.view-v-form-group textarea {
-    padding: 9px 10px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-    font-size: 14px;
-    background-color: #f9fafb;
-    color: #111827;
-    cursor: not-allowed;
+.vv-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 13px;
+  border-radius: 100px;
+  font-family: var(--vv-font-m);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.view-v-form-group textarea {
-    resize: none;
+.vv-active {
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.28);
+  color: #6ee7b7;
 }
 
-/* ============================
-   STATUS COLORS
-============================ */
-.view-v-status-active {
-    color: #16a34a;
-    font-weight: 600;
+.vv-inactive {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.28);
+  color: #fca5a5;
 }
 
-.view-v-status-disabled {
-    color: #dc2626;
-    font-weight: 600;
+.vv-status-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 5px currentColor;
+  animation: vvDotBlink 2s ease-in-out infinite;
 }
 
-/* ============================
+.vv-meta-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--vv-font-m);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: var(--vv-text-3);
+}
+
+/* =========================
+   FIELDS GRID
+========================= */
+.vv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.vv-full {
+  grid-column: 1 / -1;
+}
+
+/* =========================
+   FIELD
+========================= */
+.vv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  animation: vvFieldIn 0.3s var(--vv-ease-out) both;
+}
+
+@keyframes vvFieldIn {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.vv-field-label {
+  font-family: var(--vv-font-m);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--vv-text-2);
+}
+
+.vv-field-value-wrap {
+  position: relative;
+}
+
+/* Inputs / textarea */
+.vv-field-input {
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--vv-border);
+  border-radius: var(--vv-r-sm);
+  color: var(--vv-text-2);
+  font-family: var(--vv-font-b);
+  font-size: 13px;
+  cursor: default;
+  outline: none;
+  box-sizing: border-box;
+  resize: none;
+  transition: border-color var(--vv-tr);
+}
+
+.vv-field-input:focus {
+  border-color: var(--vv-border-mid);
+}
+
+textarea.vv-field-input {
+  resize: none;
+}
+
+/* =========================
    FOOTER
-============================ */
-.view-v-footer {
-    display: flex;
-    justify-content: flex-end;
-    padding: 12px 0 0;
-    flex-shrink: 0;
+========================= */
+.vv-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 13px 28px;
+  border-top: 1px solid var(--vv-border);
+  background: rgba(0,0,0,0.35);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
-.view-v-btn-close {
-    padding: 8px 18px;
-    background-color: #374151;
-    border: none;
-    border-radius: 6px;
-    color: #ffffff;
-    font-size: 14px;
-    cursor: pointer;
+.vv-btn-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--vv-border-mid);
+  border-radius: var(--vv-r-sm);
+  color: var(--vv-text-2);
+  font-family: var(--vv-font-m);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all var(--vv-tr);
 }
 
-.view-v-btn-close:hover {
-    background-color: #1f2937;
+.vv-btn-close:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: var(--vv-border-hi);
+  color: var(--vv-text-1);
+  transform: translateY(-1px);
 }
 
-/* ============================
-   LOADING / EMPTY
-============================ */
-.view-v-loading {
-    padding: 20px;
-    text-align: center;
-    font-size: 15px;
-    color: #374151;
-}
+.vv-btn-close:active { transform: translateY(0); }
 
-/* ============================
-   ANIMATION
-============================ */
-@keyframes view-v-fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* ============================
+/* =========================
    RESPONSIVE
-============================ */
+========================= */
 @media (max-width: 640px) {
-    .view-v-form-row {
-        flex-direction: column;
-    }
+  .vv-modal  { width: 96vw; }
+  .vv-grid   { grid-template-columns: 1fr; }
+  .vv-full   { grid-column: 1; }
+  .vv-header { padding: 16px 18px 14px; }
+  .vv-body   { padding: 16px 18px; }
+  .vv-footer { padding: 12px 18px; }
 }

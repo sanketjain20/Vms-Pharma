@@ -1,0 +1,42 @@
+<svg width="680" height="460" viewBox="0 0 680 460" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <style>@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&amp;display=swap');</style>
+  <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+    <stop offset="0%" stop-color="#2e2c2a"/><stop offset="55%" stop-color="#1a1917"/><stop offset="100%" stop-color="#0d0c0b"/>
+  </radialGradient>
+  <linearGradient id="silverWing" x1="100%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#d8d8d8"/><stop offset="20%" stop-color="#ffffff"/><stop offset="45%" stop-color="#a0a0a0"/><stop offset="70%" stop-color="#e0e0e0"/><stop offset="100%" stop-color="#686868"/>
+  </linearGradient>
+  <linearGradient id="goldWing" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#b07818"/><stop offset="25%" stop-color="#f0c050"/><stop offset="50%" stop-color="#c89030"/><stop offset="75%" stop-color="#f8d870"/><stop offset="100%" stop-color="#906010"/>
+  </linearGradient>
+  <linearGradient id="centerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#d0d0d0"/><stop offset="40%" stop-color="#f0f0f0"/><stop offset="100%" stop-color="#808080"/>
+  </linearGradient>
+  <linearGradient id="textGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#d0d0d0"/><stop offset="50%" stop-color="#ffffff"/><stop offset="100%" stop-color="#909090"/>
+  </linearGradient>
+  <filter id="shadow"><feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000" flood-opacity="0.85"/></filter>
+  <filter id="glow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="glowGold"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="680" height="460" fill="url(#bg)"/>
+<path d="M 340,300 C 325,285 305,262 280,232 C 258,205 228,172 198,145 C 174,124 148,108 122,105 C 108,104 98,110 96,118 C 115,122 138,138 158,160 C 182,187 200,220 212,252 C 220,272 226,290 230,305 C 268,298 305,296 340,300 Z" fill="url(#silverWing)" filter="url(#shadow)"/>
+<path d="M 340,300 C 312,272 278,232 248,195" fill="none" stroke="#111" stroke-width="2" opacity="0.55"/>
+<path d="M 340,300 C 308,278 272,245 242,212" fill="none" stroke="#111" stroke-width="1.5" opacity="0.45"/>
+<path d="M 340,300 C 300,282 262,258 232,235" fill="none" stroke="#111" stroke-width="1.2" opacity="0.4"/>
+<path d="M 340,300 C 325,285 305,262 280,232 C 258,205 228,172 198,145 C 174,124 148,108 122,105" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.4" filter="url(#glow)"/>
+<path d="M 340,300 C 355,285 375,262 400,232 C 422,205 452,172 482,145 C 506,124 532,108 558,105 C 572,104 582,110 584,118 C 565,122 542,138 522,160 C 498,187 480,220 468,252 C 460,272 454,290 450,305 C 412,298 375,296 340,300 Z" fill="url(#goldWing)" filter="url(#shadow)"/>
+<path d="M 340,300 C 368,272 402,232 432,195" fill="none" stroke="#111" stroke-width="2" opacity="0.55"/>
+<path d="M 340,300 C 372,278 408,245 438,212" fill="none" stroke="#111" stroke-width="1.5" opacity="0.45"/>
+<path d="M 340,300 C 380,282 418,258 448,235" fill="none" stroke="#111" stroke-width="1.2" opacity="0.4"/>
+<path d="M 340,300 C 355,285 375,262 400,232 C 422,205 452,172 482,145 C 506,124 532,108 558,105" fill="none" stroke="#f8d870" stroke-width="1.2" opacity="0.5" filter="url(#glowGold)"/>
+<path d="M 322,258 C 324,240 330,218 340,205 C 350,218 356,240 358,258 C 358,272 352,290 340,308 C 328,290 322,272 322,258 Z" fill="url(#centerGrad)" filter="url(#glow)"/>
+<line x1="340" y1="207" x2="340" y2="306" stroke="#1a1917" stroke-width="1.5" opacity="0.5"/>
+<ellipse cx="336" cy="235" rx="5" ry="18" fill="#ffffff" opacity="0.18"/>
+<text x="343" y="392" font-family="'Montserrat','Segoe UI',Arial,sans-serif" font-weight="300" font-size="15" letter-spacing="16" text-anchor="middle" fill="#000" opacity="0.5">UDYORA</text>
+<text x="340" y="389" font-family="'Montserrat','Segoe UI',Arial,sans-serif" font-weight="300" font-size="15" letter-spacing="16" text-anchor="middle" fill="url(#textGrad)">UDYORA</text>
+<line x1="158" y1="400" x2="268" y2="400" stroke="#777" stroke-width="0.5" opacity="0.55"/>
+<line x1="414" y1="400" x2="524" y2="400" stroke="#777" stroke-width="0.5" opacity="0.55"/>
+<circle cx="340" cy="400" r="1.5" fill="#c89030"/>
+</svg>
