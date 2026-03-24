@@ -251,7 +251,6 @@ label {
   letter-spacing: 0.13em !important;
   text-transform: uppercase !important;
   color: var(--san-text-2) !important;
-  margin: 0 !important;
 }
 
 input,

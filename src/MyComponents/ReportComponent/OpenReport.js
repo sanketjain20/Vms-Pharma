@@ -279,6 +279,8 @@ export default function OpenReport() {
       [ReportEntity.ProductType]: "http://localhost:8080/api/ProductType/GetFilterData",
       [ReportEntity.Inventory]:   "http://localhost:8080/api/Inventory/InvReportFilterData",
       [ReportEntity.Sales]:       "http://localhost:8080/api/Sales/SalesReportFilterData",
+      [ReportEntity.Revenue]:     "http://localhost:8080/api/Reports/RevenueReportFilterData",
+      [ReportEntity.StockMovement]: "http://localhost:8080/api/Inventory/StockMovReportFilterData",
     };
     if (!map[moduleId]) return;
     fetch(map[moduleId], { credentials: "include" })
