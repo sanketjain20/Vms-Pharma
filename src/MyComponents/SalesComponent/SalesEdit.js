@@ -2,67 +2,32 @@ import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/Sales/AddSales.css";
 
-/* ─────────────────────────────────────────
-   GST RATES
-───────────────────────────────────────── */
 const GST_RATES = [0, 5, 12, 18, 28];
 
-/* ─────────────────────────────────────────
-   SEARCHABLE DROPDOWN (reused component)
-───────────────────────────────────────── */
 const SearchableDropdown = ({
   label, options, selectedId, onSelect,
   search, setSearch, open, setOpen,
   placeholder, dropdownRef, error
 }) => {
-  // Loose comparison — handles number vs string IDs
   const selectedOption = options.find(o => String(o.id) === String(selectedId));
   const displayValue   = open ? search : (selectedOption?.name ?? "");
-
-  const filtered = options.filter(o =>
-    o.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleOpen = (e) => {
-    e.stopPropagation();
-    if (!open) setSearch(""); // reset filter when opening
-    setOpen(true);
-  };
-
+  const filtered = options.filter(o => o.name.toLowerCase().includes(search.toLowerCase()));
+  const handleOpen = (e) => { e.stopPropagation(); if (!open) setSearch(""); setOpen(true); };
   return (
     <div className="custom-select" ref={dropdownRef}>
       <label>{label}</label>
-      <div
-        className={`select-box ${open ? "active" : ""}`}
-        onClick={handleOpen}
-      >
-        <input
-          type="text"
-          value={displayValue}
-          placeholder={placeholder}
-          onChange={e => setSearch(e.target.value)}
-          onClick={handleOpen}
-          className="select-input"
-        />
+      <div className={`select-box ${open ? "active" : ""}`} onClick={handleOpen}>
+        <input type="text" value={displayValue} placeholder={placeholder}
+          onChange={e => setSearch(e.target.value)} onClick={handleOpen} className="select-input" />
         {open && (
           <ul className="options scroll-options">
             {filtered.map(o => (
-              <li
-                key={o.id}
-                onMouseDown={e => {
-                  e.preventDefault();
-                  onSelect(o.id);
-                  setOpen(false);
-                  setSearch("");
-                }}
+              <li key={o.id}
+                onMouseDown={e => { e.preventDefault(); onSelect(o.id); setOpen(false); setSearch(""); }}
                 style={String(o.id) === String(selectedId) ? { color: "#93c5fd", background: "rgba(59,130,246,0.1)" } : {}}
-              >
-                {o.name}
-              </li>
+              >{o.name}</li>
             ))}
-            {filtered.length === 0 && (
-              <li style={{ color: "#525667", fontStyle: "italic" }}>No results found</li>
-            )}
+            {filtered.length === 0 && <li style={{ color: "#525667", fontStyle: "italic" }}>No results found</li>}
           </ul>
         )}
       </div>
@@ -72,74 +37,82 @@ const SearchableDropdown = ({
 };
 
 export default function SalesEdit({ uKey, onClose, onSubmit }) {
+  // ── Existing state ────────────────────────────────────────────────────────
   const [productTypes, setProductTypes] = useState([]);
   const [products, setProducts]         = useState([]);
   const [allProducts, setAllProducts]   = useState([]);
   const lastLoadedType                  = useRef(null);
   const [inventory, setInventory]       = useState(null);
-
   const [selectedType, setSelectedType]       = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
-
-  const [quantity, setQuantity]   = useState("");
-  const [taxInput, setTaxInput]   = useState("");
-  const [taxType, setTaxType]     = useState("PERCENT");
-
-  const [manualPrice, setManualPrice] = useState("");
-  const [lineItems, setLineItems]     = useState([]);
-  const [editIndex, setEditIndex]     = useState(null);
-
+  const [quantity, setQuantity]     = useState("");
+  const [taxInput, setTaxInput]     = useState("");
+  const [taxType, setTaxType]       = useState("PERCENT");
+  const [manualPrice, setManualPrice]   = useState("");
+  const [lineItems, setLineItems]       = useState([]);
+  const [editIndex, setEditIndex]       = useState(null);
   const [discountInput, setDiscountInput] = useState("0");
   const [discountType, setDiscountType]   = useState("FLAT");
   const [billingMode, setBillingMode]     = useState("CASH");
   const [saleId, setSaleId]               = useState(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [paymentType, setPaymentType]     = useState("FULL");
   const [amountPaid, setAmountPaid]       = useState(0);
   const [remainingAmount, setRemainingAmount] = useState(0);
-
-  const [errors, setErrors]         = useState({});
-  const [activeTab, setActiveTab]   = useState("Existing");
+  const [errors, setErrors]           = useState({});
+  const [activeTab, setActiveTab]     = useState("Existing");
   const [originalItems, setOriginalItems] = useState([]);
-
-  const [typeSearch, setTypeSearch]             = useState("");
-  const [productSearch, setProductSearch]       = useState("");
-  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [typeSearch, setTypeSearch]                   = useState("");
+  const [productSearch, setProductSearch]             = useState("");
+  const [typeDropdownOpen, setTypeDropdownOpen]       = useState(false);
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);
-
   const typeDropdownRef    = useRef(null);
   const productDropdownRef = useRef(null);
+
+  // ── NEW state ─────────────────────────────────────────────────────────────
+  const [retailers, setRetailers]           = useState([]);
+  const [selectedRetailer, setSelectedRetailer] = useState("");
+  const [retailerSearch, setRetailerSearch]     = useState("");
+  const [retailerDropdownOpen, setRetailerDropdownOpen] = useState(false);
+  const retailerDropdownRef = useRef(null);
+  const [creditPaymentType, setCreditPaymentType] = useState("PAID");
+  const [dueDate, setDueDate]               = useState("");
+  const [availableBatches, setAvailableBatches] = useState([]);
+  const [selectedBatchId, setSelectedBatchId]   = useState("");
 
   const safeJson = async (res) => {
     try { const text = await res.text(); return text ? JSON.parse(text) : null; }
     catch { return null; }
   };
 
-  /* ── FETCH ALL PRODUCTS ── */
+  /* ── FETCH RETAILERS ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/Product/GetAllProduct", {
-      method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
-    })
+    fetch("http://localhost:8080/api/Retailer/Dropdown", { method: "GET", credentials: "include" })
+      .then(r => r.json())
+      .then(json => setRetailers(
+        (json?.data ?? []).map(r => ({ id: r.id, name: r.shopName + " · " + r.ownerName }))
+      ))
+      .catch(() => {});
+  }, []);
+
+  /* ── FETCH ALL PRODUCTS — unchanged ── */
+  useEffect(() => {
+    fetch("http://localhost:8080/api/Product/GetAllProduct", { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(json => {
         const dataObj = json?.data;
-        const list = Array.isArray(dataObj) ? dataObj
-          : typeof dataObj === "object" ? Object.values(dataObj).find(v => Array.isArray(v)) || [] : [];
+        const list = Array.isArray(dataObj) ? dataObj : typeof dataObj === "object" ? Object.values(dataObj).find(v => Array.isArray(v)) || [] : [];
         setAllProducts(list); setProducts(list);
-      })
-      .catch(() => { setAllProducts([]); setProducts([]); });
+      }).catch(() => { setAllProducts([]); setProducts([]); });
   }, []);
 
-  /* ── FETCH PRODUCT TYPES ── */
+  /* ── FETCH PRODUCT TYPES — unchanged ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/ProductType/GetAllProductType", {
-      method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
-    })
+    fetch("http://localhost:8080/api/ProductType/GetAllProductType", { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
       .then(safeJson)
       .then(json => { const list = json?.data?.productTypes ?? []; setProductTypes(Array.isArray(list) ? list : []); });
   }, []);
 
-  /* ── FETCH SALE ── */
+  /* ── FETCH SALE — updated to load new fields ── */
   useEffect(() => { if (uKey) fetchSaleByUkey(); }, [uKey]);
 
   const fetchSaleByUkey = () => {
@@ -160,25 +133,42 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           sellingPrice: i.sellingPrice,
           taxAmount: i.taxAmount,
           totalAmount: i.sellingPrice * i.quantity + i.taxAmount,
+          // NEW — load existing batch snapshot data
+          batchId: i.batchId || null,
+          batchNumber: i.batchNumberSnapshot || "AUTO",
+          expiryDate: i.expiryDateSnapshot || "",
         })));
         setDiscountInput(sale.totalDiscount || 0);
         setDiscountType("FLAT");
         setBillingMode(sale.billingMode || "CASH");
         setAmountPaid(sale.amountPaid || 0);
         setRemainingAmount(sale.remainingAmount || 0);
+        // NEW — load existing retailer + payment fields
+        if (sale.retailerId) setSelectedRetailer(String(sale.retailerId));
+        setCreditPaymentType(sale.paymentType || "PAID");
+        setDueDate(sale.dueDate || "");
       });
   };
 
-  /* ── TYPE CHANGE ── */
+  /* ── FETCH BATCHES when product selected ── */
+  useEffect(() => {
+    if (!selectedProduct) { setAvailableBatches([]); setSelectedBatchId(""); return; }
+    fetch(`http://localhost:8080/api/Sales/GetAvailableBatches/${selectedProduct}`, { method: "GET", credentials: "include" })
+      .then(r => r.json())
+      .then(json => { if (json?.status === 200) setAvailableBatches(json.data ?? []); else setAvailableBatches([]); })
+      .catch(() => setAvailableBatches([]));
+  }, [selectedProduct]);
+
   const handleTypeChange = (e) => {
     const typeId = e.target.value;
     setSelectedType(typeId); setSelectedProduct(""); setInventory(null); setErrors({});
+    setAvailableBatches([]); setSelectedBatchId("");
     if (!typeId) { setProducts(allProducts); return; }
     fetch(`http://localhost:8080/api/Product/GetProdByProdId/${typeId}`, { method: "GET", credentials: "include" })
       .then(safeJson).then(json => setProducts(json?.data ?? []));
   };
 
-  /* ── AUTO SET TYPE WHEN PRODUCT CHANGES ── */
+  /* ── AUTO SET TYPE — unchanged ── */
   useEffect(() => {
     if (!selectedProduct) return;
     fetch(`http://localhost:8080/api/ProductType/GetProdTypeByProductId/${selectedProduct}`, { credentials: "include" })
@@ -197,10 +187,10 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
       }).catch(() => {});
   }, [selectedProduct]);
 
-  /* ── PRODUCT CHANGE ── */
   const handleProductChange = (e) => {
     const prodId = e.target.value;
     setSelectedProduct(prodId); setInventory(null); setErrors({});
+    setAvailableBatches([]); setSelectedBatchId("");
     if (!prodId) return;
     fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${prodId}`, { method: "GET", credentials: "include" })
       .then(safeJson).then(json => setInventory(json?.data || null));
@@ -211,12 +201,12 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     const handler = (e) => {
       if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) { setTypeDropdownOpen(false); setTypeSearch(""); }
       if (productDropdownRef.current && !productDropdownRef.current.contains(e.target)) { setProductDropdownOpen(false); setProductSearch(""); }
+      if (retailerDropdownRef.current && !retailerDropdownRef.current.contains(e.target)) { setRetailerDropdownOpen(false); setRetailerSearch(""); }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* ── ADD / UPDATE ITEM ── */
   const addOrUpdateItem = () => {
     let tempErrors = {};
     if (!selectedType) tempErrors.selectedType = "Select product type";
@@ -239,6 +229,14 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
       sellingPrice: price,
       taxAmount,
       totalAmount: price * quantity + taxAmount,
+      // NEW
+      batchId: selectedBatchId ? parseInt(selectedBatchId) : null,
+      batchNumber: selectedBatchId
+        ? availableBatches.find(b => String(b.batchId) === String(selectedBatchId))?.batchNumber || "AUTO"
+        : "AUTO",
+      expiryDate: selectedBatchId
+        ? availableBatches.find(b => String(b.batchId) === String(selectedBatchId))?.expiryDate || ""
+        : "",
     };
 
     let updated = [...lineItems];
@@ -253,6 +251,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setSelectedType(""); setSelectedProduct(""); setQuantity("");
     setTaxInput(""); setManualPrice(""); setInventory(null);
     setTaxType("PERCENT"); setErrors({});
+    setAvailableBatches([]); setSelectedBatchId("");
   };
 
   const editItem = async (index) => {
@@ -260,7 +259,8 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setEditIndex(index);
     setSelectedProduct(it.productId); setQuantity(it.quantity);
     setManualPrice(it.sellingPrice);  setTaxInput(it.taxAmount);
-    setTaxType("FLAT");               setErrors({});
+    setTaxType("FLAT"); setErrors({});
+    setSelectedBatchId(it.batchId ? String(it.batchId) : "");
     const iRes  = await fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET", credentials: "include" });
     const iJson = await safeJson(iRes);
     if (iJson?.data) setInventory(iJson.data);
@@ -277,39 +277,46 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   useEffect(() => {
     const net = getNetAmount().toFixed(2);
-    if (paymentType === "FULL") { setAmountPaid(net); setRemainingAmount(0); }
+    if (creditPaymentType === "PAID") { setAmountPaid(net); setRemainingAmount(0); }
+    else if (creditPaymentType === "CREDIT") { setAmountPaid(0); setRemainingAmount(net); }
     else {
       const paid = parseFloat(amountPaid || 0);
       const rem  = net - paid;
       setRemainingAmount(rem < 0 ? 0 : rem);
     }
-  }, [paymentType, amountPaid, lineItems, discountInput]);
+  }, [creditPaymentType, amountPaid, lineItems, discountInput]);
 
   const updateSale = () => {
     let tempErrors = {};
     if (lineItems.length === 0) tempErrors.lineItems = "Add at least one item";
     if (!billingMode) tempErrors.billingMode = "Select billing mode";
     if (discountInput < 0) tempErrors.discountInput = "Discount cannot be negative";
+    if ((creditPaymentType === "CREDIT" || creditPaymentType === "PARTIAL") && !dueDate)
+      tempErrors.dueDate = "Due date is required";
     const net = getNetAmount();
-    if (!amountPaid || amountPaid <= 0) tempErrors.amountPaid = "Enter valid amount paid";
+    if (creditPaymentType !== "CREDIT" && (!amountPaid || amountPaid <= 0)) tempErrors.amountPaid = "Enter valid amount paid";
     if (parseFloat(amountPaid) > net) tempErrors.amountPaid = "Amount paid cannot exceed net amount";
     setErrors(tempErrors);
     if (Object.keys(tempErrors).length > 0) return;
 
     fetch(`http://localhost:8080/api/Sales/UpdateSales/${saleId}`, {
-      method: "PUT",
-      credentials: "include",
+      method: "PUT", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         totalDiscount: parseFloat(discountInput || 0),
         billingMode,
         amountPaid: parseFloat(amountPaid),
         remainingAmount: parseFloat(remainingAmount),
+        // NEW fields
+        retailerId: selectedRetailer ? parseInt(selectedRetailer) : null,
+        paymentType: creditPaymentType,
+        dueDate: dueDate || null,
         items: lineItems.map(it => ({
           productId: it.productId,
           quantity: it.quantity,
           sellingPrice: it.sellingPrice,
           taxAmount: it.taxAmount,
+          batchId: it.batchId || null,
         })),
       }),
     })
@@ -329,20 +336,12 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
         {/* ── HEADER ── */}
         <div className="sales-header">
           <div className="sales-header-left">
-            <div className="sales-eyebrow">
-              <span className="sales-eyebrow-dot" />
-              EDIT TRANSACTION
-            </div>
+            <div className="sales-eyebrow"><span className="sales-eyebrow-dot" />EDIT TRANSACTION</div>
             <h3>Edit Sale {invoiceNumber && `· ${invoiceNumber}`}</h3>
           </div>
-
           <div className="tabs-header">
             {["Existing", "Product", "Billing"].map(tab => (
-              <button
-                key={tab}
-                className={activeTab === tab ? "active-tab" : ""}
-                onClick={() => setActiveTab(tab)}
-              >
+              <button key={tab} className={activeTab === tab ? "active-tab" : ""} onClick={() => setActiveTab(tab)}>
                 {tab === "Existing" ? "Original Items" : tab}
               </button>
             ))}
@@ -350,17 +349,12 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           </div>
         </div>
 
-        {/* ══════════════ EXISTING ITEMS TAB ══════════════ */}
+        {/* ══════════════ EXISTING ITEMS TAB — updated with batch columns ══════════════ */}
         {activeTab === "Existing" && (
           <div className="sales-section">
             <h4>Original Line Items</h4>
-
             {originalItems.length === 0 ? (
-              <div style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
-                padding: "32px 0", fontFamily: "var(--sl-font-m)", fontSize: 11,
-                letterSpacing: "0.08em", color: "var(--sl-text-2)",
-              }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "32px 0", fontFamily: "var(--sl-font-m)", fontSize: 11, letterSpacing: "0.08em", color: "var(--sl-text-2)" }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
                   <circle cx="14" cy="14" r="12" stroke="rgba(59,130,246,0.2)" strokeWidth="1.5"/>
                   <path d="M10 14h8" stroke="rgba(59,130,246,0.3)" strokeWidth="1.5" strokeLinecap="round"/>
@@ -373,9 +367,11 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
                   <thead>
                     <tr>
                       <th>Product</th>
+                      <th>Batch No</th>
+                      <th>Expiry</th>
+                      <th>HSN</th>
                       <th>Qty</th>
                       <th>Price (₹)</th>
-                      <th>Line Amt (₹)</th>
                       <th>GST (₹)</th>
                       <th>Total (₹)</th>
                     </tr>
@@ -384,9 +380,11 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
                     {originalItems.map((it, i) => (
                       <tr key={i}>
                         <td>{it.product}</td>
+                        <td style={{ fontFamily: "var(--sl-font-m)", fontSize: 11, color: "#93c5fd" }}>{it.batchNumberSnapshot || "—"}</td>
+                        <td style={{ fontSize: 11 }}>{it.expiryDateSnapshot || "—"}</td>
+                        <td style={{ fontSize: 11, color: "var(--sl-text-2)" }}>{it.hsnCodeSnapshot || "—"}</td>
                         <td>{it.quantity}</td>
                         <td>{it.sellingPrice}</td>
-                        <td>{(it.sellingPrice * it.quantity).toFixed(2)}</td>
                         <td>{it.taxAmount.toFixed(2)}</td>
                         <td>{(it.sellingPrice * it.quantity + it.taxAmount).toFixed(2)}</td>
                       </tr>
@@ -401,33 +399,20 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           </div>
         )}
 
-        {/* ══════════════ PRODUCT TAB ══════════════ */}
+        {/* ══════════════ PRODUCT TAB — updated with batch selection ══════════════ */}
         {activeTab === "Product" && (
           <div className="sales-section">
             <h4>Update Products</h4>
-
             <div className="product-row">
-              <SearchableDropdown
-                label="Product Type"
-                options={productTypes}
-                selectedId={selectedType}
+              <SearchableDropdown label="Product Type" options={productTypes} selectedId={selectedType}
                 onSelect={id => handleTypeChange({ target: { value: id } })}
-                search={typeSearch} setSearch={setTypeSearch}
-                open={typeDropdownOpen} setOpen={setTypeDropdownOpen}
-                placeholder="Select product type"
-                dropdownRef={typeDropdownRef}
-                error={errors.selectedType}
+                search={typeSearch} setSearch={setTypeSearch} open={typeDropdownOpen} setOpen={setTypeDropdownOpen}
+                placeholder="Select product type" dropdownRef={typeDropdownRef} error={errors.selectedType}
               />
-              <SearchableDropdown
-                label="Product"
-                options={products}
-                selectedId={selectedProduct}
+              <SearchableDropdown label="Product" options={products} selectedId={selectedProduct}
                 onSelect={id => handleProductChange({ target: { value: id } })}
-                search={productSearch} setSearch={setProductSearch}
-                open={productDropdownOpen} setOpen={setProductDropdownOpen}
-                placeholder="Select product"
-                dropdownRef={productDropdownRef}
-                error={errors.selectedProduct}
+                search={productSearch} setSearch={setProductSearch} open={productDropdownOpen} setOpen={setProductDropdownOpen}
+                placeholder="Select product" dropdownRef={productDropdownRef} error={errors.selectedProduct}
               />
             </div>
 
@@ -444,22 +429,35 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
               </div>
             ) : null}
 
+            {/* NEW — Batch selection */}
+            {availableBatches.length > 0 && (
+              <div className="inv-box" style={{ flexDirection: "column", gap: 10 }}>
+                <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "var(--sl-text-2)", textTransform: "uppercase", fontFamily: "var(--sl-font-m)" }}>Batch Selection</div>
+                <select value={selectedBatchId} onChange={e => setSelectedBatchId(e.target.value)} style={{ width: "100%" }}>
+                  <option value="">Auto-select (FIFO — oldest expiry first)</option>
+                  {availableBatches.map(b => (
+                    <option key={b.batchId} value={b.batchId}>
+                      {b.batchNumber} · Exp: {b.expiryDate} · Qty: {b.availableQuantity}
+                      {b.expiryStatus === "EXPIRING_SOON" ? " ⚠️" : b.expiryStatus === "EXPIRED" ? " ❌" : " ✅"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="quantity-tax-row">
               <div>
                 <label>Quantity</label>
                 <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="Enter qty" />
                 {errors.quantity && <div className="error">{errors.quantity}</div>}
               </div>
-
               <div className="tax-column">
                 <label>GST Rate (%)</label>
                 <div className="tax-input-row">
                   {taxType === "PERCENT" ? (
                     <select value={taxInput} onChange={e => setTaxInput(e.target.value)}>
                       <option value="">Select GST rate</option>
-                      {GST_RATES.map(r => (
-                        <option key={r} value={r}>{r}%{r === 18 ? " (Standard)" : r === 0 ? " (Exempt)" : ""}</option>
-                      ))}
+                      {GST_RATES.map(r => <option key={r} value={r}>{r}%{r === 18 ? " (Standard)" : r === 0 ? " (Exempt)" : ""}</option>)}
                     </select>
                   ) : (
                     <input type="number" value={taxInput} onChange={e => setTaxInput(e.target.value)} placeholder="GST amount (₹)" />
@@ -484,9 +482,10 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
                   <thead>
                     <tr>
                       <th>Product</th>
+                      <th>Batch</th>
+                      <th>Expiry</th>
                       <th>Qty</th>
                       <th>Price (₹)</th>
-                      <th>Line Amt (₹)</th>
                       <th>GST (₹)</th>
                       <th>Total (₹)</th>
                       <th>Actions</th>
@@ -496,22 +495,19 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
                     {lineItems.map((it, i) => (
                       <tr key={i}>
                         <td>{it.productName}</td>
+                        <td style={{ fontFamily: "var(--sl-font-m)", fontSize: 11, color: "#93c5fd" }}>{it.batchNumber || "AUTO"}</td>
+                        <td style={{ fontSize: 11 }}>{it.expiryDate || "—"}</td>
                         <td>{it.quantity}</td>
                         <td>{it.sellingPrice}</td>
-                        <td>{(it.sellingPrice * it.quantity).toFixed(2)}</td>
                         <td>{it.taxAmount}</td>
                         <td>{it.totalAmount.toFixed(2)}</td>
                         <td>
                           <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
                             <button className="sl-action-btn edit" onClick={() => editItem(i)} title="Edit">
-                              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor">
-                                <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z"/>
-                              </svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z"/></svg>
                             </button>
                             <button className="sl-action-btn delete" onClick={() => deleteItem(i)} title="Delete">
-                              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor">
-                                <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360Z"/>
-                              </svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360Z"/></svg>
                             </button>
                           </div>
                         </td>
@@ -525,10 +521,21 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           </div>
         )}
 
-        {/* ══════════════ BILLING TAB ══════════════ */}
+        {/* ══════════════ BILLING TAB — updated ══════════════ */}
         {activeTab === "Billing" && (
           <div className="sales-section">
             <h4>Billing & Payment</h4>
+
+            {/* NEW — Retailer */}
+            <SearchableDropdown
+              label="Retailer (optional)"
+              options={retailers} selectedId={selectedRetailer}
+              onSelect={id => setSelectedRetailer(id)}
+              search={retailerSearch} setSearch={setRetailerSearch}
+              open={retailerDropdownOpen} setOpen={setRetailerDropdownOpen}
+              placeholder="Search retailer..." dropdownRef={retailerDropdownRef}
+              error={errors.retailerId}
+            />
 
             <label>Discount</label>
             <div className="tax-row">
@@ -550,24 +557,31 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
             <div className="total-amount">Net Amount: ₹{getNetAmount().toFixed(2)}</div>
 
+            {/* NEW — Credit payment type */}
             <label>Payment Type</label>
             <div className="radio-group">
-              <label className={`radio-option ${paymentType === "FULL" ? "checked" : ""}`}>
-                <input type="radio" checked={paymentType === "FULL"} onChange={() => setPaymentType("FULL")} />
-                Full Payment
-              </label>
-              <label className={`radio-option ${paymentType === "PARTIAL" ? "checked" : ""}`}>
-                <input type="radio" checked={paymentType === "PARTIAL"} onChange={() => setPaymentType("PARTIAL")} />
-                Partial Payment
-              </label>
+              {["PAID", "CREDIT", "PARTIAL"].map(pt => (
+                <label key={pt} className={`radio-option ${creditPaymentType === pt ? "checked" : ""}`}>
+                  <input type="radio" checked={creditPaymentType === pt} onChange={() => setCreditPaymentType(pt)} />
+                  {pt === "PAID" ? "Full Payment" : pt === "CREDIT" ? "Credit (Pay Later)" : "Partial Payment"}
+                </label>
+              ))}
             </div>
+
+            {/* NEW — Due date */}
+            {(creditPaymentType === "CREDIT" || creditPaymentType === "PARTIAL") && (
+              <>
+                <label>Due Date</label>
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ width: "100%" }} />
+                {errors.dueDate && <div className="error">{errors.dueDate}</div>}
+              </>
+            )}
 
             <label>Amount Paid (₹)</label>
             <input
-              type="number"
-              value={amountPaid}
+              type="number" value={amountPaid}
               onChange={e => setAmountPaid(e.target.value)}
-              disabled={paymentType === "FULL"}
+              disabled={creditPaymentType === "PAID" || creditPaymentType === "CREDIT"}
               placeholder="0.00"
             />
             {errors.amountPaid && <div className="error">{errors.amountPaid}</div>}
@@ -583,7 +597,6 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           <button className="cancel-btn" onClick={onClose}>Cancel</button>
           <button className="submit-btn" onClick={updateSale}>Update Sale</button>
         </div>
-
       </div>
     </div>
   );

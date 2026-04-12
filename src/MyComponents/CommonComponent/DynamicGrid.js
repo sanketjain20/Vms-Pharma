@@ -132,17 +132,6 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId }) 
   }, [Module]);
 
   const refreshGrid = React.useCallback(() => {
-    fetch(`${apiUrl}/${page}/${size}`, { method: "GET", credentials: "include" })
-      .then(r => r.json())
-      .then(res => {
-        if (res.status === 200) {
-          const dataObj = res.data;
-          const list = Array.isArray(dataObj) ? dataObj : Object.values(dataObj ?? {}).find(v => Array.isArray(v)) || [];
-          setData(list);
-          setTotalPages(dataObj?.totalPages || 1);
-          setEmptyMsg(list.length ? "" : "No records found.");
-        } else { toast.error(res.message); }
-      });
     fetch(`${apiUrl}/0/100000`, { method: "GET", credentials: "include" })
       .then(r => r.json())
       .then(res => {

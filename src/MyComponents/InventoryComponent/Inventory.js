@@ -6,12 +6,12 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function Inventory() {
 const columns = [
-  { header: "Inventory Code", field: "inventoryCode", width: "130px" },
+  { header: "Code", field: "inventoryCode", width: "110px" },
   { header: "Product Name", field: "productName", width: "130px" },
   { header: "Current Qty", field: "currentQuantity", width: "120px" },
   { header: "Reorder Level", field: "reorderLevel", width: "130px" },
-  { header: "Unit Cost Price (₹)", field: "unitCostPrice", width: "170px" },
-  { header: "Unit Selling Price (₹)", field: "unitSellingPrice", width: "190px" },
+  { header: "Unit Cost Price (₹)", field: "unitCostPrice", width: "180px" },
+  { header: "Unit Selling Price (₹)", field: "unitSellingPrice", width: "200px" },
   { header: "Total Stock Value (₹)", field: "totalStockValue", width: "180px" },
   { header: "Actions", field: "Action", width: "120px" }
   // { header: "Last Stock In", field: "lastStockInDate", width: "150px" },

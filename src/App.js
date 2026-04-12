@@ -37,9 +37,16 @@ import JobScheduler from "./MyComponents/JobScheduler/JobScheduler";
 import JobView from "./MyComponents/JobScheduler/JobSchedulerView";
 import JobEdit from "./MyComponents/JobScheduler/JobSchedulerEdit";
 import ForgotPassword from "./MyComponents/LoginComponent/ForgotPassword";
+import Retailer from "./MyComponents/RetailerComponent/Retailer";
+import Manufacturer from "./MyComponents/ManufacturerComponent/Manufacturer";
+import Supplier from "./MyComponents/SupplierComponent/Supplier";
+import PaymentCollection from "./MyComponents/PaymentCollectionComponent/PaymentCollection";
+import Purchase from "./MyComponents/PurchaseComponent/Purchase";
+import PaymentCollectionPage from "./MyComponents/PaymentCollectionComponent/PaymentCollectionPage";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
+import { ImPodcast } from "react-icons/im";
 
 function App() {
   return (
@@ -114,6 +121,57 @@ function App() {
             </ModuleGuard>
           }
         />
+
+                     {/* REATILERS  */}
+              <Route
+                path="retailer"
+                element={
+                  <ModuleGuard moduleName="RETAILER">
+                    <Retailer />
+                  </ModuleGuard>
+                }
+              />
+
+                  {/* MANUFACTURERS  */}
+              <Route
+                path="manufacturer"
+                element={
+                  <ModuleGuard moduleName="MANUFACTURER">
+                    <Manufacturer />
+                  </ModuleGuard>
+                }
+              />
+
+              {/* SUPPLIERS  */}
+              <Route
+                path="supplier"
+                element={
+                  <ModuleGuard moduleName="SUPPLIER">
+                    <Supplier />
+                  </ModuleGuard>
+                }
+              />
+
+               {/* PAYMENT COLLECTION  */}
+              <Route
+                path="payment-collection"
+                element={
+                  <ModuleGuard moduleName="PAYMENT_COLLECTION">
+                    <PaymentCollection />
+                  </ModuleGuard>
+                }
+              />
+
+
+                {/* PURCHASE  */}
+              <Route
+                path="purchase"
+                element={
+                  <ModuleGuard moduleName="PURCHASE">
+                    <Purchase />
+                  </ModuleGuard>
+                }
+              />
 
         {/* VENDOR */}
         <Route

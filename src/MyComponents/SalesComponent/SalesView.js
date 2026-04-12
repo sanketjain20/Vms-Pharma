@@ -8,8 +8,7 @@ export default function SalesView({ uKey, onClose }) {
   useEffect(() => {
     if (!uKey) return;
     fetch(`http://localhost:8080/api/Sales/GetSalesByUkey/${uKey}`, {
-      method: "GET",
-      credentials: "include",
+      method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {
@@ -43,15 +42,19 @@ export default function SalesView({ uKey, onClose }) {
     }
   };
 
+  // Resolve badge color for expiry status
+  const expiryColor = (status) => {
+    if (status === "EXPIRED")       return { color: "#fca5a5", background: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.25)" };
+    if (status === "EXPIRING_SOON") return { color: "#fbbf24", background: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)" };
+    return { color: "#6ee7b7", background: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.25)" };
+  };
+
   if (!uKey) return null;
 
   return (
     <div className="sv-backdrop">
       <div className="sv-modal">
-
-        {/* Top beam */}
         <div className="sv-top-beam" />
-        {/* Corner brackets */}
         <div className="sv-corner sv-tl" /><div className="sv-corner sv-tr" />
         <div className="sv-corner sv-bl" /><div className="sv-corner sv-br" />
 
@@ -75,12 +78,10 @@ export default function SalesView({ uKey, onClose }) {
           </button>
         </div>
 
-        {/* Divider */}
         <div className="sv-divider" />
 
         {/* ── BODY ── */}
         <div className="sv-body">
-
           {error && (
             <div className="sv-error">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -100,8 +101,8 @@ export default function SalesView({ uKey, onClose }) {
 
           {sales && (
             <>
-              {/* ── META GRID ── */}
-              <div className="sv-meta-grid">
+              {/* ── META GRID — updated with retailer + payment type + due date ── */}
+              <div className="sv-meta-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
                 <div className="sv-meta-card">
                   <span className="sv-meta-label">Invoice Number</span>
                   <span className="sv-meta-value">{sales.invoiceNumber}</span>
@@ -116,17 +117,48 @@ export default function SalesView({ uKey, onClose }) {
                   <span className="sv-meta-label">Date</span>
                   <span className="sv-meta-value">{sales.createdAt}</span>
                 </div>
+
+                {/* NEW — Retailer */}
                 <div className="sv-meta-card">
-                  <span className="sv-meta-label">Status</span>
+                  <span className="sv-meta-label">Retailer</span>
+                  <span className="sv-meta-value">
+                    {sales.retailerName
+                      ? <><b>{sales.retailerName}</b> <span style={{ fontSize: 11, color: "var(--sv-text-2)" }}>· {sales.retailerCode}</span></>
+                      : <span style={{ color: "var(--sv-text-2)", fontSize: 12 }}>Walk-in customer</span>
+                    }
+                  </span>
+                </div>
+
+                {/* NEW — Payment type */}
+                <div className="sv-meta-card">
+                  <span className="sv-meta-label">Payment Type</span>
+                  <span className="sv-meta-value">
+                    <span className={`sv-badge ${
+                      sales.paymentType === "PAID"    ? "sv-badge-green" :
+                      sales.paymentType === "CREDIT"  ? "sv-badge-red"   : ""
+                    }`}>
+                      {sales.paymentType || "—"}
+                    </span>
+                  </span>
+                </div>
+
+                {/* NEW — Due date (only for credit/partial) */}
+                <div className="sv-meta-card">
+                  <span className="sv-meta-label">Status / Due Date</span>
                   <span className="sv-meta-value">
                     <span className={`sv-badge ${Number(sales.remainingAmount) > 0 ? "sv-badge-red" : "sv-badge-green"}`}>
-                      {Number(sales.remainingAmount) > 0 ? "Partial" : "Paid"}
+                      {Number(sales.remainingAmount) > 0 ? "Pending" : "Paid"}
                     </span>
+                    {sales.dueDate && (
+                      <span style={{ fontSize: 11, color: "var(--sv-text-2)", marginLeft: 6 }}>
+                        Due: {sales.dueDate}
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
 
-              {/* ── ITEMS TABLE ── */}
+              {/* ── ITEMS TABLE — updated with batch + expiry columns ── */}
               <div className="sv-table-section">
                 <div className="sv-table-header">
                   <div className="sv-table-title">
@@ -146,6 +178,10 @@ export default function SalesView({ uKey, onClose }) {
                     <thead>
                       <tr>
                         <th>Product</th>
+                        {/* NEW columns */}
+                        <th>Batch No</th>
+                        <th>Expiry</th>
+                        <th>HSN</th>
                         <th>Qty</th>
                         <th>Price (₹)</th>
                         <th>Line Amt (₹)</th>
@@ -154,40 +190,52 @@ export default function SalesView({ uKey, onClose }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {sales.items?.map((item, idx) => (
-                        <tr key={idx} style={{ animationDelay: `${idx * 0.03}s` }}>
-                          <td>{item.product}</td>
-                          <td>{item.quantity}</td>
-                          <td>{item.sellingPrice}</td>
-                          <td>{(item.quantity * item.sellingPrice).toFixed(2)}</td>
-                          <td>{item.taxAmount}</td>
-                          <td className="sv-td-highlight">{(item.subtotal).toFixed(2)}</td>
-                        </tr>
-                      ))}
+                      {sales.items?.map((item, idx) => {
+                        // expiryStatus may come from backend or we compute it
+                        const expStyle = item.expiryStatus ? expiryColor(item.expiryStatus) : null;
+                        return (
+                          <tr key={idx} style={{ animationDelay: `${idx * 0.03}s` }}>
+                            <td>{item.product}</td>
+                            {/* NEW — batch snapshot fields */}
+                            <td style={{ fontFamily: "var(--sv-font-m)", fontSize: 11, color: "#93c5fd" }}>
+                              {item.batchNumberSnapshot || "—"}
+                            </td>
+                            <td>
+                              {item.expiryDateSnapshot ? (
+                                <span style={{
+                                  padding: "2px 7px", borderRadius: 100, fontSize: 10,
+                                  fontFamily: "var(--sv-font-m)",
+                                  background: expStyle?.background || "transparent",
+                                  color: expStyle?.color || "inherit",
+                                  border: `1px solid ${expStyle?.border || "transparent"}`,
+                                }}>
+                                  {item.expiryDateSnapshot}
+                                </span>
+                              ) : "—"}
+                            </td>
+                            <td style={{ fontSize: 11, color: "var(--sv-text-2)" }}>
+                              {item.hsnCodeSnapshot || "—"}
+                            </td>
+                            <td>{item.quantity}</td>
+                            <td>{item.sellingPrice}</td>
+                            <td>{(item.quantity * item.sellingPrice).toFixed(2)}</td>
+                            <td>{item.taxAmount}</td>
+                            <td className="sv-td-highlight">{(item.subtotal).toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              {/* ── TOTALS ── */}
+              {/* ── TOTALS — unchanged ── */}
               <div className="sv-totals">
-                <div className="sv-totals-row">
-                  <span>Items Total</span>
-                  <span>₹{(sales.totalAmount).toFixed(2)}</span>
-                </div>
-                <div className="sv-totals-row">
-                  <span>Total GST</span>
-                  <span>₹{sales.totalTax}</span>
-                </div>
-                <div className="sv-totals-row">
-                  <span>Discount</span>
-                  <span className="sv-discount">−₹{sales.totalDiscount}</span>
-                </div>
+                <div className="sv-totals-row"><span>Items Total</span><span>₹{(sales.totalAmount).toFixed(2)}</span></div>
+                <div className="sv-totals-row"><span>Total GST</span><span>₹{sales.totalTax}</span></div>
+                <div className="sv-totals-row"><span>Discount</span><span className="sv-discount">−₹{sales.totalDiscount}</span></div>
                 <div className="sv-totals-divider" />
-                <div className="sv-totals-row sv-totals-net">
-                  <span>Net Amount</span>
-                  <span>₹{(sales.netAmount).toFixed(2)}</span>
-                </div>
+                <div className="sv-totals-row sv-totals-net"><span>Net Amount</span><span>₹{(sales.netAmount).toFixed(2)}</span></div>
                 {Number(sales.remainingAmount) > 0 && (
                   <div className="sv-totals-row sv-totals-due">
                     <span>Due Amount</span>
@@ -211,7 +259,6 @@ export default function SalesView({ uKey, onClose }) {
             </button>
           </div>
         )}
-
       </div>
     </div>
   );
