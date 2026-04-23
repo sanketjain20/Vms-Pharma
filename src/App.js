@@ -43,6 +43,7 @@ import Supplier from "./MyComponents/SupplierComponent/Supplier";
 import PaymentCollection from "./MyComponents/PaymentCollectionComponent/PaymentCollection";
 import Purchase from "./MyComponents/PurchaseComponent/Purchase";
 import PaymentCollectionPage from "./MyComponents/PaymentCollectionComponent/PaymentCollectionPage";
+import SupplierPayment from "./MyComponents/SupplierPaymentComponent/SupplierPayment";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
@@ -169,6 +170,15 @@ function App() {
                 element={
                   <ModuleGuard moduleName="PURCHASE">
                     <Purchase />
+                  </ModuleGuard>
+                }
+              />
+
+              <Route
+                path="supplier-payment"
+                element={
+                  <ModuleGuard moduleName="SUPPLIER_PAYMENT">
+                    <SupplierPayment />
                   </ModuleGuard>
                 }
               />

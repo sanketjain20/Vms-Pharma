@@ -527,6 +527,124 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .mf-error { color: #fca5a5; }
 
 /* =========================
+   APPEND THESE TO YOUR EXISTING
+   ProductForm.css — new pharma styles
+========================= */
+
+/* Required star */
+.pf-req {
+  color: #fca5a5;
+  font-size: 11px;
+  margin-left: 2px;
+}
+
+/* Hint text in label */
+.pf-hint {
+  color: var(--mf-text-3);
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+/* Info banner — spans full width in form-grid */
+.pf-info-banner {
+  grid-column: 1 / -1;
+  padding: 9px 13px;
+  background: rgba(59,130,246,0.05);
+  border: 1px solid rgba(59,130,246,0.14);
+  border-radius: var(--mf-r-sm);
+  font-family: var(--mf-font-m);
+  font-size: 11px;
+  color: var(--mf-text-2);
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
+.pf-info-banner strong {
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+/* Full-width child in form-grid */
+.form-grid .full {
+  grid-column: 1 / -1;
+}
+
+/* Custom select used in SearchDrop — ensure options position correctly */
+.custom-select {
+  position: relative;
+}
+
+.custom-select .select-box {
+  position: relative;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid var(--mf-border-mid);
+  border-radius: var(--mf-r-sm);
+  cursor: pointer;
+  transition: border-color var(--mf-tr), box-shadow var(--mf-tr);
+}
+
+.custom-select .select-box.active {
+  border-color: rgba(59,130,246,0.4);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.07);
+}
+
+.custom-select .select-input {
+  width: 100% !important;
+  padding: 9px 12px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: var(--mf-r-sm) !important;
+  color: var(--mf-text-1) !important;
+  font-family: var(--mf-font-b) !important;
+  font-size: 13px !important;
+  outline: none !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+}
+
+.custom-select .select-input::placeholder {
+  color: var(--mf-text-3) !important;
+}
+
+.custom-select .options {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0; right: 0;
+  background: rgba(4,5,12,0.98);
+  border: 1px solid var(--mf-border-hi);
+  border-radius: var(--mf-r-md);
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 9999;
+  list-style: none;
+  padding: 6px;
+  margin: 0;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.95);
+  backdrop-filter: blur(20px);
+}
+
+.custom-select .options::-webkit-scrollbar { width: 3px; }
+.custom-select .options::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.2); border-radius: 4px; }
+
+.custom-select .options li {
+  padding: 9px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--mf-font-b);
+  font-size: 12.5px;
+  color: rgba(160,165,185,0.8);
+  transition: background 0.14s, color 0.14s;
+}
+
+.custom-select .options li:hover {
+  background: rgba(59,130,246,0.08);
+  color: var(--mf-text-1);
+}
+
+/* =========================
    RESPONSIVE
 ========================= */
 @media (max-width: 900px) {

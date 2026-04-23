@@ -1,515 +1,314 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Home.css";
 
-import img1  from "../Images/3741.jpg";
-import img2  from "../Images/4698.jpg";
-import img3  from "../Images/4862.jpg";
-import img4  from "../Images/28439.jpg";
-import img5  from "../Images/32881-NYSF7H.jpg";
-import img6  from "../Images/60261.jpg";
-import img7  from "../Images/2282382.jpg";
-import img8  from "../Images/O4WHN50.jpg";
-import img9  from "../Images/OQECWY0.jpg";
-import img10 from "../Images/8-bits-characters-gaming-assets.jpg";
-import img11 from "../Images/enhanced-large-preview.jpg";
-import img12 from "../Images/render.jpeg";
-import img13 from "../Images/vmsimg.jpg";
-import img14 from "../Images/variety-people-multitasking-3d-cartoon-scene.jpg";
-import img15 from "../Images/render-preview1.jpg";
-import img16 from "../Images/render-preview2.jpg";
-import img17 from "../Images/render-preview3.jpg";
-import img18 from "../Images/render-preview4.jpg";
-import img19 from "../Images/render-preview5.jpg";
-import img20 from "../Images/upload-preview6.jpg";
-import img21 from "../Images/upload-preview7.jpg";
-
-const ALL_IMAGES = [img1,img2,img3,img4,img5,img6,img7,img8,img9,img10,
-                    img11,img12,img13,img14,img15,img16,img17,img18,img19,img20,img21];
-
-/* ══════════════════════════════════════════════════════════
-   CANVAS BACKGROUND
-══════════════════════════════════════════════════════════ */
-function CanvasBg() {
-  const ref = useRef(null);
-  useEffect(() => {
-    const cv = ref.current;
-    const ctx = cv.getContext("2d");
-    let W, H, id, t = 0;
-
-    const stars = Array.from({ length: 280 }, () => ({
-      x: Math.random(), y: Math.random(),
-      r: Math.random() * 1.2 + 0.15,
-      a: Math.random() * 0.7 + 0.2,
-      tw: Math.random() * 2.5 + 0.5,
-      tp: Math.random() * Math.PI * 2,
-    }));
-
-    const streams = Array.from({ length: 20 }, () => ({
-      x: Math.random(),
-      y: Math.random(),
-      speed: Math.random() * 0.003 + 0.001,
-      len: Math.random() * 0.18 + 0.05,
-      hue: [185, 350, 45, 270][Math.floor(Math.random() * 4)],
-      a: Math.random() * 0.1 + 0.03,
-    }));
-
-    let shooters = [];
-    const addShooter = () => {
-      if (shooters.length >= 4) return;
-      shooters.push({
-        x: Math.random() * W, y: 0,
-        vx: (Math.random()-0.3)*5, vy: Math.random()*5+3,
-        len: Math.random()*100+60, a: 1,
-        hue: [185,350,45,280][Math.floor(Math.random()*4)],
-      });
-    };
-    const si = setInterval(addShooter, 2400);
-
-    const resize = () => { W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const drawHex = () => {
-      const s = 50, h = s * Math.sqrt(3);
-      ctx.strokeStyle = "rgba(255,255,255,0.02)";
-      ctx.lineWidth = 0.5;
-      for (let row = -1; row < H/h+2; row++) {
-        for (let col = -1; col < W/(s*1.5)+2; col++) {
-          const cx = col*s*1.5, cy = row*h + (col%2 ? h/2 : 0);
-          ctx.beginPath();
-          for (let a = 0; a < 6; a++) {
-            const ang = (Math.PI/3)*a - Math.PI/6;
-            ctx.lineTo(cx + s*Math.cos(ang), cy + s*Math.sin(ang));
-          }
-          ctx.closePath(); ctx.stroke();
-        }
-      }
-    };
-
-    const loop = () => {
-      ctx.clearRect(0, 0, W, H);
-      t += 0.007;
-      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
-
-      [[0.12,0.18,0.28,185,0.045],[0.88,0.78,0.22,350,0.035],[0.5,0.92,0.18,45,0.03]].forEach(([nx,ny,nr,h,a])=>{
-        const g=ctx.createRadialGradient(W*nx,H*ny,0,W*nx,H*ny,W*nr);
-        g.addColorStop(0,`hsla(${h},100%,55%,${a})`); g.addColorStop(1,"transparent");
-        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-      });
-
-      drawHex();
-
-      for (const p of stars) {
-        const tw = 0.5+0.5*Math.sin(t*p.tw+p.tp);
-        ctx.beginPath(); ctx.arc(p.x*W,p.y*H,p.r,0,Math.PI*2);
-        ctx.fillStyle=`rgba(200,215,255,${p.a*tw})`; ctx.fill();
-      }
-
-      for (const s of streams) {
-        s.y = (s.y + s.speed) % 1;
-        const sy=s.y*H, ey=sy+s.len*H;
-        const g=ctx.createLinearGradient(s.x*W,sy,s.x*W,ey);
-        g.addColorStop(0,"transparent"); g.addColorStop(0.4,`hsla(${s.hue},100%,70%,${s.a})`); g.addColorStop(1,"transparent");
-        ctx.strokeStyle=g; ctx.lineWidth=0.8;
-        ctx.beginPath(); ctx.moveTo(s.x*W,sy); ctx.lineTo(s.x*W,ey); ctx.stroke();
-      }
-
-      shooters = shooters.filter(s=>s.a>0.01);
-      for (const s of shooters) {
-        const g=ctx.createLinearGradient(s.x,s.y,s.x-s.vx*s.len/8,s.y-s.vy*s.len/8);
-        g.addColorStop(0,`hsla(${s.hue},100%,80%,${s.a})`); g.addColorStop(1,"transparent");
-        ctx.strokeStyle=g; ctx.lineWidth=1.5;
-        ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x-s.vx*s.len/8,s.y-s.vy*s.len/8); ctx.stroke();
-        s.x+=s.vx; s.y+=s.vy; s.a-=0.015;
-      }
-
-      id = requestAnimationFrame(loop);
-    };
-    loop();
-    return () => { cancelAnimationFrame(id); clearInterval(si); window.removeEventListener("resize",resize); };
-  }, []);
-  return <canvas ref={ref} className="hw-canvas" />;
-}
-
-/* ══════════════════════════════════════════════════════════
-   VMS REACTOR — centerpiece SVG
-══════════════════════════════════════════════════════════ */
-function VMSReactor({ onClick }) {
-  return (
-    <div className="reactor-wrap" onClick={onClick}>
-      <svg className="reactor-svg" viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="cg" cx="50%" cy="50%">
-            <stop offset="0%" stopColor="#00dcff" stopOpacity="0.8"/>
-            <stop offset="60%" stopColor="#004466" stopOpacity="0.3"/>
-            <stop offset="100%" stopColor="#000" stopOpacity="0"/>
-          </radialGradient>
-          <radialGradient id="ig" cx="50%" cy="50%">
-            <stop offset="0%" stopColor="#fff" stopOpacity="1"/>
-            <stop offset="50%" stopColor="#00dcff" stopOpacity="0.9"/>
-            <stop offset="100%" stopColor="#0044aa" stopOpacity="0.2"/>
-          </radialGradient>
-          <filter id="fg"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          <filter id="fg2"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        </defs>
-
-        {/* Aura */}
-        <circle cx="180" cy="180" r="168" fill="url(#cg)"/>
-
-        {/* Ring 1 — outer tick marks, slow */}
-        <g className="r-slow">
-          <circle cx="180" cy="180" r="156" fill="none" stroke="rgba(0,220,255,0.1)" strokeWidth="1"/>
-          {Array.from({length:48},(_,i)=>{
-            const a=(i/48)*Math.PI*2, r=156, big=i%6===0;
-            return <line key={i}
-              x1={180+(r-( big?10:5))*Math.cos(a)} y1={180+(r-(big?10:5))*Math.sin(a)}
-              x2={180+r*Math.cos(a)} y2={180+r*Math.sin(a)}
-              stroke={big?"rgba(0,220,255,0.7)":"rgba(0,220,255,0.25)"} strokeWidth={big?2:1}/>;
-          })}
-        </g>
-
-        {/* Ring 2 — dashed, fast counter */}
-        <g className="r-fast-rev">
-          <circle cx="180" cy="180" r="136" fill="none" stroke="rgba(0,220,255,0.2)" strokeWidth="1.5" strokeDasharray="10 14"/>
-          {Array.from({length:8},(_,i)=>{
-            const a=(i/8)*Math.PI*2, r=136;
-            return <polygon key={i} points="0,-8 5,5 -5,5" fill="rgba(0,220,255,0.65)" filter="url(#fg)"
-              transform={`translate(${180+r*Math.cos(a)},${180+r*Math.sin(a)}) rotate(${i*45+90})`}/>;
-          })}
-        </g>
-
-        {/* Ring 3 — red medium */}
-        <g className="r-med">
-          <circle cx="180" cy="180" r="114" fill="none" stroke="rgba(230,57,70,0.2)" strokeWidth="1" strokeDasharray="5 9"/>
-          {Array.from({length:6},(_,i)=>{
-            const a=(i/6)*Math.PI*2, r=114;
-            return <circle key={i} cx={180+r*Math.cos(a)} cy={180+r*Math.sin(a)} r="4.5" fill="rgba(230,57,70,0.75)" filter="url(#fg)"/>;
-          })}
-        </g>
-
-        {/* Ring 4 — arc segments, rev slow */}
-        <g className="r-slow-rev">
-          <circle cx="180" cy="180" r="94" fill="none" stroke="rgba(0,220,255,0.28)" strokeWidth="2"/>
-          {Array.from({length:4},(_,i)=>{
-            const s=(i/4)*Math.PI*2, e=s+Math.PI/4.5, r=94;
-            return <path key={i} d={`M${180+r*Math.cos(s)},${180+r*Math.sin(s)} A${r},${r} 0 0,1 ${180+r*Math.cos(e)},${180+r*Math.sin(e)}`}
-              stroke="rgba(0,220,255,0.8)" strokeWidth="3.5" fill="none" filter="url(#fg)"/>;
-          })}
-        </g>
-
-        {/* Hexagon inner */}
-        <g className="r-slow">
-          {Array.from({length:6},(_,i)=>{
-            const a1=(i/6)*Math.PI*2, a2=((i+1)/6)*Math.PI*2, r=70;
-            return <line key={i} x1={180+r*Math.cos(a1)} y1={180+r*Math.sin(a1)} x2={180+r*Math.cos(a2)} y2={180+r*Math.sin(a2)}
-              stroke="rgba(0,220,255,0.3)" strokeWidth="1.5"/>;
-          })}
-          {Array.from({length:6},(_,i)=>{
-            const a=(i/6)*Math.PI*2, r=70;
-            return <circle key={i} cx={180+r*Math.cos(a)} cy={180+r*Math.sin(a)} r="5" fill="rgba(0,220,255,0.55)" filter="url(#fg)"/>;
-          })}
-        </g>
-
-        {/* Core */}
-        <circle cx="180" cy="180" r="50" fill="rgba(0,25,45,0.9)"/>
-        <circle cx="180" cy="180" r="50" fill="none" stroke="rgba(0,220,255,0.55)" strokeWidth="2"/>
-        <circle cx="180" cy="180" r="37" fill="url(#ig)" filter="url(#fg2)" className="core-pulse"/>
-        <circle cx="180" cy="180" r="20" fill="rgba(255,255,255,0.92)" filter="url(#fg2)" className="core-pulse"/>
-
-        {/* Text */}
-        <text x="180" y="177" textAnchor="middle" fill="#000" fontSize="10" fontWeight="900"
-          fontFamily="'Orbitron',monospace" letterSpacing="2.5">VMS</text>
-        <text x="180" y="190" textAnchor="middle" fill="#000" fontSize="6.5" fontWeight="700"
-          fontFamily="'Orbitron',monospace" letterSpacing="1.5">CORE</text>
-
-        {/* Crosshairs */}
-        {[[180,133,180,147],[180,213,180,227],[133,180,147,180],[213,180,227,180]].map(([x1,y1,x2,y2],i)=>(
-          <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(0,220,255,0.55)" strokeWidth="1.5"/>
-        ))}
-
-        {/* Sweep */}
-        <g className="scan-sweep">
-          <path d="M180,180 L180,24 A156,156 0 0,1 315,258 Z" fill="rgba(0,220,255,0.04)"/>
-        </g>
-      </svg>
-
-      <div className="reactor-ping rp1"/>
-      <div className="reactor-ping rp2"/>
-      <div className="reactor-ping rp3"/>
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════
-   HUD METRIC CARD
-══════════════════════════════════════════════════════════ */
-function HUDCard({ title, label, icon, accent, hint, onClick, delay }) {
-  const ref = useRef(null);
-  const onMove = useCallback((e) => {
-    const el = ref.current; if (!el) return;
-    const r = el.getBoundingClientRect();
-    const dx = (e.clientX - r.left - r.width/2)/(r.width/2);
-    const dy = (e.clientY - r.top - r.height/2)/(r.height/2);
-    el.style.setProperty("--rx",`${-dy*13}deg`);
-    el.style.setProperty("--ry",`${dx*13}deg`);
-    el.style.setProperty("--mx",`${((e.clientX-r.left)/r.width)*100}%`);
-    el.style.setProperty("--my",`${((e.clientY-r.top)/r.height)*100}%`);
-    el.classList.add("hud-hover");
-  },[]);
-  const onLeave = useCallback(() => {
-    const el = ref.current; if(!el) return;
-    el.style.setProperty("--rx","0deg"); el.style.setProperty("--ry","0deg");
-    el.classList.remove("hud-hover");
-  },[]);
-
-  return (
-    <div className={`hud-card hud-${accent}`} ref={ref}
-      onMouseMove={onMove} onMouseLeave={onLeave}
-      onClick={onClick} style={{animationDelay:`${delay}s`}}>
-      <div className="hud-inner">
-        <span className="hc-br hc-tl"/><span className="hc-br hc-tr"/>
-        <span className="hc-br hc-bl"/><span className="hc-br hc-brr"/>
-        <div className="hud-spotlight"/>
-        <div className="hud-top-row">
-          <span className="hud-icon">{icon}</span>
-          <span className="hud-hint">{hint}</span>
-        </div>
-        <div className="hud-title">{title}</div>
-        <div className="hud-label">{label}</div>
-        <div className="hud-cta">OPEN →</div>
-        <div className="hud-bar"><div className="hud-bar-fill"/></div>
-        <div className="hud-scan"/>
-      </div>
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════
-   LIVE CLOCK
-══════════════════════════════════════════════════════════ */
+/* ── Live Clock ── */
 function LiveClock() {
-  const [state, setState] = useState({ date:"", time:"" });
+  const [time, setTime] = React.useState("");
   useEffect(() => {
-    const tick = () => {
-      const n = new Date();
-      setState({
-        date: n.toLocaleDateString("en-IN",{weekday:"short",month:"short",day:"2-digit",year:"numeric"}),
-        time: n.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}),
-      });
-    };
-    tick(); const id=setInterval(tick,1000); return ()=>clearInterval(id);
-  },[]);
-  return (
-    <div className="hw-clock">
-      <span className="hw-clock-blink"/>
-      <span className="hw-clock-d">{state.date}</span>
-      <span className="hw-clock-sep">·</span>
-      <span className="hw-clock-t">{state.time}</span>
-    </div>
-  );
+    const tick = () =>
+      setTime(new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false }));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return <span className="hw-clock">{time}</span>;
 }
 
-/* ══════════════════════════════════════════════════════════
-   MARQUEE TICKER
-══════════════════════════════════════════════════════════ */
-function Ticker() {
-  const words = ["PRODUCTS","INVENTORY","SALES","INVOICES","REPORTS","DASHBOARD",
-                 "VENDORS","CATALOGUE","ANALYTICS","ORDERS","STOCK","PAYMENTS"];
-  return (
-    <div className="hw-ticker">
-      <span className="hw-ticker-tag">VMS</span>
-      <div className="hw-ticker-track">
-        {[...words,...words].map((w,i)=>(
-          <span key={i} className="hw-ticker-item"><span className="hw-tki-dot">◆</span>{w}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
+/* ── Module icons ── */
+const ICONS = {
+  purchase: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M2 9h14M2 5h14M2 13h8"/><circle cx="14" cy="13" r="3"/><path d="M14 11.5v1.5l1 1"/></svg>,
+  sales: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M3 3h12l-1.5 9H4.5z"/><circle cx="7" cy="16" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>,
+  inventory: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><rect x="2" y="2" width="14" height="4" rx="1"/><rect x="2" y="8" width="14" height="4" rx="1"/><rect x="2" y="14" width="8" height="2" rx="1"/></svg>,
+  retailer: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16a6 6 0 0112 0"/></svg>,
+  payment: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><rect x="2" y="5" width="14" height="10" rx="2"/><path d="M2 9h14M6 9v6"/></svg>,
+  reports: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M2 14l4-5 4 3 4-7"/><circle cx="14" cy="5" r="1" fill="currentColor"/></svg>,
+};
 
-/* ══════════════════════════════════════════════════════════
-   IMAGE CAROUSEL
-══════════════════════════════════════════════════════════ */
-function ImageCarousel({ images }) {
-  const [active, setActive] = useState(0);
-  useEffect(()=>{
-    const id=setInterval(()=>setActive(p=>(p+1)%images.length), 2600);
-    return ()=>clearInterval(id);
-  },[images.length]);
-  return (
-    <div className="img-carousel">
-      <div className="img-c-track" style={{transform:`translateX(${-active*100}%)`}}>
-        {images.map((src,i)=>(
-          <div key={i} className="img-c-slide">
-            <img src={src} alt=""/>
-            <div className="img-c-overlay"/>
-          </div>
-        ))}
-      </div>
-      <div className="img-c-dots">
-        {images.map((_,i)=>(
-          <button key={i} className={`icd ${i===active?"icd-on":""}`} onClick={()=>setActive(i)}/>
-        ))}
-      </div>
-      <div className="img-c-counter">{String(active+1).padStart(2,"0")} / {String(images.length).padStart(2,"0")}</div>
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════
-   MAIN HOME PAGE
-══════════════════════════════════════════════════════════ */
 export default function Home() {
   const navigate   = useNavigate();
-  const user       = JSON.parse(localStorage.getItem("vmsUser")) || {};
+  const canvasRef  = useRef(null);
+  const rafRef     = useRef(null);
+  const user       = (() => { try { return JSON.parse(localStorage.getItem("vmsUser")) || {}; } catch { return {}; } })();
   const name       = user?.data?.name || "Vendor";
   const isLoggedIn = !!user?.data;
 
-  const [ready, setReady]   = useState(false);
-  const [mx, setMx]         = useState(0.5);
-  const [my, setMy]         = useState(0.5);
-
+  /* ── 3D Canvas background ── */
   useEffect(() => {
-    const t = setTimeout(()=>setReady(true), 100);
-    const mm = (e)=>{ setMx(e.clientX/window.innerWidth); setMy(e.clientY/window.innerHeight); };
-    window.addEventListener("mousemove", mm);
-    return ()=>{ clearTimeout(t); window.removeEventListener("mousemove",mm); };
-  },[]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
 
-  const images = [...ALL_IMAGES].sort(()=>Math.random()-0.5).slice(0,6);
+    const resize = () => {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
 
-  const cards = [
-    { title:"Quick Sales",   label:"Create Invoice",   icon:"🧾", accent:"cyan",   hint:"● ACTIVE",   path:"/master/salesshrt" },
-    { title:"Products",      label:"Manage Catalogue", icon:"📦", accent:"red",    hint:"● ONLINE",   path:"/master/product" },
-    { title:"Reports",       label:"Analytics Hub",    icon:"📊", accent:"gold",   hint:"● READY",    path:"/master/reports" },
-    { title:"Dashboard",     label:"Live Overview",    icon:"🚀", accent:"purple", hint:"● LIVE",     path:"/master/dashboard" },
+    const orbs = Array.from({ length: 5 }, (_, i) => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: 150 + Math.random() * 180,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15,
+      hue: [215, 230, 245, 200, 260][i],
+      alpha: 0.016 + Math.random() * 0.018,
+    }));
+
+    const pts = Array.from({ length: 40 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: 0.5 + Math.random() * 0.9,
+      vx: (Math.random() - 0.5) * 0.2,
+      vy: (Math.random() - 0.5) * 0.2,
+      alpha: 0.1 + Math.random() * 0.2,
+    }));
+
+    let tick = 0;
+    const draw = () => {
+      tick++;
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+
+      /* perspective grid */
+      const hor = H * 0.38, vanX = W / 2, gc = 10;
+      const spd = (tick * 0.14) % (H / gc);
+      ctx.save(); ctx.globalAlpha = 0.032; ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 0.5;
+      for (let i = 0; i <= gc; i++) {
+        const y = hor + spd + (i * (H - hor)) / gc;
+        if (y > H) continue;
+        const sp = ((y - hor) / (H - hor)) * W * 1.5;
+        ctx.beginPath(); ctx.moveTo(vanX - sp / 2, y); ctx.lineTo(vanX + sp / 2, y); ctx.stroke();
+      }
+      for (let i = 0; i <= 16; i++) {
+        const t = i / 16, bx = vanX - W * 0.75 + t * W * 1.5;
+        ctx.beginPath(); ctx.moveTo(vanX, hor); ctx.lineTo(bx, H + 10); ctx.stroke();
+      }
+      ctx.restore();
+
+      /* orbs */
+      orbs.forEach(o => {
+        o.x += o.vx; o.y += o.vy;
+        if (o.x < -o.r) o.x = W + o.r; if (o.x > W + o.r) o.x = -o.r;
+        if (o.y < -o.r) o.y = H + o.r; if (o.y > H + o.r) o.y = -o.r;
+        const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
+        g.addColorStop(0, `hsla(${o.hue},70%,55%,${o.alpha})`);
+        g.addColorStop(1, "transparent");
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+        ctx.fillStyle = g; ctx.fill();
+      });
+
+      /* particles + connections */
+      pts.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(96,165,250,${p.alpha})`; ctx.fill();
+      });
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 90) {
+            ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y);
+            ctx.strokeStyle = `rgba(59,130,246,${(1 - d / 90) * 0.07})`; ctx.lineWidth = 0.5; ctx.stroke();
+          }
+        }
+      }
+
+      /* vignette */
+      const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.08, W / 2, H / 2, H * 0.85);
+      vig.addColorStop(0, "rgba(0,0,0,0)"); vig.addColorStop(1, "rgba(0,0,0,0.65)");
+      ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(rafRef.current); };
+  }, []);
+
+  const modules = [
+    { key: "purchase",  label: "Purchase",   hint: "Stock in · batches · supplier dues", color: "#06b6d4", path: "/master/purchase"  },
+    { key: "sales",     label: "Sales",      hint: "Bill · FIFO batch · credit invoice",  color: "#3b82f6", path: "/master/salesshrt" },
+    { key: "inventory", label: "Inventory",  hint: "Live stock · low-stock alerts",       color: "#8b5cf6", path: "/master/inventory" },
+    { key: "retailer",  label: "Retailers",  hint: "Customers · credit · outstanding",    color: "#f59e0b", path: "/master/retailer"  },
+    { key: "payment",   label: "Payments",   hint: "Collect · reverse · due tracking",   color: "#10b981", path: "/master/payment-collection"   },
+    { key: "reports",   label: "Reports",    hint: "GSTR-1 · expiry · recall trace",     color: "#6366f1", path: "/master/reports"   },
   ];
 
-  const flow = [
-    { n:"01", t:"Product Types",   path:"/master/producttype" },
-    { n:"02", t:"Products",        path:"/master/product" },
-    { n:"03", t:"Inventory",       path:"/master/inventory" },
-    { n:"04", t:"Sales & Invoice", path:"/master/salesshrt" },
-    { n:"05", t:"Reports",         path:"/master/reports" },
-    { n:"06", t:"Dashboard",       path:"/master/dashboard" },
+  const features = [
+    { label: "Auto FIFO batches",       sub: "Oldest expiry sold first — always automatic" },
+    { label: "Credit limit enforcement", sub: "System blocks sale if retailer limit reached" },
+    { label: "Nightly expiry scheduler", sub: "1 AM marks expired batches, sends email alerts" },
+    { label: "GST-ready invoices",       sub: "HSN snapshot on every line — GSTR-1 ready" },
+    { label: "Batch recall trace",       sub: "One batch → every retailer who received it" },
+    { label: "Zero manual outstanding",  sub: "All balances update automatically on every action" },
   ];
-
-  const px = (mx - 0.5) * 28;
-  const py = (my - 0.5) * 18;
 
   return (
-    <div className={`hw-root ${ready?"hw-ready":""}`}>
-      <CanvasBg />
+    <div className="hw-root">
+      <canvas ref={canvasRef} className="hw-canvas" />
 
-      {/* Global mouse-parallax glow */}
-      <div className="hw-pglow" style={{transform:`translate(${-px*0.35}px,${-py*0.35}px)`}}/>
+      {/* ── NAV ── */}
+      <nav className="hw-nav">
+        <div className="hw-nav-logo">
+          <span className="hw-logo-dot" />
+          VMS<span className="hw-logo-acc">Pro</span>
+        </div>
+        <div className="hw-nav-links">
+          {[
+            { label: "Dashboard", path: "/master/dashboard" },
+            { label: "Sales",     path: "/master/salesshrt" },
+            { label: "Purchase",  path: "/master/purchase"  },
+            { label: "Inventory", path: "/master/inventory" },
+            { label: "Reports",   path: "/master/reports"   },
+          ].map(l => (
+            <button key={l.label} className="hw-nav-link" onClick={() => navigate(l.path)}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <div className="hw-nav-right">
+          <LiveClock />
+          <button className="hw-nav-cta" onClick={() => navigate("/master/dashboard")}>
+            Dashboard →
+          </button>
+        </div>
+      </nav>
 
-      <LiveClock />
-      <Ticker />
+      <main className="hw-main">
 
-      {/* ═══ THREE-COLUMN LAYOUT ═══════════════════════════ */}
-      <main className="hw-layout">
-
-        {/* ── LEFT ──────────────────────────────────────── */}
-        <aside className="hw-left">
-
-          <div className="hw-sys-badge">
-            <span className="hw-sys-led"/><span className="hw-sys-led hw-sled2"/>
-            SYSTEM ONLINE — VMS v2.0
+        {/* ── HERO ── */}
+        <section className="hw-hero">
+          <div className="hw-hero-eyebrow">
+            <span className="hw-eyebrow-dot" />
+            Medical Wholesale ERP
           </div>
-
-          <div className="hw-greet-wrap">
-            <span className="hw-namaste" aria-label="Namaste">🙏</span>
-            <span className="hw-greet-text">Namaste, <strong>{name}</strong></span>
-          </div>
-
           <h1 className="hw-h1">
-            <span className="hw-h1-vendor">VENDOR</span>
-            <span className="hw-h1-mgmt">MANAGEMENT</span>
-            <span className="hw-h1-sys">
-              <span className="hw-h1-sys-text">SYSTEM</span>
-            </span>
+            Run your pharmacy<br />
+            wholesale <span className="hw-h1-grad">effortlessly</span>
           </h1>
-
-          <p className="hw-desc">
-            Complete command centre — manage products,<br/>
-            track inventory, process invoices and analyse<br/>
-            performance in real time.
+          <p className="hw-hero-sub">
+            Namaste, <strong>{name}</strong>. One system for purchase, sales, batches,
+            expiry, payments and GST — built for Indian medical wholesale shops.
           </p>
-
-          <div className="hw-actions">
-            <button className="hw-btn-launch" onClick={()=>navigate(isLoggedIn?"/onboarding":"/")}>
-              <span className="hw-btn-sweep"/>
-              <span className="hw-btn-label">Launch System</span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8h10M10 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+          <div className="hw-hero-btns">
+            <button className="hw-btn-primary" onClick={() => navigate(isLoggedIn ? "/master/salesshrt" : "/")}>
+              Start billing today
             </button>
-            <button className="hw-btn-dash" onClick={()=>navigate("/master/dashboard")}>
-              Dashboard →
+            <button className="hw-btn-ghost" onClick={() => navigate("/master/dashboard")}>
+              View dashboard
             </button>
           </div>
+        </section>
 
-          <div className="hw-carousel-section">
-            <div className="hw-carousel-label">SYSTEM GALLERY</div>
-            <ImageCarousel images={images}/>
-          </div>
-        </aside>
-
-        {/* ── CENTER — REACTOR ──────────────────────────── */}
-        <div className="hw-center"
-          style={{transform:`translate(${px*0.07}px,${py*0.05}px)`}}>
-
-          <div className="hw-center-tag hw-ct-top">◆ VMS CORE REACTOR ◆</div>
-          <VMSReactor onClick={()=>navigate(isLoggedIn?"/onboarding":"/")} />
-          <div className="hw-center-tag hw-ct-bot">CLICK TO EXPLORE WORKFLOW</div>
-
-          {/* Status indicators around reactor */}
-          <div className="hw-ring-stats">
-            <div className="hrs hrs-tl"><div className="hrs-dot"/>SYNC</div>
-            <div className="hrs hrs-tr"><div className="hrs-dot"/>LIVE</div>
-            <div className="hrs hrs-bl"><div className="hrs-dot hrs-amber"/>STOCK</div>
-            <div className="hrs hrs-br"><div className="hrs-dot"/>99.9%</div>
-          </div>
+        {/* ── STATS STRIP ── */}
+        <div className="hw-stats">
+          {[
+            { val: "Auto",  unit: "",   label: "Batch FIFO selection"  },
+            { val: "1",     unit: " AM", label: "Nightly expiry scan"  },
+            { val: "Zero",  unit: "",   label: "Manual outstanding"    },
+            { val: "GSTR-1", unit: "",  label: "Invoice-ready GST"     },
+          ].map(s => (
+            <div key={s.label} className="hw-stat">
+              <div className="hw-stat-val">{s.val}<span className="hw-stat-unit">{s.unit}</span></div>
+              <div className="hw-stat-lbl">{s.label}</div>
+            </div>
+          ))}
         </div>
 
-        {/* ── RIGHT ─────────────────────────────────────── */}
-        <aside className="hw-right">
-          <div className="hw-right-label">— QUICK ACCESS —</div>
-
-          <div className="hw-cards">
-            {cards.map((c,i)=>(
-              <HUDCard key={i} {...c} delay={0.25+i*0.09}
-                onClick={()=>navigate(c.path)}/>
-            ))}
-          </div>
-
-          {/* System stats */}
-          <div className="hw-sys-stats">
-            {[{k:"UPTIME",v:"99.9%",c:"cyan"},{k:"SYNC",v:"LIVE",c:"green"},{k:"ALERTS",v:"0",c:"amber"}].map((s,i)=>(
-              <div key={i} className="hw-ss-item">
-                <div className={`hw-ss-val hw-ss-${s.c}`}>{s.v}</div>
-                <div className="hw-ss-key">{s.k}</div>
+        {/* ── MODULES ── */}
+        <section className="hw-section">
+          <div className="hw-sec-label">Quick access</div>
+          <h2 className="hw-sec-title">All modules</h2>
+          <div className="hw-modules-grid">
+            {modules.map(m => (
+              <div key={m.key} className="hw-mod-card" onClick={() => navigate(m.path)}
+                style={{ "--mod-color": m.color }}>
+                <div className="hw-mod-icon" style={{ background: `${m.color}18`, border: `1px solid ${m.color}30` }}>
+                  <span style={{ color: m.color }}>{ICONS[m.key]}</span>
+                </div>
+                <div className="hw-mod-body">
+                  <div className="hw-mod-name">{m.label}</div>
+                  <div className="hw-mod-hint">{m.hint}</div>
+                </div>
+                <svg className="hw-mod-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+                  <path d="M3 7h8M7 3l4 4-4 4" />
+                </svg>
               </div>
             ))}
           </div>
+        </section>
 
-          {/* VMS Workflow steps */}
-          <div className="hw-workflow">
-            <div className="hw-wf-label">VMS WORKFLOW</div>
-            {flow.map((f,i)=>(
-              <div key={i} className="hw-wf-step"
-                style={{animationDelay:`${0.5+i*0.07}s`}}
-                onClick={()=>navigate(f.path)}>
-                <span className="hw-wf-num">{f.n}</span>
-                <div className="hw-wf-bar"/>
-                <span className="hw-wf-title">{f.t}</span>
-                <span className="hw-wf-arrow">›</span>
+        {/* ── FEATURES ── */}
+        <section className="hw-section">
+          <div className="hw-sec-label">Core capabilities</div>
+          <h2 className="hw-sec-title">Built for pharma wholesale</h2>
+          <div className="hw-feat-grid">
+            {features.map((f, i) => (
+              <div key={i} className="hw-feat-card">
+                <div className="hw-feat-check">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                    <path d="M2 5l2 2 4-4" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="hw-feat-name">{f.label}</div>
+                  <div className="hw-feat-sub">{f.sub}</div>
+                </div>
               </div>
             ))}
           </div>
-        </aside>
+        </section>
+
+        {/* ── WORKFLOW ── */}
+        <section className="hw-section">
+          <div className="hw-sec-label">Daily workflow</div>
+          <h2 className="hw-sec-title">Your day in 5 steps</h2>
+          <div className="hw-flow">
+            {[
+              { n: "01", title: "Check alerts",    desc: "Expiry · low stock · overdue dues" },
+              { n: "02", title: "Enter purchase",   desc: "Stock in → batches auto-created"   },
+              { n: "03", title: "Bill retailer",    desc: "FIFO batch → invoice in seconds"   },
+              { n: "04", title: "Collect payment",  desc: "Cash/UPI → outstanding drops"      },
+              { n: "05", title: "System runs",      desc: "1 AM scheduler → expiry emails"   },
+            ].map((s, i) => (
+              <div key={i} className="hw-flow-step">
+                <div className="hw-flow-num">{s.n}</div>
+                <div className="hw-flow-name">{s.title}</div>
+                <div className="hw-flow-desc">{s.desc}</div>
+                {i < 4 && <div className="hw-flow-line" />}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── CTA ── */}
+        <section className="hw-cta">
+          <div className="hw-cta-glow" />
+          <div className="hw-cta-text">
+            <h2 className="hw-cta-title">Ready to modernize your shop?</h2>
+            <p className="hw-cta-sub">First bill in under 30 minutes. One owner, zero complexity.</p>
+          </div>
+          <div className="hw-cta-btns">
+            <button className="hw-btn-primary" onClick={() => navigate(isLoggedIn ? "/onboarding" : "/")}>
+              Launch system
+            </button>
+            <button className="hw-btn-ghost" onClick={() => navigate("/master/dashboard")}>
+              View dashboard
+            </button>
+          </div>
+        </section>
+
+        {/* ── FOOTER ── */}
+        <footer className="hw-footer">
+          <span className="hw-footer-logo">VMS<span style={{ color: "#3b82f6" }}>Pro</span></span>
+          <span className="hw-footer-note">Medical Wholesale Management System · v2.0</span>
+        </footer>
+
       </main>
     </div>
   );
