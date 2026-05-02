@@ -1,12 +1,12 @@
 /* ============================================================
-   VendorOnboarding.css
-   ALL rules scoped under .vms-root — zero global leakage
+   VendorOnboarding.css  —  COMPLETE & UPDATED
+   All rules scoped under .vms-root — zero global leakage
    No :root overrides · No global resets · No fixed positions
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap');
 
-/* ─── Root container — holds ALL local tokens ───────────── */
+/* ─── Root container ─────────────────────────────────────── */
 .vms-root {
   position: relative;
   min-height: 100vh;
@@ -16,7 +16,6 @@
   color: #e8eaf0;
   box-sizing: border-box;
 
-  /* ── Local CSS tokens (NO :root — stays scoped here) ─── */
   --vo-bg-deep:    #020409;
   --vo-bg-card:    #0d1117;
   --vo-bg-card2:   #161b22;
@@ -30,12 +29,21 @@
   --vo-green:      #06d6a0;
 }
 
-/* Scope box-sizing only inside vms-root */
 .vms-root *, .vms-root *::before, .vms-root *::after {
   box-sizing: border-box;
 }
 
-/* ─── Background grid (absolute, NOT fixed) ─────────────── */
+/* ─── Canvas background ──────────────────────────────────── */
+.vms-root .vo-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Background grid ────────────────────────────────────── */
 .vms-root .vo-grid-overlay {
   position: absolute;
   inset: 0;
@@ -47,7 +55,7 @@
   z-index: 0;
 }
 
-/* ─── Background particles (absolute, NOT fixed) ─────────── */
+/* ─── Background particles ───────────────────────────────── */
 .vms-root .vo-bg-particles {
   position: absolute;
   inset: 0;
@@ -65,13 +73,13 @@
 }
 
 @keyframes vo-floatUp {
-  0%   { transform: translateY(0) scale(1);    opacity: 0; }
+  0%   { transform: translateY(0) scale(1);       opacity: 0; }
   20%  { opacity: 0.5; }
   80%  { opacity: 0.3; }
   100% { transform: translateY(-60vh) scale(0.5); opacity: 0; }
 }
 
-/* ─── Hero SVG characters (absolute, NOT fixed) ──────────── */
+/* ─── Hero SVG characters ────────────────────────────────── */
 .vms-root .vo-hero-left,
 .vms-root .vo-hero-right {
   position: absolute;
@@ -105,48 +113,109 @@
   overflow: visible;
 }
 
-/* ─── SVG animations (all prefixed vo- to avoid collisions) */
+/* ─── SVG animations ─────────────────────────────────────── */
+.vms-root .vo-head-pulse {
+  animation: vo-headBob 3s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+@keyframes vo-headBob {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-4px); }
+}
 
-.vms-root .vo-head-pulse { animation: vo-headBob 3s ease-in-out infinite; transform-origin: center bottom; }
-@keyframes vo-headBob { 0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)} }
+.vms-root .vo-arm-swing {
+  animation: vo-armSwing 2.5s ease-in-out infinite;
+  transform-origin: 62px 210px;
+}
+@keyframes vo-armSwing {
+  0%,100% { transform: rotate(0deg); }
+  50%     { transform: rotate(-8deg); }
+}
 
-.vms-root .vo-arm-swing { animation: vo-armSwing 2.5s ease-in-out infinite; transform-origin: 62px 210px; }
-@keyframes vo-armSwing { 0%,100%{transform:rotate(0deg)}50%{transform:rotate(-8deg)} }
+.vms-root .vo-web-shoot {
+  animation: vo-webExtend 2.5s ease-in-out infinite;
+}
+@keyframes vo-webExtend {
+  0%,100% { stroke-dashoffset: 0;   opacity: .8; }
+  50%     { stroke-dashoffset: -20; opacity: .4; }
+}
 
-.vms-root .vo-web-shoot { animation: vo-webExtend 2.5s ease-in-out infinite; }
-@keyframes vo-webExtend { 0%,100%{stroke-dashoffset:0;opacity:.8}50%{stroke-dashoffset:-20;opacity:.4} }
-
-.vms-root .vo-leg-float   { animation: vo-legFloat  3s ease-in-out infinite; transform-origin: 82px 248px; }
-.vms-root .vo-leg-float-r { animation: vo-legFloatR 3s ease-in-out infinite; transform-origin: 118px 248px; }
+.vms-root .vo-leg-float {
+  animation: vo-legFloat 3s ease-in-out infinite;
+  transform-origin: 82px 248px;
+}
+.vms-root .vo-leg-float-r {
+  animation: vo-legFloatR 3s ease-in-out infinite;
+  transform-origin: 118px 248px;
+}
 @keyframes vo-legFloat  { 0%,100%{transform:rotate(0deg)}50%{transform:rotate(2deg)} }
 @keyframes vo-legFloatR { 0%,100%{transform:rotate(0deg)}50%{transform:rotate(-2deg)} }
 
-.vms-root .vo-body-glow { animation: vo-bodyPulse 2s ease-in-out infinite; filter: drop-shadow(0 0 8px #e6394660); }
-@keyframes vo-bodyPulse { 0%,100%{filter:drop-shadow(0 0 8px #e6394660)}50%{filter:drop-shadow(0 0 16px #e6394699)} }
+.vms-root .vo-body-glow {
+  animation: vo-bodyPulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px #e6394660);
+}
+@keyframes vo-bodyPulse {
+  0%,100% { filter: drop-shadow(0 0 8px  #e6394660); }
+  50%     { filter: drop-shadow(0 0 16px #e6394699); }
+}
 
 .vms-root .vo-eye-glow { animation: vo-eyeBlink 4s ease-in-out infinite; }
-@keyframes vo-eyeBlink { 0%,90%,100%{opacity:.9}95%{opacity:.1} }
+@keyframes vo-eyeBlink {
+  0%,90%,100% { opacity: .9; }
+  95%         { opacity: .1; }
+}
 
 .vms-root .vo-aura-pulse { animation: vo-auraPulse 2.5s ease-in-out infinite; }
-@keyframes vo-auraPulse { 0%,100%{opacity:.05}50%{opacity:.11} }
+@keyframes vo-auraPulse {
+  0%,100% { opacity: .05; }
+  50%     { opacity: .11; }
+}
 
-.vms-root .vo-cosmic-body { animation: vo-cosmicPulse 2.5s ease-in-out infinite; filter: drop-shadow(0 0 12px #4cc9f080); }
-@keyframes vo-cosmicPulse { 0%,100%{filter:drop-shadow(0 0 12px #4cc9f080)}50%{filter:drop-shadow(0 0 24px #4cc9f0bb)} }
+.vms-root .vo-cosmic-body {
+  animation: vo-cosmicPulse 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px #4cc9f080);
+}
+@keyframes vo-cosmicPulse {
+  0%,100% { filter: drop-shadow(0 0 12px #4cc9f080); }
+  50%     { filter: drop-shadow(0 0 24px #4cc9f0bb); }
+}
 
 .vms-root .vo-cosmic-eye { animation: vo-eyeGlow 1.8s ease-in-out infinite; }
-@keyframes vo-eyeGlow { 0%,100%{opacity:1}50%{opacity:.6} }
+@keyframes vo-eyeGlow {
+  0%,100% { opacity: 1; }
+  50%     { opacity: .6; }
+}
 
-.vms-root .vo-crest-glow { animation: vo-crestPulse 2s ease-in-out infinite; filter: drop-shadow(0 0 4px #ffd60a); }
-@keyframes vo-crestPulse { 0%,100%{filter:drop-shadow(0 0 4px #ffd60a)}50%{filter:drop-shadow(0 0 12px #ffd60a)} }
+.vms-root .vo-crest-glow {
+  animation: vo-crestPulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px #ffd60a);
+}
+@keyframes vo-crestPulse {
+  0%,100% { filter: drop-shadow(0 0 4px  #ffd60a); }
+  50%     { filter: drop-shadow(0 0 12px #ffd60a); }
+}
 
-.vms-root .vo-star-pulse { animation: vo-starSpin 6s linear infinite; transform-origin: center; }
-@keyframes vo-starSpin { 0%{transform:rotate(0deg)}100%{transform:rotate(360deg)} }
+.vms-root .vo-star-pulse {
+  animation: vo-starSpin 6s linear infinite;
+  transform-origin: center;
+}
+@keyframes vo-starSpin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
 .vms-root .vo-blast-pulse { animation: vo-blastPulse 1.2s ease-in-out infinite; }
-@keyframes vo-blastPulse { 0%,100%{opacity:.4}50%{opacity:.2} }
+@keyframes vo-blastPulse {
+  0%,100% { opacity: .4; }
+  50%     { opacity: .2; }
+}
 
 .vms-root .vo-blast-core { animation: vo-blastCore .8s ease-in-out infinite; }
-@keyframes vo-blastCore { 0%,100%{opacity:.8}50%{opacity:1;filter:drop-shadow(0 0 6px #ffd60a)} }
+@keyframes vo-blastCore {
+  0%,100% { opacity: .8; }
+  50%     { opacity: 1; filter: drop-shadow(0 0 6px #ffd60a); }
+}
 
 .vms-root .vo-particle-1 { animation: vo-pFloat1 2s   ease-in-out infinite; }
 .vms-root .vo-particle-2 { animation: vo-pFloat2 2.5s ease-in-out infinite .3s; }
@@ -164,18 +233,30 @@
 
 .vms-root .vo-ring-pulse-1 { animation: vo-ringExpand 3s ease-in-out infinite; }
 .vms-root .vo-ring-pulse-2 { animation: vo-ringExpand 3s ease-in-out infinite 1s; }
-@keyframes vo-ringExpand { 0%,100%{transform:scale(1);opacity:.15}50%{transform:scale(1.05);opacity:.3} }
+@keyframes vo-ringExpand {
+  0%,100% { transform: scale(1);    opacity: .15; }
+  50%     { transform: scale(1.05); opacity: .3; }
+}
 
-.vms-root .vo-cape-flutter { animation: vo-capeWave 3s ease-in-out infinite; transform-origin: 64px 200px; }
-@keyframes vo-capeWave { 0%,100%{transform:skewX(0deg)}50%{transform:skewX(3deg)} }
-
-.vms-root .vo-leg-hover   { animation: vo-legHover  3s ease-in-out infinite; transform-origin: 82px 248px; }
-.vms-root .vo-leg-hover-r { animation: vo-legHoverR 3s ease-in-out infinite; transform-origin: 118px 248px; }
+.vms-root .vo-leg-hover {
+  animation: vo-legHover 3s ease-in-out infinite;
+  transform-origin: 82px 248px;
+}
+.vms-root .vo-leg-hover-r {
+  animation: vo-legHoverR 3s ease-in-out infinite;
+  transform-origin: 118px 248px;
+}
 @keyframes vo-legHover  { 0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)} }
 @keyframes vo-legHoverR { 0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)} }
 
-.vms-root .vo-cosmic-arm { animation: vo-armFloat 3s ease-in-out infinite; transform-origin: 138px 200px; }
-@keyframes vo-armFloat { 0%,100%{transform:rotate(0deg)}50%{transform:rotate(4deg)} }
+.vms-root .vo-cosmic-arm {
+  animation: vo-armFloat 3s ease-in-out infinite;
+  transform-origin: 138px 200px;
+}
+@keyframes vo-armFloat {
+  0%,100% { transform: rotate(0deg); }
+  50%     { transform: rotate(4deg); }
+}
 
 /* ─── Main content ───────────────────────────────────────── */
 .vms-root .vms-content {
@@ -195,176 +276,373 @@
 }
 
 /* ─── Header ─────────────────────────────────────────────── */
-.vms-root .vms-header { text-align: center; margin-bottom: 40px; }
+.vms-root .vms-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
 
 .vms-root .vo-badge {
   display: inline-block;
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
   color: var(--vo-text-muted);
   border: 1px solid var(--vo-border);
   background: rgba(255,255,255,0.04);
-  padding: 5px 16px; border-radius: 100px; margin-bottom: 20px;
+  padding: 5px 16px;
+  border-radius: 100px;
+  margin-bottom: 20px;
 }
 
 .vms-root .vms-title {
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(48px, 8vw, 80px);
-  line-height: 0.95; letter-spacing: 2px; color: #fff; margin-bottom: 16px;
+  line-height: 0.95;
+  letter-spacing: 2px;
+  color: #fff;
+  margin: 0 0 16px;
 }
 
-.vms-root .vo-highlight-red  { color: var(--vo-red);  text-shadow: 0 0 30px #e6394660; }
 .vms-root .vo-highlight-blue { color: var(--vo-cyan); text-shadow: 0 0 30px #4cc9f060; }
+.vms-root .vo-highlight-gold { color: var(--vo-gold); text-shadow: 0 0 30px #ffd60a60; }
+.vms-root .vo-highlight-red  { color: var(--vo-red);  text-shadow: 0 0 30px #e6394660; }
 
 .vms-root .vms-subtitle {
-  font-size: 15px; color: var(--vo-text-muted);
-  max-width: 440px; margin: 0 auto; line-height: 1.6;
+  font-size: 15px;
+  color: var(--vo-text-muted);
+  max-width: 440px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ─── Phase selector nav ─────────────────────────────────── */
+.vms-root .vo-phase-nav {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.vms-root .vo-phase-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--vo-border);
+  background: var(--vo-bg-card);
+  color: var(--vo-text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.vms-root .vo-phase-btn:hover {
+  border-color: var(--ph-color);
+  color: var(--vo-text);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--ph-color) 25%, transparent);
+}
+
+.vms-root .vo-phase-btn.vo-phase-active {
+  border-color: var(--ph-color);
+  background: linear-gradient(135deg, var(--vo-bg-card2), var(--vo-bg-card));
+  color: #fff;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--ph-color) 30%, transparent);
+}
+
+.vms-root .vo-phase-btn.vo-phase-done {
+  border-color: color-mix(in srgb, var(--ph-color) 50%, transparent);
+  opacity: 0.75;
+}
+
+.vms-root .vo-phase-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.vms-root .vo-phase-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.vms-root .vo-phase-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.vms-root .vo-phase-count {
+  font-size: 10px;
+  opacity: 0.6;
+  letter-spacing: 0.5px;
+}
+
+.vms-root .vo-phase-check {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ph-color);
+  margin-left: 4px;
+}
+
+.vms-root .vo-phase-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 0 0 14px 14px;
+  opacity: 0.8;
+}
+
+/* ─── Global progress bar ────────────────────────────────── */
+.vms-root .vo-global-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.vms-root .vo-gp-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--vo-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.vms-root .vo-gp-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 0 8px currentColor;
+}
+
+.vms-root .vo-gp-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  min-width: 80px;
+  text-align: right;
 }
 
 /* ─── Step pill nav ──────────────────────────────────────── */
 .vms-root .vo-step-nav {
-  display: flex; gap: 8px; flex-wrap: wrap;
-  justify-content: center; margin-bottom: 24px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 24px;
 }
 
 .vms-root .vo-step-pill {
   position: relative;
-  display: flex; align-items: center; gap: 6px;
-  padding: 7px 14px; border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 100px;
   border: 1px solid var(--vo-border);
   background: var(--vo-bg-card);
   color: var(--vo-text-muted);
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
-  cursor: pointer; transition: all 0.25s ease;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.25s ease;
 }
 
 .vms-root .vo-step-pill:hover {
   border-color: var(--pill-color);
   color: var(--vo-text);
-  box-shadow: 0 0 12px var(--pill-glow);
 }
 
-.vms-root .vo-step-pill.vo-active {
+/* active step pill */
+.vms-root .vo-step-pill.vo-sp-active {
   border-color: var(--pill-color);
   background: linear-gradient(135deg, var(--vo-bg-card2), var(--vo-bg-card));
   color: #fff;
-  box-shadow: 0 0 20px var(--pill-glow);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--pill-color) 30%, transparent);
+}
+
+/* completed step pill */
+.vms-root .vo-step-pill.vo-sp-done {
+  border-color: color-mix(in srgb, var(--pill-color) 50%, transparent);
+  color: var(--pill-color);
+  opacity: 0.7;
 }
 
 .vms-root .vo-pill-icon  { font-size: 15px; }
 .vms-root .vo-pill-label { font-size: 12px; }
 
 .vms-root .vo-pill-dot {
-  position: absolute; bottom: -5px; left: 50%;
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
   transform: translateX(-50%);
-  width: 4px; height: 4px; border-radius: 50%;
-  background: var(--pill-color); box-shadow: 0 0 6px var(--pill-color);
-}
-
-/* ─── Progress connector bar ─────────────────────────────── */
-.vms-root .vo-connector-bar {
-  position: relative; height: 3px;
-  background: var(--vo-border); border-radius: 2px;
-  margin: 0 20px 40px;
-}
-
-.vms-root .vo-connector-fill {
-  position: absolute; left: 0; top: 0; height: 100%;
-  border-radius: 2px;
-  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
-  box-shadow: 0 0 8px currentColor;
-}
-
-.vms-root .vo-connector-node {
-  position: absolute; top: 50%;
-  transform: translate(-50%,-50%);
-  width: 22px; height: 22px; border-radius: 50%;
-  background: var(--vo-bg-deep);
-  border: 2px solid var(--vo-border);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 10px; font-weight: 700;
-  color: var(--vo-text-muted); cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.vms-root .vo-connector-node.vo-done {
-  border-color: var(--nc); background: var(--nc);
-  color: #000; box-shadow: 0 0 10px var(--nc);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
 }
 
 /* ─── Step detail card ───────────────────────────────────── */
 .vms-root .vo-step-card {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 0; background: var(--vo-bg-card);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  background: var(--vo-bg-card);
   border: 1px solid var(--step-color, var(--vo-border));
-  border-radius: 20px; overflow: hidden;
-  box-shadow: 0 0 40px var(--step-glow, transparent), 0 20px 60px rgba(0,0,0,0.4);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 0 40px var(--step-glow, transparent),
+    0 20px 60px rgba(0,0,0,0.4);
   animation: vo-cardPop 0.4s cubic-bezier(0.16,1,0.3,1);
   margin-bottom: 32px;
 }
 
 @keyframes vo-cardPop {
   from { opacity: 0; transform: translateY(16px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
+/* ── Left panel ── */
 .vms-root .vo-card-left {
   padding: 36px 32px;
   border-right: 1px solid var(--vo-border);
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   background: linear-gradient(135deg, var(--vo-bg-card2) 0%, var(--vo-bg-card) 100%);
 }
 
 .vms-root .vo-step-tag {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 11px; font-weight: 700; letter-spacing: 2px; opacity: 0.9;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  opacity: 0.9;
 }
 
 .vms-root .vo-step-big-icon {
-  font-size: 48px; line-height: 1;
+  font-size: 48px;
+  line-height: 1;
   filter: drop-shadow(0 0 12px var(--step-color));
   animation: vo-iconFloat 3s ease-in-out infinite;
 }
-@keyframes vo-iconFloat { 0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-6px) rotate(4deg)} }
+@keyframes vo-iconFloat {
+  0%,100% { transform: translateY(0) rotate(0deg); }
+  50%     { transform: translateY(-6px) rotate(4deg); }
+}
 
 .vms-root .vo-step-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 36px; letter-spacing: 1px; color: #fff; line-height: 1;
+  font-size: 36px;
+  letter-spacing: 1px;
+  color: #fff;
+  line-height: 1;
+  margin: 0;
 }
 
 .vms-root .vo-step-sub {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0;
 }
 
-.vms-root .vo-step-desc { font-size: 13.5px; color: var(--vo-text-muted); line-height: 1.7; flex: 1; }
+.vms-root .vo-step-desc {
+  font-size: 13.5px;
+  color: var(--vo-text-muted);
+  line-height: 1.7;
+  flex: 1;
+  margin: 0;
+}
 
 .vms-root .vo-tip-box {
-  border-left: 3px solid; padding: 10px 14px;
+  border-left: 3px solid;
+  padding: 10px 14px;
   background: rgba(255,255,255,0.03);
   border-radius: 0 8px 8px 0;
-  display: flex; flex-direction: column; gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .vms-root .vo-tip-label {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
-.vms-root .vo-tip-text { font-size: 12.5px; color: var(--vo-text-muted); line-height: 1.5; }
+.vms-root .vo-tip-text {
+  font-size: 12.5px;
+  color: var(--vo-text-muted);
+  line-height: 1.5;
+}
 
-.vms-root .vo-card-right { padding: 36px 32px; display: flex; flex-direction: column; gap: 14px; }
+/* ── "Open …" button ── */
+.vms-root .vo-go-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #000;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 20px var(--step-glow, transparent);
+  align-self: flex-start;
+}
+
+.vms-root .vo-go-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px var(--step-glow, transparent);
+}
+
+/* ── Right panel ── */
+.vms-root .vo-card-right {
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
 .vms-root .vo-actions-label {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 11px; font-weight: 700; letter-spacing: 3px;
-  color: var(--vo-text-muted); margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--vo-text-muted);
+  margin-bottom: 4px;
 }
 
 .vms-root .vo-action-row {
-  display: flex; align-items: flex-start; gap: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
   padding: 10px 14px;
   background: var(--vo-bg-card2);
   border: 1px solid var(--vo-border);
@@ -378,37 +656,119 @@
   box-shadow: 0 0 12px var(--step-glow);
 }
 
-@keyframes vo-rowSlide { from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)} }
-
-.vms-root .vo-action-num {
-  min-width: 22px; height: 22px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 11px; font-weight: 700; color: #000;
-  flex-shrink: 0; margin-top: 1px;
+@keyframes vo-rowSlide {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
-.vms-root .vo-action-text { font-size: 13px; color: var(--vo-text); line-height: 1.5; }
+.vms-root .vo-action-num {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #000;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
 
-/* Nav buttons */
-.vms-root .vo-nav-buttons { display: flex; gap: 10px; margin-top: auto; padding-top: 8px; }
+.vms-root .vo-action-text {
+  font-size: 13px;
+  color: var(--vo-text);
+  line-height: 1.5;
+}
+
+/* ── Phase mini progress dots ── */
+.vms-root .vo-phase-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.vms-root .vo-pp-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--vo-text-muted);
+  white-space: nowrap;
+}
+
+.vms-root .vo-pp-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.vms-root .vo-pp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vo-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.vms-root .vo-pp-dot.vo-pp-active {
+  background: var(--dot-color);
+  box-shadow: 0 0 8px var(--dot-color);
+  transform: scale(1.3);
+}
+
+.vms-root .vo-pp-dot.vo-pp-done {
+  background: color-mix(in srgb, var(--dot-color) 55%, transparent);
+  border-color: var(--dot-color);
+}
+
+.vms-root .vo-pp-dot:hover:not(.vo-pp-active) {
+  border-color: var(--dot-color);
+  transform: scale(1.15);
+}
+
+/* ── Nav buttons ── */
+.vms-root .vo-nav-buttons {
+  display: flex;
+  gap: 10px;
+  padding-top: 4px;
+}
 
 .vms-root .vo-nav-btn {
-  flex: 1; padding: 10px 16px; border-radius: 10px;
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
   border: 1px solid var(--vo-border);
   background: var(--vo-bg-card2);
   color: var(--vo-text-muted);
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
-  cursor: pointer; transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.vms-root .vo-nav-btn:hover:not(:disabled) { border-color: rgba(255,255,255,0.2); color: var(--vo-text); }
-.vms-root .vo-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.vms-root .vo-nav-btn:hover:not(:disabled) {
+  border-color: rgba(255,255,255,0.2);
+  color: var(--vo-text);
+}
+
+.vms-root .vo-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
 
 .vms-root .vo-nav-btn.vo-next,
 .vms-root .vo-nav-btn.vo-finish {
-  color: #000; border: none; font-weight: 800;
+  color: #000;
+  border: none;
+  font-weight: 800;
   box-shadow: 0 4px 20px var(--step-glow);
   transition: all 0.25s ease;
 }
@@ -420,28 +780,174 @@
   filter: brightness(1.15);
 }
 
-/* ─── Flow overview ──────────────────────────────────────── */
-.vms-root .vo-flow-overview {
-  display: flex; align-items: center; justify-content: center;
-  flex-wrap: wrap; gap: 4px;
+/* ─── Phase map (all steps overview) ────────────────────── */
+.vms-root .vo-phase-map {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
   background: var(--vo-bg-card);
   border: 1px solid var(--vo-border);
-  border-radius: 16px; padding: 20px 24px;
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+
+.vms-root .vo-pm-phase {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.vms-root .vo-pm-phase-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+.vms-root .vo-pm-steps {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.vms-root .vo-pm-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.4;
+  min-width: 52px;
+}
+
+.vms-root .vo-pm-step:hover {
+  opacity: 0.75;
+  border-color: var(--pm-color);
+}
+
+.vms-root .vo-pm-step.vo-pm-done {
+  opacity: 0.6;
+  border-color: color-mix(in srgb, var(--pm-color) 50%, transparent);
+}
+
+.vms-root .vo-pm-step.vo-pm-active {
+  opacity: 1;
+  border-color: var(--pm-color);
+  background: color-mix(in srgb, var(--pm-color) 10%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--pm-color) 25%, transparent);
+}
+
+.vms-root .vo-pm-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.vms-root .vo-pm-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--vo-text-muted);
+  text-align: center;
+}
+
+.vms-root .vo-pm-step.vo-pm-active .vo-pm-name {
+  color: var(--pm-color);
+}
+
+.vms-root .vo-pm-arrow {
+  font-size: 16px;
+  opacity: 0.3;
+  padding: 0 2px;
+  font-weight: 700;
+  align-self: center;
+}
+
+/* ─── Legacy / unused — kept for safety ─────────────────── */
+.vms-root .vo-connector-bar {
+  position: relative;
+  height: 3px;
+  background: var(--vo-border);
+  border-radius: 2px;
+  margin: 0 20px 40px;
+}
+
+.vms-root .vo-connector-fill {
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 0 8px currentColor;
+}
+
+.vms-root .vo-connector-node {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--vo-bg-deep);
+  border: 2px solid var(--vo-border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 700;
+  color: var(--vo-text-muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.vms-root .vo-connector-node.vo-done {
+  border-color: var(--nc);
+  background: var(--nc);
+  color: #000;
+  box-shadow: 0 0 10px var(--nc);
+}
+
+.vms-root .vo-flow-overview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: var(--vo-bg-card);
+  border: 1px solid var(--vo-border);
+  border-radius: 16px;
+  padding: 20px 24px;
 }
 
 .vms-root .vo-flow-node {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 8px 12px; border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 10px;
   border: 1px solid transparent;
-  cursor: pointer; transition: all 0.2s ease; opacity: 0.4;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.4;
 }
 
-.vms-root .vo-flow-node:hover { opacity: 0.8; }
-
-.vms-root .vo-flow-node.vo-flow-done { opacity: 0.6; border-color: var(--fc); }
-
+.vms-root .vo-flow-node:hover      { opacity: 0.8; }
+.vms-root .vo-flow-node.vo-flow-done   { opacity: 0.6; border-color: var(--fc); }
 .vms-root .vo-flow-node.vo-flow-active {
-  opacity: 1; border-color: var(--fc);
+  opacity: 1;
+  border-color: var(--fc);
   background: rgba(255,255,255,0.04);
   box-shadow: 0 0 16px color-mix(in srgb, var(--fc) 40%, transparent);
 }
@@ -461,14 +967,21 @@
 
 /* ─── Responsive ─────────────────────────────────────────── */
 @media (max-width: 700px) {
-  .vms-root .vo-step-card     { grid-template-columns: 1fr; }
-  .vms-root .vo-card-left     { border-right: none; border-bottom: 1px solid var(--vo-border); padding: 24px; }
-  .vms-root .vo-card-right    { padding: 24px; }
-  .vms-root .vo-hero-left     { width: 120px; left: -10px; }
-  .vms-root .vo-hero-right    { width: 120px; right: -10px; }
-  .vms-root .vms-content      { padding: 30px 16px 50px; }
-  .vms-root .vo-step-nav      { gap: 6px; }
-  .vms-root .vo-step-pill     { padding: 6px 10px; font-size: 11px; }
-  .vms-root .vo-flow-overview { gap: 2px; padding: 14px 12px; }
-  .vms-root .vo-flow-node     { padding: 6px 8px; }
+  .vms-root .vo-step-card       { grid-template-columns: 1fr; }
+  .vms-root .vo-card-left       { border-right: none; border-bottom: 1px solid var(--vo-border); padding: 24px; }
+  .vms-root .vo-card-right      { padding: 24px; }
+  .vms-root .vo-hero-left       { width: 120px; left: -10px; }
+  .vms-root .vo-hero-right      { width: 120px; right: -10px; }
+  .vms-root .vms-content        { padding: 30px 16px 50px; }
+  .vms-root .vo-step-nav        { gap: 6px; }
+  .vms-root .vo-step-pill       { padding: 6px 10px; font-size: 11px; }
+  .vms-root .vo-phase-nav       { gap: 6px; }
+  .vms-root .vo-phase-btn       { padding: 8px 12px; }
+  .vms-root .vo-phase-label     { font-size: 12px; }
+  .vms-root .vo-phase-map       { gap: 4px; padding: 14px 12px; }
+  .vms-root .vo-pm-step         { padding: 5px 7px; min-width: 44px; }
+  .vms-root .vo-pm-arrow        { display: none; }
+  .vms-root .vo-flow-overview   { gap: 2px; padding: 14px 12px; }
+  .vms-root .vo-flow-node       { padding: 6px 8px; }
+  .vms-root .vo-go-btn          { width: 100%; justify-content: center; }
 }

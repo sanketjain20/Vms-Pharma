@@ -17,6 +17,9 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
       "Sales":        `/api/sales/ToggleStatus?uKey=${uKey}&isDisable=${isDisable}`,
       "Product Type": `http://localhost:8080/api/ProductType/ToggleProdTypeDisable/${uKey}/${isDisable}`,
       "Roles":        `http://localhost:8080/api/Roles/ToggleRoleDisable/${uKey}/${isDisable}`,
+      "Manufacturer": `http://localhost:8080/api/Manufacturer/ToggleManufacturer/${uKey}/${isDisable}`,
+      "Retailer":     `http://localhost:8080/api/Retailer/ToggleDisable/${uKey}/${isDisable}`,
+      "Supplier":     `http://localhost:8080/api/Supplier/ToggleDisable/${uKey}/${isDisable}`,
     };
 
     const apiUrl = apiMap[moduleName];

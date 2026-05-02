@@ -107,14 +107,14 @@
 @keyframes dbRing { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
 
 /* =========================
-   SECTION LABEL (static)
+   SECTION LABEL (static non-button)
 ========================= */
 .db-section-label {
   display:flex; align-items:center; gap:8px;
   font-family:var(--db-font-m); font-size:10px; font-weight:500;
   letter-spacing:.18em; text-transform:uppercase;
   color:var(--sl-color, #3b82f6);
-  margin:24px 0 12px; padding-bottom:10px;
+  margin:28px 0 14px; padding-bottom:10px;
   border-bottom:1px solid var(--db-border);
 }
 .db-section-dot {
@@ -123,37 +123,24 @@
   box-shadow:0 0 6px var(--sl-color, #3b82f6);
   flex-shrink:0;
 }
+.db-section-text { flex:0 0 auto; }
 
 /* =========================
    COLLAPSIBLE SECTION
 ========================= */
 .db-collapsible-section {
-  margin: 20px 0 6px;
-  margin-bottom: 40px;
-  background-color: rgb(20, 19, 19);
-
-  /* Only top border */
-  border-top: none;
-  border-left: none;
-  border-right: none;
-  border-bottom: 2px solid rgb(247, 247, 247);
-
-  /* Only top corners rounded */
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-
-  /* Remove bottom rounding */
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  margin: 0 0 28px;
+  border-radius: var(--db-r-lg);
+  overflow: hidden;
 }
 
-/* Button-styled section label */
+/* ── Toggle button ── */
 .db-section-label--btn {
   width: 100%;
   background: rgba(255,255,255,0.018);
   border: 1px solid var(--db-border);
   border-radius: var(--db-r-md);
-  padding: 10px 14px;
+  padding: 11px 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -164,16 +151,15 @@
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--sl-color, #3b82f6);
-  transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
+  transition: background 0.18s, border-color 0.2s, box-shadow 0.2s;
   text-align: left;
   margin: 0;
-  padding-bottom: 10px;
 }
 
 .db-section-label--btn:hover {
   background: rgba(255,255,255,0.035);
   border-color: var(--sl-color, #3b82f6);
-  box-shadow: 0 0 18px -8px var(--sl-color, #3b82f6);
+  box-shadow: 0 0 22px -8px var(--sl-color, #3b82f6);
 }
 
 .db-section-label--open {
@@ -184,11 +170,7 @@
   border-bottom-color: transparent;
 }
 
-.db-section-text {
-  flex-shrink: 0;
-}
-
-/* Inline summary chips (shown when collapsed) */
+/* ── Summary chips (visible when collapsed) ── */
 .db-section-summary {
   display: flex;
   align-items: center;
@@ -224,18 +206,19 @@
   letter-spacing: 0;
 }
 
-/* Chevron */
+/* ── Chevron ── */
 .db-section-chevron {
   margin-left: auto;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  opacity: 0.55;
-  transition: opacity 0.2s, transform 0.25s var(--db-ease);
+  opacity: 0.5;
+  transition: opacity 0.2s, transform 0.28s var(--db-ease);
 }
 .db-section-label--btn:hover .db-section-chevron { opacity: 1; }
+.db-section-label--open .db-section-chevron { transform: rotate(180deg); opacity: 0.8; }
 
-/* Collapse body */
+/* ── Animated body ── */
 .db-section-body {
   display: grid;
   grid-template-rows: 0fr;
@@ -243,8 +226,8 @@
   border: 1px solid var(--db-border);
   border-top: none;
   border-radius: 0 0 var(--db-r-md) var(--db-r-md);
-  overflow: hidden;
   background: rgba(255,255,255,0.008);
+  overflow: hidden;
 }
 
 .db-section-body--open {
@@ -255,7 +238,7 @@
 
 .db-section-body-inner {
   overflow: hidden;
-  padding: 14px 0 4px;
+  padding: 16px 0 8px;
 }
 
 /* =========================
@@ -263,7 +246,7 @@
 ========================= */
 .db-cards-row {
   display:grid; gap:12px; margin-bottom:6px;
-  padding: 0 12px;
+  padding: 0 14px;
 }
 .db-cards-4 { grid-template-columns: repeat(4,1fr); }
 
@@ -291,7 +274,7 @@
   box-shadow:0 28px 70px rgba(0,0,0,.85), 0 0 30px -10px var(--card-color, transparent);
 }
 
-/* Top color beam */
+/* Color beam on top */
 .db-stat-beam {
   position:absolute; top:0; left:0; right:0; height:2px;
   background:linear-gradient(to right, var(--card-color, #3b82f6), transparent 70%);
@@ -310,7 +293,7 @@
 .db-bl{bottom:0;left:0;border-width:0 0 1px 1px;border-radius:0 0 0 var(--db-r-lg)}
 .db-br{bottom:0;right:0;border-width:0 1px 1px 0;border-radius:0 0 var(--db-r-lg) 0}
 
-/* Icon */
+/* Icon box */
 .db-stat-icon {
   width:38px; height:38px; border-radius:var(--db-r-sm);
   background:rgba(0,0,0,.4); border:1px solid var(--card-color, #3b82f6);
@@ -320,7 +303,7 @@
 .db-stat-icon svg { width:18px; height:18px; }
 .db-stat-card:hover .db-stat-icon { box-shadow:0 0 14px var(--card-color, transparent); }
 
-/* Stat body */
+/* Text */
 .db-stat-body { display:flex; flex-direction:column; gap:3px; flex:1; min-width:0; }
 .db-stat-label { font-family:var(--db-font-m); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--db-text-2); }
 .db-stat-value { font-family:var(--db-font-d); font-size:20px; font-weight:700; letter-spacing:-.02em; color:var(--db-text-1); line-height:1.15; }
@@ -370,7 +353,7 @@
 .db-list-empty { font-family:var(--db-font-m); font-size:10px; color:var(--db-text-3); display:block; margin-top:6px; }
 
 /* =========================
-   CHARTS
+   CHART CARDS
 ========================= */
 .db-charts-row { display:grid; gap:14px; margin-bottom:14px; }
 .db-charts-2   { grid-template-columns:1fr 1fr; }
@@ -384,20 +367,116 @@
   animation:dbCard .55s var(--db-spring) both;
   transition:transform .28s var(--db-spring), border-color .2s, box-shadow .28s;
 }
-.db-chart-card:hover { transform:translateY(-3px) scale(1.006); border-color:var(--db-border3); }
-
-.db-chart-header {
-  display:flex; align-items:center; gap:9px; padding:12px 14px;
-  border-bottom:1px solid var(--db-border); background:rgba(0,0,0,.35);
-  flex-shrink:0;
+.db-chart-card:hover {
+  transform:translateY(-3px) scale(1.006);
+  border-color:var(--db-border3);
+  box-shadow:0 28px 70px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.018);
 }
+
+/* ── Chart header ── */
+.db-chart-header {
+  display:flex; align-items:center; gap:9px;
+  padding:11px 14px;
+  border-bottom:1px solid var(--db-border);
+  background:rgba(0,0,0,.38);
+  flex-shrink:0;
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.db-chart-header-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+}
+
+.db-chart-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
 .db-chart-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 .db-chart-title {
   font-family:var(--db-font-m); font-size:10px; letter-spacing:.1em;
   text-transform:uppercase; color:var(--db-text-2);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
-.db-chart-body { flex:1; padding:14px 10px 10px; min-height:300px; }
+/* ── Chart type switcher ── */
+.db-chart-switcher {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--db-border);
+  border-radius: var(--db-r-sm);
+  padding: 3px;
+}
+
+.db-chart-switch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--db-text-3);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.db-chart-switch-btn:hover {
+  color: var(--db-text-1);
+  background: rgba(255,255,255,0.06);
+}
+
+.db-chart-switch-active {
+  color: var(--sw-color, #3b82f6) !important;
+  background: rgba(255,255,255,0.07) !important;
+  border-color: var(--sw-color, #3b82f6) !important;
+  box-shadow: 0 0 10px -3px var(--sw-color, #3b82f6);
+}
+
+/* ── Inline chart legend (from Dashboard.jsx) ── */
+.db-chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.db-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--db-font-m);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--db-text-2);
+}
+
+.db-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Chart body ── */
+.db-chart-body {
+  flex:1;
+  padding: 0;       /* padding handled by CustomChart internals */
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
 
 /* =========================
    SCROLLBARS
@@ -423,4 +502,12 @@
   .db-title    { font-size:22px; }
   .db-stat-value { font-size:17px; }
   .db-section-summary { display:none; }
+  .db-chart-header { flex-direction: column; align-items: flex-start; }
+  .db-chart-header-right { width: 100%; justify-content: flex-end; }
+}
+
+@media (max-width: 480px) {
+  .db-cards-row { padding: 0 8px; }
+  .db-section-label--btn { padding: 10px 10px; }
+  .db-charts-3 { grid-template-columns:1fr; }
 }

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -13,61 +13,67 @@ import {
   Tooltip,
   CartesianGrid,
   LabelList,
+  Legend,
 } from "recharts";
 
 /* ─────────────────────────────────────────
-   CUSTOM TOOLTIP
+   MULTI-SERIES CUSTOM TOOLTIP
 ───────────────────────────────────────── */
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, lineLabels }) => {
   if (!active || !payload || !payload.length) return null;
-  const val = payload[0].value;
-  const formatted =
+
+  const fmt = (val) =>
     typeof val === "number" && val > 999
-      ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val)
+      ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(val)
       : val;
+
   return (
     <div style={{
-      background: "rgba(5,6,12,0.97)",
-      border: "1px solid rgba(59,130,246,0.3)",
-      borderRadius: 10,
-      padding: "10px 14px",
-      boxShadow: "0 16px 40px rgba(0,0,0,0.9)",
-      backdropFilter: "blur(20px)",
+      background: "rgba(5,6,14,0.98)",
+      border: "1px solid rgba(59,130,246,0.35)",
+      borderRadius: 12,
+      padding: "12px 16px",
+      boxShadow: "0 20px 50px rgba(0,0,0,0.95)",
+      backdropFilter: "blur(24px)",
       fontFamily: "'JetBrains Mono', monospace",
       zIndex: 9999,
+      minWidth: 160,
     }}>
-      <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "#525667", marginBottom: 6 }}>
+      <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "#525667", marginBottom: 8 }}>
         {label}
       </div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: "#e6e8f0", fontFamily: "'Oxanium', sans-serif" }}>
-        {formatted}
-      </div>
-      <div style={{ width: "100%", height: 1, background: "linear-gradient(to right, rgba(59,130,246,0.5), transparent)", marginTop: 8 }} />
+      {payload.map((p, i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: i < payload.length - 1 ? 6 : 0 }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: "50%",
+            background: p.color || p.fill,
+            flexShrink: 0,
+            boxShadow: `0 0 6px ${p.color || p.fill}`,
+          }} />
+          <span style={{ fontSize: 10, color: "#6b7280", flex: 1 }}>
+            {lineLabels?.[i] || p.name || p.dataKey}
+          </span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#e6e8f0", fontFamily: "'Oxanium', sans-serif" }}>
+            {fmt(p.value)}
+          </span>
+        </div>
+      ))}
+      <div style={{ width: "100%", height: 1, background: "linear-gradient(to right, rgba(59,130,246,0.5), transparent)", marginTop: 10 }} />
     </div>
   );
 };
 
 /* ─────────────────────────────────────────
-   PIE LABELS — computed outside recharts
-   Strategy: compute all label positions in JS,
-   detect collisions, push them apart vertically,
-   then render as SVG overlay on top of the pie.
+   PIE LABELS
 ───────────────────────────────────────── */
 const RADIAN = Math.PI / 180;
 
-/*
-  Compute label layout for N slices.
-  Returns array of {x, y, anchor, name, pct, value, lineStart, lineEnd}
-  where lineStart is the spoke origin on the pie edge and lineEnd is the elbow.
-*/
 function computePieLabels(data, yKey, xKey, cx, cy, outerRadius, pieColors) {
   if (!data || data.length === 0) return [];
-
   const total = data.reduce((s, d) => s + (Number(d[yKey]) || 0), 0);
   if (total === 0) return [];
 
-  // Build angle info for each slice
-  let startAngle = 0; // degrees, 0 = right, going clockwise
+  let startAngle = 0;
   const slices = data.map((d, i) => {
     const value = Number(d[yKey]) || 0;
     const pct = value / total;
@@ -77,18 +83,13 @@ function computePieLabels(data, yKey, xKey, cx, cy, outerRadius, pieColors) {
     return { name: d[xKey], value, pct, mid, color: pieColors[i % pieColors.length] };
   });
 
-  // Spoke end radius (just outside pie)
-  const spokeR = outerRadius + 12;
-  // Elbow radius (where line bends toward text)
-  const elbowR = outerRadius + 28;
-  // Text starts at this offset from elbow
+  const spokeR = outerRadius + 14;
+  const elbowR = outerRadius + 30;
   const textOffsetX = 8;
-  // Line anchor is on elbow
-  const MIN_LABEL_GAP = 18; // px vertical minimum between label centres
+  const MIN_LABEL_GAP = 18;
 
-  // Compute raw positions
   const labels = slices.map((s) => {
-    const rad = -s.mid * RADIAN; // recharts uses clockwise from top
+    const rad = -s.mid * RADIAN;
     const sx = cx + spokeR * Math.cos(rad);
     const sy = cy + spokeR * Math.sin(rad);
     const ex = cx + elbowR * Math.cos(rad);
@@ -98,13 +99,8 @@ function computePieLabels(data, yKey, xKey, cx, cy, outerRadius, pieColors) {
     return { ...s, sx, sy, ex, ey, isRight, textX, rawY: ey };
   });
 
-  // Separate into left and right groups
-  const right = labels.filter(l => l.isRight).sort((a, b) => a.rawY - b.rawY);
-  const left  = labels.filter(l => !l.isRight).sort((a, b) => a.rawY - b.rawY);
-
-  // Push apart vertically within each group to avoid overlap
   const spread = (group) => {
-    for (let pass = 0; pass < 5; pass++) {
+    for (let pass = 0; pass < 8; pass++) {
       for (let i = 1; i < group.length; i++) {
         const prev = group[i - 1];
         const curr = group[i];
@@ -118,16 +114,16 @@ function computePieLabels(data, yKey, xKey, cx, cy, outerRadius, pieColors) {
     }
   };
 
+  const right = labels.filter(l => l.isRight).sort((a, b) => a.rawY - b.rawY);
+  const left  = labels.filter(l => !l.isRight).sort((a, b) => a.rawY - b.rawY);
   spread(right);
   spread(left);
 
   return [...right, ...left];
 }
 
-/* Custom pie label renderer using SVG overlay */
-const PieLabelsOverlay = ({ data, yKey, xKey, cx, cy, outerRadius, pieColors, width, height }) => {
+const PieLabelsOverlay = ({ data, yKey, xKey, cx, cy, outerRadius, pieColors }) => {
   if (!cx || !cy || !outerRadius) return null;
-
   const labels = computePieLabels(data, yKey, xKey, cx, cy, outerRadius, pieColors);
 
   return (
@@ -135,7 +131,6 @@ const PieLabelsOverlay = ({ data, yKey, xKey, cx, cy, outerRadius, pieColors, wi
       {labels.map((l, i) => {
         const shortName = l.name && l.name.length > 14 ? l.name.slice(0, 13) + "…" : (l.name || "");
         const pctStr = `${(l.pct * 100).toFixed(1)}%`;
-        // Value formatted
         const valStr = l.value > 999999
           ? `₹${(l.value / 1000000).toFixed(1)}M`
           : l.value > 999
@@ -144,52 +139,22 @@ const PieLabelsOverlay = ({ data, yKey, xKey, cx, cy, outerRadius, pieColors, wi
 
         return (
           <g key={i}>
-            {/* Spoke from pie edge to elbow */}
-            <line
-              x1={l.sx} y1={l.sy}
-              x2={l.ex} y2={l.rawY}
-              stroke={l.color}
-              strokeWidth={1}
-              strokeOpacity={0.5}
-            />
-            {/* Horizontal tick from elbow to text */}
-            <line
-              x1={l.ex} y1={l.rawY}
-              x2={l.textX} y2={l.rawY}
-              stroke={l.color}
-              strokeWidth={1}
-              strokeOpacity={0.5}
-            />
-            {/* Dot at elbow */}
+            <line x1={l.sx} y1={l.sy} x2={l.ex} y2={l.rawY} stroke={l.color} strokeWidth={1} strokeOpacity={0.5} />
+            <line x1={l.ex} y1={l.rawY} x2={l.textX} y2={l.rawY} stroke={l.color} strokeWidth={1} strokeOpacity={0.5} />
             <circle cx={l.ex} cy={l.rawY} r={2} fill={l.color} fillOpacity={0.8} />
-
-            {/* Name */}
             <text
               x={l.textX + (l.isRight ? 2 : -2)}
               y={l.rawY - 6}
               textAnchor={l.isRight ? "start" : "end"}
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 9,
-                fill: "rgba(210,215,230,0.95)",
-                fontWeight: 600,
-                letterSpacing: "0.03em",
-              }}
+              style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fill: "rgba(210,215,230,0.95)", fontWeight: 600, letterSpacing: "0.03em" }}
             >
               {shortName}
             </text>
-
-            {/* Value + pct */}
             <text
               x={l.textX + (l.isRight ? 2 : -2)}
               y={l.rawY + 7}
               textAnchor={l.isRight ? "start" : "end"}
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 8,
-                fill: l.color,
-                letterSpacing: "0.02em",
-              }}
+              style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fill: l.color, letterSpacing: "0.02em" }}
             >
               {valStr} · {pctStr}
             </text>
@@ -261,7 +226,7 @@ const ChartCanvas3D = ({ color }) => {
 };
 
 /* ─────────────────────────────────────────
-   ANIMATED BAR
+   ANIMATED BAR SHAPE
 ───────────────────────────────────────── */
 const AnimatedBar = (props) => {
   const { fill, x, y, width, height } = props;
@@ -281,51 +246,90 @@ const AnimatedBar = (props) => {
 };
 
 /* ─────────────────────────────────────────
-   BAR CHART — scrollable when many items
+   MULTI-SERIES LEGEND (inline, compact)
 ───────────────────────────────────────── */
-const BarChartInner = ({ data, xKey, yKey, barColor, formatYAxis, yAxisMax, gradId }) => {
+const SeriesLegend = ({ keys, colors, labels }) => (
+  <div style={{
+    display: "flex", gap: 16, flexWrap: "wrap",
+    padding: "6px 14px 2px",
+    borderBottom: "1px solid rgba(255,255,255,0.05)",
+  }}>
+    {keys.map((k, i) => (
+      <div key={k} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{
+          width: 10, height: 10, borderRadius: 2,
+          background: colors[i % colors.length],
+          boxShadow: `0 0 6px ${colors[i % colors.length]}`,
+          display: "inline-block",
+        }} />
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 10,
+          color: colors[i % colors.length],
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+        }}>
+          {labels?.[i] || k}
+        </span>
+      </div>
+    ))}
+  </div>
+);
+
+/* ─────────────────────────────────────────
+   BAR CHART — single + multi-series
+───────────────────────────────────────── */
+const BarChartInner = ({ data, xKey, yKey, barColor, lineColors, lineLabels, formatYAxis, yAxisMax, gradId }) => {
+  const isMulti = Array.isArray(yKey);
+  const keys = isMulti ? yKey : [yKey];
+  const colors = isMulti ? (lineColors || ["#3b82f6", "#10b981"]) : [barColor];
   const count = data.length;
 
-  // How many px per bar slot — ensures bars are never squished
-  const PX_PER_BAR = Math.max(24, Math.min(56, 700 / Math.max(count, 1)));
+  const PX_PER_BAR = Math.max(isMulti ? 40 : 24, Math.min(56, 700 / Math.max(count, 1)));
   const LEFT_W = 50;
   const RIGHT_P = 16;
   const computedW = count * PX_PER_BAR + LEFT_W + RIGHT_P;
-  // Scroll when content is wider than container
   const needsScroll = computedW > 700;
-
-  // X tick interval — show at most 15 ticks
   const tickInterval = Math.max(0, Math.ceil(count / 15) - 1);
 
   const formatX = (v) => {
     if (!v) return "";
     const s = String(v);
-    // Shorten date strings: "3/28/2026" → "3/28"
     if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) return s.slice(0, s.lastIndexOf("/"));
-    // Shorten month names: "January" → "Jan"
     if (s.length > 6) return s.slice(0, 6) + "…";
     return s;
   };
 
-  const chartEl = (
-    <BarChart
-      data={data}
-      margin={{ top: 24, right: RIGHT_P, bottom: 64, left: 0 }}
-      barCategoryGap={count > 30 ? "20%" : "35%"}
-    >
+  const sharedProps = {
+    data,
+    margin: { top: 24, right: RIGHT_P, bottom: 64, left: 0 },
+    barCategoryGap: isMulti ? "25%" : (count > 30 ? "20%" : "35%"),
+    barGap: 3,
+  };
+
+  const ChartContent = ({ width: fixedW }) => {
+    const chartEl = fixedW
+      ? <BarChart width={fixedW} height={280} {...sharedProps}>{innerContent}</BarChart>
+      : <BarChart {...sharedProps}>{innerContent}</BarChart>;
+
+    return chartEl;
+  };
+
+  const innerContent = (
+    <>
       <defs>
-        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={barColor} stopOpacity={1} />
-          <stop offset="100%" stopColor={barColor} stopOpacity={0.3} />
-        </linearGradient>
+        {keys.map((k, i) => (
+          <linearGradient key={k} id={`${gradId}-${i}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={colors[i]} stopOpacity={1} />
+            <stop offset="100%" stopColor={colors[i]} stopOpacity={0.3} />
+          </linearGradient>
+        ))}
       </defs>
-
       <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
-
       <XAxis
         dataKey={xKey}
         tickFormatter={formatX}
-        interval={tickInterval}
+        interval={needsScroll ? 0 : tickInterval}
         angle={-45}
         textAnchor="end"
         height={64}
@@ -334,7 +338,6 @@ const BarChartInner = ({ data, xKey, yKey, barColor, formatYAxis, yAxisMax, grad
         tick={{ fill: "#5a5f78", fontSize: count > 25 ? 9 : 10, fontFamily: "'JetBrains Mono', monospace" }}
         padding={{ left: 12, right: 12 }}
       />
-
       <YAxis
         domain={[0, yAxisMax]}
         tickFormatter={formatYAxis}
@@ -343,110 +346,64 @@ const BarChartInner = ({ data, xKey, yKey, barColor, formatYAxis, yAxisMax, grad
         tick={{ fill: "#383a4d", fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
         width={LEFT_W}
       />
-
-      <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-
-      <Bar
-        dataKey={yKey}
-        fill={`url(#${gradId})`}
-        radius={[5, 5, 0, 0]}
-        shape={<AnimatedBar fill={`url(#${gradId})`} />}
-        maxBarSize={count > 40 ? 12 : count > 20 ? 20 : 38}
-      >
-        {count <= 25 && (
-          <LabelList
-            dataKey={yKey}
-            position="top"
-            formatter={(v) =>
-              v >= 1_000_000 ? `₹${(v / 1_000_000).toFixed(1)}M`
-              : v >= 1000 ? `₹${(v / 1000).toFixed(1)}k`
-              : String(v)
-            }
-            style={{
-              fill: `${barColor}dd`,
-              fontSize: 8,
-              fontFamily: "'JetBrains Mono', monospace",
-              fontWeight: 700,
-            }}
-          />
-        )}
-      </Bar>
-    </BarChart>
+      <Tooltip content={<CustomTooltip lineLabels={lineLabels} />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+      {keys.map((k, i) => (
+        <Bar
+          key={k}
+          dataKey={k}
+          name={lineLabels?.[i] || k}
+          fill={`url(#${gradId}-${i})`}
+          radius={[4, 4, 0, 0]}
+          maxBarSize={isMulti ? (count > 20 ? 14 : 24) : (count > 40 ? 12 : count > 20 ? 20 : 38)}
+        >
+          {!isMulti && count <= 25 && (
+            <LabelList
+              dataKey={k}
+              position="top"
+              formatter={(v) =>
+                v >= 1_000_000 ? `₹${(v / 1_000_000).toFixed(1)}M`
+                : v >= 1000 ? `₹${(v / 1000).toFixed(1)}k`
+                : String(v)
+              }
+              style={{ fill: `${colors[i]}dd`, fontSize: 8, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}
+            />
+          )}
+        </Bar>
+      ))}
+    </>
   );
 
   return (
     <div style={{ width: "100%" }}>
-      <div
-        style={{
-          overflowX: needsScroll ? "auto" : "hidden",
-          overflowY: "hidden",
-          paddingBottom: 2,
-          // Custom scrollbar
-          scrollbarWidth: "thin",
-          scrollbarColor: `${barColor}44 rgba(255,255,255,0.04)`,
-        }}
-      >
+      {isMulti && (
+        <SeriesLegend keys={keys} colors={colors} labels={lineLabels} />
+      )}
+      <div style={{
+        overflowX: needsScroll ? "auto" : "hidden",
+        overflowY: "hidden",
+        paddingBottom: 2,
+        scrollbarWidth: "thin",
+        scrollbarColor: `${colors[0]}44 rgba(255,255,255,0.04)`,
+      }}>
         <div style={{ width: needsScroll ? computedW : "100%", height: 280 }}>
           {needsScroll ? (
-            <BarChart
-              width={computedW}
-              height={280}
-              data={data}
-              margin={{ top: 24, right: RIGHT_P, bottom: 64, left: 0 }}
-              barCategoryGap={count > 30 ? "20%" : "35%"}
-            >
-              <defs>
-                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={barColor} stopOpacity={1} />
-                  <stop offset="100%" stopColor={barColor} stopOpacity={0.3} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
-              <XAxis
-                dataKey={xKey}
-                tickFormatter={formatX}
-                interval={0}
-                angle={-45}
-                textAnchor="end"
-                height={64}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#5a5f78", fontSize: 9, fontFamily: "'JetBrains Mono', monospace" }}
-                padding={{ left: 12, right: 12 }}
-              />
-              <YAxis
-                domain={[0, yAxisMax]}
-                tickFormatter={formatYAxis}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#383a4d", fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
-                width={LEFT_W}
-              />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-              <Bar
-                dataKey={yKey}
-                fill={`url(#${gradId})`}
-                radius={[5, 5, 0, 0]}
-                shape={<AnimatedBar fill={`url(#${gradId})`} />}
-                maxBarSize={count > 40 ? 14 : count > 20 ? 22 : 38}
-              />
+            <BarChart width={computedW} height={280} {...sharedProps}>
+              {innerContent}
             </BarChart>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              {chartEl}
+              <BarChart {...sharedProps}>
+                {innerContent}
+              </BarChart>
             </ResponsiveContainer>
           )}
         </div>
       </div>
       {needsScroll && (
         <div style={{
-          textAlign: "center",
-          fontSize: 9,
-          color: `${barColor}88`,
-          fontFamily: "'JetBrains Mono', monospace",
-          letterSpacing: "0.1em",
-          paddingTop: 6,
-          paddingBottom: 4,
+          textAlign: "center", fontSize: 9, color: `${colors[0]}88`,
+          fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em",
+          paddingTop: 6, paddingBottom: 4,
         }}>
           ← SCROLL TO SEE ALL {count} ITEMS →
         </div>
@@ -456,46 +413,33 @@ const BarChartInner = ({ data, xKey, yKey, barColor, formatYAxis, yAxisMax, grad
 };
 
 /* ─────────────────────────────────────────
-   PIE CHART — label collision resolved
-   Uses custom SVG overlay for labels so we
-   can fully control collision avoidance.
+   PIE CHART
 ───────────────────────────────────────── */
 const PieChartInner = ({ data, xKey, yKey, pieColors }) => {
   const [dims, setDims] = useState({ cx: 0, cy: 0, outerRadius: 0, width: 0, height: 0 });
   const containerRef = useRef(null);
   const count = data.length;
 
-  // Measure container so we can compute absolute label positions
   useEffect(() => {
     if (!containerRef.current) return;
     const obs = new ResizeObserver(([e]) => {
       const { width, height } = e.contentRect;
-      // Leave margins for labels
       const margin = { left: 90, right: 90, top: 30, bottom: 30 };
       const pieW = width - margin.left - margin.right;
       const pieH = height - margin.top - margin.bottom;
       const maxR = Math.min(pieW, pieH) / 2;
-      // Scale outerRadius: smaller pie when more slices (more label space needed)
       const scaleF = count > 15 ? 0.52 : count > 8 ? 0.62 : 0.70;
       const outerRadius = Math.max(50, maxR * scaleF);
-      setDims({
-        cx: width / 2,
-        cy: height / 2,
-        outerRadius,
-        width,
-        height,
-      });
+      setDims({ cx: width / 2, cy: height / 2, outerRadius, width, height });
     });
     obs.observe(containerRef.current);
     return () => obs.disconnect();
   }, [count]);
 
-  // Height scales with item count to give label room
   const containerH = Math.max(340, 280 + count * 12);
 
   return (
     <div ref={containerRef} style={{ width: "100%", height: containerH, position: "relative" }}>
-      {/* Recharts pie — no built-in labels */}
       <div style={{ position: "absolute", inset: 0 }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -534,8 +478,6 @@ const PieChartInner = ({ data, xKey, yKey, pieColors }) => {
           </PieChart>
         </ResponsiveContainer>
       </div>
-
-      {/* Custom SVG labels overlay — drawn on top with collision avoidance */}
       {dims.outerRadius > 0 && (
         <svg
           style={{ position: "absolute", inset: 0, overflow: "visible", pointerEvents: "none" }}
@@ -543,15 +485,9 @@ const PieChartInner = ({ data, xKey, yKey, pieColors }) => {
           height={dims.height}
         >
           <PieLabelsOverlay
-            data={data}
-            yKey={yKey}
-            xKey={xKey}
-            cx={dims.cx}
-            cy={dims.cy}
-            outerRadius={dims.outerRadius}
+            data={data} yKey={yKey} xKey={xKey}
+            cx={dims.cx} cy={dims.cy} outerRadius={dims.outerRadius}
             pieColors={pieColors}
-            width={dims.width}
-            height={dims.height}
           />
         </svg>
       )}
@@ -560,9 +496,13 @@ const PieChartInner = ({ data, xKey, yKey, pieColors }) => {
 };
 
 /* ─────────────────────────────────────────
-   LINE / AREA CHART
+   LINE / AREA CHART — single + multi-series
 ───────────────────────────────────────── */
-const LineChartInner = ({ data, xKey, yKey, barColor, formatYAxis, yAxisMax, gradId }) => {
+const LineChartInner = ({ data, xKey, yKey, barColor, lineColors, lineLabels, formatYAxis, yAxisMax, gradId }) => {
+  const isMulti = Array.isArray(yKey);
+  const keys = isMulti ? yKey : [yKey];
+  const MULTI_COLORS = lineColors || ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#f43f5e"];
+  const colors = isMulti ? MULTI_COLORS : [barColor];
   const count = data.length;
   const tickInterval = Math.max(0, Math.ceil(count / 10) - 1);
 
@@ -575,75 +515,66 @@ const LineChartInner = ({ data, xKey, yKey, barColor, formatYAxis, yAxisMax, gra
   };
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={data} margin={{ top: 20, right: 16, bottom: 56, left: 0 }}>
-        <defs>
-  {Array.isArray(yKey) ? (
-    yKey.map((_, i) => (
-      <linearGradient key={i} id={`${gradId}-${i}`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor={["#3b82f6", "#10b981"][i % 2]} stopOpacity={0.25} />
-        <stop offset="95%" stopColor={["#3b82f6", "#10b981"][i % 2]} stopOpacity={0} />
-      </linearGradient>
-    ))
-  ) : (
-    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="5%" stopColor={barColor} stopOpacity={0.25} />
-      <stop offset="95%" stopColor={barColor} stopOpacity={0} />
-    </linearGradient>
-  )}
-</defs>
+    <>
+      {isMulti && (
+        <SeriesLegend keys={keys} colors={colors} labels={lineLabels} />
+      )}
+      <div style={{ height: 280 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 20, right: 16, bottom: 56, left: 0 }}>
+            <defs>
+              {keys.map((k, i) => (
+                <linearGradient key={k} id={`${gradId}-${i}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={colors[i]} stopOpacity={0.28} />
+                  <stop offset="95%" stopColor={colors[i]} stopOpacity={0} />
+                </linearGradient>
+              ))}
+            </defs>
 
-        <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
+            <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
+            <XAxis
+              dataKey={xKey}
+              tickFormatter={formatX}
+              interval={tickInterval}
+              angle={-38}
+              textAnchor="end"
+              height={56}
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#5a5f78", fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
+              padding={{ left: 12, right: 12 }}
+            />
+            <YAxis
+              domain={[0, yAxisMax]}
+              tickFormatter={formatYAxis}
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#383a4d", fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
+              width={50}
+            />
+            <Tooltip
+              content={<CustomTooltip lineLabels={lineLabels} />}
+              cursor={{ stroke: `${colors[0]}55`, strokeWidth: 1 }}
+            />
 
-        <XAxis
-          dataKey={xKey}
-          tickFormatter={formatX}
-          interval={tickInterval}
-          angle={-38}
-          textAnchor="end"
-          height={56}
-          axisLine={false}
-          tickLine={false}
-          tick={{ fill: "#5a5f78", fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
-          padding={{ left: 12, right: 12 }}
-        />
-
-        <YAxis
-          domain={[0, yAxisMax]}
-          tickFormatter={formatYAxis}
-          axisLine={false}
-          tickLine={false}
-          tick={{ fill: "#383a4d", fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
-          width={50}
-        />
-
-        <Tooltip content={<CustomTooltip />} cursor={{ stroke: `${barColor}55`, strokeWidth: 1 }} />
-
-        {Array.isArray(yKey) ? (
-  yKey.map((key, i) => (
-    <Area
-      key={key}
-      type="monotone"
-      dataKey={key}
-      stroke={["#3b82f6", "#10b981"][i % 2]}   // sales = blue, purchase = green
-      strokeWidth={2.5}
-      fill={`url(#${gradId}-${i})`}
-      dot={data.length <= 50 ? { r: 3.5 } : false}
-      activeDot={{ r: 6 }}
-      isAnimationActive={true}
-    />
-  ))
-) : (
-  <Area
-    type="monotone"
-    dataKey={yKey}
-    stroke={barColor}
-    strokeWidth={2.5}
-    fill={`url(#${gradId})`}
-  />
-)}
-      </AreaChart>
-    </ResponsiveContainer>
+            {keys.map((k, i) => (
+              <Area
+                key={k}
+                type="monotone"
+                dataKey={k}
+                name={lineLabels?.[i] || k}
+                stroke={colors[i]}
+                strokeWidth={2.5}
+                fill={`url(#${gradId}-${i})`}
+                dot={count <= 50 ? { r: 3.5, fill: colors[i], strokeWidth: 0 } : false}
+                activeDot={{ r: 6, fill: colors[i], stroke: "rgba(0,0,0,0.5)", strokeWidth: 2 }}
+                isAnimationActive={true}
+              />
+            ))}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </>
   );
 };
 
@@ -657,9 +588,11 @@ const CustomChart = ({
   chartTitle = "",
   barColor = "#3b82f6",
   chartType = "bar",
+  lineColors,
+  lineLabels,
   pieColors = [
-    "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6",
-    "#f43f5e", "#06b6d4", "#ec4899", "#84cc16",
+    "#ec4899", "#10b981", "#f59e0b", "#8b5cf6",
+    "#f43f5e", "#06b6d4", "#3b82f6", "#84cc16",
     "#fb923c", "#a78bfa", "#34d399", "#f472b6",
     "#facc15", "#38bdf8", "#4ade80", "#e879f9",
     "#818cf8", "#fb7185", "#fbbf24", "#2dd4bf",
@@ -679,20 +612,22 @@ const CustomChart = ({
     );
   }
 
-const maxValue = Array.isArray(yKey)
-  ? Math.max(...data.flatMap(d => yKey.map(k => Number(d[k]) || 0)))
-  : Math.max(...data.map(d => Number(d[yKey]) || 0));
+  const isMulti = Array.isArray(yKey);
+  const keys = isMulti ? yKey : [yKey];
+  const MULTI_COLORS = lineColors || ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#f43f5e"];
+
+  const maxValue = isMulti
+    ? Math.max(...data.flatMap(d => keys.map(k => Number(d[k]) || 0)))
+    : Math.max(...data.map(d => Number(d[yKey]) || 0));
   const yAxisMax = Math.ceil(maxValue * 1.28);
+
   const glowHex = barColor.startsWith("#") ? barColor : "#3b82f6";
-  const gradId  = `bG-${barColor.replace(/[^a-z0-9]/gi, "")}`;
+  const gradId = `bG-${barColor.replace(/[^a-z0-9]/gi, "")}`;
 
   const formatYAxis = (v) =>
     v >= 1_000_000 ? `₹${(v / 1_000_000).toFixed(1)}M`
     : v >= 1000    ? `₹${(v / 1000).toFixed(0)}k`
     : String(v);
-
-  // Heights: pie needs extra room for labels; bar/line fixed
-  const bodyH = chartType === "pie" ? "auto" : 300;
 
   return (
     <div style={{
@@ -706,63 +641,57 @@ const maxValue = Array.isArray(yKey)
       flexDirection: "column",
       boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
     }}>
-
       <ChartCanvas3D color={glowHex} />
 
-      {/* Top shimmer line */}
+      {/* Top shimmer */}
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, height: 1, zIndex: 1, pointerEvents: "none",
         background: `linear-gradient(to right, transparent, ${glowHex}66 40%, ${glowHex}aa 50%, ${glowHex}66 60%, transparent)`,
       }} />
 
-      {/* Title */}
       {chartTitle && (
         <div style={{
           position: "relative", zIndex: 2,
           padding: "14px 18px 4px",
           display: "flex", alignItems: "center", gap: 8,
         }}>
-          <div style={{
-            width: 3, height: 14,
-            background: barColor, borderRadius: 2,
-            boxShadow: `0 0 8px ${barColor}`,
-          }} />
-          <span style={{
-            fontFamily: "'Oxanium', sans-serif",
-            fontSize: 13, fontWeight: 600,
-            letterSpacing: "-0.01em", color: "#bcc0d0",
-          }}>
+          <div style={{ width: 3, height: 14, background: barColor, borderRadius: 2, boxShadow: `0 0 8px ${barColor}` }} />
+          <span style={{ fontFamily: "'Oxanium', sans-serif", fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em", color: "#bcc0d0" }}>
             {chartTitle}
           </span>
         </div>
       )}
 
-      {/* Chart body */}
       <div style={{
         position: "relative", zIndex: 2,
-        height: chartType !== "pie" ? bodyH : undefined,
+        height: chartType !== "pie" ? undefined : undefined,
         padding: chartType === "pie" ? "8px 4px 12px" : "8px 8px 4px",
         overflow: chartType === "pie" ? "visible" : "hidden",
       }}>
         {chartType === "bar" && (
           <BarChartInner
             data={data} xKey={xKey} yKey={yKey}
-            barColor={barColor} formatYAxis={formatYAxis}
+            barColor={barColor}
+            lineColors={MULTI_COLORS}
+            lineLabels={lineLabels}
+            formatYAxis={formatYAxis}
             yAxisMax={yAxisMax} gradId={gradId}
           />
         )}
         {chartType === "line" && (
-          <div style={{ height: "100%" }}>
-            <LineChartInner
-              data={data} xKey={xKey} yKey={yKey}
-              barColor={barColor} formatYAxis={formatYAxis}
-              yAxisMax={yAxisMax} gradId={`lG-${barColor.replace(/[^a-z0-9]/gi, "")}`}
-            />
-          </div>
+          <LineChartInner
+            data={data} xKey={xKey} yKey={yKey}
+            barColor={barColor}
+            lineColors={MULTI_COLORS}
+            lineLabels={lineLabels}
+            formatYAxis={formatYAxis}
+            yAxisMax={yAxisMax}
+            gradId={`lG-${barColor.replace(/[^a-z0-9]/gi, "")}`}
+          />
         )}
         {chartType === "pie" && (
           <PieChartInner
-            data={data} xKey={xKey} yKey={yKey}
+            data={data} xKey={xKey} yKey={Array.isArray(yKey) ? yKey[0] : yKey}
             pieColors={pieColors}
           />
         )}

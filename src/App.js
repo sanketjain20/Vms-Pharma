@@ -44,6 +44,7 @@ import PaymentCollection from "./MyComponents/PaymentCollectionComponent/Payment
 import Purchase from "./MyComponents/PurchaseComponent/Purchase";
 import PaymentCollectionPage from "./MyComponents/PaymentCollectionComponent/PaymentCollectionPage";
 import SupplierPayment from "./MyComponents/SupplierPaymentComponent/SupplierPayment";
+import LoginPage from "./MyComponents/LoginComponent/LoginPage";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
@@ -52,7 +53,7 @@ import { ImPodcast } from "react-icons/im";
 function App() {
   return (
     <>
-    {/* 🔥 GLOBAL TOAST CONTAINER */}
+      {/* 🔥 GLOBAL TOAST CONTAINER */}
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -60,247 +61,252 @@ function App() {
         closeOnClick
         pauseOnHover
       />
-    <Routes>
-      {/* LOGIN PAGE */}
-      <Route
-        path="/"
-        element={
-          <>
-            <div className="container">
-              <LoginSection />
-              <VMSSection />
+      <Routes>
+        {/* LOGIN PAGE */}
+        <Route
+          path="/"
+          element={
+            <>
+            <div className="login-page">
+              {/* Ambient glow orbs (pure CSS, no JS) */}
+            <LoginPage />
+              {/* Left: brand + features (canvas is inside LoginSection) */}
+
+              {/* Right: canvas + glass login card */}
             </div>
             <Footer />
-          </>
-        }
-      />
+</>
+          }
 
-<Route
-  path="/forgotpassword"
-  element={
-    <>
-      <div className="container">
-        <ForgotPassword />
-      </div>
-      <Footer />
-    </>
-  }
-/>
+        />
 
 
-      {/* HOME PAGE */}
-      <Route path="/home" element={<Layout />}>
-        <Route index element={<Home />} />
-      </Route>
-
-            <Route path="/onboarding" element={<Layout />}>
-        <Route index element={<VendorOnboarding />} />
-      </Route>
-
-      <Route path="/setting" element={<Layout />}>
-        <Route index element={<Setting />} />
-      </Route>
-      {/* MODULE PAGES */}
-      <Route path="/master" element={<LayoutModule />}>
-
-        {/* PRODUCT */}
         <Route
-          path="product"
+          path="/forgotpassword"
           element={
-            <ModuleGuard moduleName="PRODUCT">
-              <Product />
-            </ModuleGuard>
+            <>
+              <div className="container">
+                <ForgotPassword />
+              </div>
+              <Footer />
+            </>
           }
         />
 
-        {/* PRODUCT TYPE */}
-        <Route
-          path="product-type"
-          element={
-            <ModuleGuard moduleName="PRODUCT_TYPE">
-              <ProductType />
-            </ModuleGuard>
-          }
-        />
 
-                     {/* REATILERS  */}
-              <Route
-                path="retailer"
-                element={
-                  <ModuleGuard moduleName="RETAILER">
-                    <Retailer />
-                  </ModuleGuard>
-                }
-              />
+        {/* HOME PAGE */}
+        <Route path="/home" element={<Layout />}>
+          <Route index element={<Home />} />
+        </Route>
 
-                  {/* MANUFACTURERS  */}
-              <Route
-                path="manufacturer"
-                element={
-                  <ModuleGuard moduleName="MANUFACTURER">
-                    <Manufacturer />
-                  </ModuleGuard>
-                }
-              />
+        <Route path="/onboarding" element={<Layout />}>
+          <Route index element={<VendorOnboarding />} />
+        </Route>
 
-              {/* SUPPLIERS  */}
-              <Route
-                path="supplier"
-                element={
-                  <ModuleGuard moduleName="SUPPLIER">
-                    <Supplier />
-                  </ModuleGuard>
-                }
-              />
+        <Route path="/setting" element={<Layout />}>
+          <Route index element={<Setting />} />
+        </Route>
+        {/* MODULE PAGES */}
+        <Route path="/master" element={<LayoutModule />}>
 
-               {/* PAYMENT COLLECTION  */}
-              <Route
-                path="payment-collection"
-                element={
-                  <ModuleGuard moduleName="PAYMENT_COLLECTION">
-                    <PaymentCollection />
-                  </ModuleGuard>
-                }
-              />
+          {/* PRODUCT */}
+          <Route
+            path="product"
+            element={
+              <ModuleGuard moduleName="PRODUCT">
+                <Product />
+              </ModuleGuard>
+            }
+          />
+
+          {/* PRODUCT TYPE */}
+          <Route
+            path="product-type"
+            element={
+              <ModuleGuard moduleName="PRODUCT_TYPE">
+                <ProductType />
+              </ModuleGuard>
+            }
+          />
+
+          {/* REATILERS  */}
+          <Route
+            path="retailer"
+            element={
+              <ModuleGuard moduleName="RETAILER">
+                <Retailer />
+              </ModuleGuard>
+            }
+          />
+
+          {/* MANUFACTURERS  */}
+          <Route
+            path="manufacturer"
+            element={
+              <ModuleGuard moduleName="MANUFACTURER">
+                <Manufacturer />
+              </ModuleGuard>
+            }
+          />
+
+          {/* SUPPLIERS  */}
+          <Route
+            path="supplier"
+            element={
+              <ModuleGuard moduleName="SUPPLIER">
+                <Supplier />
+              </ModuleGuard>
+            }
+          />
+
+          {/* PAYMENT COLLECTION  */}
+          <Route
+            path="payment-collection"
+            element={
+              <ModuleGuard moduleName="PAYMENT_COLLECTION">
+                <PaymentCollection />
+              </ModuleGuard>
+            }
+          />
 
 
-                {/* PURCHASE  */}
-              <Route
-                path="purchase"
-                element={
-                  <ModuleGuard moduleName="PURCHASE">
-                    <Purchase />
-                  </ModuleGuard>
-                }
-              />
-
-              <Route
-                path="supplier-payment"
-                element={
-                  <ModuleGuard moduleName="SUPPLIER_PAYMENT">
-                    <SupplierPayment />
-                  </ModuleGuard>
-                }
-              />
-
-        {/* VENDOR */}
-        <Route
-          path="vendor"
-          element={
-            <ModuleGuard moduleName="VENDOR">
-              <Vendor />
-            </ModuleGuard>
-          }
-        />
-
-        {/* REPORTS */}
-        <Route
-          path="reports"
-          element={
-            <ModuleGuard moduleName="REPORTS">
-              <Report />
-            </ModuleGuard>
-          }
-        />
-
-        <Route
-          path="reports/open"
-          element={
-            <ModuleGuard moduleName="REPORTS">
-              <OpenReport />
-            </ModuleGuard>
-          }
-        />
+          {/* PURCHASE  */}
+          <Route
+            path="purchase"
+            element={
+              <ModuleGuard moduleName="PURCHASE">
+                <Purchase />
+              </ModuleGuard>
+            }
+          />
 
           <Route
-          path="reports/generate"
-          element={
-            <ModuleGuard moduleName="REPORTS">
-              <GenerateReport />
-            </ModuleGuard>
-          }
-        />
+            path="supplier-payment"
+            element={
+              <ModuleGuard moduleName="SUPPLIER_PAYMENT">
+                <SupplierPayment />
+              </ModuleGuard>
+            }
+          />
 
-        {/* INVENTORY */}
-        <Route
-          path="inventory"
-          element={
-            <ModuleGuard moduleName="INVENTORY">
-              <Inventory />
-            </ModuleGuard>
-          }
-        />
-
-        {/* SALES */}
-        <Route
-          path="sales"
-          element={
-            <ModuleGuard moduleName="SALES">
-              <Sales />
-            </ModuleGuard>
-          }
-        />
-
-        {/* ROLES */}
-        <Route
-          path="roles"
-          element={
-            <ModuleGuard moduleName="ROLES">
-              <Role />
-            </ModuleGuard>
-          }
-        />
-
-         <Route
-          path="salesshrt"
-          element={
-            <ModuleGuard moduleName="SALES">
-              <SalesAddNew />
-            </ModuleGuard>
-          }
-        />
-
-        <Route
-          path="dashboard"
-          element={
-            <ModuleGuard moduleName="DASHBOARD">
-              <Dashboard />
-            </ModuleGuard>
-          }
-        />
-
-                {/* JOB SCHEDULER */}
-        <Route
-          path="job-scheduler"
-          element={
-            <ModuleGuard moduleName="JOB_SCHEDULER">
-              <JobScheduler />
-            </ModuleGuard>
-          }
-        />
-        
+          {/* VENDOR */}
           <Route
-          path="job-scheduler/view/:id"
-          element={
-            <ModuleGuard moduleName="JOB_SCHEDULER">
-              <JobView/>
-            </ModuleGuard>
-          }
-        />
+            path="vendor"
+            element={
+              <ModuleGuard moduleName="VENDOR">
+                <Vendor />
+              </ModuleGuard>
+            }
+          />
 
-        <Route
-          path="job-scheduler/edit/:id"
-          element={
-            <ModuleGuard moduleName="JOB_SCHEDULER">
-              <JobEdit/>
-            </ModuleGuard>
-          }
-        />
-      </Route>
-      
-      {/* UNAUTHORIZED PAGE */}
-      <Route path="/unauthorized" element={<Unauthorized />} />
-    </Routes>
+          {/* REPORTS */}
+          <Route
+            path="reports"
+            element={
+              <ModuleGuard moduleName="REPORTS">
+                <Report />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="reports/open"
+            element={
+              <ModuleGuard moduleName="REPORTS">
+                <OpenReport />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="reports/generate"
+            element={
+              <ModuleGuard moduleName="REPORTS">
+                <GenerateReport />
+              </ModuleGuard>
+            }
+          />
+
+          {/* INVENTORY */}
+          <Route
+            path="inventory"
+            element={
+              <ModuleGuard moduleName="INVENTORY">
+                <Inventory />
+              </ModuleGuard>
+            }
+          />
+
+          {/* SALES */}
+          <Route
+            path="sales"
+            element={
+              <ModuleGuard moduleName="SALES">
+                <Sales />
+              </ModuleGuard>
+            }
+          />
+
+          {/* ROLES */}
+          <Route
+            path="roles"
+            element={
+              <ModuleGuard moduleName="ROLES">
+                <Role />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="salesshrt"
+            element={
+              <ModuleGuard moduleName="SALES">
+                <SalesAddNew />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="dashboard"
+            element={
+              <ModuleGuard moduleName="DASHBOARD">
+                <Dashboard />
+              </ModuleGuard>
+            }
+          />
+
+          {/* JOB SCHEDULER */}
+          <Route
+            path="job-scheduler"
+            element={
+              <ModuleGuard moduleName="JOB_SCHEDULER">
+                <JobScheduler />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="job-scheduler/view/:id"
+            element={
+              <ModuleGuard moduleName="JOB_SCHEDULER">
+                <JobView />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="job-scheduler/edit/:id"
+            element={
+              <ModuleGuard moduleName="JOB_SCHEDULER">
+                <JobEdit />
+              </ModuleGuard>
+            }
+          />
+        </Route>
+
+        {/* UNAUTHORIZED PAGE */}
+        <Route path="/unauthorized" element={<Unauthorized />} />
+      </Routes>
     </>
   );
 }

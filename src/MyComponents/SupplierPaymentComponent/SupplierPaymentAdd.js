@@ -104,12 +104,12 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
     setForm(p => ({ ...p, amount: "" }));
     setErrors({});
     // Load unpaid purchases
-    fetch(`http://localhost:8080/api/Purchase/GetUnpaidBySupplier/${supplier.id}`, { credentials: "include" })
+    fetch(`http://localhost:8080/api/Purchase/GetUnpaidInvoice/${supplier.id}`, { credentials: "include" })
       .then(r => r.json())
       .then(j => {
         const list = (j?.data || []).map(p => ({
           id:   p.id,
-          name: `${p.purchaseNumber} — ₹${fmt(p.remainingAmount)} due`,
+          name: `${p.invoiceNumber} — ₹${fmt(p.remainingAmount)} due`,
           sub:  p.purchaseDate ? `Date: ${p.purchaseDate}` : "",
           purchaseNumber:   p.purchaseNumber,
           remainingAmount:  p.remainingAmount,
