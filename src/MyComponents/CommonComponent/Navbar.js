@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import "../../Styles/Navbar.css";
 import udoyralogo from "../../Images/udoyraname.png";
 import udyorawingslogo from "../../Images/udyora_wings.svg";
+import ThemeToggle from "./ThemeToggle";
 
-export default function Navbar({ sidebarOpen }) {
+export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
@@ -77,6 +78,7 @@ export default function Navbar({ sidebarOpen }) {
 
       {/* RIGHT — Profile */}
       <div className="topbar-right">
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
 
         {/* Greeting */}
         <div className="topbar-greeting">

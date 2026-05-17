@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -45,12 +45,26 @@ import Purchase from "./MyComponents/PurchaseComponent/Purchase";
 import PaymentCollectionPage from "./MyComponents/PaymentCollectionComponent/PaymentCollectionPage";
 import SupplierPayment from "./MyComponents/SupplierPaymentComponent/SupplierPayment";
 import LoginPage from "./MyComponents/LoginComponent/LoginPage";
+import SalesReturn from "./MyComponents/SalesReturnComponent/SalesReturn";
+import PurchaseReturn from "./MyComponents/PurchaseReturnComponent/PurchaseReturn";
+import RetailerOutstanding from "./MyComponents/RetailerOutstandingComponent/RetailerOutstanding";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
 import { ImPodcast } from "react-icons/im";
 
 function App() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("vmsTheme") || "dark");
+
+  useEffect(() => {
+    document.body.dataset.theme = theme;
+    localStorage.setItem("vmsTheme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
+  };
+
   return (
     <>
       {/* 🔥 GLOBAL TOAST CONTAINER */}
@@ -95,19 +109,19 @@ function App() {
 
 
         {/* HOME PAGE */}
-        <Route path="/home" element={<Layout />}>
+        <Route path="/home" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
           <Route index element={<Home />} />
         </Route>
 
-        <Route path="/onboarding" element={<Layout />}>
+        <Route path="/onboarding" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
           <Route index element={<VendorOnboarding />} />
         </Route>
 
-        <Route path="/setting" element={<Layout />}>
+        <Route path="/setting" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
           <Route index element={<Setting />} />
         </Route>
         {/* MODULE PAGES */}
-        <Route path="/master" element={<LayoutModule />}>
+        <Route path="/master" element={<LayoutModule theme={theme} onToggleTheme={toggleTheme} />}>
 
           {/* PRODUCT */}
           <Route
@@ -189,6 +203,32 @@ function App() {
             }
           />
 
+          <Route
+            path="sales-return"
+            element={
+              <ModuleGuard moduleName="SALES_RETURN">
+                <SalesReturn />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="purchase-return"
+            element={
+              <ModuleGuard moduleName="PURCHASE_RETURN">
+                <PurchaseReturn />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="retailer-outstanding"
+            element={
+              <ModuleGuard moduleName="RETAILER_OUTSTANDING">
+                <RetailerOutstanding />
+              </ModuleGuard>
+            }
+          />
           {/* VENDOR */}
           <Route
             path="vendor"

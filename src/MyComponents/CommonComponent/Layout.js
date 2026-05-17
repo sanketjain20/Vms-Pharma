@@ -5,13 +5,13 @@ import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 import "../../Styles/layout.css";
 
-function Layout() {
+function Layout({ theme, onToggleTheme }) {
   return (
     <div className="layout">
       <Sidebar />
 
       <div className="layout-main">
-        <Navbar />
+        <Navbar theme={theme} onToggleTheme={onToggleTheme} />
 
         <div className="layout-content">
           <Outlet />

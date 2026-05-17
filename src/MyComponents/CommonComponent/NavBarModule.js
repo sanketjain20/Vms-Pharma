@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import "../../Styles/NavBarModule.css";
 import udoyralogo from "../../Images/udoyraname.png";
 import udyorawingslogo from "../../Images/udyora_wings.svg";
+import ThemeToggle from "./ThemeToggle";
 
-export default function NavBarModule({ sidebarOpen }) {
+export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [scrolled, setScrolled]         = useState(false);
   const navigate    = useNavigate();
@@ -77,6 +78,7 @@ export default function NavBarModule({ sidebarOpen }) {
 
       {/* ── RIGHT: Greeting + Avatar ────────────────────────── */}
       <div className="nbm-right">
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
 
         <div className="nbm-greeting">
           <span className="nbm-hi">Hello,</span>

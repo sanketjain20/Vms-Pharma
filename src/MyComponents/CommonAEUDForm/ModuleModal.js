@@ -13,6 +13,8 @@ import ManufacturerAdd from "../ManufacturerComponent/ManufacturerAdd";
 import RetailerAdd from "../RetailerComponent/RetailerAdd";
 import PaymentCollect from "../PaymentCollectionComponent/PaymentCollect";
 import SupplierPayment from "../SupplierPaymentComponent/SupplierPaymentAdd";
+import SalesReturnAdd from "../SalesReturnComponent/SalesReturnAdd";
+import PurchaseReturnAdd from "../PurchaseReturnComponent/PurchaseReturnAdd";
 
 export default function ModuleModal({ isOpen, onClose, moduleName, onSubmit }) {
   if (!isOpen) return null;
@@ -31,6 +33,8 @@ export default function ModuleModal({ isOpen, onClose, moduleName, onSubmit }) {
     case "Retailer":     content = <RetailerAdd      onSubmit={onSubmit} onClose={onClose} />; break;
     case "Payment Collection": content = <PaymentCollect onSubmit={onSubmit} onClose={onClose} />; break;
     case "Supplier Payment": content = <SupplierPayment onSubmit={onSubmit} onClose={onClose} />; break;
+    case "Sales Return": content = <SalesReturnAdd onSubmit={onSubmit} onClose={onClose} />; break;
+    case "Purchase Return": content = <PurchaseReturnAdd onSubmit={onSubmit} onClose={onClose} />; break;
     default:             return null;
   }
 

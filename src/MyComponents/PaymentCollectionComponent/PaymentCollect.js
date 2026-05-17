@@ -41,11 +41,20 @@ const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setO
 const PAYMENT_MODES = ["CASH", "UPI", "CARD", "CHEQUE"];
 const fmt = n => parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
-export default function PaymentCollect({ onClose, onSubmit, prefillRetailerId = null }) {
+export default function PaymentCollect({
+  onClose,
+  onSubmit,
+  prefillRetailerId = null,
+  prefillSalesId = null,
+  prefillSalesUKey = null,
+  prefillInvoiceNumber = null,
+  prefillAmount = null,
+}) {
   const [retailers, setRetailers]       = useState([]);
   const [unpaidInvoices, setUnpaid]     = useState([]);
   const [loading, setLoading]           = useState(false);
   const [errors, setErrors]             = useState({});
+  const [salesPrefill, setSalesPrefill] = useState(null);
 
   const [retailerOpen, setRetailerOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen]   = useState(false);
@@ -63,6 +72,22 @@ export default function PaymentCollect({ onClose, onSubmit, prefillRetailerId = 
     notes:           "",
   });
 
+  const effectiveRetailerId = salesPrefill?.retailerId || prefillRetailerId;
+  const effectiveSalesId = salesPrefill?.id || prefillSalesId;
+  const effectiveInvoiceNumber = salesPrefill?.invoiceNumber || prefillInvoiceNumber;
+  const effectiveAmount = salesPrefill?.remainingAmount || prefillAmount;
+
+  useEffect(() => {
+    if (!prefillSalesUKey || prefillRetailerId) return;
+
+    fetch(`http://localhost:8080/api/Sales/GetSalesByUkey/${prefillSalesUKey}`, { credentials: "include" })
+      .then(r => r.json())
+      .then(json => {
+        if (json?.status === 200 && json.data) setSalesPrefill(json.data);
+      })
+      .catch(() => {});
+  }, [prefillSalesUKey, prefillRetailerId]);
+
   /* ── FETCH RETAILERS WITH OUTSTANDING ── */
   useEffect(() => {
     fetch("http://localhost:8080/api/PaymentCollection/GetRetailersOutstanding", { credentials: "include" })
@@ -78,20 +103,15 @@ export default function PaymentCollect({ onClose, onSubmit, prefillRetailerId = 
           retailerCode:       r.retailerCode,
         }));
         setRetailers(list);
-        // Pre-fill if retailerId passed (from retailer ledger page)
-        if (prefillRetailerId) {
-          const found = list.find(r => String(r.id) === String(prefillRetailerId));
-          if (found) handleRetailerSelect(found);
-        }
       })
       .catch(() => {});
   }, []);
 
   /* ── LOAD UNPAID INVOICES WHEN RETAILER SELECTED ── */
-  const handleRetailerSelect = (retailer) => {
+  const handleRetailerSelect = (retailer, prefill = {}) => {
     setSelectedRetailer(retailer);
     setSelectedInvoice(null);
-    setForm(p => ({ ...p, amount: "" }));
+    setForm(p => ({ ...p, amount: prefill.amount ? String(prefill.amount) : "" }));
     setErrors({});
 
     fetch(`http://localhost:8080/api/Sales/GetUnpaidInvoice/${retailer.id}`, { credentials: "include" })
@@ -108,9 +128,68 @@ export default function PaymentCollect({ onClose, onSubmit, prefillRetailerId = 
             dueDate:         s.dueDate,
           }));
         setUnpaid(list);
+
+        const matchedInvoice = list.find(inv =>
+          (prefill.salesId && String(inv.id) === String(prefill.salesId)) ||
+          (prefill.invoiceNumber && String(inv.invoiceNumber) === String(prefill.invoiceNumber))
+        );
+
+        if (matchedInvoice) {
+          setSelectedInvoice(matchedInvoice);
+          setForm(p => ({ ...p, amount: String(prefill.amount || matchedInvoice.remainingAmount || "") }));
+        } else if (prefill.salesId) {
+          setSelectedInvoice({
+            id: prefill.salesId,
+            name: `${prefill.invoiceNumber || "Invoice"} - Rs ${fmt(prefill.amount)} due`,
+            sub: prefill.dueDate ? `Due: ${prefill.dueDate}` : "Selected invoice",
+            invoiceNumber: prefill.invoiceNumber,
+            remainingAmount: prefill.amount,
+            dueDate: prefill.dueDate,
+          });
+        }
       })
-      .catch(() => setUnpaid([]));
+      .catch(() => {
+        setUnpaid([]);
+        if (prefill.salesId) {
+          setSelectedInvoice({
+            id: prefill.salesId,
+            name: `${prefill.invoiceNumber || "Invoice"} - Rs ${fmt(prefill.amount)} due`,
+            sub: prefill.dueDate ? `Due: ${prefill.dueDate}` : "Selected invoice",
+            invoiceNumber: prefill.invoiceNumber,
+            remainingAmount: prefill.amount,
+            dueDate: prefill.dueDate,
+          });
+        }
+      });
   };
+
+  useEffect(() => {
+    if (!effectiveRetailerId || selectedRetailer) return;
+    if (!retailers.length && !salesPrefill?.retailerId) return;
+
+    const found = retailers.find(r => String(r.id) === String(effectiveRetailerId));
+    if (found) {
+      handleRetailerSelect(found, {
+        salesId: effectiveSalesId,
+        invoiceNumber: effectiveInvoiceNumber,
+        amount: effectiveAmount,
+        dueDate: salesPrefill?.dueDate,
+      });
+    } else if (salesPrefill?.retailerId) {
+      handleRetailerSelect({
+        id: salesPrefill.retailerId,
+        name: salesPrefill.retailerName || "Retailer",
+        sub: `${salesPrefill.retailerCode || "Retailer"} - Outstanding: Rs ${fmt(effectiveAmount)}`,
+        outstandingBalance: effectiveAmount,
+        retailerCode: salesPrefill.retailerCode,
+      }, {
+        salesId: effectiveSalesId,
+        invoiceNumber: effectiveInvoiceNumber,
+        amount: effectiveAmount,
+        dueDate: salesPrefill?.dueDate,
+      });
+    }
+  }, [retailers, effectiveRetailerId, effectiveSalesId, effectiveInvoiceNumber, effectiveAmount, selectedRetailer, salesPrefill]);
 
   /* ── CLICK OUTSIDE ── */
   useEffect(() => {

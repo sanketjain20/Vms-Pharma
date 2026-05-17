@@ -7,5 +7,11 @@ export const ReportEntity={
     Roles:6,
     Reports:7,
     Revenue:8,
-    StockMovement:9
+    StockMovement:9,
+    Outstanding:10,
+    RetailerCustomer:11,
+    Purchase:12,
+    Supplier:13,
+    PaymentCollection:14,
+    DayBook:15
 }

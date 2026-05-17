@@ -59,7 +59,6 @@ function ReportCanvas() {
         ctx.fillStyle = `rgba(180,210,255,${p.a * tw})`; ctx.fill();
       }
 
-      // Data viz nebula — reddish/amber for analytics feel
       const n1 = ctx.createRadialGradient(W * 0.8, H * 0.15, 0, W * 0.8, H * 0.15, W * 0.35);
       n1.addColorStop(0, "rgba(255,120,0,0.04)"); n1.addColorStop(1, "transparent");
       ctx.fillStyle = n1; ctx.fillRect(0, 0, W, H);
@@ -88,24 +87,34 @@ function ReportCanvas() {
   return <canvas ref={cvRef} className="rpt-canvas" />;
 }
 
-/* ── Report Card ──────────────────────────────────────────── */
-const ACCENT_COLORS = ["cyan", "amber", "purple", "green", "pink", "blue"];
+/* ── Accent Colors ────────────────────────────────────────── */
+const ACCENT_COLORS = [
+  "neon-pink", "electric-blue", "lime-green", "sunset-orange",
+  "violet-purple", "cyber-yellow", "aqua-cyan", "hot-red",
+  "deep-orange", "bright-teal", "neon-green", "royal-blue",
+  "magenta-glow", "gold-flash", "ice-blue",
+];
 
+/* ── Grid Card ────────────────────────────────────────────── */
 function ReportCard({ report, index, onOpen }) {
   const cardRef = useRef(null);
   const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
 
   const handleMove = (e) => {
-    const el = cardRef.current; if (!el) return;
+    const el = cardRef.current;
+    if (!el) return;
     const r = el.getBoundingClientRect();
     const dx = (e.clientX - r.left - r.width / 2) / (r.width / 2);
     const dy = (e.clientY - r.top - r.height / 2) / (r.height / 2);
-    el.style.transform = `rotateY(${dx * 8}deg) rotateX(${-dy * 6}deg) translateY(-6px)`;
+    el.style.transform = `perspective(1000px) rotateY(${dx * 8}deg) rotateX(${-dy * 6}deg) translateY(-8px) scale(1.02)`;
   };
-  const handleLeave = () => { if (cardRef.current) cardRef.current.style.transform = ""; };
 
-  // mini chart bars — decorative
-  const bars = Array.from({ length: 7 }, (_, i) => Math.random() * 60 + 20);
+  const handleLeave = () => {
+    if (cardRef.current)
+      cardRef.current.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(0px) scale(1)`;
+  };
+
+  const bars = Array.from({ length: 7 }, (_, i) => ((index * 17 + i * 13) % 60) + 30);
 
   return (
     <div
@@ -116,11 +125,10 @@ function ReportCard({ report, index, onOpen }) {
       style={{ animationDelay: `${index * 0.08}s` }}
     >
       <div className="rpt-card-shell">
-        {/* HUD corners */}
+        <div className="rpt-glow" />
         <div className="rpt-c rpt-tl" /><div className="rpt-c rpt-tr" />
         <div className="rpt-c rpt-bl" /><div className="rpt-c rpt-br" />
 
-        {/* Mini bar chart */}
         <div className="rpt-mini-chart">
           {bars.map((h, i) => (
             <div key={i} className="rpt-bar" style={{ height: `${h}%`, animationDelay: `${i * 0.1}s` }} />
@@ -136,7 +144,7 @@ function ReportCard({ report, index, onOpen }) {
         <button className="rpt-open-btn" onClick={() => onOpen(report.name)}>
           <span>Open Report</span>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>
@@ -144,25 +152,116 @@ function ReportCard({ report, index, onOpen }) {
   );
 }
 
+/* ── List Row ─────────────────────────────────────────────── */
+function ReportRow({ report, index, onOpen }) {
+  const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
+  const bars = Array.from({ length: 12 }, (_, i) => ((index * 17 + i * 13) % 60) + 30);
+
+  return (
+    <div
+      className={`rpt-row rpt-card-${accent}`}
+      style={{ animationDelay: `${index * 0.055}s` }}
+    >
+      {/* Left accent strip */}
+      <div className="rpt-row-strip" />
+
+      {/* Index badge */}
+      <div className="rpt-row-index">
+        <span className="rpt-row-num">{String(index + 1).padStart(2, "0")}</span>
+        <span className="rpt-row-rpt">RPT</span>
+      </div>
+
+      {/* Info */}
+      <div className="rpt-row-info">
+        <h3 className="rpt-row-title">{report.name}</h3>
+        <p className="rpt-row-desc">{report.description}</p>
+      </div>
+
+      {/* Sparkline */}
+      <div className="rpt-row-spark">
+        {bars.map((h, i) => (
+          <div key={i} className="rpt-row-bar" style={{ height: `${h}%`, animationDelay: `${i * 0.06}s` }} />
+        ))}
+      </div>
+
+      {/* Corner decorations */}
+      <div className="rpt-c rpt-tl" /><div className="rpt-c rpt-tr" />
+      <div className="rpt-c rpt-bl" /><div className="rpt-c rpt-br" />
+
+      {/* Open button */}
+      <button className="rpt-open-btn rpt-row-btn" onClick={() => onOpen(report.name)}>
+        <span>Open</span>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+/* ── View Toggle Button ───────────────────────────────────── */
+function ViewToggle({ view, onChange }) {
+  return (
+    <div className="rpt-view-toggle">
+      <button
+        className={`rpt-toggle-btn ${view === "grid" ? "active" : ""}`}
+        onClick={() => onChange("grid")}
+        title="Grid view"
+      >
+        {/* Grid icon */}
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" />
+          <rect x="9" y="1" width="6" height="6" rx="1.5" />
+          <rect x="1" y="9" width="6" height="6" rx="1.5" />
+          <rect x="9" y="9" width="6" height="6" rx="1.5" />
+        </svg>
+        <span>Grid</span>
+      </button>
+      <button
+        className={`rpt-toggle-btn ${view === "list" ? "active" : ""}`}
+        onClick={() => onChange("list")}
+        title="List view"
+      >
+        {/* List icon */}
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+          <rect x="1" y="2" width="14" height="2.5" rx="1.25" />
+          <rect x="1" y="6.75" width="14" height="2.5" rx="1.25" />
+          <rect x="1" y="11.5" width="14" height="2.5" rx="1.25" />
+        </svg>
+        <span>List</span>
+      </button>
+      {/* Sliding pill */}
+      <div className={`rpt-toggle-pill ${view}`} />
+    </div>
+  );
+}
+
+const roleId = localStorage.getItem("roleId");
+
 /* ── Main ─────────────────────────────────────────────────── */
 export default function ReportsDashboard() {
   const moduleId = 7;
   const apiUrl   = "http://localhost:8080/api/Reports/GetAllReports";
-  const accessApi = `http://localhost:8080/api/Access/GetUserModuleAccess/${moduleId}`;
+  const accessApi = `http://localhost:8080/api/Access/GetUserModuleAccess/${moduleId}/${roleId}`;
 
   const [search, setSearch]                   = useState("");
   const [reports, setReports]                 = useState([]);
   const [allowedReportKeys, setAllowedReportKeys] = useState([]);
   const [loaded, setLoaded]                   = useState(false);
+  const [view, setView]                       = useState(() => localStorage.getItem("rpt-view") || "grid");
   const navigate = useNavigate();
+
+  const handleViewChange = (v) => {
+    setView(v);
+    localStorage.setItem("rpt-view", v);
+  };
 
   useEffect(() => {
     fetch(accessApi, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(res => {
-        if (res.status === 200 && Array.isArray(res.data)) {
+        if (res.status === 200 && Array.isArray(res.data))
           setAllowedReportKeys(res.data.flatMap(p => p.split("/")).map(s => s.toLowerCase()));
-        }
       })
       .catch(err => console.error("Access fetch error:", err));
   }, [accessApi]);
@@ -192,17 +291,17 @@ export default function ReportsDashboard() {
     return access && match;
   });
 
+  const handleOpen = (name) => navigate("/master/reports/open", { state: { reportName: name } });
+
   return (
     <div className="rpt-page">
       <ReportCanvas />
-
-      {/* Orbs */}
       <div className="rpt-orb rpt-orb-a" />
       <div className="rpt-orb rpt-orb-b" />
 
       <div className="rpt-inner">
 
-        {/* ── Header ───────────────────────────────────────── */}
+        {/* ── Header ── */}
         <div className="rpt-header">
           <div className="rpt-header-left">
             <div className="rpt-eyebrow">
@@ -235,10 +334,13 @@ export default function ReportsDashboard() {
           </div>
         </div>
 
-        {/* ── Divider ───────────────────────────────────────── */}
-        <div className="rpt-divider" />
+        {/* ── Controls bar ── */}
+        <div className="rpt-controls-bar">
+          <div className="rpt-divider" />
+          <ViewToggle view={view} onChange={handleViewChange} />
+        </div>
 
-        {/* ── Grid ─────────────────────────────────────────── */}
+        {/* ── Content ── */}
         {filtered.length === 0 ? (
           <div className="rpt-empty">
             <div className="rpt-empty-icon">
@@ -249,15 +351,16 @@ export default function ReportsDashboard() {
             <p>No reports found</p>
             {search && <span>Try a different search term</span>}
           </div>
-        ) : (
+        ) : view === "grid" ? (
           <div className={`rpt-grid ${loaded ? "loaded" : ""}`}>
             {filtered.map((report, i) => (
-              <ReportCard
-                key={report.reportCode}
-                report={report}
-                index={i}
-                onOpen={name => navigate("/master/reports/open", { state: { reportName: name } })}
-              />
+              <ReportCard key={report.reportCode} report={report} index={i} onOpen={handleOpen} />
+            ))}
+          </div>
+        ) : (
+          <div className={`rpt-list ${loaded ? "loaded" : ""}`}>
+            {filtered.map((report, i) => (
+              <ReportRow key={report.reportCode} report={report} index={i} onOpen={handleOpen} />
             ))}
           </div>
         )}

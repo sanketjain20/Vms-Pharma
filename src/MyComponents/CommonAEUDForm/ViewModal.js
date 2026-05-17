@@ -14,6 +14,9 @@ import ManufacturerView from "../ManufacturerComponent/ManufacturerView";
 import RetailerView from "../RetailerComponent/RetailerView";
 import PaymentView from "../PaymentCollectionComponent/PaymentView";
 import SupplierPaymentView from "../SupplierPaymentComponent/SupplierPaymentView";
+import SalesReturnView from "../SalesReturnComponent/SalesReturnView";
+import PurchaseReturnView from "../PurchaseReturnComponent/PurchaseReturnView";
+import ReatilerLedgerView from "../RetailerOutstandingComponent/RetailerLedgerView";
 
 export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
   if (!isOpen) return null;
@@ -32,6 +35,9 @@ export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
     case "Retailer":     content = <RetailerView      uKey={uKey} onClose={onClose} />; break;
     case "Payment Collection": content = <PaymentView uKey={uKey} onClose={onClose} />; break;
     case "Supplier Payment": content = <SupplierPaymentView uKey={uKey} onClose={onClose} />; break;
+    case "Sales Return": content = <SalesReturnView uKey={uKey} onClose={onClose} />; break;
+    case "Purchase Return": content = <PurchaseReturnView uKey={uKey} onClose={onClose} />; break;
+    case "Retailer Outstanding": content = <ReatilerLedgerView uKey={uKey} onClose={onClose} />; break;
     default:             return null;
   }
 

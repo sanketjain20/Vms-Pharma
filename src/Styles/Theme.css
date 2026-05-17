@@ -1,0 +1,939 @@
+/* Loaded after component styles so theme overrides win consistently. */
+
+body[data-theme="light"] {
+  color-scheme: light;
+
+  --light-page: #f4f7fb;
+  --light-surface: #ffffff;
+  --light-surface-soft: #f8fafc;
+  --light-surface-muted: #eef4ff;
+  --light-border: rgba(15, 23, 42, 0.12);
+  --light-border-strong: rgba(15, 23, 42, 0.2);
+  --light-text: #0f172a;
+  --light-text-soft: #334155;
+  --light-text-muted: #64748b;
+  --light-blue: #2563eb;
+
+  --dg-bg: var(--light-page);
+  --dg-surface: rgba(255, 255, 255, 0.98);
+  --dg-raised: var(--light-surface);
+  --dg-border: rgba(15, 23, 42, 0.08);
+  --dg-border-mid: var(--light-border);
+  --dg-border-hi: var(--light-border-strong);
+  --dg-accent-dim: rgba(37, 99, 235, 0.1);
+  --dg-text-1: var(--light-text);
+  --dg-text-2: var(--light-text-soft);
+  --dg-text-3: var(--light-text-muted);
+
+  --db-bg: var(--light-page);
+  --db-surface: rgba(255, 255, 255, 0.98);
+  --db-border: rgba(15, 23, 42, 0.08);
+  --db-border2: var(--light-border);
+  --db-border3: var(--light-border-strong);
+  --db-text-1: var(--light-text);
+  --db-text-2: var(--light-text-soft);
+  --db-text-3: var(--light-text-muted);
+
+  --bg-void: var(--light-page);
+  --bg-surface: var(--light-surface);
+  --bg-elevated: var(--light-surface-soft);
+  --bg-hover: var(--light-surface-muted);
+  --border-sub: rgba(15, 23, 42, 0.08);
+  --border-mid: var(--light-border);
+  --border-hi: var(--light-border-strong);
+  --text-0: var(--light-text);
+  --text-1: rgba(15, 23, 42, 0.78);
+  --text-2: rgba(51, 65, 85, 0.72);
+  --text-3: rgba(100, 116, 139, 0.62);
+  --row-border: rgba(15, 23, 42, 0.1);
+
+  --vo-bg-deep: var(--light-page);
+  --vo-bg-card: var(--light-surface);
+  --vo-bg-card2: var(--light-surface-soft);
+  --vo-border: var(--light-border);
+}
+
+body[data-theme="light"] {
+  --mf-surface: rgba(255, 255, 255, 0.98);
+  --mf-border: rgba(15, 23, 42, 0.08);
+  --mf-border-mid: var(--light-border);
+  --mf-border-hi: var(--light-border-strong);
+  --mf-text-1: var(--light-text);
+  --mf-text-2: var(--light-text-soft);
+  --mf-text-3: var(--light-text-muted);
+}
+
+body[data-theme="light"] {
+  --inv-bg: var(--light-page);
+  --inv-surface: rgba(255, 255, 255, 0.98);
+  --inv-border: rgba(15, 23, 42, 0.08);
+  --inv-border-mid: var(--light-border);
+  --inv-border-hi: var(--light-border-strong);
+  --inv-text-1: var(--light-text);
+  --inv-text-2: var(--light-text-soft);
+  --inv-text-3: var(--light-text-muted);
+
+  --mfx-surface: rgba(255, 255, 255, 0.98);
+  --mfx-border: rgba(15, 23, 42, 0.08);
+  --mfx-border-mid: var(--light-border);
+  --mfx-border-hi: var(--light-border-strong);
+  --mfx-text-1: var(--light-text);
+  --mfx-text-2: var(--light-text-soft);
+  --mfx-text-3: var(--light-text-muted);
+
+  --pfx-surface: rgba(255, 255, 255, 0.98);
+  --pfx-border: rgba(15, 23, 42, 0.08);
+  --pfx-border-mid: var(--light-border);
+  --pfx-border-hi: var(--light-border-strong);
+  --pfx-text-1: var(--light-text);
+  --pfx-text-2: var(--light-text-soft);
+  --pfx-text-3: var(--light-text-muted);
+
+  --pyx-surface: rgba(255, 255, 255, 0.98);
+  --pyx-border: rgba(15, 23, 42, 0.08);
+  --pyx-border-mid: var(--light-border);
+  --pyx-border-hi: var(--light-border-strong);
+  --pyx-text-1: var(--light-text);
+  --pyx-text-2: var(--light-text-soft);
+  --pyx-text-3: var(--light-text-muted);
+
+  --rtx-surface: rgba(255, 255, 255, 0.98);
+  --rtx-border: rgba(15, 23, 42, 0.08);
+  --rtx-border-mid: var(--light-border);
+  --rtx-border-hi: var(--light-border-strong);
+  --rtx-text-1: var(--light-text);
+  --rtx-text-2: var(--light-text-soft);
+  --rtx-text-3: var(--light-text-muted);
+
+  --rl-surface: rgba(255, 255, 255, 0.98);
+  --rl-border: rgba(15, 23, 42, 0.08);
+  --rl-border-mid: var(--light-border);
+  --rl-border-hi: var(--light-border-strong);
+  --rl-text-1: var(--light-text);
+  --rl-text-2: var(--light-text-soft);
+  --rl-text-3: var(--light-text-muted);
+
+  --sl-surface: rgba(255, 255, 255, 0.98);
+  --sl-border: rgba(15, 23, 42, 0.08);
+  --sl-border-mid: var(--light-border);
+  --sl-border-hi: var(--light-border-strong);
+  --sl-text-1: var(--light-text);
+  --sl-text-2: var(--light-text-soft);
+  --sl-text-3: var(--light-text-muted);
+
+  --san-surface: rgba(255, 255, 255, 0.98);
+  --san-border: rgba(15, 23, 42, 0.08);
+  --san-border-mid: var(--light-border);
+  --san-border-hi: var(--light-border-strong);
+  --san-text-1: var(--light-text);
+  --san-text-2: var(--light-text-soft);
+  --san-text-3: var(--light-text-muted);
+
+  --sv-surface: rgba(255, 255, 255, 0.98);
+  --sv-border: rgba(15, 23, 42, 0.08);
+  --sv-border-mid: var(--light-border);
+  --sv-border-hi: var(--light-border-strong);
+  --sv-text-1: var(--light-text);
+  --sv-text-2: var(--light-text-soft);
+  --sv-text-3: var(--light-text-muted);
+
+  --sra-surface: rgba(255, 255, 255, 0.98);
+  --sra-border: rgba(15, 23, 42, 0.08);
+  --sra-border-mid: var(--light-border);
+  --sra-border-hi: var(--light-border-strong);
+  --sra-text-1: var(--light-text);
+  --sra-text-2: var(--light-text-soft);
+  --sra-text-3: var(--light-text-muted);
+
+  --srv-surface: rgba(255, 255, 255, 0.98);
+  --srv-border: rgba(15, 23, 42, 0.08);
+  --srv-border-mid: var(--light-border);
+  --srv-border-hi: var(--light-border-strong);
+  --srv-text-1: var(--light-text);
+  --srv-text-2: var(--light-text-soft);
+  --srv-text-3: var(--light-text-muted);
+
+  --su-surface: rgba(255, 255, 255, 0.98);
+  --su-border: rgba(15, 23, 42, 0.08);
+  --su-border-mid: var(--light-border);
+  --su-border-hi: var(--light-border-strong);
+  --su-text-1: var(--light-text);
+  --su-text-2: var(--light-text-soft);
+  --su-text-3: var(--light-text-muted);
+
+  --sup-surface: rgba(255, 255, 255, 0.98);
+  --sup-border: rgba(15, 23, 42, 0.08);
+  --sup-border-mid: var(--light-border);
+  --sup-border-hi: var(--light-border-strong);
+  --sup-text-1: var(--light-text);
+  --sup-text-2: var(--light-text-soft);
+  --sup-text-3: var(--light-text-muted);
+
+  --spx-surface: rgba(255, 255, 255, 0.98);
+  --spx-border: rgba(15, 23, 42, 0.08);
+  --spx-border-mid: var(--light-border);
+  --spx-border-hi: var(--light-border-strong);
+  --spx-text-1: var(--light-text);
+  --spx-text-2: var(--light-text-soft);
+  --spx-text-3: var(--light-text-muted);
+
+  --vd-surface: rgba(255, 255, 255, 0.98);
+  --vd-border: rgba(15, 23, 42, 0.08);
+  --vd-border-mid: var(--light-border);
+  --vd-border-hi: var(--light-border-strong);
+  --vd-text-1: var(--light-text);
+  --vd-text-2: var(--light-text-soft);
+  --vd-text-3: var(--light-text-muted);
+
+  --vv-surface: rgba(255, 255, 255, 0.98);
+  --vv-border: rgba(15, 23, 42, 0.08);
+  --vv-border-mid: var(--light-border);
+  --vv-border-hi: var(--light-border-strong);
+  --vv-text-1: var(--light-text);
+  --vv-text-2: var(--light-text-soft);
+  --vv-text-3: var(--light-text-muted);
+
+  --rlv-surface: rgba(255, 255, 255, 0.98);
+  --rlv-border: rgba(15, 23, 42, 0.08);
+  --rlv-border-mid: var(--light-border);
+  --rlv-border-hi: var(--light-border-strong);
+  --rlv-text-1: var(--light-text);
+  --rlv-text-2: var(--light-text-soft);
+  --rlv-text-3: var(--light-text-muted);
+
+  --rlm-surface: rgba(255, 255, 255, 0.98);
+  --rlm-border: rgba(15, 23, 42, 0.08);
+  --rlm-border-mid: var(--light-border);
+  --rlm-border-hi: var(--light-border-strong);
+  --rlm-text-1: var(--light-text);
+  --rlm-text-2: var(--light-text-soft);
+
+  --cp-surface: rgba(255, 255, 255, 0.98);
+  --cp-border: rgba(15, 23, 42, 0.08);
+  --cp-border-mid: var(--light-border);
+  --cp-border-hi: var(--light-border-strong);
+  --cp-text-1: var(--light-text);
+  --cp-text-2: var(--light-text-soft);
+  --cp-text-3: var(--light-text-muted);
+
+  --black: var(--light-page);
+  --bg-base: var(--light-page);
+  --bg-raised: var(--light-surface);
+  --border: rgba(15, 23, 42, 0.08);
+  --border-strong: var(--light-border-strong);
+  --text-primary: var(--light-text);
+  --text-secondary: var(--light-text-soft);
+  --text-muted: var(--light-text-muted);
+}
+
+body[data-theme="light"],
+body[data-theme="light"] #root,
+body[data-theme="light"] .layout-content,
+body[data-theme="light"] .i-container,
+body[data-theme="light"] .hw-root,
+body[data-theme="light"] .s-root,
+body[data-theme="light"] .db-dashboard,
+body[data-theme="light"] .db-root {
+  background: var(--light-page) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] .topbar,
+body[data-theme="light"] .nbm-bar,
+body[data-theme="light"] .sb-sidebar,
+body[data-theme="light"] .sb-submenu {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08) !important;
+}
+
+body[data-theme="light"] .topbar *,
+body[data-theme="light"] .nbm-bar *,
+body[data-theme="light"] .sb-sidebar *,
+body[data-theme="light"] .sb-submenu * {
+  color: inherit;
+}
+
+body[data-theme="light"] .topbar .greeting-hi,
+body[data-theme="light"] .nbm-bar .nbm-hi,
+body[data-theme="light"] .sb-label,
+body[data-theme="light"] .sb-submenu-item,
+body[data-theme="light"] .dd-item,
+body[data-theme="light"] .nbm-dd-item {
+  color: var(--light-text-soft) !important;
+}
+
+body[data-theme="light"] .greeting-name,
+body[data-theme="light"] .nbm-name,
+body[data-theme="light"] .shop-name,
+body[data-theme="light"] .nbm-shop-name,
+body[data-theme="light"] .sb-item:hover .sb-icon,
+body[data-theme="light"] .sb-item:hover .sb-label,
+body[data-theme="light"] .sb-item.hovered .sb-icon,
+body[data-theme="light"] .sb-item.hovered .sb-label {
+  color: var(--light-blue) !important;
+}
+
+body[data-theme="light"] .profile-dropdown,
+body[data-theme="light"] .nbm-dropdown {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16) !important;
+}
+
+body[data-theme="light"] .theme-toggle {
+  background: #eff6ff !important;
+  border-color: rgba(37, 99, 235, 0.25) !important;
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .theme-toggle svg {
+  color: currentColor !important;
+}
+
+body[data-theme="light"] .modal-backdrop,
+body[data-theme="light"] .pfx-backdrop,
+body[data-theme="light"] .mm-overlay,
+body[data-theme="light"] .vd-backdrop,
+body[data-theme="light"] .vv-backdrop,
+body[data-theme="light"] .sv-backdrop,
+body[data-theme="light"] .su-backdrop,
+body[data-theme="light"] .sra-backdrop,
+body[data-theme="light"] .srv-backdrop,
+body[data-theme="light"] .spx-backdrop,
+body[data-theme="light"] .sup-backdrop,
+body[data-theme="light"] .rtx-backdrop,
+body[data-theme="light"] .rlv-backdrop,
+body[data-theme="light"] .rlm-backdrop,
+body[data-theme="light"] .cp-backdrop,
+body[data-theme="light"] .mfx-backdrop,
+body[data-theme="light"] .pyx-backdrop {
+  background: rgba(241, 245, 249, 0.78) !important;
+  backdrop-filter: blur(10px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.1) !important;
+}
+
+body[data-theme="light"] .modal,
+body[data-theme="light"] .pfx-modal,
+body[data-theme="light"] .mm-container,
+body[data-theme="light"] .vd-modal,
+body[data-theme="light"] .vv-modal,
+body[data-theme="light"] .sv-modal,
+body[data-theme="light"] .su-modal,
+body[data-theme="light"] .sra-modal,
+body[data-theme="light"] .srv-modal,
+body[data-theme="light"] .spx-modal,
+body[data-theme="light"] .sup-modal,
+body[data-theme="light"] .rtx-modal,
+body[data-theme="light"] .rlv-modal,
+body[data-theme="light"] .rlm-modal,
+body[data-theme="light"] .cp-modal,
+body[data-theme="light"] .mfx-modal,
+body[data-theme="light"] .pyx-modal {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.16) !important;
+}
+
+body[data-theme="light"] .modal-header,
+body[data-theme="light"] .modal-footer-fixed,
+body[data-theme="light"] .pfx-header,
+body[data-theme="light"] .pfx-footer,
+body[data-theme="light"] .mm-header,
+body[data-theme="light"] .pfx-view-table-header,
+body[data-theme="light"] .srv-header,
+body[data-theme="light"] .srv-footer,
+body[data-theme="light"] .srv-table-header,
+body[data-theme="light"] .spx-header,
+body[data-theme="light"] .spx-footer,
+body[data-theme="light"] .vd-header,
+body[data-theme="light"] .vd-footer,
+body[data-theme="light"] .vv-header,
+body[data-theme="light"] .vv-footer,
+body[data-theme="light"] .sv-header,
+body[data-theme="light"] .sv-footer,
+body[data-theme="light"] .sup-header,
+body[data-theme="light"] .sup-footer,
+body[data-theme="light"] .rtx-header,
+body[data-theme="light"] .rtx-footer,
+body[data-theme="light"] .rlv-header,
+body[data-theme="light"] .rlv-footer,
+body[data-theme="light"] .rlm-header,
+body[data-theme="light"] .rlm-footer,
+body[data-theme="light"] .cp-header,
+body[data-theme="light"] .cp-footer,
+body[data-theme="light"] .mfx-header,
+body[data-theme="light"] .mfx-footer,
+body[data-theme="light"] .pyx-header,
+body[data-theme="light"] .pyx-footer {
+  background: #f8fafc !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] .dg-wrapper,
+body[data-theme="light"] .dg-shell,
+body[data-theme="light"] .dg-card,
+body[data-theme="light"] .dg-card-pagination,
+body[data-theme="light"] .inventory-card,
+body[data-theme="light"] .db-stat-card,
+body[data-theme="light"] .db-panel,
+body[data-theme="light"] .db-card,
+body[data-theme="light"] .s-card,
+body[data-theme="light"] .hw-stat,
+body[data-theme="light"] .hw-mod-card,
+body[data-theme="light"] .hw-feat-card,
+body[data-theme="light"] .hw-flow,
+body[data-theme="light"] .hw-cta,
+body[data-theme="light"] .pfx-view-card,
+body[data-theme="light"] .pfx-item-row,
+body[data-theme="light"] .pfx-items-head,
+body[data-theme="light"] .pfx-view-table-section,
+body[data-theme="light"] .srv-meta-card,
+body[data-theme="light"] .srv-reason-card,
+body[data-theme="light"] .srv-table-section,
+body[data-theme="light"] .spx-summary,
+body[data-theme="light"] .spx-view-card,
+body[data-theme="light"] .spx-sum-card,
+body[data-theme="light"] .spx-table-wrap,
+body[data-theme="light"] .sup-view-card,
+body[data-theme="light"] .rlv-card,
+body[data-theme="light"] .rlv-view-card,
+body[data-theme="light"] .rlv-inv-row,
+body[data-theme="light"] .rlv-history-summary,
+body[data-theme="light"] .rlm-inv-row,
+body[data-theme="light"] .rlm-summary-card,
+body[data-theme="light"] .cp-card,
+body[data-theme="light"] .cp-ledger-invoice,
+body[data-theme="light"] .cp-history-row,
+body[data-theme="light"] .cp-collect-panel {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08) !important;
+}
+
+body[data-theme="light"] .dg-shell-header,
+body[data-theme="light"] .dg-pagination,
+body[data-theme="light"] .dg-th,
+body[data-theme="light"] .pfx-view-table th,
+body[data-theme="light"] .srv-table th,
+body[data-theme="light"] .spx-table th,
+body[data-theme="light"] .pfx-items-head {
+  background: #f1f5f9 !important;
+  color: var(--light-text-soft) !important;
+}
+
+body[data-theme="light"] .dg-td,
+body[data-theme="light"] .dg-action-cell,
+body[data-theme="light"] .pfx-view-table td,
+body[data-theme="light"] .srv-table td,
+body[data-theme="light"] .spx-table td {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  color: var(--light-text-soft) !important;
+}
+
+body[data-theme="light"] input,
+body[data-theme="light"] select,
+body[data-theme="light"] textarea,
+body[data-theme="light"] .dg-search,
+body[data-theme="light"] .dg-size-select,
+body[data-theme="light"] .pfx-input,
+body[data-theme="light"] .pfx-cell-input,
+body[data-theme="light"] .pfx-drop-box,
+body[data-theme="light"] .pfx-drop-input,
+body[data-theme="light"] .custom-select .select-box,
+body[data-theme="light"] .custom-select .select-input,
+body[data-theme="light"] .s-input,
+body[data-theme="light"] .spx-drop-box,
+body[data-theme="light"] .spx-drop-input,
+body[data-theme="light"] .spx-filter-search,
+body[data-theme="light"] .spx-filter-date,
+body[data-theme="light"] .rlv-cpf-input,
+body[data-theme="light"] .rlm-cpf-input,
+body[data-theme="light"] .cp-input {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: none !important;
+}
+
+body[data-theme="light"] input:focus,
+body[data-theme="light"] select:focus,
+body[data-theme="light"] textarea:focus,
+body[data-theme="light"] .pfx-input:focus,
+body[data-theme="light"] .pfx-cell-input:focus,
+body[data-theme="light"] .pfx-drop-open,
+body[data-theme="light"] .custom-select .select-box.active {
+  background: #ffffff !important;
+  border-color: rgba(37, 99, 235, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+body[data-theme="light"] input::placeholder,
+body[data-theme="light"] textarea::placeholder,
+body[data-theme="light"] .pfx-drop-input::placeholder,
+body[data-theme="light"] .custom-select .select-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+body[data-theme="light"] select option {
+  background: #ffffff !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] .pfx-drop-list,
+body[data-theme="light"] .custom-select .options,
+body[data-theme="light"] .spx-drop-list,
+body[data-theme="light"] .dg-xl-drop {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16) !important;
+}
+
+body[data-theme="light"] .pfx-drop-list li,
+body[data-theme="light"] .custom-select .options li,
+body[data-theme="light"] .spx-drop-list li,
+body[data-theme="light"] .dg-xl-drop-item {
+  color: var(--light-text-soft) !important;
+}
+
+body[data-theme="light"] .pfx-drop-list li:hover,
+body[data-theme="light"] .custom-select .options li:hover,
+body[data-theme="light"] .spx-drop-list li:hover,
+body[data-theme="light"] .dg-xl-drop-item:hover {
+  background: rgba(37, 99, 235, 0.08) !important;
+  color: var(--light-blue) !important;
+}
+
+body[data-theme="light"] label,
+body[data-theme="light"] .pfx-label,
+body[data-theme="light"] .s-label,
+body[data-theme="light"] .small-muted,
+body[data-theme="light"] .inventory-card-title,
+body[data-theme="light"] .dg-shell-title,
+body[data-theme="light"] .dg-record-count,
+body[data-theme="light"] .srv-meta-label,
+body[data-theme="light"] .srv-table-title,
+body[data-theme="light"] .spx-section-label,
+body[data-theme="light"] .spx-view-label,
+body[data-theme="light"] .sup-view-label {
+  color: var(--light-text-muted) !important;
+}
+
+body[data-theme="light"] h1,
+body[data-theme="light"] h2,
+body[data-theme="light"] h3,
+body[data-theme="light"] h4,
+body[data-theme="light"] .modal-title h3,
+body[data-theme="light"] .pfx-title,
+body[data-theme="light"] .mm-title,
+body[data-theme="light"] .i-title,
+body[data-theme="light"] .dg-card-title,
+body[data-theme="light"] .inventory-card-value,
+body[data-theme="light"] .srv-title,
+body[data-theme="light"] .srv-meta-value,
+body[data-theme="light"] .srv-reason-text,
+body[data-theme="light"] .spx-page-title,
+body[data-theme="light"] .spx-view-value,
+body[data-theme="light"] .sup-view-value {
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] button svg,
+body[data-theme="light"] .dg-action-btn svg,
+body[data-theme="light"] .dg-card-btn svg,
+body[data-theme="light"] .pfx-close-btn svg,
+body[data-theme="light"] .pfx-remove-btn svg,
+body[data-theme="light"] .mm-close svg,
+body[data-theme="light"] .sb-icon svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+body[data-theme="light"] .dg-action-btn,
+body[data-theme="light"] .dg-card-btn,
+body[data-theme="light"] .pfx-close-btn,
+body[data-theme="light"] .pfx-remove-btn,
+body[data-theme="light"] .pfx-btn-ghost,
+body[data-theme="light"] .btn-ghost,
+body[data-theme="light"] .modal-actions .btn-ghost,
+body[data-theme="light"] .mm-close,
+body[data-theme="light"] .mm-body button[type="button"],
+body[data-theme="light"] .s-btn-ghost,
+body[data-theme="light"] .s-upload-btn,
+body[data-theme="light"] .s-edit-btn,
+body[data-theme="light"] .hw-btn-ghost,
+body[data-theme="light"] .spx-action-btn,
+body[data-theme="light"] .spx-page-btn {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text-soft) !important;
+  box-shadow: none !important;
+}
+
+body[data-theme="light"] .dg-action-btn:hover,
+body[data-theme="light"] .dg-card-btn:hover,
+body[data-theme="light"] .pfx-btn-ghost:hover,
+body[data-theme="light"] .btn-ghost:hover,
+body[data-theme="light"] .mm-close:hover,
+body[data-theme="light"] .mm-body button[type="button"]:hover,
+body[data-theme="light"] .s-btn-ghost:hover,
+body[data-theme="light"] .spx-action-btn:hover,
+body[data-theme="light"] .spx-page-btn:hover:not(:disabled) {
+  background: #eff6ff !important;
+  border-color: rgba(37, 99, 235, 0.25) !important;
+  color: var(--light-blue) !important;
+}
+
+body[data-theme="light"] .submit-button,
+body[data-theme="light"] .pfx-btn-primary,
+body[data-theme="light"] .dg-add-btn,
+body[data-theme="light"] .hw-btn-primary,
+body[data-theme="light"] .hw-nav-cta,
+body[data-theme="light"] .s-btn-primary,
+body[data-theme="light"] .mm-body button[type="submit"],
+body[data-theme="light"] .mm-body .submit-btn,
+body[data-theme="light"] .mm-body .form-submit {
+  background: #2563eb !important;
+  border-color: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="light"] .Toastify__toast {
+  background: #ffffff !important;
+  color: var(--light-text) !important;
+  border-color: var(--light-border) !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12) !important;
+}
+
+body[data-theme="light"] [class$="-page"],
+body[data-theme="light"] [class$="-root"] {
+  background-color: var(--light-page) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] [class$="-container"] {
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] [class$="-modal"],
+body[data-theme="light"] [class$="-wrapper"],
+body[data-theme="light"] [class$="-panel"],
+body[data-theme="light"] [class$="-section"],
+body[data-theme="light"] [class$="-table-section"],
+body[data-theme="light"] [class$="-table-wrap"],
+body[data-theme="light"] [class$="-list"],
+body[data-theme="light"] [class$="-grid"] {
+  background-color: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] [class$="-card"],
+body[data-theme="light"] [class$="-box"],
+body[data-theme="light"] [class$="-summary"],
+body[data-theme="light"] [class$="-details"],
+body[data-theme="light"] [class$="-meta"],
+body[data-theme="light"] [class$="-body"] {
+  background-color: #ffffff !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] [class$="-header"],
+body[data-theme="light"] [class$="-footer"],
+body[data-theme="light"] [class$="-head"] {
+  background-color: #f8fafc !important;
+  border-color: var(--light-border) !important;
+}
+
+body[data-theme="light"] [class$="-title"],
+body[data-theme="light"] [class$="-name"],
+body[data-theme="light"] [class$="-value"],
+body[data-theme="light"] [class$="-total"],
+body[data-theme="light"] [class$="-amount"],
+body[data-theme="light"] [class$="-main"] {
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] [class$="-subtitle"],
+body[data-theme="light"] [class$="-sub"],
+body[data-theme="light"] [class$="-label"],
+body[data-theme="light"] [class$="-hint"],
+body[data-theme="light"] [class$="-meta"],
+body[data-theme="light"] [class$="-empty"],
+body[data-theme="light"] [class$="-count"],
+body[data-theme="light"] [class$="-info"] {
+  color: var(--light-text-muted) !important;
+}
+
+body[data-theme="light"] table,
+body[data-theme="light"] tbody,
+body[data-theme="light"] tr,
+body[data-theme="light"] td {
+  color: var(--light-text-soft) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+body[data-theme="light"] th {
+  background: #f1f5f9 !important;
+  color: var(--light-text-soft) !important;
+  border-color: var(--light-border) !important;
+}
+
+body[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none !important;
+  opacity: 0.75 !important;
+}
+
+body[data-theme="light"] .hw-root::before,
+body[data-theme="light"] .s-root::before,
+body[data-theme="light"] .dg-noise {
+  opacity: 0.08 !important;
+}
+
+/* Broad light-mode hardening for modules with local dark CSS. */
+body[data-theme="light"] .js-page,
+body[data-theme="light"] .rpt-page,
+body[data-theme="light"] .or-page,
+body[data-theme="light"] .gen-page,
+body[data-theme="light"] .vo-root,
+body[data-theme="light"] .vms-root {
+  background: var(--light-page) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] .js-canvas,
+body[data-theme="light"] .rpt-canvas,
+body[data-theme="light"] .or-bg-canvas,
+body[data-theme="light"] .or-noise,
+body[data-theme="light"] .js-orb,
+body[data-theme="light"] .rpt-orb {
+  opacity: 0.08 !important;
+}
+
+body[data-theme="light"] [class*="-backdrop"],
+body[data-theme="light"] [class*="-overlay"] {
+  background: rgba(241, 245, 249, 0.78) !important;
+  backdrop-filter: blur(10px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.08) !important;
+}
+
+body[data-theme="light"] [class*="-modal"],
+body[data-theme="light"] [class*="-panel"],
+body[data-theme="light"] [class*="-shell"],
+body[data-theme="light"] [class*="-wrap"],
+body[data-theme="light"] [class*="-section"],
+body[data-theme="light"] [class*="-card"],
+body[data-theme="light"] [class*="-box"],
+body[data-theme="light"] [class*="-row"],
+body[data-theme="light"] [class*="-list"],
+body[data-theme="light"] [class*="-grid"],
+body[data-theme="light"] [class*="-table"],
+body[data-theme="light"] [class*="-summary"],
+body[data-theme="light"] [class*="-banner"] {
+  border-color: var(--light-border) !important;
+}
+
+body[data-theme="light"] [class*="-modal"],
+body[data-theme="light"] [class*="-panel"],
+body[data-theme="light"] [class*="-shell"],
+body[data-theme="light"] [class*="-section"],
+body[data-theme="light"] [class*="-card"],
+body[data-theme="light"] [class*="-box"],
+body[data-theme="light"] [class*="-table-wrap"],
+body[data-theme="light"] [class*="-table-section"],
+body[data-theme="light"] [class*="-summary"] {
+  background: #ffffff !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] [class*="-header"],
+body[data-theme="light"] [class*="-footer"],
+body[data-theme="light"] [class*="-head"],
+body[data-theme="light"] [class*="-top"] {
+  background-color: #f8fafc !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] [class*="-title"],
+body[data-theme="light"] [class*="-name"],
+body[data-theme="light"] [class*="-value"],
+body[data-theme="light"] [class*="-amount"],
+body[data-theme="light"] [class*="-total"],
+body[data-theme="light"] [class*="-main"],
+body[data-theme="light"] [class*="-number"],
+body[data-theme="light"] [class*="-val"] {
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] [class*="-label"],
+body[data-theme="light"] [class*="-sub"],
+body[data-theme="light"] [class*="-hint"],
+body[data-theme="light"] [class*="-meta"],
+body[data-theme="light"] [class*="-empty"],
+body[data-theme="light"] [class*="-count"],
+body[data-theme="light"] [class*="-info"],
+body[data-theme="light"] [class*="-eyebrow"] {
+  color: var(--light-text-muted) !important;
+}
+
+body[data-theme="light"] input,
+body[data-theme="light"] select,
+body[data-theme="light"] textarea,
+body[data-theme="light"] [class*="-input"],
+body[data-theme="light"] [class*="-select"],
+body[data-theme="light"] [class*="-filter"],
+body[data-theme="light"] [class*="-drop-box"],
+body[data-theme="light"] [class*="-drop-input"] {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] [class*="-drop-list"],
+body[data-theme="light"] [class*="-dropdown"],
+body[data-theme="light"] [class*="-options"] {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16) !important;
+}
+
+body[data-theme="light"] [class*="-drop-list"] li,
+body[data-theme="light"] [class*="-options"] li {
+  color: var(--light-text-soft) !important;
+}
+
+body[data-theme="light"] table,
+body[data-theme="light"] thead,
+body[data-theme="light"] tbody,
+body[data-theme="light"] tr,
+body[data-theme="light"] td {
+  background-color: #ffffff !important;
+  color: var(--light-text-soft) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+body[data-theme="light"] th,
+body[data-theme="light"] [class*="-table-header"],
+body[data-theme="light"] [class*="-items-head"] {
+  background: #f1f5f9 !important;
+  color: var(--light-text-soft) !important;
+  border-color: var(--light-border) !important;
+}
+
+body[data-theme="light"] tbody tr:hover td,
+body[data-theme="light"] [class*="-row"]:hover {
+  background-color: #eff6ff !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] button:not([class*="primary"]):not([class*="submit"]):not([class*="danger"]),
+body[data-theme="light"] [class*="-btn"]:not([class*="primary"]):not([class*="submit"]):not([class*="danger"]) {
+  border-color: var(--light-border) !important;
+  color: var(--light-text-soft) !important;
+}
+
+body[data-theme="light"] button svg,
+body[data-theme="light"] svg {
+  color: currentColor;
+}
+
+body[data-theme="light"] svg [fill="#FFFFFF"],
+body[data-theme="light"] svg [fill="#fff"],
+body[data-theme="light"] svg [fill="white"] {
+  fill: currentColor !important;
+}
+
+body[data-theme="light"] svg [stroke="#FFFFFF"],
+body[data-theme="light"] svg [stroke="#fff"],
+body[data-theme="light"] svg [stroke="white"] {
+  stroke: currentColor !important;
+}
+
+body[data-theme="light"] .dg-action-btn.edit,
+body[data-theme="light"] .dg-card-btn.edit,
+body[data-theme="light"] button[class*="edit"],
+body[data-theme="light"] [class*="action"][class*="edit"] {
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .dg-action-btn.view,
+body[data-theme="light"] .dg-card-btn.view,
+body[data-theme="light"] button[class*="view"],
+body[data-theme="light"] [class*="action"][class*="view"] {
+  color: #334155 !important;
+}
+
+body[data-theme="light"] .dg-action-btn.payment-collection,
+body[data-theme="light"] .dg-card-btn.payment-collection,
+body[data-theme="light"] button[class*="collect"],
+body[data-theme="light"] [class*="action"][class*="collect"] {
+  color: #047857 !important;
+}
+
+body[data-theme="light"] .dg-action-btn.download,
+body[data-theme="light"] .dg-card-btn.download,
+body[data-theme="light"] button[class*="download"],
+body[data-theme="light"] [class*="action"][class*="download"] {
+  color: #b45309 !important;
+}
+
+body[data-theme="light"] .dg-action-btn.disable,
+body[data-theme="light"] .dg-card-btn.disable,
+body[data-theme="light"] button[class*="delete"],
+body[data-theme="light"] button[class*="remove"],
+body[data-theme="light"] button[class*="danger"],
+body[data-theme="light"] [class*="action"][class*="delete"],
+body[data-theme="light"] [class*="action"][class*="remove"],
+body[data-theme="light"] [class*="action"][class*="danger"] {
+  color: #b91c1c !important;
+}
+
+body[data-theme="light"] [class*="-badge"],
+body[data-theme="light"] [class*="-pill"],
+body[data-theme="light"] [class*="-tag"],
+body[data-theme="light"] [class*="-chip"] {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+body[data-theme="light"] [class*="-badge-green"],
+body[data-theme="light"] [class*="-success"],
+body[data-theme="light"] .cp-accent,
+body[data-theme="light"] .rlv-accent {
+  color: #047857 !important;
+}
+
+body[data-theme="light"] [class*="-badge-red"],
+body[data-theme="light"] [class*="-danger"] {
+  color: #b91c1c !important;
+}
+
+body[data-theme="light"] [class*="-badge-amber"],
+body[data-theme="light"] [class*="-amber"] {
+  color: #b45309 !important;
+}
+
+body[data-theme="light"] [class*="-badge-blue"],
+body[data-theme="light"] [class*="-accent"] {
+  color: #1d4ed8 !important;
+}
+
+@media (max-width: 640px) {
+  .theme-toggle {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .theme-toggle-text {
+    display: none;
+  }
+}

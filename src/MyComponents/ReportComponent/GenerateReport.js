@@ -16,6 +16,8 @@ export default function GenerateReport() {
   const [summary, setSummary] = useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [downloading, setDownloading] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   const tableRef = useRef(null);
   const modalTableRef = useRef(null);
@@ -47,7 +49,6 @@ export default function GenerateReport() {
     resize();
     window.addEventListener("resize", resize);
 
-    // Floating orbs
     const orbs = Array.from({ length: 6 }, (_, i) => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -58,18 +59,15 @@ export default function GenerateReport() {
       alpha: 0.03 + Math.random() * 0.04,
     }));
 
-    // Grid lines (3D perspective grid)
     let tick = 0;
 
     const draw = () => {
       tick++;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Deep background
       ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Perspective grid
       const horizon = canvas.height * 0.55;
       const vanishX = canvas.width / 2;
       const gridCount = 18;
@@ -80,7 +78,6 @@ export default function GenerateReport() {
       ctx.strokeStyle = "#3b82f6";
       ctx.lineWidth = 0.5;
 
-      // Horizontal grid lines (receding)
       for (let i = 0; i <= gridCount; i++) {
         const y = horizon + speed + (i * (canvas.height - horizon)) / gridCount;
         if (y > canvas.height) continue;
@@ -91,7 +88,6 @@ export default function GenerateReport() {
         ctx.stroke();
       }
 
-      // Vertical grid lines (converging to vanish point)
       const vLineCount = 20;
       for (let i = 0; i <= vLineCount; i++) {
         const t = i / vLineCount;
@@ -104,7 +100,6 @@ export default function GenerateReport() {
 
       ctx.restore();
 
-      // Floating glow orbs
       orbs.forEach((orb) => {
         orb.x += orb.vx;
         orb.y += orb.vy;
@@ -122,13 +117,11 @@ export default function GenerateReport() {
         ctx.fill();
       });
 
-      // Scanlines
       for (let y = 0; y < canvas.height; y += 4) {
         ctx.fillStyle = "rgba(0,0,0,0.04)";
         ctx.fillRect(0, y, canvas.width, 1);
       }
 
-      // Vignette
       const vignette = ctx.createRadialGradient(
         canvas.width / 2, canvas.height / 2, canvas.height * 0.2,
         canvas.width / 2, canvas.height / 2, canvas.height * 0.85
@@ -178,15 +171,21 @@ export default function GenerateReport() {
     payload.pageSize = pageSize;
 
     const apiMap = {
-      [ReportEntity.Vendor]:        "http://localhost:8080/api/Vendor/GetVendorReport",
-      [ReportEntity.ProductType]:   "http://localhost:8080/api/ProductType/GetProductTypeReport",
-      [ReportEntity.Product]:       "http://localhost:8080/api/Product/GetProductReport",
-      [ReportEntity.Inventory]:     "http://localhost:8080/api/Inventory/GetInventoryReport",
-      [ReportEntity.Sales]:         "http://localhost:8080/api/Sales/GetSaleReport",
-      [ReportEntity.Roles]:         "http://localhost:8080/api/Roles/GetRoleReport",
-      [ReportEntity.Reports]:       "http://localhost:8080/api/Reports/GetReportData",
-      [ReportEntity.Revenue]:       "http://localhost:8080/api/Reports/RevenueReportData",
-      [ReportEntity.StockMovement]: "http://localhost:8080/api/Inventory/GetInvMovementReport",
+      [ReportEntity.Vendor]:            "http://localhost:8080/api/Vendor/GetVendorReport",
+      [ReportEntity.ProductType]:       "http://localhost:8080/api/ProductType/GetProductTypeReport",
+      [ReportEntity.Product]:           "http://localhost:8080/api/Product/GetProductReport",
+      [ReportEntity.Inventory]:         "http://localhost:8080/api/Inventory/GetInventoryReport",
+      [ReportEntity.Sales]:             "http://localhost:8080/api/Sales/GetSaleReport",
+      [ReportEntity.Roles]:             "http://localhost:8080/api/Roles/GetRoleReport",
+      [ReportEntity.Reports]:           "http://localhost:8080/api/Reports/GetReportData",
+      [ReportEntity.Revenue]:           "http://localhost:8080/api/Reports/RevenueReportData",
+      [ReportEntity.StockMovement]:     "http://localhost:8080/api/Inventory/GetInvMovementReport",
+      [ReportEntity.Outstanding]:       "http://localhost:8080/api/Reports/OutstandingReportData",
+      [ReportEntity.RetailerCustomer]:  "http://localhost:8080/api/Reports/CustomerReportData",
+      [ReportEntity.Purchase]:          "http://localhost:8080/api/Purchase/PurchaseReportData",
+      [ReportEntity.Supplier]:          "http://localhost:8080/api/Supplier/SupplierReportData",
+      [ReportEntity.PaymentCollection]: "http://localhost:8080/api/PaymentCollection/PaymentCollectionReportData",
+      [ReportEntity.DayBook]:          "http://localhost:8080/api/Reports/DayBookReportData",
     };
 
     const apiUrl = apiMap[moduleId];
@@ -209,6 +208,81 @@ export default function GenerateReport() {
         }
       });
   }, [moduleId, initialFilters, page, pageSize]);
+
+  /* DOWNLOAD HANDLER */
+  const handleDownload = async () => {
+    if (!moduleId || !initialFilters || downloading) return;
+
+    const downloadApiMap = {
+      [ReportEntity.Vendor]:            "http://localhost:8080/api/Vendor/report",
+      [ReportEntity.ProductType]:       "http://localhost:8080/api/ProductType/Report",
+      [ReportEntity.Product]:           "http://localhost:8080/api/Product/Report",
+      [ReportEntity.Inventory]:         "http://localhost:8080/api/Inventory/Report",
+      [ReportEntity.Sales]:             "http://localhost:8080/api/Sales/Report",
+      [ReportEntity.Roles]:             "http://localhost:8080/api/Roles/GenerateReport",
+      [ReportEntity.Reports]:           "http://localhost:8080/api/Reports/GenerateReport",
+      [ReportEntity.Revenue]:           "http://localhost:8080/api/Reports/RevenueReport",
+      [ReportEntity.StockMovement]:     "http://localhost:8080/api/Inventory/InvMovementFileReport",
+      [ReportEntity.Outstanding]:       "http://localhost:8080/api/Reports/OutstandingReport",
+      [ReportEntity.RetailerCustomer]:  "http://localhost:8080/api/Reports/CustomerReport",
+      [ReportEntity.Purchase]:          "http://localhost:8080/api/Purchase/PurchaseReport",
+      [ReportEntity.Supplier]:          "http://localhost:8080/api/Supplier/SupplierReport",
+      [ReportEntity.PaymentCollection]: "http://localhost:8080/api/PaymentCollection/PaymentCollectionReport",
+      [ReportEntity.DayBook]:          "http://localhost:8080/api/Reports/DayBookReport",
+    };
+
+    const apiUrl = downloadApiMap[moduleId];
+    if (!apiUrl) return;
+
+    setDownloading(true);
+    setDownloadSuccess(false);
+
+    try {
+      const payload = {};
+      Object.keys(initialFilters).forEach((key) => {
+        payload[key] =
+          initialFilters[key] && initialFilters[key].trim() !== ""
+            ? initialFilters[key]
+            : null;
+      });
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error("Download failed");
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let fileName = `${reportName || "Report"}.xlsx`;
+
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (match && match[1]) {
+          fileName = match[1].replace(/['"]/g, "");
+        }
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 3000);
+    } catch (err) {
+      console.error("Download error:", err);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   /* RESIZER — MAIN TABLE */
   useEffect(() => {
@@ -309,11 +383,10 @@ export default function GenerateReport() {
   const openModal = (items) => setModalInvoice(items);
   const closeModal = () => setModalInvoice(null);
 
-  /* Summary label map */
   const summaryConfig = [
     { key: "totalRevenue",    label: "Revenue",       icon: "₹", color: "#3b82f6",  glow: "rgba(59,130,246,0.4)" },
     { key: "totalProfit",     label: "Profit",        icon: "↑", color: "#10b981",  glow: "rgba(16,185,129,0.4)" },
-    { key: "totalDiscount",   label: "Discount",      icon: "%", color: "#f59e0b",  glow: "rgba(245,158,11,0.4)" },
+    { key: "totalDiscount",   label: "Discount",      icon: "₹", color: "#f59e0b",  glow: "rgba(245,158,11,0.4)" },
     { key: "totalTax",        label: "Tax",           icon: "T", color: "#8b5cf6",  glow: "rgba(139,92,246,0.4)" },
     { key: "netProfit",       label: "Net Profit",    icon: "N", color: "#06b6d4",  glow: "rgba(6,182,212,0.4)" },
     { key: "profitMargin",    label: "Profit Margin", icon: "M", color: "#ec4899",  glow: "rgba(236,72,153,0.4)", suffix: "%" },
@@ -327,35 +400,72 @@ export default function GenerateReport() {
 
   return (
     <div className="r-container">
-      {/* 3D Animated Canvas Background */}
       <canvas ref={canvasRef} className="bg-canvas" />
-
-      {/* Noise texture overlay */}
       <div className="noise-overlay" />
-
-      {/* Top accent beam */}
       <div className="top-beam" />
 
       {/* Header */}
       <header className="report-header" style={parallaxStyle}>
-        <div className="header-badge">
-          <span className="badge-dot" />
-          REPORT VIEWER
+        <div className="header-top-row">
+          <div className="header-left">
+            <div className="header-badge">
+              <span className="badge-dot" />
+              REPORT VIEWER
+            </div>
+            <h1 className="gen-report-title">
+              <span className="title-accent">//</span>
+              {reportName}
+            </h1>
+            <div className="header-meta">
+              <span className="meta-chip">
+                <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>
+                LIVE
+              </span>
+              <span className="meta-divider" />
+              <span className="meta-label">{fields.length} columns</span>
+              <span className="meta-divider" />
+              <span className="meta-label">{reportData.length} rows</span>
+            </div>
+          </div>
+
+          {/* Download Button */}
+          <div className="header-actions">
+            <button
+              className={`download-btn ${downloading ? "downloading" : ""} ${downloadSuccess ? "success" : ""}`}
+              onClick={handleDownload}
+              disabled={downloading || loading}
+              title="Download Report as Excel"
+            >
+              {downloading ? (
+                <>
+                  <span className="download-spinner">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="28" strokeDashoffset="10" strokeLinecap="round"/>
+                    </svg>
+                  </span>
+                  <span>Exporting…</span>
+                </>
+              ) : downloadSuccess ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M2.5 7.5L5.5 10.5L11.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span>Downloaded!</span>
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 2V9M7 9L4.5 6.5M7 9L9.5 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 11H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <span>Export Excel</span>
+                </>
+              )}
+              <span className="download-btn-glow" />
+            </button>
+          </div>
         </div>
-        <h1 className="gen-report-title">
-          <span className="title-accent">//</span>
-          {reportName}
-        </h1>
-        <div className="header-meta">
-          <span className="meta-chip">
-            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>
-            LIVE
-          </span>
-          <span className="meta-divider" />
-          <span className="meta-label">{fields.length} columns</span>
-          <span className="meta-divider" />
-          <span className="meta-label">{reportData.length} rows</span>
-        </div>
+
         <div className="header-rule" />
       </header>
 

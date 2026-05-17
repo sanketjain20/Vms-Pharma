@@ -5,7 +5,7 @@ import Sidebar from "./Sidebar";
 import Footer from "../CommonComponent/Footer";
 import "../../Styles/layout.css";
 
-function LayoutModule() {
+function LayoutModule({ theme, onToggleTheme }) {
 
   return (
     <div className="layout">
@@ -14,7 +14,7 @@ function LayoutModule() {
 
       {/* Main content */}
       <div className="layout-main ">
-        <NavBarModule />
+        <NavBarModule theme={theme} onToggleTheme={onToggleTheme} />
         <div className="layout-content">
           <Outlet />
         </div>

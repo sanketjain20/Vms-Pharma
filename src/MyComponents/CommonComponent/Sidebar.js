@@ -137,7 +137,12 @@ export default function Sidebar() {
   }, []);
 
   const handleNavigation = (moduleName) => {
-    navigate(`/master/${moduleName.toLowerCase().replace(/_/g, "-")}`);
+    const path = String(moduleName)
+      .replace(/([a-z])([A-Z])/g, "$1-$2")
+      .toLowerCase()
+      .replace(/_/g, "-")
+      .replace(/\s+/g, "-");
+    navigate(`/master/${path}`);
     setHoveredMenu(null);
   };
 
@@ -158,7 +163,10 @@ export default function Sidebar() {
   const hasPurchase = has("purchase");
   const hasPayment  = has("paymentcollection");
   const hasSupplierPayment  = has("supplierpayment");
-  const hasBilling  = hasSales || hasPurchase || hasPayment|| hasSupplierPayment;
+ const hasSalesReturn = has("salesreturn");
+ const hasPurchaseReturn = has("purchasereturn");
+ const hasRetailerOutstanding = has("retaileroutstanding");
+ const hasBilling = hasSales || hasPurchase || hasPayment || hasSupplierPayment || hasSalesReturn || hasPurchaseReturn || hasRetailerOutstanding;
 
   /* ── Standalone items ── */
   const hasInventory  = has("inventory");
@@ -176,7 +184,7 @@ export default function Sidebar() {
     "product","producttype","retailer","supplier","manufacturer",
     "sales","purchase","paymentcollection",
     "inventory","dashboard","reports","report","scheduler",
-    "vendor","roles","supplierpayment",
+    "vendor","roles","supplierpayment","salesreturn","purchasereturn","retaileroutstanding",
   ];
   const otherModules = modules.filter(m => !knownKeys.includes(normalize(m)));
 
@@ -271,6 +279,9 @@ export default function Sidebar() {
                   hasPurchase && { label: "Purchase",           key: find("purchase")          || "Purchase"          },
                   hasPayment  && { label: "Payment Collection", key: find("paymentcollection") || "PaymentCollection" },
                   hasSupplierPayment  && { label: "Supplier Payment", key: find("supplierpayment") || "SupplierPayment" },
+                  hasSalesReturn && { label: "Sales Return", key: find("salesreturn") || "SalesReturn" },
+                  hasPurchaseReturn && { label: "Purchase Return", key: find("purchasereturn") || "PurchaseReturn" },
+                  hasRetailerOutstanding && { label: "Retailer Outstanding", key: find("retaileroutstanding") || "RetailerOutstanding" },
                 ].filter(Boolean)}
               />
             </SidebarItem>

@@ -6,8 +6,8 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function Purchase() {
 const columns = [
-  { header: "Purchase No", field: "purchaseNumber", width: "150px" },
-  { header: "Supplier", field: "supplierName", width: "180px" },
+  { header: "Purchase Number", field: "purchaseNumber", width: "160px" },
+  { header: "Supplier", field: "supplierName", width: "170px" },
   { header: "Invoice No", field: "supplierInvoiceNumber", width: "160px" },
   { header: "Total (₹)", field: "", width: "130px" },
   { header: "Net Amount (₹)", field: "netAmount", width: "150px" },

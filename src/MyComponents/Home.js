@@ -33,6 +33,43 @@ export default function Home() {
   const name       = user?.data?.name || "Vendor";
   const isLoggedIn = !!user?.data;
 
+  // ── Profile photo — single consolidated effect ──
+  const [profilePhoto, setProfilePhoto] = React.useState(null);
+
+
+ useEffect(() => {
+  fetch("http://localhost:8080/api/Vendor/GetUserRoleId", {
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  })
+    .then((r) => r.json())
+    .then((d) => {
+      if (d.status === 200) {
+        // ✅ store role id in localStorage
+        localStorage.setItem("roleId", d.data);
+      } else {
+        console.log(d.message || "Failed to load role id");
+      }
+    })
+    .catch(() => {
+      console.log("Unable to fetch role id");
+    });
+}, []);
+
+  useEffect(() => {
+    const loadPhoto = () => {
+      const photo = localStorage.getItem("profilePhoto");
+      setProfilePhoto(photo || null);
+    };
+
+    loadPhoto(); // load on mount
+
+    // Fires when localStorage changes in ANY tab (and same-tab if dispatched manually)
+    window.addEventListener("storage", loadPhoto);
+    return () => window.removeEventListener("storage", loadPhoto);
+  }, []);
+
   /* ── 3D Canvas background ── */
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -69,7 +106,8 @@ export default function Home() {
     const draw = () => {
       tick++;
       const W = canvas.width, H = canvas.height;
-      ctx.clearRect(0, 0, W, H);
+     ctx.fillStyle = "rgba(0,0,0,0.4)";
+ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
 
       /* perspective grid */
@@ -149,7 +187,19 @@ export default function Home() {
   ];
 
   return (
-    <div className="hw-root">
+    <div
+  className="hw-root"
+  style={
+    profilePhoto
+      ? {
+          backgroundImage: `url(${profilePhoto})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }
+      : {}
+  }
+>
       <canvas ref={canvasRef} className="hw-canvas" />
 
       {/* ── NAV ── */}
@@ -173,9 +223,26 @@ export default function Home() {
         </div>
         <div className="hw-nav-right">
           <LiveClock />
-          <button className="hw-nav-cta" onClick={() => navigate("/master/dashboard")}>
-            Dashboard →
-          </button>
+
+          {/* ── Profile avatar — only shown if photo exists in localStorage ── */}
+          {profilePhoto && (
+            <div
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: "50%",
+                backgroundImage: `url(${profilePhoto})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                border: "1.5px solid rgba(59,130,246,0.45)",
+                boxShadow: "0 0 8px rgba(59,130,246,0.3)",
+                flexShrink: 0,
+                cursor: "pointer",
+              }}
+              title={name}
+              onClick={() => navigate("/master/dashboard")}
+            />
+          )}
         </div>
       </nav>
 

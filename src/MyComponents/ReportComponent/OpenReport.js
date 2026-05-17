@@ -26,6 +26,12 @@ function getModuleIdByReportName(reportName) {
   if (name.includes("role"))           return ReportEntity.Roles;
   if (name.includes("revenue-profit")) return ReportEntity.Revenue;
   if (name.includes("stock"))          return ReportEntity.StockMovement;
+  if (name.includes("outstanding"))    return ReportEntity.Outstanding;
+  if (name.includes("customer"))       return ReportEntity.RetailerCustomer; 
+  if (name.includes("purchase"))       return ReportEntity.Purchase;
+  if (name.includes("supplier"))       return ReportEntity.Supplier;
+  if (name.includes("payment"))        return ReportEntity.PaymentCollection;
+  if (name.includes("day"))        return ReportEntity.DayBook;
 
   return null;
 }

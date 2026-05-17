@@ -34,6 +34,24 @@ export const runReportByModule = async (moduleId, filters) => {
     case ReportEntity.StockMovement:
       apiUrl = "http://localhost:8080/api/Inventory/InvMovementFileReport";
       break;
+    case ReportEntity.Outstanding:
+        apiUrl = "http://localhost:8080/api/Reports/OutstandingReport";
+        break;
+    case ReportEntity.RetailerCustomer:
+        apiUrl = "http://localhost:8080/api/Reports/CustomerReport";
+        break;
+    case ReportEntity.Purchase:
+        apiUrl = "http://localhost:8080/api/Purchase/PurchaseReport";
+        break;
+    case ReportEntity.Supplier:
+        apiUrl = "http://localhost:8080/api/Supplier/SupplierReport";
+        break;
+    case ReportEntity.PaymentCollection:
+        apiUrl = "http://localhost:8080/api/PaymentCollection/PaymentCollectionReport";
+        break;
+    case ReportEntity.DayBook:
+        apiUrl = "http://localhost:8080/api/Reports/DayBookReport";
+        break;
     default:
       throw new Error("Invalid module ID");
   }
