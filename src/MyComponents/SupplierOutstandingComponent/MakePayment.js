@@ -221,7 +221,7 @@ export default function MakePayment({ uKey, onClose, onSuccess }) {
           <div className="cp-header-left">
             <div className="cp-eyebrow"><span className="cp-eyebrow-dot" />SUPPLIER PAYMENT</div>
             <h3 className="cp-title">
-              <span className="cp-title-acc">{"//"}</span>
+              <span className="cp-title-acc"></span>
               {ledger ? ledger.shopName : "Loading ledger"}
             </h3>
           </div>

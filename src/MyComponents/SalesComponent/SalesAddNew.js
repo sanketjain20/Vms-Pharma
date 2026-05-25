@@ -515,18 +515,16 @@ const payload = {
       <div className="san-top-beam" />
 
       <div className="san-content">
-        {/* ── Page Header ── */}
+        
         <div className="san-page-header">
           <div className="san-badge"><span className="san-badge-dot" />NEW TRANSACTION</div>
-          <h1 className="san-page-title"><span className="san-title-acc">//</span> New Sale</h1>
+          <h1 className="san-page-title"><span className="san-title-acc"></span> New Sale</h1>
           <div className="san-header-rule" />
         </div>
 
         <div className="san-layout">
 
-          {/* ═══════════════════════════════
-              LEFT — Item Builder
-          ═══════════════════════════════ */}
+          
           <div className="san-panel">
             <div className="san-panel-header">
               <div className="san-panel-title">
@@ -538,7 +536,7 @@ const payload = {
             </div>
             <div className="san-panel-body">
 
-              {/* Product Type */}
+              
               <Dropdown
                 label="Product Type"
                 options={productTypes}
@@ -548,7 +546,7 @@ const payload = {
                 error={errors.selectedType}
               />
 
-              {/* Product */}
+              
               <Dropdown
                 label="Product"
                 options={products}
@@ -558,7 +556,7 @@ const payload = {
                 error={errors.product}
               />
 
-              {/* Inventory / Manual Price */}
+              
               {inventory ? (
                 <div className="san-inv-box">
                   <div>
@@ -583,7 +581,7 @@ const payload = {
                 </div>
               ) : null}
 
-              {/* Batch Selection */}
+              
               {availableBatches.length > 0 && (
                 <div className="san-field">
                   <label>Batch</label>
@@ -635,7 +633,7 @@ const payload = {
                 </div>
               )}
 
-              {/* Quantity */}
+              
               <div className="san-field">
                 <label>Quantity</label>
                 <input
@@ -649,7 +647,7 @@ const payload = {
                 {errors.quantity && <span className="san-err">{errors.quantity}</span>}
               </div>
 
-              {/* GST Mode */}
+              
               <div className="san-field">
                 <label>GST Mode</label>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -671,7 +669,7 @@ const payload = {
                 </div>
               </div>
 
-              {/* GST Inputs */}
+              
               {taxMode === "COMMON" ? (
                 <div className="san-field">
                   <label>GST Rate</label>
@@ -712,7 +710,7 @@ const payload = {
                 </div>
               )}
 
-              {/* Buttons */}
+              
               <div className="san-btn-row">
                 <button className="san-btn-primary" onClick={addItem}>
                   <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -729,9 +727,7 @@ const payload = {
             </div>
           </div>
 
-          {/* ═══════════════════════════════
-              RIGHT — Cart & Billing
-          ═══════════════════════════════ */}
+          
           <div className="san-panel">
             <div className="san-panel-header">
               <div className="san-panel-title">
@@ -747,7 +743,7 @@ const payload = {
             </div>
             <div className="san-panel-body san-panel-body-right">
 
-              {/* ── Items list ── */}
+              
               <div className="san-items-list">
                 {items.length === 0 ? (
                   <div className="san-empty-cart">
@@ -776,7 +772,7 @@ const payload = {
                         <button onClick={() => increaseQty(idx)}>+</button>
                       </div>
                       <span className="san-item-total">₹{(item.sellingPrice * item.quantity).toFixed(2)}</span>
-                      {/* Edit */}
+                      
                       <button
                         onClick={() => editItem(idx)}
                         style={{
@@ -791,7 +787,7 @@ const payload = {
                           <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z"/>
                         </svg>
                       </button>
-                      {/* Delete */}
+                      
                       <button className="san-delete-btn" onClick={() => deleteItem(idx)}>
                         <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
                           <path d="M1.5 3h8M4.5 3V2h2v1M2.5 3l.5 6h5l.5-6"
@@ -804,7 +800,7 @@ const payload = {
               </div>
               {errors.items && <span className="san-err">{errors.items}</span>}
 
-              {/* ── Totals ── */}
+              
               <div className="san-totals">
                 <div className="san-total-row"><span>Subtotal</span><span>₹{subTotal.toFixed(2)}</span></div>
                 <div className="san-total-row">
@@ -844,10 +840,10 @@ const payload = {
                 </div>
               </div>
 
-              {/* ── Billing section ── */}
+              
               <div className="san-billing-section">
 
-                {/* Retailer */}
+                
                 <Dropdown
                   label="Retailer (optional — blank = walk-in)"
                   options={retailers}
@@ -857,7 +853,7 @@ const payload = {
                   error={errors.retailerId}
                 />
 
-                {/* Billing Mode (hidden for CREDIT) */}
+                
                 {creditPaymentType !== "CREDIT" && (
                   <Dropdown
                     label="Billing Mode"
@@ -869,7 +865,7 @@ const payload = {
                   />
                 )}
 
-                {/* Payment Type */}
+                
                 <div className="san-field">
                   <label>Payment Type</label>
                   <div style={{ display: "flex", gap: 6 }}>
@@ -896,7 +892,7 @@ const payload = {
                   </div>
                 </div>
 
-                {/* Due Date */}
+                
                 {(creditPaymentType === "CREDIT" || creditPaymentType === "PARTIAL") && (
                   <div className="san-field">
                     <label>Due Date</label>
@@ -909,7 +905,7 @@ const payload = {
                   </div>
                 )}
 
-                {/* Amount Paid */}
+                
                 <div className="san-field">
                   <label>Amount Paid (₹)</label>
                   <input
@@ -923,7 +919,7 @@ const payload = {
                   {errors.amountPaid && <span className="san-err">{errors.amountPaid}</span>}
                 </div>
 
-                {/* Due badge */}
+                
                 {creditPaymentType !== "PAID" && parseFloat(amountPaid) >= 0 && (
                   <div className="san-due-badge">
                     Due: ₹{Math.max(0, netAmount - parseFloat(amountPaid || 0)).toFixed(2)}
@@ -931,7 +927,7 @@ const payload = {
                 )}
               </div>
 
-              {/* Submit */}
+              
               <button className="san-btn-submit" onClick={submitSales}>
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                   <path d="M2 6.5l3 3 6-6" stroke="currentColor" strokeWidth="1.6"
@@ -943,8 +939,8 @@ const payload = {
             </div>
           </div>
 
-        </div>{/* end san-layout */}
-      </div>{/* end san-content */}
+        </div>
+      </div>
 
       {isViewOpen && (
         <SalesView

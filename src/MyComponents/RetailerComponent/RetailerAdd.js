@@ -82,11 +82,11 @@ export default function RetailerAdd({ onClose, onSubmit }) {
         <div className="rtx-corner rtx-tl" /><div className="rtx-corner rtx-tr" />
         <div className="rtx-corner rtx-bl" /><div className="rtx-corner rtx-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="rtx-header">
           <div className="rtx-header-left">
             <div className="rtx-eyebrow"><span className="rtx-eyebrow-dot" />NEW RETAILER</div>
-            <h3 className="rtx-title"><span className="rtx-title-acc">//</span> Add Retailer</h3>
+            <h3 className="rtx-title"><span className="rtx-title-acc"></span> Add Retailer</h3>
           </div>
           <button className="rtx-close" type="button" onClick={onClose}>
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -98,11 +98,11 @@ export default function RetailerAdd({ onClose, onSubmit }) {
 
         <div className="rtx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="rtx-body">
           {errors.general && <div className="rtx-alert">{errors.general}</div>}
 
-          {/* ── CREDIT LIMIT INFO ── */}
+          
           <div className="rtx-info-banner">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
               <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" strokeWidth="1.2"/>
@@ -142,7 +142,7 @@ export default function RetailerAdd({ onClose, onSubmit }) {
           </div>
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="rtx-footer">
           <button type="button" className="rtx-btn-ghost" onClick={onClose}>Cancel</button>
           <button type="button" className="rtx-btn-primary" onClick={submit} disabled={loading}>

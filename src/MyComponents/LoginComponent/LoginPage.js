@@ -148,10 +148,10 @@ function VMSLeft() {
   return (
     <div className="vms-left">
       <div className="vms-left-inner">
-        {/* Tag */}
+        
         <div className="vms-sys-tag">System · v2.0 · Pharma Wholesale</div>
 
-        {/* Brand */}
+        
         <div className="vms-logo">
           <div className="vms-logo-text">
             VMS<span className="vms-cursor" />
@@ -159,13 +159,13 @@ function VMSLeft() {
           <div className="vms-logo-sub">Vendor Management System</div>
         </div>
 
-        {/* Tagline */}
+        
         <p className="vms-tagline">
           Complete pharma wholesale control — vendors, stock, billing
           and analytics in one unified system.
         </p>
 
-        {/* Modules */}
+        
         <div className="vms-modules">
           {modules.map(({ icon, name, desc, cls }, i) => (
             <div key={i} className={`vms-module ${cls}`}>
@@ -176,7 +176,7 @@ function VMSLeft() {
           ))}
         </div>
 
-        {/* Stats */}
+        
         <div className="vms-statrow">
           {[
             ["∞", "Products"],
@@ -244,19 +244,19 @@ function VMSRight() {
 
   return (
     <div className="vms-right">
-      {/* Corner decorations */}
+      
       <div className="vms-corner vms-corner-tl" />
       <div className="vms-corner vms-corner-tr" />
       <div className="vms-corner vms-corner-bl" />
       <div className="vms-corner vms-corner-br" />
 
-      {/* Step badge */}
+      
       <div className="vms-step-badge">
         <div className="vms-badge-num">{step === "email" ? "01" : "02"}</div>
         {step === "email" ? "Identify Account" : "Verify Credentials"}
       </div>
 
-      {/* Heading */}
+      
       <div className="vms-form-heading">
         {step === "email"
           ? <><span>WELCOME</span><br />BACK</>
@@ -264,7 +264,7 @@ function VMSRight() {
         }
       </div>
 
-      {/* Sub */}
+      
       <div className="vms-form-sub">
         {step === "email"
           ? "Sign in to access your vendor management console."
@@ -272,7 +272,7 @@ function VMSRight() {
         }
       </div>
 
-      {/* EMAIL STEP */}
+      
       {step === "email" && (
         <div key="email-step">
           <div className="vms-field">
@@ -304,10 +304,10 @@ function VMSRight() {
         </div>
       )}
 
-      {/* PASSWORD STEP */}
+      
       {step === "password" && (
         <div key="password-step">
-          {/* Email tag */}
+          
           <div className="vms-email-tag">
             <svg width="11" height="11" viewBox="0 -960 960 960" fill="currentColor">
               <path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200Z" />
@@ -377,7 +377,7 @@ function VMSRight() {
         </div>
       )}
 
-      {/* Footer */}
+      
       <div className="vms-foot">
         <span>support@vms.com</span>
         <span className="vms-foot-sep">·</span>

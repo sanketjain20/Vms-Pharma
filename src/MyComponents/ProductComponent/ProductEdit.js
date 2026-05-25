@@ -263,7 +263,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
         <form className="modal-body" onSubmit={handleSubmit}>
           <div className="form-col scrollable">
 
-            {/* ════ DETAILS TAB ════ */}
+            
             {activeTab === "details" && (
               <div className="form-grid">
                 <div>
@@ -286,7 +286,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
               </div>
             )}
 
-            {/* ════ PHARMA TAB ════ */}
+            
             {activeTab === "pharma" && (
               <div className="form-grid">
 
@@ -322,7 +322,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
               </div>
             )}
 
-            {/* ════ PRICING & UNITS TAB ════ */}
+            
             {activeTab === "pricing" && (
               <div className="form-grid">
                 <div>
@@ -363,7 +363,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
           <div className="modal-footer-fixed">
             <div className="modal-actions">
               <button className="btn-ghost" type="button" onClick={onClose}>Cancel</button>
-              {/* Keep your existing isChanged guard */}
+              
               {isChanged() && (
                 <button type="submit" className="submit-button">Update Product</button>
               )}

@@ -220,14 +220,14 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
     <div className="pfx-backdrop">
       <div className="pfx-modal">
 
-        {/* ── TOP BEAM ── */}
+        
         <div className="pfx-top-beam" />
 
-        {/* ── HEADER ── */}
+        
         <div className="pfx-header">
           <div className="pfx-header-left">
             <div className="pfx-eyebrow"><span className="pfx-eyebrow-dot" />NEW PURCHASE</div>
-            <h2 className="pfx-title"><span className="pfx-title-acc">//</span> Create Purchase Entry</h2>
+            <h2 className="pfx-title"><span className="pfx-title-acc"></span> Create Purchase Entry</h2>
           </div>
           <div className="pfx-header-right">
             <div className="pfx-tab-row">
@@ -251,14 +251,14 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
 
         <div className="pfx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="pfx-body">
 
-          {/* ════ DETAILS TAB ════ */}
+          
           {activeTab === "DETAILS" && (
             <div className="pfx-details-grid">
 
-              {/* Supplier */}
+              
               <div className="pfx-field">
                 <label className="pfx-label">Supplier <span className="pfx-req">*</span></label>
                 <SearchDrop
@@ -273,7 +273,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                 {errors.supplierId && <span className="pfx-error">{errors.supplierId}</span>}
               </div>
 
-              {/* Invoice number */}
+              
               <div className="pfx-field">
                 <label className="pfx-label">Supplier Invoice No <span className="pfx-req">*</span></label>
                 <input className={`pfx-input ${errors.supplierInvoiceNumber ? "pfx-input-err" : ""}`}
@@ -284,7 +284,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                 {errors.supplierInvoiceNumber && <span className="pfx-error">{errors.supplierInvoiceNumber}</span>}
               </div>
 
-              {/* Invoice date */}
+              
               <div className="pfx-field">
                 <label className="pfx-label">Invoice Date <span className="pfx-req">*</span></label>
                 <input type="date" className={`pfx-input ${errors.invoiceDate ? "pfx-input-err" : ""}`}
@@ -294,7 +294,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                 {errors.invoiceDate && <span className="pfx-error">{errors.invoiceDate}</span>}
               </div>
 
-              {/* Payment status */}
+              
               <div className="pfx-field">
                 <label className="pfx-label">Payment Status <span className="pfx-req">*</span></label>
                 <select className={`pfx-input ${errors.paymentStatus ? "pfx-input-err" : ""}`}
@@ -309,7 +309,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                 {errors.paymentStatus && <span className="pfx-error">{errors.paymentStatus}</span>}
               </div>
 
-              {/* Due date — only for credit/partial */}
+              
               {(form.paymentStatus === "CREDIT" || form.paymentStatus === "PARTIAL") && (
                 <div className="pfx-field">
                   <label className="pfx-label">Due Date <span className="pfx-req">*</span></label>
@@ -321,7 +321,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                 </div>
               )}
 
-              {/* Amount paid — only for partial */}
+              
               {form.paymentStatus === "PARTIAL" && (
                 <div className="pfx-field">
                   <label className="pfx-label">Amount Paid (₹)</label>
@@ -333,7 +333,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                 </div>
               )}
 
-              {/* Notes */}
+              
               <div className="pfx-field pfx-field-full">
                 <label className="pfx-label">Notes</label>
                 <textarea className="pfx-input pfx-textarea" rows={3}
@@ -345,7 +345,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
             </div>
           )}
 
-          {/* ════ ITEMS TAB ════ */}
+          
           {activeTab === "ITEMS" && (
             <div className="pfx-items-section">
               {errors.items_empty && (
@@ -363,7 +363,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                 </div>
               ) : (
                 <>
-                  {/* ITEMS TABLE HEADER */}
+                  
                   <div className="pfx-items-head">
                     <span>Product</span>
                     <span>MFG Date</span>
@@ -379,7 +379,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                   {form.items.map((item, i) => (
                     <div key={i} className="pfx-item-row">
 
-                      {/* PRODUCT */}
+                      
                       <div ref={el => productRefs.current[i] = el}>
                         <SearchDrop
                           options={products}
@@ -393,7 +393,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                         {errors.items?.[i]?.productId && <span className="pfx-error">{errors.items[i].productId}</span>}
                       </div>
 
-                      {/* MFG DATE */}
+                      
                       <div>
                         <input type="date" className="pfx-cell-input"
                           value={item.manufacturingDate}
@@ -401,7 +401,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                         />
                       </div>
 
-                      {/* EXPIRY DATE */}
+                      
                       <div>
                         <input type="date" className={`pfx-cell-input ${errors.items?.[i]?.expiryDate ? "pfx-input-err" : ""}`}
                           value={item.expiryDate}
@@ -410,7 +410,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                         {errors.items?.[i]?.expiryDate && <span className="pfx-error">{errors.items[i].expiryDate}</span>}
                       </div>
 
-                      {/* QTY */}
+                      
                       <div>
                         <input type="number" min="1" className={`pfx-cell-input ${errors.items?.[i]?.quantity ? "pfx-input-err" : ""}`}
                           value={item.quantity}
@@ -419,7 +419,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                         {errors.items?.[i]?.quantity && <span className="pfx-error">{errors.items[i].quantity}</span>}
                       </div>
 
-                      {/* COST */}
+                      
                       <div>
                         <input type="number" min="0" className={`pfx-cell-input ${errors.items?.[i]?.costPrice ? "pfx-input-err" : ""}`}
                           value={item.costPrice}
@@ -429,7 +429,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                         {errors.items?.[i]?.costPrice && <span className="pfx-error">{errors.items[i].costPrice}</span>}
                       </div>
 
-                      {/* MRP */}
+                      
                       <div>
                         <input type="number" min="0" className={`pfx-cell-input ${errors.items?.[i]?.mrp ? "pfx-input-err" : ""}`}
                           value={item.mrp}
@@ -439,7 +439,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                         {errors.items?.[i]?.mrp && <span className="pfx-error">{errors.items[i].mrp}</span>}
                       </div>
 
-                      {/* GST */}
+                      
                       <div>
                         <select className="pfx-cell-input"
                           value={item.gstRate}
@@ -449,12 +449,12 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                         </select>
                       </div>
 
-                      {/* LINE TOTAL */}
+                      
                       <div className="pfx-line-total">
                         ₹{getLineTotal(item).toFixed(2)}
                       </div>
 
-                      {/* REMOVE */}
+                      
                       <button type="button" className="pfx-remove-btn" onClick={() => removeItem(i)} title="Remove">
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                           <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -463,7 +463,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                     </div>
                   ))}
 
-                  {/* TOTALS */}
+                  
                   <div className="pfx-totals">
                     <div className="pfx-totals-row">
                       <span>Subtotal</span>
@@ -487,7 +487,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="pfx-footer">
           <button type="button" className="pfx-btn-ghost" onClick={onClose}>Cancel</button>
           <button type="button" className="pfx-btn-primary" onClick={handleSubmit} disabled={loading}>

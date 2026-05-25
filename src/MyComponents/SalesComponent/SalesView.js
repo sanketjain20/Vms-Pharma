@@ -58,7 +58,7 @@ export default function SalesView({ uKey, onClose }) {
         <div className="sv-corner sv-tl" /><div className="sv-corner sv-tr" />
         <div className="sv-corner sv-bl" /><div className="sv-corner sv-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="sv-header">
           <div className="sv-header-left">
             <div className="sv-eyebrow">
@@ -66,7 +66,7 @@ export default function SalesView({ uKey, onClose }) {
               SALES RECORD
             </div>
             <h3 className="sv-title">
-              <span className="sv-title-acc">//</span>
+              <span className="sv-title-acc"></span>
               {sales ? `Invoice · ${sales.invoiceNumber}` : "Loading…"}
             </h3>
           </div>
@@ -80,7 +80,7 @@ export default function SalesView({ uKey, onClose }) {
 
         <div className="sv-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="sv-body">
           {error && (
             <div className="sv-error">
@@ -101,7 +101,7 @@ export default function SalesView({ uKey, onClose }) {
 
           {sales && (
             <>
-              {/* ── META GRID — updated with retailer + payment type + due date ── */}
+              
               <div className="sv-meta-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
                 <div className="sv-meta-card">
                   <span className="sv-meta-label">Invoice Number</span>
@@ -118,7 +118,7 @@ export default function SalesView({ uKey, onClose }) {
                   <span className="sv-meta-value">{sales.createdAt}</span>
                 </div>
 
-                {/* NEW — Retailer */}
+                
                 <div className="sv-meta-card">
                   <span className="sv-meta-label">Retailer</span>
                   <span className="sv-meta-value">
@@ -129,7 +129,7 @@ export default function SalesView({ uKey, onClose }) {
                   </span>
                 </div>
 
-                {/* NEW — Payment type */}
+                
                 <div className="sv-meta-card">
                   <span className="sv-meta-label">Payment Type</span>
                   <span className="sv-meta-value">
@@ -142,7 +142,7 @@ export default function SalesView({ uKey, onClose }) {
                   </span>
                 </div>
 
-                {/* NEW — Due date (only for credit/partial) */}
+                
                 <div className="sv-meta-card">
                   <span className="sv-meta-label">Status / Due Date</span>
                   <span className="sv-meta-value">
@@ -158,7 +158,7 @@ export default function SalesView({ uKey, onClose }) {
                 </div>
               </div>
 
-              {/* ── ITEMS TABLE — updated with batch + expiry columns ── */}
+              
               <div className="sv-table-section">
                 <div className="sv-table-header">
                   <div className="sv-table-title">
@@ -178,7 +178,7 @@ export default function SalesView({ uKey, onClose }) {
                     <thead>
                       <tr>
                         <th>Product</th>
-                        {/* NEW columns */}
+                        
                         <th>Batch No</th>
                         <th>Expiry</th>
                         <th>HSN</th>
@@ -196,7 +196,7 @@ export default function SalesView({ uKey, onClose }) {
                         return (
                           <tr key={idx} style={{ animationDelay: `${idx * 0.03}s` }}>
                             <td>{item.product}</td>
-                            {/* NEW — batch snapshot fields */}
+                            
                             <td style={{ fontFamily: "var(--sv-font-m)", fontSize: 11, color: "#93c5fd" }}>
                               {item.batchNumberSnapshot || "—"}
                             </td>
@@ -229,7 +229,7 @@ export default function SalesView({ uKey, onClose }) {
                 </div>
               </div>
 
-              {/* ── TOTALS — unchanged ── */}
+              
               <div className="sv-totals">
                 <div className="sv-totals-row"><span>Items Total</span><span>₹{(sales.totalAmount).toFixed(2)}</span></div>
                 <div className="sv-totals-row"><span>Total GST</span><span>₹{sales.totalTax}</span></div>
@@ -247,7 +247,7 @@ export default function SalesView({ uKey, onClose }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         {sales && (
           <div className="sv-footer">
             <button className="sv-btn-ghost" onClick={onClose}>Close</button>

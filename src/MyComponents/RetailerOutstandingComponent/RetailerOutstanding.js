@@ -24,7 +24,7 @@ export default function RetailerOutstanding() {
   return (
     <div className="i-container">
 
-      {/* ── PAGE HEADER ── */}
+      
       <div className="ro-page-header">
         <div className="ro-header-left">
           <div className="ro-eyebrow">
@@ -32,7 +32,7 @@ export default function RetailerOutstanding() {
             ACCOUNTS RECEIVABLE
           </div>
           <h2 className="ro-title">
-            <span className="ro-title-slash">//</span>
+            <span className="ro-title-slash"></span>
             Retailer Outstanding
           </h2>
         </div>
@@ -52,13 +52,7 @@ export default function RetailerOutstanding() {
         </div>
       </div>
 
-      {/*
-        ── DynamicGrid with noPagination ──
-        We override the ViewModal by intercepting the view action.
-        Since DynamicGrid opens ViewModal on view click, we need
-        to use the custom ledger modal instead.
-        Solution: pass customViewComponent prop (add below).
-      */}
+      
       <DynamicGrid
         columns={columns}
         apiUrl="http://localhost:8080/api/RetailerLedger/Outstanding"

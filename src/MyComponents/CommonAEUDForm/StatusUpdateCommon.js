@@ -55,13 +55,13 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
     <div className="su-overlay">
       <div className="su-modal">
 
-        {/* Top beam */}
+        
         <div className="su-top-beam" />
-        {/* Corners */}
+        
         <div className="su-corner su-tl" /><div className="su-corner su-tr" />
         <div className="su-corner su-bl" /><div className="su-corner su-br" />
 
-        {/* Icon */}
+        
         <div className={`su-icon-ring ${isActivating ? "su-ring-green" : "su-ring-red"}`}>
           {isActivating ? (
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -75,12 +75,12 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
           )}
         </div>
 
-        {/* Title */}
+        
         <div className="su-heading">
           {isActivating ? "Activate Record" : "Deactivate Record"}
         </div>
 
-        {/* Body text */}
+        
         <p className="su-body-text">
           Are you sure you want to{" "}
           <span className={isActivating ? "su-green" : "su-red"}>
@@ -94,7 +94,7 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
           )}
         </p>
 
-        {/* Actions */}
+        
         <div className="su-actions">
           <button className="su-btn-cancel" onClick={onClose} disabled={loading}>
             Cancel

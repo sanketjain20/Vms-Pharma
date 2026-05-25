@@ -47,7 +47,7 @@ export default function ProductTypeAdd({ onSubmit, onClose }) {
     <div className="modal-backdrop show">
       <div className="modal">
 
-        {/* Header */}
+        
         <div className="modal-header">
           <div className="modal-title">
             <h3>Add Product Type</h3>
@@ -56,7 +56,7 @@ export default function ProductTypeAdd({ onSubmit, onClose }) {
           <button className="btn-ghost" onClick={onClose} title="Close">✕ ESC</button>
         </div>
 
-        {/* Form */}
+        
         <form className="modal-body" onSubmit={handleSubmit}>
           <div className="form-col">
             <div className="form-grid">
@@ -88,7 +88,7 @@ export default function ProductTypeAdd({ onSubmit, onClose }) {
             </div>
           </div>
 
-          {/* Footer */}
+          
           <div className="modal-footer-fixed">
             <div className="modal-actions">
               <button className="btn-ghost" type="button" onClick={onClose}>Cancel</button>

@@ -650,7 +650,7 @@ const CustomChart = ({
     }}>
       <ChartCanvas3D color={glowHex} />
 
-      {/* Top shimmer */}
+      
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, height: 1, zIndex: 1, pointerEvents: "none",
         background: `linear-gradient(to right, transparent, ${glowHex}66 40%, ${glowHex}aa 50%, ${glowHex}66 60%, transparent)`,
@@ -704,7 +704,7 @@ const CustomChart = ({
         )}
       </div>
 
-      {/* Bottom glow */}
+      
       <div style={{
         position: "absolute",
         bottom: 0, left: "20%", right: "20%", height: 1, zIndex: 1, pointerEvents: "none",

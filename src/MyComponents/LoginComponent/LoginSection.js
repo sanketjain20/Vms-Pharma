@@ -200,7 +200,7 @@ export default function LoginSection() {
       <div className="ls-wrap">
         <div className="ls-card">
 
-          {/* ── Card header ── */}
+          
           <div className="ls-card-header">
             <div className="ls-eyebrow">
               <span className="ls-dot" />
@@ -215,7 +215,7 @@ export default function LoginSection() {
             </h1>
           </div>
 
-          {/* ── Email step ── */}
+          
           {step === "email" && (
             <div className="ls-step" key="email-step">
               <p className="ls-hint">
@@ -249,7 +249,7 @@ export default function LoginSection() {
             </div>
           )}
 
-          {/* ── Password step ── */}
+          
           {step === "password" && (
             <div className="ls-step" key="password-step">
               <div className="ls-email-pill">
@@ -316,7 +316,7 @@ export default function LoginSection() {
             </div>
           )}
 
-          {/* Support */}
+          
           <div className="ls-support">
             <span>support@vms.com</span>
             <span className="ls-support-sep">·</span>

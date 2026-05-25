@@ -338,7 +338,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     <div className="sales-modal show">
       <div className="sales-container">
 
-        {/* ── HEADER ── */}
+        
         <div className="sales-header">
           <div className="sales-header-left">
             <div className="sales-eyebrow"><span className="sales-eyebrow-dot" />EDIT TRANSACTION</div>
@@ -354,7 +354,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           </div>
         </div>
 
-        {/* ══════════════ EXISTING ITEMS TAB — updated with batch columns ══════════════ */}
+        
         {activeTab === "Existing" && (
           <div className="sales-section">
             <h4>Original Line Items</h4>
@@ -404,7 +404,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           </div>
         )}
 
-        {/* ══════════════ PRODUCT TAB — updated with batch selection ══════════════ */}
+        
         {activeTab === "Product" && (
           <div className="sales-section">
             <h4>Update Products</h4>
@@ -434,7 +434,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
               </div>
             ) : null}
 
-            {/* NEW — Batch selection */}
+            
             {availableBatches.length > 0 && (
               <div className="inv-box" style={{ flexDirection: "column", gap: 10 }}>
                 <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "var(--sl-text-2)", textTransform: "uppercase", fontFamily: "var(--sl-font-m)" }}>Batch Selection</div>
@@ -526,12 +526,12 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           </div>
         )}
 
-        {/* ══════════════ BILLING TAB — updated ══════════════ */}
+        
         {activeTab === "Billing" && (
           <div className="sales-section">
             <h4>Billing & Payment</h4>
 
-            {/* NEW — Retailer */}
+            
             <SearchableDropdown
               label="Retailer (optional)"
               options={retailers} selectedId={selectedRetailer}
@@ -562,7 +562,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
             <div className="total-amount">Net Amount: ₹{getNetAmount().toFixed(2)}</div>
 
-            {/* NEW — Credit payment type */}
+            
             <label>Payment Type</label>
             <div className="radio-group">
               {["PAID", "CREDIT", "PARTIAL"].map(pt => (
@@ -573,7 +573,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
               ))}
             </div>
 
-            {/* NEW — Due date */}
+            
             {(creditPaymentType === "CREDIT" || creditPaymentType === "PARTIAL") && (
               <>
                 <label>Due Date</label>
@@ -597,7 +597,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           </div>
         )}
 
-        {/* ── FOOTER ── */}
+        
         <div className="sales-footer">
           <button className="cancel-btn" onClick={onClose}>Cancel</button>
           <button className="submit-btn" onClick={updateSale}>Update Sale</button>

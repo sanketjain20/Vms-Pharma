@@ -40,13 +40,13 @@ export default function VendorView({ uKey, onClose }) {
     <div className="vv-backdrop">
       <div className="vv-modal">
 
-        {/* Top beam */}
+        
         <div className="vv-top-beam" />
-        {/* Corners */}
+        
         <div className="vv-corner vv-tl" /><div className="vv-corner vv-tr" />
         <div className="vv-corner vv-bl" /><div className="vv-corner vv-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="vv-header">
           <div className="vv-header-left">
             <div className="vv-eyebrow">
@@ -54,7 +54,7 @@ export default function VendorView({ uKey, onClose }) {
               VENDOR RECORD
             </div>
             <h2 className="vv-title">
-              <span className="vv-title-acc">//</span>
+              <span className="vv-title-acc"></span>
               {vendor?.vendorCode ? `Vendor · ${vendor.vendorCode}` : "View Vendor"}
             </h2>
           </div>
@@ -66,10 +66,10 @@ export default function VendorView({ uKey, onClose }) {
           </button>
         </div>
 
-        {/* ── BODY ── */}
+        
         <div className="vv-body">
 
-          {/* LOADING */}
+          
           {loading && (
             <div className="vv-loading">
               <div className="vv-loader-ring"><div/><div/><div/><div/></div>
@@ -77,7 +77,7 @@ export default function VendorView({ uKey, onClose }) {
             </div>
           )}
 
-          {/* NOT FOUND */}
+          
           {!loading && !vendor && (
             <div className="vv-empty">
               <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -88,10 +88,10 @@ export default function VendorView({ uKey, onClose }) {
             </div>
           )}
 
-          {/* DATA */}
+          
           {!loading && vendor && (
             <>
-              {/* Status badge row */}
+              
               <div className="vv-status-row">
                 <span className={`vv-status-badge ${isActive ? "vv-active" : "vv-inactive"}`}>
                   <span className="vv-status-dot" />
@@ -106,7 +106,7 @@ export default function VendorView({ uKey, onClose }) {
                 </span>
               </div>
 
-              {/* Fields grid */}
+              
               <div className="vv-grid">
                 {fields.map((f, i) => (
                   <div key={i} className="vv-field" style={{ animationDelay: `${i * 0.04}s` }}>
@@ -122,7 +122,6 @@ export default function VendorView({ uKey, onClose }) {
                   </div>
                 ))}
 
-                {/* Address — full width */}
                 <div className="vv-field vv-full" style={{ animationDelay: `${fields.length * 0.04}s` }}>
                   <span className="vv-field-label">Address</span>
                   <textarea
@@ -137,7 +136,6 @@ export default function VendorView({ uKey, onClose }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
         <div className="vv-footer">
           <button className="vv-btn-close" onClick={onClose}>Close</button>
         </div>

@@ -266,16 +266,16 @@ function GridCard({ row, columns, index, selectedStatus, can, Module, isReadOnly
 
   return (
     <div className="dg-card" style={{ animationDelay: `${index * 0.04}s` }}>
-      {/* top accent beam */}
+      
       {!hideCardStatus && <div className={`dg-card-beam dg-card-beam-${statusColor}`} />}
 
-      {/* HUD corners */}
+      
       <div className="dg-card-corner dg-cc-tl" />
       <div className="dg-card-corner dg-cc-tr" />
       <div className="dg-card-corner dg-cc-bl" />
       <div className="dg-card-corner dg-cc-br" />
 
-      {/* Header */}
+      
       <div className="dg-card-head">
         <div className="dg-card-idx">#{String(index + 1).padStart(3, "0")}</div>
         {!hideCardStatus && (
@@ -283,10 +283,10 @@ function GridCard({ row, columns, index, selectedStatus, can, Module, isReadOnly
         )}
       </div>
 
-      {/* Title */}
+      
       <div className="dg-card-title" title={titleVal}>{titleVal}</div>
 
-      {/* Fields grid */}
+      
       <div className="dg-card-fields">
         {dataCols.slice(1).map((col, i) => {
           const val = row[col.field];
@@ -303,7 +303,7 @@ function GridCard({ row, columns, index, selectedStatus, can, Module, isReadOnly
         })}
       </div>
 
-      {/* Actions */}
+      
       <div className="dg-card-actions">
         {selectedStatus === "inactive" ? (
           <>
@@ -581,7 +581,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
 
       <div className="dg-inner">
 
-        {/* ── TOP BAR ── */}
+        
         <div className="dg-topbar">
           <div className="dg-search-wrap">
             <FaSearch className="dg-search-icon" />
@@ -607,7 +607,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
               {filteredData.length} records
             </div>
 
-            {/* ── VIEW TOGGLE ── */}
+            
             <ViewToggle view={viewMode} onChange={handleViewChange} />
 
             {can("Add") && !isReadOnlyModule && (
@@ -621,7 +621,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
           </div>
         </div>
 
-        {/* ── STATUS CHIPS + EXCEL ── */}
+        
         <div className="dg-chips-row">
           <div className="dg-chips">
             {Module === "Sales" ? (
@@ -658,7 +658,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
             )}
           </div>
 
-          {/* EXCEL DOWNLOAD DROPDOWN */}
+          
           <div className="dg-xl-wrap" ref={xlDropRef}>
             <button
               className={`dg-xl-btn ${xlLoading ? "dg-xl-btn--loading" : ""}`}
@@ -696,7 +696,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
           </div>
         </div>
 
-        {/* ── TABLE SHELL (table mode) ── */}
+        
         {viewMode === "table" && (
           <div className="dg-shell">
             <div className="dg-shell-header">
@@ -804,7 +804,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
               </table>
             </div>
 
-            {/* PAGINATION */}
+            
             <div className="dg-pagination">
               <button className="dg-page-btn" onClick={() => setPage(0)} disabled={page === 0}>
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -838,7 +838,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
           </div>
         )}
 
-        {/* ── CARD GRID MODE ── */}
+        
         {viewMode === "grid" && (
           <div className="dg-card-section">
             {filteredData.length === 0 ? (
@@ -872,7 +872,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
                   ))}
                 </div>
 
-                {/* grid pagination */}
+                
                 <div className="dg-pagination dg-card-pagination">
                   <button className="dg-page-btn" onClick={() => setPage(0)} disabled={page === 0}>
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 2L3 5L7 8M4 2L4 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -901,7 +901,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
         )}
       </div>
 
-      {/* MODALS */}
+      
       <ModuleModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} moduleName={Module} onSubmit={refreshGrid} />
       <EditModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} moduleName={Module} uKey={editUkey} onSubmit={refreshGrid} />
       {isViewOpen && (

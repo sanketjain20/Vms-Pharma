@@ -29,7 +29,7 @@ export default function ProductTypeView({ uKey, onClose }) {
     <div className="modal-backdrop show">
       <div className="modal">
 
-        {/* Header */}
+        
         <div className="modal-header">
           <div className="modal-title">
             <h3>View Product Type {productType?.typeCode && `· ${productType.typeCode}`}</h3>
@@ -38,7 +38,7 @@ export default function ProductTypeView({ uKey, onClose }) {
           <button className="btn-ghost" onClick={onClose} title="Close">✕ ESC</button>
         </div>
 
-        {/* Body */}
+        
         <div className="modal-body">
           {error && <div className="mf-error">{error}</div>}
           {!productType && !error && <div className="mf-loading">Loading…</div>}
@@ -66,7 +66,7 @@ export default function ProductTypeView({ uKey, onClose }) {
           )}
         </div>
 
-        {/* Footer */}
+        
         <div className="modal-footer-fixed">
           <div className="modal-actions">
             <button className="btn-ghost" onClick={onClose}>Close</button>

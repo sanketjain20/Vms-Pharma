@@ -246,7 +246,7 @@ export default function Sidebar() {
       <aside ref={sidebarRef} className={`sb-sidebar ${open ? "open" : ""}`}>
         <nav className="sb-nav">
 
-          {/* 1 ── HOME (always visible) */}
+          
           <SidebarItem
             icon={iconMap.home}
             label="Home"
@@ -254,7 +254,7 @@ export default function Sidebar() {
             onClick={() => navigate("/home")}
           />
 
-          {/* 2 ── DASHBOARD (standalone) */}
+          
           {hasDashboard && (
             <SidebarItem
               icon={iconMap.dashboard}
@@ -266,7 +266,7 @@ export default function Sidebar() {
 
           <SidebarDivider open={open} />
 
-          {/* 3 ── MASTERS (product, type, retailer, supplier, manufacturer) */}
+          
           {hasMasters && (
             <SidebarItem
               icon={iconMap.product}
@@ -291,7 +291,7 @@ export default function Sidebar() {
             </SidebarItem>
           )}
 
-          {/* 4 ── INVENTORY (standalone) */}
+          
           {(hasInventory || hasBatch || hasStockAdjustment || hasExpiryAlerts || hasReorderAlerts) && (
             <SidebarItem
               icon={iconMap.inventory}
@@ -352,7 +352,7 @@ export default function Sidebar() {
 
           <SidebarDivider open={open} />
 
-          {/* 5 ── BILLING (sales, purchase, payment) */}
+          
           {hasBilling && (
             <SidebarItem
               icon={iconMap.sales}
@@ -406,7 +406,7 @@ export default function Sidebar() {
 
           <SidebarDivider open={open} />
 
-          {/* 6 ── REPORTS (standalone) */}
+          
           {hasReports && (
             <SidebarItem
               icon={iconMap.reports}
@@ -416,7 +416,7 @@ export default function Sidebar() {
             />
           )}
 
-          {/* 7 ── SCHEDULER (standalone) */}
+          
           {hasScheduler && (
             <SidebarItem
               icon={iconMap.scheduler}
@@ -428,7 +428,7 @@ export default function Sidebar() {
 
           <SidebarDivider open={open} />
 
-          {/* 8 ── VENDOR & ROLES (grouped) */}
+          
           {hasVendorGroup && (
             <SidebarItem
               icon={iconMap.vendor}
@@ -450,7 +450,7 @@ export default function Sidebar() {
             </SidebarItem>
           )}
 
-          {/* 9 ── ANY OTHER unknown modules */}
+          
           {otherModules.map((mod) => (
             <SidebarItem
               key={mod}

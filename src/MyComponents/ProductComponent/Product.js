@@ -25,7 +25,7 @@ PRODUCTS </h2>
     ModuleId ="3"
   />
 
-  {/* Toast container here */}
+  
 </div>
 
 );

@@ -23,7 +23,7 @@ return ( <div className="i-container"> <h2 className="i-title"> 🏭
     ModuleId ="11"
   />
 
-  {/* Toast container here */}
+  
 </div>
 
 );

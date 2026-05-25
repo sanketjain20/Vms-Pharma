@@ -57,12 +57,12 @@ export default function SupplierPaymentView({ uKey, onClose, onReverse }) {
         <div className="spx-corner spx-tl" /><div className="spx-corner spx-tr" />
         <div className="spx-corner spx-bl" /><div className="spx-corner spx-br" />
 
-        {/* HEADER */}
+        
         <div className="spx-header">
           <div className="spx-header-left">
             <div className="spx-eyebrow"><span className="spx-eyebrow-dot" />SUPPLIER PAYMENT</div>
             <h3 className="spx-title">
-              <span className="spx-title-acc">//</span>
+              <span className="spx-title-acc"></span>
               {data ? `₹${fmt(data.amount)} paid` : "Loading…"}
             </h3>
           </div>
@@ -76,7 +76,7 @@ export default function SupplierPaymentView({ uKey, onClose, onReverse }) {
 
         <div className="spx-divider" />
 
-        {/* BODY */}
+        
         <div className="spx-body">
           {error && <div className="spx-alert">{error}</div>}
 
@@ -89,7 +89,7 @@ export default function SupplierPaymentView({ uKey, onClose, onReverse }) {
 
           {data && (
             <>
-              {/* Status row */}
+              
               <div className="spx-view-status-row">
                 <span className="spx-code-badge">{data.paymentCode}</span>
                 <span className={`spx-badge ${modeBadge(data.paymentMode)}`}>{data.paymentMode}</span>
@@ -97,14 +97,14 @@ export default function SupplierPaymentView({ uKey, onClose, onReverse }) {
                 {data.isReversed && <span className="spx-badge spx-badge-red">REVERSED</span>}
               </div>
 
-              {/* Supplier */}
+              
               <div className="spx-section-label">Supplier</div>
               <div className="spx-view-grid">
                 <Card label="Shop name"     value={data.supplierShopName} />
                 <Card label="Supplier code" value={data.supplierCode} mono />
               </div>
 
-              {/* Purchase link */}
+              
               {data.purchaseNumber && (
                 <>
                   <div className="spx-section-label">Linked purchase</div>
@@ -123,7 +123,7 @@ export default function SupplierPaymentView({ uKey, onClose, onReverse }) {
                 </>
               )}
 
-              {/* Payment details */}
+              
               <div className="spx-section-label">Payment details</div>
               <div className="spx-view-grid">
                 <Card label="Amount"        value={`₹${fmt(data.amount)}`} accent />
@@ -139,7 +139,7 @@ export default function SupplierPaymentView({ uKey, onClose, onReverse }) {
                 </>
               )}
 
-              {/* Reversal warning */}
+              
               {!data.isReversed && (
                 <div className="spx-reversal-info">
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -153,7 +153,7 @@ export default function SupplierPaymentView({ uKey, onClose, onReverse }) {
           )}
         </div>
 
-        {/* FOOTER */}
+        
         {data && !data.isReversed && (
           <div className="spx-footer">
             {confirmRev ? (

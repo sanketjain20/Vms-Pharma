@@ -225,7 +225,7 @@ export default function JobSchedulerPage() {
 
       <div className="js-inner">
 
-        {/* ── Header ─────────────────────────────────────── */}
+        
         <div className="js-header">
           <div className="js-header-left">
             <div className="js-eyebrow">
@@ -266,10 +266,10 @@ export default function JobSchedulerPage() {
           </div>
         </div>
 
-        {/* ── Divider ────────────────────────────────────── */}
+        
         <div className="js-divider" />
 
-        {/* ── Table ──────────────────────────────────────── */}
+        
         {loading && !jobs.length ? (
           <div className="js-loading">
             <span className="js-loading-spin" />
@@ -305,7 +305,7 @@ export default function JobSchedulerPage() {
         )}
       </div>
 
-      {/* ── Confirm Modal ──────────────────────────────── */}
+      
       {confirmRunId && (
         <ConfirmModal
           jobName={confirmJob?.jobName}

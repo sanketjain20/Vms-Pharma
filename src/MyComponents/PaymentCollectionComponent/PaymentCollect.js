@@ -267,11 +267,11 @@ export default function PaymentCollect({
         <div className="pyx-corner pyx-tl" /><div className="pyx-corner pyx-tr" />
         <div className="pyx-corner pyx-bl" /><div className="pyx-corner pyx-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="pyx-header">
           <div className="pyx-header-left">
             <div className="pyx-eyebrow"><span className="pyx-eyebrow-dot" />COLLECT PAYMENT</div>
-            <h3 className="pyx-title"><span className="pyx-title-acc">//</span> Record Payment Collection</h3>
+            <h3 className="pyx-title"><span className="pyx-title-acc"></span> Record Payment Collection</h3>
           </div>
           <button className="pyx-close" type="button" onClick={onClose}>
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -283,11 +283,11 @@ export default function PaymentCollect({
 
         <div className="pyx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="pyx-body">
           {errors.general && <div className="pyx-alert">{errors.general}</div>}
 
-          {/* ── RETAILER SELECT ── */}
+          
           <div className="pyx-field pyx-field-full">
             <label className="pyx-label">Retailer <span className="pyx-req">*</span></label>
             <SearchDrop
@@ -299,7 +299,7 @@ export default function PaymentCollect({
             {errors.retailer && <span className="pyx-error">{errors.retailer}</span>}
           </div>
 
-          {/* ── OUTSTANDING DISPLAY ── */}
+          
           {selectedRetailer && (
             <div className="pyx-outstanding-card">
               <div className="pyx-outstanding-row">
@@ -315,7 +315,7 @@ export default function PaymentCollect({
             </div>
           )}
 
-          {/* ── INVOICE LINK (optional) ── */}
+          
           {selectedRetailer && (
             <div className="pyx-field pyx-field-full">
               <label className="pyx-label">Link to specific invoice <span className="pyx-opt">(optional)</span></label>
@@ -338,7 +338,7 @@ export default function PaymentCollect({
             </div>
           )}
 
-          {/* ── AMOUNT + DATE ── */}
+          
           <div className="pyx-grid">
             <div className="pyx-field">
               <label className="pyx-label">
@@ -363,7 +363,7 @@ export default function PaymentCollect({
               {errors.paymentDate && <span className="pyx-error">{errors.paymentDate}</span>}
             </div>
 
-            {/* ── PAYMENT MODE ── */}
+            
             <div className="pyx-field pyx-field-full">
               <label className="pyx-label">Payment Mode <span className="pyx-req">*</span></label>
               <div className="pyx-mode-row">
@@ -377,7 +377,7 @@ export default function PaymentCollect({
               {errors.paymentMode && <span className="pyx-error">{errors.paymentMode}</span>}
             </div>
 
-            {/* ── REFERENCE (UPI/CHEQUE) ── */}
+            
             {(form.paymentMode === "UPI" || form.paymentMode === "CHEQUE") && (
               <div className="pyx-field pyx-field-full">
                 <label className="pyx-label">
@@ -393,7 +393,7 @@ export default function PaymentCollect({
               </div>
             )}
 
-            {/* ── NOTES ── */}
+            
             <div className="pyx-field pyx-field-full">
               <label className="pyx-label">Notes <span className="pyx-opt">(optional)</span></label>
               <textarea className="pyx-input pyx-textarea" rows={2}
@@ -403,7 +403,7 @@ export default function PaymentCollect({
             </div>
           </div>
 
-          {/* ── SUMMARY BEFORE SAVE ── */}
+          
           {selectedRetailer && form.amount && parseFloat(form.amount) > 0 && (
             <div className="pyx-summary">
               <div className="pyx-summary-row">
@@ -423,7 +423,7 @@ export default function PaymentCollect({
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="pyx-footer">
           <button type="button" className="pyx-btn-ghost" onClick={onClose}>Cancel</button>
           <button type="button" className="pyx-btn-primary" onClick={submit} disabled={loading}>

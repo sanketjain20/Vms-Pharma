@@ -73,11 +73,11 @@ export default function ManufacturerAdd({ onClose, onSubmit }) {
         <div className="mfx-corner mfx-tl" /><div className="mfx-corner mfx-tr" />
         <div className="mfx-corner mfx-bl" /><div className="mfx-corner mfx-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="mfx-header">
           <div className="mfx-header-left">
             <div className="mfx-eyebrow"><span className="mfx-eyebrow-dot" />NEW MANUFACTURER</div>
-            <h3 className="mfx-title"><span className="mfx-title-acc">//</span> Add Manufacturer</h3>
+            <h3 className="mfx-title"><span className="mfx-title-acc"></span> Add Manufacturer</h3>
           </div>
           <button className="mfx-close" type="button" onClick={onClose}>
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -89,7 +89,7 @@ export default function ManufacturerAdd({ onClose, onSubmit }) {
 
         <div className="mfx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="mfx-body">
           {errors.general && <div className="mfx-alert">{errors.general}</div>}
 
@@ -123,7 +123,7 @@ export default function ManufacturerAdd({ onClose, onSubmit }) {
           </div>
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="mfx-footer">
           <button type="button" className="mfx-btn-ghost" onClick={onClose}>Cancel</button>
           <button type="button" className="mfx-btn-primary" onClick={submit} disabled={loading}>

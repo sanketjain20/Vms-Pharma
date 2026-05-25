@@ -84,7 +84,7 @@ export default function JobSchedulerView() {
     <div className="jsv-page">
       <div className="jsv-inner">
 
-        {/* ── Header ─────────────────────────────────────── */}
+        
         <div className="jsv-header">
           <div className="jsv-header-left">
             <div className="jsv-eyebrow">
@@ -110,7 +110,7 @@ export default function JobSchedulerView() {
 
         <div className="jsv-divider" />
 
-        {/* ── Sections ───────────────────────────────────── */}
+        
         <div className="jsv-sections">
 
           <Section

@@ -13,7 +13,7 @@ export default function PaymentModuleModal({ isOpen, onClose, moduleName }) {
     case "Payment Collection":
       content = (
         <div className="modal-fullscreen-wrapper">
-          {/* Optional close button */}
+          
           <button className="modal-close-btn" onClick={onClose}>✕</button>
 
           <PaymentCollectionPage />

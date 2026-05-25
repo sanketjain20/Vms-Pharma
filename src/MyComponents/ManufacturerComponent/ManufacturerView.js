@@ -38,12 +38,12 @@ export default function ManufacturerView({ uKey, onClose, onEdit }) {
         <div className="mfx-corner mfx-tl" /><div className="mfx-corner mfx-tr" />
         <div className="mfx-corner mfx-bl" /><div className="mfx-corner mfx-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="mfx-header">
           <div className="mfx-header-left">
             <div className="mfx-eyebrow"><span className="mfx-eyebrow-dot" />MANUFACTURER RECORD</div>
             <h3 className="mfx-title">
-              <span className="mfx-title-acc">//</span>
+              <span className="mfx-title-acc"></span>
               {data ? data.name : "Loading…"}
             </h3>
           </div>
@@ -67,7 +67,7 @@ export default function ManufacturerView({ uKey, onClose, onEdit }) {
 
         <div className="mfx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="mfx-body">
 
           {error && <div className="mfx-alert">{error}</div>}
@@ -81,7 +81,7 @@ export default function ManufacturerView({ uKey, onClose, onEdit }) {
 
           {data && (
             <>
-              {/* ── STATUS ROW ── */}
+              
               <div className="mfx-view-status-row">
                 <span className="mfx-code-badge">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -95,7 +95,7 @@ export default function ManufacturerView({ uKey, onClose, onEdit }) {
                 </span>
               </div>
 
-              {/* ── INFO GRID ── */}
+              
               <div className="mfx-view-grid">
                 <Card label="Manufacturer Name" value={data.name} />
                 <Card label="Contact Person"     value={data.contactPerson} />
@@ -121,7 +121,7 @@ export default function ManufacturerView({ uKey, onClose, onEdit }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         {data && (
           <div className="mfx-footer">
             <button type="button" className="mfx-btn-ghost" onClick={onClose}>Close</button>

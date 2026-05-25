@@ -221,7 +221,7 @@ export default function CollectPayment({ uKey, onClose, onSuccess }) {
           <div className="cp-header-left">
             <div className="cp-eyebrow"><span className="cp-eyebrow-dot" />PAYMENT COLLECTION</div>
             <h3 className="cp-title">
-              <span className="cp-title-acc">{"//"}</span>
+              <span className="cp-title-acc"></span>
               {ledger ? ledger.shopName : "Loading ledger"}
             </h3>
           </div>

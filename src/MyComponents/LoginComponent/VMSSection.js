@@ -31,15 +31,15 @@ const features = [
 export default function VMSSection() {
   return (
     <div className="vms-wrap">
-      {/* Decorative rings */}
+      
       <div className="vms-ring vms-ring-1" />
       <div className="vms-ring vms-ring-2" />
 
-      {/* Right-edge accent line */}
+      
       <div className="vms-accent-line" />
 
       <div className="vms-inner">
-        {/* ── Brand ── */}
+        
         <div className="vms-brand">
           <div className="vms-brand-letters">
             {"VMS".split("").map((c, i) => (
@@ -56,12 +56,12 @@ export default function VMSSection() {
           <div className="vms-brand-sub">Vendor Management System</div>
         </div>
 
-        {/* ── Tagline ── */}
+        
         <p className="vms-tagline">
           Track vendors, stock, billing and analytics — complete pharma wholesale control in one system.
         </p>
 
-        {/* ── Features ── */}
+        
         <div className="vms-features">
           {features.map(({ icon, label, desc, color }, i) => (
             <div key={i} className={`vms-feat vms-feat-${color}`}>
@@ -75,7 +75,7 @@ export default function VMSSection() {
           ))}
         </div>
 
-        {/* ── Stats ── */}
+        
         <div className="vms-stats">
           {[
             ["Products",  "Managed"],

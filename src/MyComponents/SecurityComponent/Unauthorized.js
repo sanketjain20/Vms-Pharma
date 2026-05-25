@@ -75,27 +75,27 @@ export default function Unauthorized() {
       <div className="ua-top-beam" />
 
       <div className="ua-card">
-        {/* Corner brackets */}
+        
         <div className="ua-corner ua-tl" /><div className="ua-corner ua-tr" />
         <div className="ua-corner ua-bl" /><div className="ua-corner ua-br" />
 
-        {/* Badge */}
+        
         <div className="ua-badge">
           <span className="ua-badge-dot" />
           ACCESS CONTROL
         </div>
 
-        {/* 403 */}
+        
         <div className="ua-code">
           <span>4</span>
           <span className="ua-code-accent">0</span>
           <span>3</span>
         </div>
 
-        {/* Divider */}
+        
         <div className="ua-rule" />
 
-        {/* Lock icon */}
+        
         <div className="ua-icon-ring">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
             <rect x="5" y="12" width="18" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.6"/>

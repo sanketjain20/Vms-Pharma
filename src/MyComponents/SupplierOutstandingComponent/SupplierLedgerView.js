@@ -39,7 +39,7 @@ const OutstandingBar = ({ totalOutstanding, totalCredit, totalPartial }) => {
         <span className="rlv-bar-total">₹{fmt(total)} total due</span>
       </div>
 
-      {/* Stacked bar */}
+      
       <div className="rlv-bar-track">
         <div
           className="rlv-bar-seg rlv-bar-credit"
@@ -138,13 +138,13 @@ function PayForm({ invoice, onSuccess, onCancel }) {
         <span className="rlv-cpf-inv-label">{invoice.invoiceNumber}</span>
       </div>
 
-      {/* Remaining pill */}
+      
       <div className="rlv-cpf-remaining">
         <span>Remaining</span>
         <span className="rlv-cpf-rem-amt">₹{fmt(max)}</span>
       </div>
 
-      {/* Amount row */}
+      
       <span className="rlv-field-label">Amount (₹)</span>
       <div className="rlv-cpf-amt-row">
         <input
@@ -166,7 +166,7 @@ function PayForm({ invoice, onSuccess, onCancel }) {
         </button>
       </div>
 
-      {/* Mode pills */}
+      
       <span className="rlv-field-label" style={{ marginTop: 10 }}>Mode</span>
       <div className="rlv-cpf-modes">
         {MODES.map(m => (
@@ -180,7 +180,7 @@ function PayForm({ invoice, onSuccess, onCancel }) {
         ))}
       </div>
 
-      {/* Note */}
+      
       <span className="rlv-field-label" style={{ marginTop: 10 }}>Note (optional)</span>
       <input
         type="text"
@@ -271,7 +271,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
         <div className="rlv-corner rlv-tl" /><div className="rlv-corner rlv-tr" />
         <div className="rlv-corner rlv-bl" /><div className="rlv-corner rlv-br" />
 
-        {/* ══ HEADER ══ */}
+        
         <div className="rlv-header">
           <div className="rlv-header-left">
             <div className="rlv-eyebrow">
@@ -279,7 +279,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
               SUPPLIER LEDGER
             </div>
             <h3 className="rlv-title">
-              <span className="rlv-title-acc">//</span>
+              <span className="rlv-title-acc"></span>
               {ledger ? ledger.shopName : "Loading…"}
             </h3>
           </div>
@@ -301,10 +301,10 @@ export default function SupplierLedgerView({ uKey, onClose }) {
 
         <div className="rlv-divider" />
 
-        {/* ══ BODY ══ */}
+        
         <div className="rlv-body">
 
-          {/* Loading */}
+          
           {loading && (
             <div className="rlv-loading">
               <div className="rlv-loader"><div/><div/><div/><div/></div>
@@ -312,13 +312,13 @@ export default function SupplierLedgerView({ uKey, onClose }) {
             </div>
           )}
 
-          {/* Error */}
+          
           {error && <div className="rlv-alert">{error}</div>}
 
-          {/* Content */}
+          
           {!loading && !error && ledger && (
             <>
-              {/* ── STATUS ROW (mirrors RetailerView) ── */}
+              
               <div className="rlv-status-row">
                 <span className="rlv-code-badge">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -340,7 +340,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                 )}
               </div>
 
-              {/* ── OUTSTANDING BAR (mirrors CreditBar) ── */}
+              
               <OutstandingBar
                 totalOutstanding={ledger.totalOutstanding}
                 totalCredit={ledger.invoices?.filter(i => i.paymentType === "CREDIT")
@@ -349,7 +349,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                   .reduce((s, i) => s + parseFloat(i.remainingAmount || 0), 0)}
               />
 
-              {/* ── INFO GRID (mirrors rtx-view-grid) ── */}
+              
               <div className="rlv-view-grid">
                 <Card label="Shop Name"     value={ledger.shopName} />
                 <Card label="Owner Name"    value={ledger.ownerName} />
@@ -378,7 +378,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                 />
               </div>
 
-              {/* ── TABS ── */}
+              
               <div className="rlv-tabs">
                 {[
                   { key: "invoices", label: "Invoices",
@@ -397,11 +397,11 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                 ))}
               </div>
 
-              {/* ══════ INVOICES TAB ══════ */}
+              
               {activeTab === "invoices" && (
                 <div className="rlv-tab-body">
 
-                  {/* Filter pills */}
+                  
                   <div className="rlv-pills">
                     {[
                       { k: "ALL",      label: "All",       count: ledger.invoices?.length || 0 },
@@ -445,7 +445,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                             ].filter(Boolean).join(" ")}
                             style={{ animationDelay: `${idx * 0.03}s` }}
                           >
-                            {/* LEFT */}
+                            
                             <div className="rlv-inv-left">
                               <div className="rlv-inv-number">{inv.invoiceNumber}</div>
                               <div className="rlv-inv-sub">
@@ -463,7 +463,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                               </div>
                             </div>
 
-                            {/* AMOUNTS — mirrors credit bar sub style */}
+                            
                             <div className="rlv-inv-amounts">
                               <div className="rlv-inv-amt-block">
                                 <span className="rlv-amt-label">Invoice</span>
@@ -489,7 +489,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                               </div>
                             </div>
 
-                            {/* RIGHT */}
+                            
                             <div className="rlv-inv-right">
                               <StatusBadge label={inv.statusLabel} />
                               {inv.statusLabel !== "PAID" && payingId !== (inv.purchaseId ?? inv.salesId) && (
@@ -507,7 +507,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                             </div>
                           </div>
 
-                          {/* Inline Pay form */}
+                          
                           {payingId === (inv.purchaseId ?? inv.salesId) && (
                             <PayForm
                               invoice={inv}
@@ -522,7 +522,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                 </div>
               )}
 
-              {/* ══════ PAYMENT HISTORY TAB ══════ */}
+              
               {activeTab === "history" && (
                 <div className="rlv-tab-body">
                   {!ledger.paymentHistory?.length ? (
@@ -535,7 +535,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                     </div>
                   ) : (
                     <>
-                      {/* Summary card */}
+                      
                       <div className="rlv-history-summary">
                         <div className="rlv-hs-block">
                           <span className="rlv-hs-label">Total Paid</span>
@@ -553,7 +553,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                         </div>
                       </div>
 
-                      {/* Table — mirrors sv-table */}
+                      
                       <div className="rlv-hist-table-wrap">
                         <table className="rlv-hist-table">
                           <thead>
@@ -618,7 +618,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
           )}
         </div>
 
-        {/* ══ FOOTER ══ */}
+        
         {ledger && (
           <div className="rlv-footer">
             <button className="rlv-btn-ghost" onClick={onClose}>Close</button>

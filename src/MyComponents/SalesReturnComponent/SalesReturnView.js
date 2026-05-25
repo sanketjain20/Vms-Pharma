@@ -51,7 +51,7 @@ export default function SalesReturnView({ uKey, onClose }) {
         <div className="srv-corner srv-tl"/><div className="srv-corner srv-tr"/>
         <div className="srv-corner srv-bl"/><div className="srv-corner srv-br"/>
 
-        {/* ── HEADER ── */}
+        
         <div className="srv-header">
           <div className="srv-header-left">
             <div className="srv-eyebrow">
@@ -59,7 +59,7 @@ export default function SalesReturnView({ uKey, onClose }) {
               RETURN RECORD
             </div>
             <h3 className="srv-title">
-              <span className="srv-title-acc">//</span>
+              <span className="srv-title-acc"></span>
               {data ? `Return · ${data.returnNumber}` : "Loading…"}
             </h3>
           </div>
@@ -92,7 +92,7 @@ export default function SalesReturnView({ uKey, onClose }) {
 
           {data && (
             <>
-              {/* ── META GRID ── */}
+              
               <div className="srv-meta-grid">
                 <div className="srv-meta-card">
                   <span className="srv-meta-label">Return Number</span>
@@ -140,7 +140,7 @@ export default function SalesReturnView({ uKey, onClose }) {
                 </div>
               </div>
 
-              {/* ── REASON CARD ── */}
+              
               {data.returnReason && (
                 <div className="srv-reason-card">
                   <span className="srv-reason-label">Return Reason</span>
@@ -148,7 +148,7 @@ export default function SalesReturnView({ uKey, onClose }) {
                 </div>
               )}
 
-              {/* ── ITEMS TABLE ── */}
+              
               <div className="srv-table-section">
                 <div className="srv-table-header">
                   <div className="srv-table-title">
@@ -210,7 +210,7 @@ export default function SalesReturnView({ uKey, onClose }) {
                 </div>
               </div>
 
-              {/* ── TOTALS ── */}
+              
               <div className="srv-totals">
                 <div className="srv-totals-row">
                   <span>Items Subtotal</span>
@@ -230,7 +230,7 @@ export default function SalesReturnView({ uKey, onClose }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         {data && (
           <div className="srv-footer">
             <button className="srv-btn-ghost" onClick={onClose}>Close</button>

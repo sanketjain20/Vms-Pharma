@@ -104,12 +104,12 @@ export default function ManufacturerEdit({ uKey, onClose, onSubmit }) {
         <div className="mfx-corner mfx-tl" /><div className="mfx-corner mfx-tr" />
         <div className="mfx-corner mfx-bl" /><div className="mfx-corner mfx-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="mfx-header">
           <div className="mfx-header-left">
             <div className="mfx-eyebrow"><span className="mfx-eyebrow-dot" />EDIT MANUFACTURER</div>
             <h3 className="mfx-title">
-              <span className="mfx-title-acc">//</span>
+              <span className="mfx-title-acc"></span>
               Update Manufacturer
               {mfrCode && <span className="mfx-code-inline">{mfrCode}</span>}
             </h3>
@@ -124,7 +124,7 @@ export default function ManufacturerEdit({ uKey, onClose, onSubmit }) {
 
         <div className="mfx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="mfx-body">
           {fetching ? (
             <div className="mfx-loading">
@@ -166,7 +166,7 @@ export default function ManufacturerEdit({ uKey, onClose, onSubmit }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="mfx-footer">
           <button type="button" className="mfx-btn-ghost" onClick={onClose}>Cancel</button>
           <button type="button" className="mfx-btn-primary" onClick={submit} disabled={loading || fetching}>

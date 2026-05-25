@@ -111,7 +111,7 @@ const ChartCard = ({ title, color, delay, defaultType = "bar", allowedTypes = ["
         </div>
         <div className="db-chart-header-right">
           {legend && <div className="db-chart-legend">{legend}</div>}
-          {/* Chart type switcher */}
+          
           <div className="db-chart-switcher">
             {allowedTypes.map(t => (
               <button
@@ -235,11 +235,11 @@ export default function Dashboard() {
 
       <div className="db-content">
 
-        {/* ── HEADER ── */}
+        
         <div className="db-header">
           <div className="db-header-left">
             <div className="db-badge"><span className="db-badge-dot" />Analytics Overview</div>
-            <h1 className="db-title"><span className="db-title-acc">//</span> Dashboard</h1>
+            <h1 className="db-title"><span className="db-title-acc"></span> Dashboard</h1>
           </div>
           <div className="db-header-rule" />
         </div>
@@ -253,7 +253,7 @@ export default function Dashboard() {
 
         {!loading && (
           <>
-            {/* ══ SECTION 1 — TODAY ══ */}
+            
             <CollapsibleSection
               label="Today at a glance" color="#3b82f6" defaultOpen={false}
               summaryStats={[
@@ -286,7 +286,7 @@ export default function Dashboard() {
               </div>
             </CollapsibleSection>
 
-            {/* ══ SECTION 2 — THIS MONTH ══ */}
+            
             <CollapsibleSection
               label="This month" color="#8b5cf6" defaultOpen={false}
               summaryStats={[
@@ -315,7 +315,7 @@ export default function Dashboard() {
               </div>
             </CollapsibleSection>
 
-            {/* ══ SECTION 3 — OUTSTANDING ══ */}
+            
             <CollapsibleSection
               label="Outstanding & dues" color="#ef4444" defaultOpen={false}
               summaryStats={[
@@ -349,7 +349,7 @@ export default function Dashboard() {
               </div>
             </CollapsibleSection>
 
-            {/* ══ SECTION 4 — INVENTORY ══ */}
+            
             <CollapsibleSection
               label="Inventory health" color="#10b981" defaultOpen={false}
               summaryStats={[
@@ -390,16 +390,16 @@ export default function Dashboard() {
               </div>
             </CollapsibleSection>
 
-            {/* ══ CHARTS ══ */}
+            
             <div className="db-section-label" style={{ "--sl-color": "#3b82f6" }}>
               <span className="db-section-dot" />
               Analytics charts
             </div>
 
-            {/* Row 1 — dual chart + monthly */}
+            
             <div className="db-charts-row db-charts-2">
 
-              {/* Sales vs Purchase — line only makes sense here as default; bar also works */}
+              
               <ChartCard
                 title="Sales vs purchase — last 7 days"
                 color="#3b82f6"
@@ -428,7 +428,7 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Row 2 — 3 smaller */}
+            
             <div className="db-charts-row db-charts-3">
 
               <ChartCard

@@ -101,7 +101,7 @@ export default function BatchView({ uKey, onClose }) {
           <div className="pfx-header-left">
             <div className="pfx-eyebrow"><span className="pfx-eyebrow-dot" />BATCH RECORD</div>
             <h2 className="pfx-title">
-              <span className="pfx-title-acc">{"//"}</span>
+              <span className="pfx-title-acc"></span>
               {batch?.batchNumber || "Loading..."}
             </h2>
           </div>

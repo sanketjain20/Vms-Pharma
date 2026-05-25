@@ -110,12 +110,12 @@ export default function JobSchedulerEdit() {
   return (
     <div className="jse-page">
 
-      {/* subtle bg grid */}
+      
       <div className="jse-grid-bg" />
 
       <div className="jse-inner">
 
-        {/* ── Header ─────────────────────────────────────── */}
+        
         <div className="jse-header">
           <div className="jse-header-left">
             <div className="jse-eyebrow">
@@ -138,12 +138,12 @@ export default function JobSchedulerEdit() {
           </button>
         </div>
 
-        {/* ── Divider ────────────────────────────────────── */}
+        
         <div className="jse-divider" />
 
-        {/* ── Sections ───────────────────────────────────── */}
+        
 
-        {/* General */}
+        
         <Section title="General Information" delay={0.05}
           icon={<svg width="15" height="15" viewBox="0 -960 960 960" fill="currentColor"><path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>}
         >
@@ -174,7 +174,7 @@ export default function JobSchedulerEdit() {
           </Field>
         </Section>
 
-        {/* Schedule */}
+        
         <Section title="Schedule & Timing" delay={0.12}
           icon={<svg width="15" height="15" viewBox="0 -960 960 960" fill="currentColor"><path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>}
         >
@@ -223,7 +223,7 @@ export default function JobSchedulerEdit() {
           </Field>
         </Section>
 
-        {/* Notifications */}
+        
         <Section title="Notifications" delay={0.19}
           icon={<svg width="15" height="15" viewBox="0 -960 960 960" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200Z"/></svg>}
         >
@@ -235,7 +235,7 @@ export default function JobSchedulerEdit() {
           </Field>
         </Section>
 
-        {/* History */}
+        
         <Section title="Audit Trail" delay={0.26}
           icon={<svg width="15" height="15" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm80-80h160v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Z"/></svg>}
         >
@@ -247,7 +247,7 @@ export default function JobSchedulerEdit() {
           </Field>
         </Section>
 
-        {/* ── Save bar ───────────────────────────────────── */}
+        
         <div className="jse-save-bar">
           <button className="jse-cancel-btn" onClick={() => navigate(-1)}>Discard Changes</button>
           <button className="jse-save-btn" onClick={save} disabled={saving}>

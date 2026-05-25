@@ -173,33 +173,33 @@ function ReportRow({ report, index, onOpen }) {
       className={`rpt-row rpt-card-${accent}`}
       style={{ animationDelay: `${index * 0.055}s` }}
     >
-      {/* Left accent strip */}
+      
       <div className="rpt-row-strip" />
 
-      {/* Index badge */}
+      
       <div className="rpt-row-index">
         <span className="rpt-row-num">{String(index + 1).padStart(2, "0")}</span>
         <span className="rpt-row-rpt">RPT</span>
       </div>
 
-      {/* Info */}
+      
       <div className="rpt-row-info">
         <h3 className="rpt-row-title">{report.name}</h3>
         <p className="rpt-row-desc">{report.description}</p>
       </div>
 
-      {/* Sparkline */}
+      
       <div className="rpt-row-spark">
         {bars.map((h, i) => (
           <div key={i} className="rpt-row-bar" style={{ height: `${h}%`, animationDelay: `${i * 0.06}s` }} />
         ))}
       </div>
 
-      {/* Corner decorations */}
+      
       <div className="rpt-c rpt-tl" /><div className="rpt-c rpt-tr" />
       <div className="rpt-c rpt-bl" /><div className="rpt-c rpt-br" />
 
-      {/* Open button */}
+      
       <button className="rpt-open-btn rpt-row-btn" onClick={() => onOpen(report.name)}>
         <span>Open</span>
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
@@ -219,7 +219,7 @@ function ViewToggle({ view, onChange }) {
         onClick={() => onChange("grid")}
         title="Grid view"
       >
-        {/* Grid icon */}
+        
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
           <rect x="1" y="1" width="6" height="6" rx="1.5" />
           <rect x="9" y="1" width="6" height="6" rx="1.5" />
@@ -233,7 +233,7 @@ function ViewToggle({ view, onChange }) {
         onClick={() => onChange("list")}
         title="List view"
       >
-        {/* List icon */}
+        
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
           <rect x="1" y="2" width="14" height="2.5" rx="1.25" />
           <rect x="1" y="6.75" width="14" height="2.5" rx="1.25" />
@@ -241,7 +241,7 @@ function ViewToggle({ view, onChange }) {
         </svg>
         <span>List</span>
       </button>
-      {/* Sliding pill */}
+      
       <div className={`rpt-toggle-pill ${view}`} />
     </div>
   );
@@ -312,7 +312,7 @@ export default function ReportsDashboard() {
 
       <div className="rpt-inner">
 
-        {/* ── Header ── */}
+        
         <div className="rpt-header">
           <div className="rpt-header-left">
             <div className="rpt-eyebrow">
@@ -345,13 +345,13 @@ export default function ReportsDashboard() {
           </div>
         </div>
 
-        {/* ── Controls bar ── */}
+        
         <div className="rpt-controls-bar">
           <div className="rpt-divider" />
           <ViewToggle view={view} onChange={handleViewChange} />
         </div>
 
-        {/* ── Content ── */}
+        
         {filtered.length === 0 ? (
           <div className="rpt-empty">
             <div className="rpt-empty-icon">

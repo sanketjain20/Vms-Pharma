@@ -109,12 +109,12 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
         <div className="rtx-corner rtx-tl" /><div className="rtx-corner rtx-tr" />
         <div className="rtx-corner rtx-bl" /><div className="rtx-corner rtx-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="rtx-header">
           <div className="rtx-header-left">
             <div className="rtx-eyebrow"><span className="rtx-eyebrow-dot" />EDIT RETAILER</div>
             <h3 className="rtx-title">
-              <span className="rtx-title-acc">//</span>
+              <span className="rtx-title-acc"></span>
               Update Retailer
               {retailerCode && <span className="rtx-code-inline">{retailerCode}</span>}
             </h3>
@@ -129,7 +129,7 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
 
         <div className="rtx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="rtx-body">
           {fetching ? (
             <div className="rtx-loading">
@@ -140,7 +140,7 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
             <>
               {errors.general && <div className="rtx-alert">{errors.general}</div>}
 
-              {/* Outstanding balance warning — read-only, not editable */}
+              
               {outstanding != null && parseFloat(outstanding) > 0 && (
                 <div className="rtx-outstanding-banner">
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -185,7 +185,7 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="rtx-footer">
           <button type="button" className="rtx-btn-ghost" onClick={onClose}>Cancel</button>
           <button type="button" className="rtx-btn-primary" onClick={submit} disabled={loading || fetching}>

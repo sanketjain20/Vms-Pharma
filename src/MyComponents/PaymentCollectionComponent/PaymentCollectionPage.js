@@ -80,7 +80,7 @@ export default function PaymentCollectionPage() {
   return (
     <div className="pyx-page">
 
-      {/* ── PAGE HEADER ── */}
+      
       <div className="pyx-page-header">
         <div className="pyx-page-title-row">
           <div>
@@ -95,7 +95,7 @@ export default function PaymentCollectionPage() {
           </button>
         </div>
 
-        {/* ── SUMMARY CARDS ── */}
+        
         <div className="pyx-summary-cards">
           <div className="pyx-sum-card">
             <span className="pyx-sum-label">Today's collection</span>
@@ -116,7 +116,7 @@ export default function PaymentCollectionPage() {
         </div>
       </div>
 
-      {/* ── TABS ── */}
+      
       <div className="pyx-tab-bar">
         {[
           { id: "PAYMENTS",    label: "Payment history" },
@@ -129,10 +129,10 @@ export default function PaymentCollectionPage() {
         ))}
       </div>
 
-      {/* ══════════ PAYMENTS TAB ══════════ */}
+      
       {activeTab === "PAYMENTS" && (
         <>
-          {/* ── FILTERS ── */}
+          
           <div className="pyx-filters">
             <input className="pyx-filter-search" placeholder="Search retailer, reference…"
               value={search} onChange={e => { setSearch(e.target.value); setPage(0); }} />
@@ -158,7 +158,7 @@ export default function PaymentCollectionPage() {
             )}
           </div>
 
-          {/* ── TABLE ── */}
+          
           <div className="pyx-table-wrap">
             {loading ? (
               <div className="pyx-table-loading">
@@ -206,14 +206,14 @@ export default function PaymentCollectionPage() {
                       <td className="pyx-td-date">{p.paymentDate}</td>
                       <td>
                         <div className="pyx-actions">
-                          {/* VIEW */}
+                          
                           <button className="pyx-action-btn" title="View details" onClick={() => setViewUKey(p.uKey)}>
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                               <circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.2"/>
                               <path d="M1.5 7C2.5 4 4.5 2.5 7 2.5S11.5 4 12.5 7c-1 3-3 4.5-5.5 4.5S2.5 10 1.5 7Z" stroke="currentColor" strokeWidth="1.2"/>
                             </svg>
                           </button>
-                          {/* REVERSE */}
+                          
                           <button className="pyx-action-btn pyx-action-danger" title="Reverse payment" onClick={() => setViewUKey(p.uKey)}>
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                               <path d="M2 5h6a4 4 0 0 1 0 8H5M2 5l3-3M2 5l3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -228,7 +228,7 @@ export default function PaymentCollectionPage() {
             )}
           </div>
 
-          {/* ── PAGINATION ── */}
+          
           {totalPages > 1 && (
             <div className="pyx-pagination">
               <button className="pyx-page-btn" disabled={page === 0} onClick={() => setPage(p => p - 1)}>← Prev</button>
@@ -239,7 +239,7 @@ export default function PaymentCollectionPage() {
         </>
       )}
 
-      {/* ══════════ OUTSTANDING TAB ══════════ */}
+      
       {activeTab === "OUTSTANDING" && (
         <div className="pyx-outstanding-list">
           {outstanding.length === 0 ? (
@@ -301,7 +301,7 @@ export default function PaymentCollectionPage() {
         </div>
       )}
 
-      {/* ── MODALS ── */}
+      
       {showCollect && (
         <PaymentCollect
           onClose={() => setShowCollect(false)}

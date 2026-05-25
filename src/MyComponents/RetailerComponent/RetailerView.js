@@ -100,12 +100,12 @@ export default function RetailerView({ uKey, onClose, onEdit }) {
         <div className="rtx-corner rtx-tl" /><div className="rtx-corner rtx-tr" />
         <div className="rtx-corner rtx-bl" /><div className="rtx-corner rtx-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="rtx-header">
           <div className="rtx-header-left">
             <div className="rtx-eyebrow"><span className="rtx-eyebrow-dot" />RETAILER RECORD</div>
             <h3 className="rtx-title">
-              <span className="rtx-title-acc">//</span>
+              <span className="rtx-title-acc"></span>
               {data ? data.shopName : "Loading…"}
             </h3>
           </div>
@@ -129,7 +129,7 @@ export default function RetailerView({ uKey, onClose, onEdit }) {
 
         <div className="rtx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="rtx-body">
 
           {error && <div className="rtx-alert">{error}</div>}
@@ -143,7 +143,7 @@ export default function RetailerView({ uKey, onClose, onEdit }) {
 
           {data && (
             <>
-              {/* ── STATUS ROW ── */}
+              
               <div className="rtx-view-status-row">
                 <span className="rtx-code-badge">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -163,10 +163,10 @@ export default function RetailerView({ uKey, onClose, onEdit }) {
                 )}
               </div>
 
-              {/* ── CREDIT BAR ── */}
+              
               <CreditBar creditLimit={data.creditLimit} outstandingBalance={data.outstandingBalance} />
 
-              {/* ── INFO GRID ── */}
+              
               <div className="rtx-view-grid">
                 <Card label="Shop Name"           value={data.shopName} />
                 <Card label="Owner Name"           value={data.ownerName} />
@@ -200,7 +200,7 @@ export default function RetailerView({ uKey, onClose, onEdit }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         {data && (
           <div className="rtx-footer">
             <button type="button" className="rtx-btn-ghost" onClick={onClose}>Close</button>

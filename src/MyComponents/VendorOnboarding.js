@@ -405,10 +405,10 @@ export default function VendorOnboarding() {
 
   return (
     <div className="vms-root">
-      {/* Canvas BG */}
+      
       <canvas ref={canvasRef} className="vo-canvas" />
 
-      {/* Particles */}
+      
       <div className="vo-bg-particles" aria-hidden="true">
         {particles.map(p => (
           <div key={p.id} className="vo-bg-particle" style={{
@@ -419,10 +419,10 @@ export default function VendorOnboarding() {
         ))}
       </div>
 
-      {/* Grid */}
+      
       <div className="vo-grid-overlay" aria-hidden="true" />
 
-      {/* Hero characters */}
+      
       <div className={`vo-hero-left ${animated ? "vo-hero-in" : ""}`} aria-hidden="true">
         <SpiderHero />
       </div>
@@ -430,10 +430,10 @@ export default function VendorOnboarding() {
         <CosmicHero />
       </div>
 
-      {/* ── Content ── */}
+      
       <div className={`vms-content ${animated ? "vo-content-in" : ""}`}>
 
-        {/* HEADER */}
+        
         <div className="vms-header">
           <div className="vo-badge">VENDOR MANAGEMENT SYSTEM · SETUP GUIDE</div>
           <h1 className="vms-title">
@@ -445,7 +445,7 @@ export default function VendorOnboarding() {
           </p>
         </div>
 
-        {/* PHASE SELECTOR */}
+        
         <div className="vo-phase-nav">
           {PHASES.map((ph, pi) => {
             const phSteps  = STEPS.filter(s => s.phase === ph.id);
@@ -469,7 +469,7 @@ export default function VendorOnboarding() {
           })}
         </div>
 
-        {/* GLOBAL PROGRESS BAR */}
+        
         <div className="vo-global-progress">
           <div className="vo-gp-bar">
             <div className="vo-gp-fill" style={{ width: `${totalProgress}%`, background: step.color }} />
@@ -479,7 +479,7 @@ export default function VendorOnboarding() {
           </span>
         </div>
 
-        {/* STEP PILLS — only current phase */}
+        
         <div className="vo-step-nav">
           {phaseSteps.map((s, i) => (
             <button key={s.id}
@@ -494,10 +494,10 @@ export default function VendorOnboarding() {
           ))}
         </div>
 
-        {/* STEP CARD */}
+        
         <div key={cardKey} className="vo-step-card" style={{ "--step-color": step.color, "--step-glow": step.glow }}>
 
-          {/* ── LEFT ── */}
+          
           <div className="vo-card-left">
             <div className="vo-step-tag" style={{ color: step.color }}>
               Phase {PHASES.findIndex(p => p.id === step.phase) + 1} · Step {globalIndex + 1}
@@ -519,7 +519,7 @@ export default function VendorOnboarding() {
             )}
           </div>
 
-          {/* ── RIGHT ── */}
+          
           <div className="vo-card-right">
             <div className="vo-actions-label">HOW TO DO IT</div>
             {step.bullets.map((b, i) => (
@@ -529,7 +529,7 @@ export default function VendorOnboarding() {
               </div>
             ))}
 
-            {/* Phase mini progress */}
+            
             <div className="vo-phase-progress">
               <span className="vo-pp-label">Phase progress</span>
               <div className="vo-pp-dots">
@@ -559,7 +559,7 @@ export default function VendorOnboarding() {
           </div>
         </div>
 
-        {/* PHASE MAP — all steps overview */}
+        
         <div className="vo-phase-map">
           {PHASES.map((ph, pi) => (
             <div key={ph.id} className="vo-pm-phase">

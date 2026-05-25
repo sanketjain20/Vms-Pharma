@@ -191,7 +191,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
         <div className="rlm-corner rlm-bl"/>
         <div className="rlm-corner rlm-br"/>
 
-        {/* ── HEADER ── */}
+        
         <div className="rlm-header">
           <div className="rlm-header-left">
             <div className="rlm-eyebrow">
@@ -199,7 +199,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
               RETAILER LEDGER
             </div>
             <h3 className="rlm-title">
-              <span className="rlm-title-acc">//</span>
+              <span className="rlm-title-acc"></span>
               {ledger ? `${ledger.shopName}` : "Loading…"}
             </h3>
             {ledger && (
@@ -232,7 +232,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
 
         <div className="rlm-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="rlm-body">
 
           {loading && (
@@ -256,7 +256,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
 
           {!loading && !error && ledger && (
             <>
-              {/* ── STAT CARDS ── */}
+              
               <div className="rlm-stats">
                 {[
                   { label: "Overdue",  value: overdueCount,  cls: "red"   },
@@ -271,7 +271,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
                 ))}
               </div>
 
-              {/* ── TABS ── */}
+              
               <div className="rlm-tabs">
                 <button
                   className={`rlm-tab ${activeTab === "invoices" ? "active" : ""}`}
@@ -293,11 +293,11 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
                 </button>
               </div>
 
-              {/* ══════ INVOICES TAB ══════ */}
+              
               {activeTab === "invoices" && (
                 <div className="rlm-tab-body">
 
-                  {/* Filter pills */}
+                  
                   <div className="rlm-filter-pills">
                     {["ALL", "UNPAID", "OVERDUE", "DUE_SOON", "PENDING", "PAID"].map(f => (
                       <button
@@ -320,7 +320,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
                           className={`rlm-invoice-row ${inv.statusLabel === "OVERDUE" ? "rlm-inv-overdue" : ""}`}
                           style={{ animationDelay: `${idx * 0.03}s` }}
                         >
-                          {/* Left: invoice info */}
+                          
                           <div className="rlm-inv-left">
                             <div className="rlm-inv-number">{inv.invoiceNumber}</div>
                             <div className="rlm-inv-meta">
@@ -338,7 +338,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
                             </div>
                           </div>
 
-                          {/* Center: amounts */}
+                          
                           <div className="rlm-inv-amounts">
                             <div className="rlm-inv-amount-row">
                               <span className="rlm-inv-alabel">Invoice</span>
@@ -360,7 +360,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
                             </div>
                           </div>
 
-                          {/* Right: status + action */}
+                          
                           <div className="rlm-inv-right">
                             <StatusBadge label={inv.statusLabel} />
                             {inv.statusLabel !== "PAID" && (
@@ -391,7 +391,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
                 </div>
               )}
 
-              {/* ══════ PAYMENT HISTORY TAB ══════ */}
+              
               {activeTab === "history" && (
                 <div className="rlm-tab-body">
                   {!ledger.paymentHistory?.length ? (
@@ -453,7 +453,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="rlm-footer">
           <button className="rlm-btn-ghost" onClick={onClose}>Close</button>
         </div>

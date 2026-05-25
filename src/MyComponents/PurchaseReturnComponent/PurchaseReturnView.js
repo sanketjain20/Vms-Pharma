@@ -46,7 +46,7 @@ export default function PurchaseReturnView({ uKey, onClose }) {
               PURCHASE RETURN RECORD
             </div>
             <h3 className="srv-title">
-              <span className="srv-title-acc">{'//'}</span>
+              <span className="srv-title-acc"></span>
               {data ? `Return - ${data.returnNumber}` : "Loading..."}
             </h3>
           </div>

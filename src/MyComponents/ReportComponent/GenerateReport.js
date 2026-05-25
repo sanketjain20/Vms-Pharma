@@ -754,7 +754,7 @@ export default function GenerateReport() {
       <div className="noise-overlay" />
       <div className="top-beam" />
 
-      {/* ── HEADER ── */}
+      
       <header className="report-header" style={parallaxStyle}>
         <div className="header-top-row">
           <div className="header-left">
@@ -763,7 +763,7 @@ export default function GenerateReport() {
               {moduleId === ReportEntity.GSTR1 ? "GST COMPLIANCE" : "REPORT VIEWER"}
             </div>
             <h1 className="gen-report-title">
-              <span className="title-accent">//</span>
+              <span className="title-accent"></span>
               {reportName}
             </h1>
             <div className="header-meta">
@@ -846,7 +846,7 @@ export default function GenerateReport() {
         <div className="header-rule" />
       </header>
 
-      {/* ── REVENUE SUMMARY CARDS ── */}
+      
       {moduleId === ReportEntity.Revenue && summary && (
         <div className="rev-summary">
           {summaryConfig.map((cfg, i) => (
@@ -877,12 +877,10 @@ export default function GenerateReport() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════
-          GSTR-1 LAYOUT
-      ══════════════════════════════════════════════════════ */}
+      
       {moduleId === ReportEntity.GSTR1 && (
         <>
-          {/* ── Spinner: shown while loading is true ── */}
+          
           {loading ? (
             <div className="gen-loading-text">
               <div className="loader-ring">
@@ -893,7 +891,7 @@ export default function GenerateReport() {
           ) : gstrData ? (
             /* ── Data loaded successfully ── */
             <>
-              {/* GSTR Summary Cards */}
+              
               <div className="rev-summary gstr-summary-grid">
                 {gstrSummaryConfig.map((cfg, i) => (
                   <div
@@ -921,7 +919,7 @@ export default function GenerateReport() {
                 ))}
               </div>
 
-              {/* Period info bar */}
+              
               <div className="gstr-period-bar">
                 <div className="gstr-period-info">
                   <span className="gstr-period-label">Period</span>
@@ -945,7 +943,7 @@ export default function GenerateReport() {
                 </div>
               </div>
 
-              {/* Section Tabs */}
+              
               <div className="table-shell" style={{ marginTop: 0 }}>
                 <div className="table-shell-header">
                   <div className="gstr-tabs">
@@ -977,7 +975,7 @@ export default function GenerateReport() {
                   </div>
                 </div>
 
-                {/* Tab content — pagination is self-contained inside each table component */}
+                
                 <div className="gstr-tab-content">
                   {gstrTab === "b2b" && <GstrB2BTable data={gstrData.b2b || []} />}
                   {gstrTab === "b2c" && <GstrB2CTable data={gstrData.b2c || []} />}
@@ -1000,9 +998,7 @@ export default function GenerateReport() {
         </>
       )}
 
-      {/* ══════════════════════════════════════════════════════
-          GENERIC TABLE LAYOUT (all other reports)
-      ══════════════════════════════════════════════════════ */}
+      
       {moduleId !== ReportEntity.GSTR1 && (
         <>
           {loading ? (
@@ -1099,7 +1095,7 @@ export default function GenerateReport() {
                 </div>
               </div>
 
-              {/* Pagination */}
+              
               <div className="gen-pagination">
                 <button
                   disabled={page === 1}
@@ -1145,7 +1141,7 @@ export default function GenerateReport() {
                 </select>
               </div>
 
-              {/* Modal */}
+              
               {modalInvoice && (
                 <div
                   className="gen-modal-overlay"

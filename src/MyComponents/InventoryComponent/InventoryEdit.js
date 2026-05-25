@@ -206,7 +206,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     <div className="modal-backdrop show">
       <div className="modal">
 
-        {/* ── HEADER ── */}
+        
         <div className="modal-header">
           <div className="modal-title">
             <h3>Edit Inventory {formData.inventoryCode && `· ${formData.inventoryCode}`}</h3>
@@ -229,11 +229,11 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
           </div>
         </div>
 
-        {/* ── BODY ── */}
+        
         <form className="modal-body">
           <div className="form-col scrollable">
 
-            {/* ══ STOCK SCREENS ══ */}
+            
             {showStockScreen ? (
 
               stockActionType ? (
@@ -310,7 +310,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
                 {activeTab === "details" && (
                   <div className="form-grid">
 
-                    {/* Product Type Dropdown */}
+                    
                     <div className="custom-select" ref={typeDropdownRef}>
                       <label>Product Type</label>
                       <div
@@ -333,7 +333,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
                       </div>
                     </div>
 
-                    {/* Product Dropdown */}
+                    
                     <div className="custom-select" ref={dropdownRef}>
                       <label>Select Product</label>
                       <div
@@ -381,7 +381,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
             )}
           </div>
 
-          {/* ── FOOTER ── */}
+          
           <div className="modal-footer-fixed">
             <div className="modal-actions">
               {!showStockScreen && (

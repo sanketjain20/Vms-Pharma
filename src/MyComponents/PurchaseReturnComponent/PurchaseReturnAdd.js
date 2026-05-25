@@ -150,7 +150,7 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
               {step === 1 ? "STEP 1 OF 2 - LOCATE PURCHASE" : "STEP 2 OF 2 - PROCESS RETURN"}
             </div>
             <h3 className="sra-title">
-              <span className="sra-title-acc">{'//'}</span>
+              <span className="sra-title-acc"></span>
               {step === 1 ? "Find Original Purchase" : `Return - ${purchaseData?.purchaseNumber}`}
             </h3>
           </div>

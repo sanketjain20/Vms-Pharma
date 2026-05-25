@@ -103,7 +103,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
     return (
         <div className="vd-backdrop">
 
-            {/* ── LOADING OVERLAY ── */}
+
             {loading && (
                 <div className="vd-loader-overlay">
                     <div className="vd-loader-ring">
@@ -114,13 +114,13 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
             )}
 
             <div className="vd-modal">
-                {/* Top beam */}
+                
                 <div className="vd-top-beam" />
-                {/* Corners */}
+                
                 <div className="vd-corner vd-tl" /><div className="vd-corner vd-tr" />
                 <div className="vd-corner vd-bl" /><div className="vd-corner vd-br" />
 
-                {/* ── HEADER ── */}
+                
                 <div className="vd-header">
                     <div className="vd-header-left">
                         <div className="vd-eyebrow">
@@ -128,7 +128,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                             EDIT VENDOR
                         </div>
                         <h2 className="vd-title">
-                            <span className="vd-title-acc">//</span>
+                            <span className="vd-title-acc"></span>
                             {vendorPrefix ? `Vendor · ${vendorPrefix}` : "Edit Vendor"}
                         </h2>
                     </div>
@@ -140,10 +140,9 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                     </button>
                 </div>
 
-                {/* ── FORM ── */}
                 <form className="vd-form" onSubmit={handleSubmit} noValidate>
 
-                    {/* Row 1 — Name / Email */}
+                    
                     <div className="vd-row">
                         <div className="vd-group">
                             <label>Name</label>
@@ -170,7 +169,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                         </div>
                     </div>
 
-                    {/* Row 3 — Shop Name / Role */}
+                    
                     <div className="vd-row">
                         <div className="vd-group">
                             <label>Shop Name</label>
@@ -201,7 +200,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
 
                     </div>
 
-                    {/* Row 4 — Address (full) */}
+                    
                     <div className="vd-row">
                         <div className="vd-group">
                             <label>Select Role</label>
@@ -231,7 +230,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                         </div>
                     </div>
 
-                    {/* Row 5 — Vendor Prefix (readonly) / Expiry */}
+                    
                     <div className="vd-row">
                         <div className="vd-group">
                             <label>Vendor Prefix</label>
@@ -253,7 +252,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                         </div>
                     </div>
 
-                    {/* ── FOOTER ── */}
+                    
                     <div className="vd-footer">
                         <button type="button" className="vd-btn-cancel" onClick={onClose}>Cancel</button>
                         <button type="submit" className="vd-btn-save" disabled={loading}>

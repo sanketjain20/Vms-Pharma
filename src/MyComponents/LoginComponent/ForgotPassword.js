@@ -151,18 +151,18 @@ export default function ForgotPassword() {
   return (
     <div className="fp-page">
 
-      {/* Background grid */}
+      
       <div className="fp-grid" />
-      {/* Orbs */}
+      
       <div className="fp-orb fp-orb-a" />
       <div className="fp-orb fp-orb-b" />
 
       <div className="fp-card">
-        {/* Corner accents */}
+        
         <div className="fp-corner fp-tl" /><div className="fp-corner fp-tr" />
         <div className="fp-corner fp-bl" /><div className="fp-corner fp-br" />
 
-        {/* Header */}
+        
         <div className="fp-header">
           <div className="fp-eyebrow">
             <span className="fp-dot" />
@@ -175,10 +175,10 @@ export default function ForgotPassword() {
           </h1>
         </div>
 
-        {/* Step indicator */}
+        
         <StepDots current={step} />
 
-        {/* ── STEP: EMAIL ────────────────────────────────── */}
+        
         {step === "email" && (
           <div className="fp-body">
             <p className="fp-hint">Enter the email address linked to your account.</p>
@@ -204,7 +204,7 @@ export default function ForgotPassword() {
           </div>
         )}
 
-        {/* ── STEP: OTP ──────────────────────────────────── */}
+        
         {step === "code" && (
           <div className="fp-body">
             <div className="fp-email-pill">
@@ -228,7 +228,7 @@ export default function ForgotPassword() {
           </div>
         )}
 
-        {/* ── STEP: NEW PASSWORD ─────────────────────────── */}
+        
         {step === "password" && (
           <div className="fp-body">
             <p className="fp-hint">Choose a strong new password for your account.</p>
@@ -262,7 +262,7 @@ export default function ForgotPassword() {
           </div>
         )}
 
-        {/* Back to login */}
+        
         <div className="fp-footer">
           <button className="fp-back" onClick={() => navigate("/")}>
             ← Back to Login

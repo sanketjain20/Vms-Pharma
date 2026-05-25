@@ -106,11 +106,11 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
         <div className="sup-corner sup-tl" /><div className="sup-corner sup-tr" />
         <div className="sup-corner sup-bl" /><div className="sup-corner sup-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="sup-header">
           <div className="sup-header-left">
             <div className="sup-eyebrow"><span className="sup-eyebrow-dot" />EDIT SUPPLIER</div>
-            <h3 className="sup-title"><span className="sup-title-acc">//</span> Update Supplier</h3>
+            <h3 className="sup-title"><span className="sup-title-acc"></span> Update Supplier</h3>
           </div>
           <button className="sup-close" onClick={onClose}>
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -122,7 +122,7 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
 
         <div className="sup-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="sup-body">
           {fetching ? (
             <div className="sup-loading">
@@ -166,7 +166,7 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="sup-footer">
           <button className="sup-btn-ghost" onClick={onClose}>Cancel</button>
           <button className="sup-btn-primary" onClick={submit} disabled={loading || fetching}>

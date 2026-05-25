@@ -132,7 +132,7 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
         <div className="rl-corner rl-tl" /><div className="rl-corner rl-tr" />
         <div className="rl-corner rl-bl" /><div className="rl-corner rl-br" />
 
-        {/* HEADER */}
+        
         <div className="rl-header">
           <div className="rl-header-left">
             <div className="rl-eyebrow">
@@ -140,7 +140,7 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
               EDIT ROLE
             </div>
             <h3 className="rl-title">
-              <span className="rl-title-acc">//</span>
+              <span className="rl-title-acc"></span>
               {formData.roleCode ? `Role · ${formData.roleCode}` : "Edit Role"}
             </h3>
           </div>
@@ -152,13 +152,13 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
           </button>
         </div>
 
-        {/* FORM WRAPPER — flex-column: body scrolls, footer anchored */}
+        
         <form className="rl-form-wrapper" onSubmit={handleSubmit}>
 
-          {/* SCROLLABLE BODY */}
+          
           <div className="rl-body">
 
-            {/* Role Name */}
+            
             <div className="rl-name-row">
               <div className="rl-field">
                 <label>Role Name</label>
@@ -174,7 +174,7 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
               </div>
             </div>
 
-            {/* Permissions */}
+            
             <div className="rl-perms-section">
               <div className="rl-perms-header">
                 <div className="rl-perms-title">
@@ -263,9 +263,9 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
               </div>
             </div>
 
-          </div>{/* END .rl-body */}
+          </div>
 
-          {/* FOOTER — outside scroll body, always anchored to bottom */}
+          
           <div className="rl-footer">
             <button className="rl-btn-cancel" type="button" onClick={onClose}>Cancel</button>
             <button type="submit" className="rl-btn-save">Update Role</button>

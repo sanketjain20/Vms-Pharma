@@ -106,11 +106,11 @@ export default function RoleForm({ onSubmit, onClose }) {
         <div className="rl-corner rl-tl" /><div className="rl-corner rl-tr" />
         <div className="rl-corner rl-bl" /><div className="rl-corner rl-br" />
 
-        {/* HEADER */}
+        
         <div className="rl-header">
           <div className="rl-header-left">
             <div className="rl-eyebrow"><span className="rl-eyebrow-dot" />NEW ROLE</div>
-            <h3 className="rl-title"><span className="rl-title-acc">//</span>Add Role</h3>
+            <h3 className="rl-title"><span className="rl-title-acc"></span>Add Role</h3>
           </div>
           <button className="rl-close" onClick={onClose} title="Close">
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -120,17 +120,13 @@ export default function RoleForm({ onSubmit, onClose }) {
           </button>
         </div>
 
-        {/*
-          KEY FIX: rl-form-wrapper is flex-column with flex:1 and min-height:0.
-          rl-body is flex:1 overflow-y:auto  → scrolls independently.
-          rl-footer is flex-shrink:0         → always visible at bottom, never overlaps.
-        */}
+        
         <form className="rl-form-wrapper" onSubmit={handleSubmit}>
 
-          {/* SCROLLABLE CONTENT */}
+          
           <div className="rl-body">
 
-            {/* Role Name */}
+            
             <div className="rl-name-row">
               <div className="rl-field">
                 <label>Role Name</label>
@@ -146,7 +142,7 @@ export default function RoleForm({ onSubmit, onClose }) {
               </div>
             </div>
 
-            {/* Permissions */}
+            
             <div className="rl-perms-section">
               <div className="rl-perms-header">
                 <div className="rl-perms-title">
@@ -218,9 +214,9 @@ export default function RoleForm({ onSubmit, onClose }) {
               </div>
             </div>
 
-          </div>{/* END .rl-body */}
+          </div>
 
-          {/* FOOTER — outside scroll body, always anchored to bottom */}
+          
           <div className="rl-footer">
             <button className="rl-btn-cancel" type="button" onClick={onClose}>Cancel</button>
             <button type="submit" className="rl-btn-save">Save Role</button>

@@ -182,7 +182,7 @@ export default function ProductForm({ onSubmit, onClose }) {
         <form className="modal-body" onSubmit={handleSubmit}>
           <div className="form-col scrollable">
 
-            {/* ════ DETAILS TAB ════ */}
+            
             {activeTab === "details" && (
               <div className="form-grid">
                 <div>
@@ -205,7 +205,7 @@ export default function ProductForm({ onSubmit, onClose }) {
               </div>
             )}
 
-            {/* ════ PHARMA TAB (new) ════ */}
+            
             {activeTab === "pharma" && (
               <div className="form-grid">
 
@@ -232,7 +232,7 @@ export default function ProductForm({ onSubmit, onClose }) {
                   </select>
                 </div>
 
-                {/* Schedule info banner */}
+                
                 <div className="pf-info-banner full">
                   <strong>OTC</strong> — Over the counter, no prescription needed&nbsp;&nbsp;
                   <strong>H</strong> — Prescription required&nbsp;&nbsp;
@@ -242,7 +242,7 @@ export default function ProductForm({ onSubmit, onClose }) {
               </div>
             )}
 
-            {/* ════ PRICING & UNITS TAB ════ */}
+            
             {activeTab === "pricing" && (
               <div className="form-grid">
                 <div>
@@ -271,7 +271,7 @@ export default function ProductForm({ onSubmit, onClose }) {
                   </select>
                 </div>
 
-                {/* Pack size explainer */}
+                
                 {formData.packSize && formData.packUnit && (
                   <div className="pf-info-banner full">
                     Each <strong>{formData.unit || "unit"}</strong> contains <strong>{formData.packSize}</strong> items packed as <strong>{formData.packUnit}</strong>

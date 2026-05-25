@@ -61,10 +61,10 @@ export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
   return (
     <header className={`nbm-bar ${sidebarOpen ? "shifted" : ""} ${scrolled ? "scrolled" : ""}`}>
 
-      {/* scanline */}
+      
       <div className="nbm-scan" />
 
-      {/* ── LEFT: Logo ─────────────────────────────────────── */}
+      
       <div className="nbm-left">
         <img src={udoyralogo} alt="Udoyra" className="nbm-logo" />
 
@@ -76,7 +76,7 @@ export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
         )}
       </div>
 
-      {/* ── RIGHT: Greeting + Avatar ────────────────────────── */}
+      
       <div className="nbm-right">
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
 
@@ -87,7 +87,7 @@ export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
 
         <div className="nbm-profile-wrap" ref={profileRef} onClick={() => setDropdownOpen(!dropdownOpen)}>
 
-          {/* Avatar */}
+          
           <div className={`nbm-avatar ${dropdownOpen ? "open" : ""}`}>
             {profileImage
               ? <img src={profileImage} alt="Profile" className="nbm-avatar-img" />
@@ -96,10 +96,10 @@ export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
             <span className="nbm-avatar-ring" />
           </div>
 
-          {/* Dropdown */}
+          
           <div className={`nbm-dropdown ${dropdownOpen ? "show" : ""}`}>
 
-            {/* User info header */}
+            
             <div className="nbm-dd-user">
               <div className="nbm-dd-avatar-sm">
                 {profileImage
@@ -115,7 +115,7 @@ export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
 
             <div className="nbm-dd-divider" />
 
-            {/* Settings */}
+            
             <button
               className="nbm-dd-item"
               onClick={(e) => { e.stopPropagation(); setDropdownOpen(false); navigate("/setting"); }}
@@ -126,7 +126,7 @@ export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
               <span>Settings</span>
             </button>
 
-            {/* Logout */}
+            
             <button
               className="nbm-dd-item nbm-dd-logout"
               onClick={(e) => { e.stopPropagation(); handleLogout(); }}

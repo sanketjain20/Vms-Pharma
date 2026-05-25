@@ -190,7 +190,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   return (
     <div className="modal-backdrop show">
       <div className="modal">
-        {/* HEADER */}
+        
         <div className="modal-header">
           <div className="modal-title">
             <h3>Add Inventory</h3>
@@ -216,13 +216,13 @@ export default function InventoryAdd({ onSubmit, onClose }) {
           </div>
         </div>
 
-        {/* FORM BODY */}
+        
         <form className="modal-body" onSubmit={handleSubmit}>
           <div className="form-col scrollable">
             {activeTab === "details" && (
               <div className="form-grid">
 
-                {/* PRODUCT TYPE DROPDOWN */}
+                
                 <div className="custom-select" ref={typeDropdownRef} style={{ width: "100%" }}>
                   <label>Product Type</label>
                   <div
@@ -255,7 +255,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
                 </div>
 
 
-                {/* PRODUCT DROPDOWN */}
+                
                 <div className="custom-select" ref={dropdownRef}>
                   <label>Select Product</label>
                   <div

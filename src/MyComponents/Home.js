@@ -207,7 +207,7 @@ export default function Home() {
 >
       <canvas ref={canvasRef} className="hw-canvas" />
 
-      {/* ── NAV ── */}
+      
       <nav className="hw-nav">
         <div className="hw-nav-logo">
           <span className="hw-logo-dot" />
@@ -229,7 +229,7 @@ export default function Home() {
         <div className="hw-nav-right">
           <LiveClock />
 
-          {/* ── Profile avatar — only shown if photo exists in localStorage ── */}
+          
           {profilePhoto && (
             <div
               style={{
@@ -253,7 +253,7 @@ export default function Home() {
 
       <main className="hw-main">
 
-        {/* ── HERO ── */}
+        
         <section className="hw-hero">
           <div className="hw-hero-eyebrow">
             <span className="hw-eyebrow-dot" />
@@ -277,7 +277,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── STATS STRIP ── */}
+        
         <div className="hw-stats">
           {[
             { val: "Auto",  unit: "",   label: "Batch FIFO selection"  },
@@ -292,7 +292,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* ── MODULES ── */}
+        
         <section className="hw-section">
           <div className="hw-sec-label">Quick access</div>
           <h2 className="hw-sec-title">All modules</h2>
@@ -315,7 +315,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── FEATURES ── */}
+        
         <section className="hw-section">
           <div className="hw-sec-label">Core capabilities</div>
           <h2 className="hw-sec-title">Built for pharma wholesale</h2>
@@ -336,7 +336,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── WORKFLOW ── */}
+        
         <section className="hw-section">
           <div className="hw-sec-label">Daily workflow</div>
           <h2 className="hw-sec-title">Your day in 5 steps</h2>
@@ -358,7 +358,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── CTA ── */}
+        
         <section className="hw-cta">
           <div className="hw-cta-glow" />
           <div className="hw-cta-text">
@@ -375,7 +375,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
+        
         <footer className="hw-footer">
           <span className="hw-footer-logo">VMS<span style={{ color: "#3b82f6" }}>Pro</span></span>
           <span className="hw-footer-note">Medical Wholesale Management System · v2.0</span>

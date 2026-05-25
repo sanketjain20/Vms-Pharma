@@ -358,7 +358,7 @@ if (creditPaymentType === "CREDIT") {
     <div className="sales-modal show">
       <div className="sales-container">
 
-        {/* ── HEADER — unchanged ── */}
+        
         <div className="sales-header">
           <div className="sales-header-left">
             <div className="sales-eyebrow">
@@ -375,7 +375,7 @@ if (creditPaymentType === "CREDIT") {
           </div>
         </div>
 
-        {/* ══════════════ TAX TAB — unchanged ══════════════ */}
+        
         {activeTab === "Tax" && (
           <div className="sales-section">
             <h4>GST / Tax Settings</h4>
@@ -412,7 +412,7 @@ if (creditPaymentType === "CREDIT") {
           </div>
         )}
 
-        {/* ══════════════ PRODUCT TAB — updated with batch section ══════════════ */}
+        
         {activeTab === "Product" && (
           <div className="sales-section">
             <h4>Select Product</h4>
@@ -446,7 +446,7 @@ if (creditPaymentType === "CREDIT") {
               </div>
             ) : null}
 
-            {/* ── NEW: Batch selection ── */}
+            
             {availableBatches.length > 0 && (
               <div className="inv-box" style={{ flexDirection: "column", gap: 10 }}>
                 <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "var(--sl-text-2)", textTransform: "uppercase", fontFamily: "var(--sl-font-m)" }}>
@@ -560,12 +560,12 @@ if (creditPaymentType === "CREDIT") {
           </div>
         )}
 
-        {/* ══════════════ BILLING TAB — updated with retailer + credit ══════════════ */}
+        
 {activeTab === "Billing" && (
   <div className="sales-section">
     <h4>Billing & Payment</h4>
 
-    {/* Retailer */}
+    
     <SearchableDropdown
       label="Retailer (optional — leave empty for walk-in)"
       options={retailers}
@@ -580,7 +580,7 @@ if (creditPaymentType === "CREDIT") {
       error={errors.retailerId}
     />
 
-    {/* Discount */}
+    
     <label>Discount</label>
     <div className="tax-row">
       <input
@@ -597,7 +597,7 @@ if (creditPaymentType === "CREDIT") {
     </div>
     {errors.discountInput && <div className="error">{errors.discountInput}</div>}
 
-    {/* Billing Mode */}
+    
     {creditPaymentType !== "CREDIT" && (
       <>
         <label>Billing Mode</label>
@@ -613,7 +613,7 @@ if (creditPaymentType === "CREDIT") {
 
     <div className="total-amount">Net Amount: ₹{netAmount.toFixed(2)}</div>
 
-    {/* Payment Type */}
+    
     <label>Payment Type</label>
     <div className="radio-group">
       {["PAID", "CREDIT", "PARTIAL"].map(pt => (
@@ -637,7 +637,7 @@ if (creditPaymentType === "CREDIT") {
       ))}
     </div>
 
-    {/* Due Date */}
+    
     {(creditPaymentType === "CREDIT" || creditPaymentType === "PARTIAL") && (
       <>
         <label>Due Date</label>
@@ -651,7 +651,7 @@ if (creditPaymentType === "CREDIT") {
       </>
     )}
 
-    {/* Amount Paid */}
+    
     <label>Amount Paid (₹)</label>
     <input
       type="number"
@@ -663,7 +663,7 @@ if (creditPaymentType === "CREDIT") {
     />
     {errors.amountPaid && <div className="error">{errors.amountPaid}</div>}
 
-    {/* Remaining */}
+    
     {creditPaymentType !== "PAID" && (
       <div
         className="total-amount"
@@ -675,7 +675,7 @@ if (creditPaymentType === "CREDIT") {
   </div>
 )}
 
-      {/* ── FOOTER — unchanged ── */}
+      
       <div className="sales-footer">
         <button className="cancel-btn" onClick={onClose}>Cancel</button>
         <button className="submit-btn" onClick={submitSales}>Submit Sales</button>

@@ -72,7 +72,7 @@ function App() {
 
   return (
     <>
-      {/* 🔥 GLOBAL TOAST CONTAINER */}
+      
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -82,17 +82,17 @@ function App() {
         className="vms-toast-container"
       />
       <Routes>
-        {/* LOGIN PAGE */}
+        
         <Route
           path="/"
           element={
             <>
             <div className="login-page">
-              {/* Ambient glow orbs (pure CSS, no JS) */}
+              
             <LoginPage />
-              {/* Left: brand + features (canvas is inside LoginSection) */}
+              
 
-              {/* Right: canvas + glass login card */}
+              
             </div>
             <Footer />
 </>
@@ -114,7 +114,7 @@ function App() {
         />
 
 
-        {/* HOME PAGE */}
+        
         <Route path="/home" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
           <Route index element={<Home />} />
         </Route>
@@ -126,10 +126,10 @@ function App() {
         <Route path="/setting" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
           <Route index element={<Setting />} />
         </Route>
-        {/* MODULE PAGES */}
+        
         <Route path="/master" element={<LayoutModule theme={theme} onToggleTheme={toggleTheme} />}>
 
-          {/* PRODUCT */}
+          
           <Route
             path="product"
             element={
@@ -139,7 +139,7 @@ function App() {
             }
           />
 
-          {/* PRODUCT TYPE */}
+          
           <Route
             path="product-type"
             element={
@@ -149,7 +149,7 @@ function App() {
             }
           />
 
-          {/* REATILERS  */}
+          
           <Route
             path="retailer"
             element={
@@ -159,7 +159,7 @@ function App() {
             }
           />
 
-          {/* MANUFACTURERS  */}
+          
           <Route
             path="manufacturer"
             element={
@@ -169,7 +169,7 @@ function App() {
             }
           />
 
-          {/* SUPPLIERS  */}
+          
           <Route
             path="supplier"
             element={
@@ -179,7 +179,7 @@ function App() {
             }
           />
 
-          {/* PAYMENT COLLECTION  */}
+          
           <Route
             path="payment-collection"
             element={
@@ -190,7 +190,7 @@ function App() {
           />
 
 
-          {/* PURCHASE  */}
+          
           <Route
             path="purchase"
             element={
@@ -244,7 +244,7 @@ function App() {
               </ModuleGuard>
             }
           />
-          {/* VENDOR */}
+          
           <Route
             path="vendor"
             element={
@@ -254,7 +254,7 @@ function App() {
             }
           />
 
-          {/* REPORTS */}
+          
           <Route
             path="reports"
             element={
@@ -282,7 +282,7 @@ function App() {
             }
           />
 
-          {/* INVENTORY */}
+          
           <Route
             path="inventory"
             element={
@@ -328,7 +328,7 @@ function App() {
             }
           />
 
-          {/* SALES */}
+          
           <Route
             path="sales"
             element={
@@ -338,7 +338,7 @@ function App() {
             }
           />
 
-          {/* ROLES */}
+          
           <Route
             path="roles"
             element={
@@ -366,7 +366,7 @@ function App() {
             }
           />
 
-          {/* JOB SCHEDULER */}
+          
           <Route
             path="job-scheduler"
             element={
@@ -395,7 +395,7 @@ function App() {
           />
         </Route>
 
-        {/* UNAUTHORIZED PAGE */}
+        
         <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>
     </>

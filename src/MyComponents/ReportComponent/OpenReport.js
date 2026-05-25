@@ -275,15 +275,15 @@ export default function OpenReport() {
 
   return (
     <div className="or-container">
-      {/* 3D canvas bg */}
+      
       <canvas ref={canvasRef} className="or-bg-canvas" />
       <div className="or-noise" />
       <div className="or-top-beam" />
 
-      {/* Page layout */}
+      
       <div className="or-layout">
 
-        {/* LEFT — filters panel */}
+        
         <aside className="or-sidebar">
           <div className="sidebar-header">
             <div className="sidebar-title-row">
@@ -358,21 +358,21 @@ export default function OpenReport() {
           </div>
         </aside>
 
-        {/* RIGHT — report info + actions */}
+        
         <main className="or-main">
-          {/* Header area */}
+          
           <div className="or-main-header">
             <div className="or-badge">
               <span className="or-badge-dot" />
               REPORT CONFIGURATION
             </div>
             <h1 className="or-title">
-              <span className="or-title-accent">//</span>
+              <span className="or-title-accent"></span>
               {reportName}
             </h1>
             <div className="or-title-rule" />
 
-            {/* Stats row */}
+            
             <div className="or-stats-row">
               <div className="or-stat">
                 <span className="or-stat-val">{filters.length}</span>
@@ -393,7 +393,7 @@ export default function OpenReport() {
             </div>
           </div>
 
-          {/* Decorative terminal preview box */}
+          
           <div className="or-preview-box">
             <div className="preview-topbar">
               <div className="preview-dots">
@@ -422,14 +422,14 @@ export default function OpenReport() {
               ))}
               {Object.keys(selectedFilters).length === 0 && (
                 <div className="preview-line indent">
-                  <span className="pv-muted">// no filters applied</span>
+                  <span className="pv-muted">{"no filters applied"}</span>
                 </div>
               )}
               <div className="preview-line"><span className="pv">{`}`}</span></div>
             </div>
           </div>
 
-          {/* Download status */}
+          
           {reportLoading && (
             <div className="or-generating">
               <div className="or-loader">
@@ -439,7 +439,7 @@ export default function OpenReport() {
             </div>
           )}
 
-          {/* Action buttons */}
+          
           <div className="or-actions">
             <button
               className="or-btn or-btn-primary"

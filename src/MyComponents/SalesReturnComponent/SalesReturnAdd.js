@@ -173,7 +173,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
         <div className="sra-corner sra-tl"/><div className="sra-corner sra-tr"/>
         <div className="sra-corner sra-bl"/><div className="sra-corner sra-br"/>
 
-        {/* ── HEADER ── */}
+        
         <div className="sra-header">
           <div className="sra-header-left">
             <div className="sra-eyebrow">
@@ -181,7 +181,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
               {step === 1 ? "STEP 1 OF 2 · LOCATE SALE" : "STEP 2 OF 2 · PROCESS RETURN"}
             </div>
             <h3 className="sra-title">
-              <span className="sra-title-acc">//</span>
+              <span className="sra-title-acc"></span>
               {step === 1 ? "Find Original Sale" : `Return · ${saleData?.invoiceNumber}`}
             </h3>
           </div>
@@ -193,7 +193,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
           </button>
         </div>
 
-        {/* ── PROGRESS ── */}
+        
         <div className="sra-progress">
           <div className={`sra-progress-step ${step >= 1 ? "active" : ""}`}>
             <span className="sra-progress-num">01</span>
@@ -208,7 +208,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
 
         <div className="sra-body">
 
-          {/* ══════════ STEP 1 ══════════ */}
+          
           {step === 1 && (
             <div className="sra-step">
               <div className="sra-info-banner">
@@ -253,11 +253,11 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
             </div>
           )}
 
-          {/* ══════════ STEP 2 ══════════ */}
+          
           {step === 2 && saleData && (
             <div className="sra-step">
 
-              {/* Original sale meta */}
+              
               <div className="sra-sale-meta">
                 <div className="sra-meta-card">
                   <span className="sra-meta-label">Invoice</span>
@@ -277,7 +277,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
                 </div>
               </div>
 
-              {/* Return Reason */}
+              
               <label className="sra-label">Return Reason <span className="sra-required">*</span></label>
               <textarea
                 className="sra-textarea"
@@ -288,7 +288,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
               />
               {errors.reason && <div className="sra-error">{errors.reason}</div>}
 
-              {/* Refund Mode */}
+              
               <label className="sra-label">Refund Mode</label>
               <div className="sra-radio-group">
                 {[
@@ -304,7 +304,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
                 ))}
               </div>
 
-              {/* Items table */}
+              
               <div className="sra-items-header">
                 <span className="sra-section-title">
                   <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -386,7 +386,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
                 </table>
               </div>
 
-              {/* Total preview */}
+              
               <div className="sra-total-preview">
                 <span>Estimated Refund</span>
                 <span className="sra-total-amt">₹{totalReturnAmt.toFixed(2)}</span>
@@ -399,7 +399,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="sra-footer">
           {step === 2 && (
             <button className="sra-btn-back" onClick={() => { setStep(1); setSaleData(null); }}>

@@ -61,10 +61,10 @@ export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
   return (
     <header className={`topbar ${sidebarOpen ? "shifted" : ""} ${scrolled ? "scrolled" : ""}`}>
 
-      {/* Scanline sweep */}
+      
       <div className="topbar-scan" />
 
-      {/* LEFT — Logo */}
+      
       <div className="topbar-left">
         <img src={udyorawingslogo} alt="Udoyra" className="brand-logo" />
 
@@ -76,17 +76,17 @@ export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
         )}
       </div>
 
-      {/* RIGHT — Profile */}
+      
       <div className="topbar-right">
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
 
-        {/* Greeting */}
+        
         <div className="topbar-greeting">
           <span className="greeting-hi">Hello,</span>
           <span className="greeting-name">{vendorName.split(" ")[0]}</span>
         </div>
 
-        {/* Profile avatar + dropdown */}
+        
         <div className="profile-wrap" ref={profileRef} onClick={() => setDropdownOpen(!dropdownOpen)}>
           <div className={`profile-avatar ${dropdownOpen ? "open" : ""}`}>
             {profileImage
@@ -96,9 +96,9 @@ export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
             <span className="avatar-ring" />
           </div>
 
-          {/* Dropdown */}
+          
           <div className={`profile-dropdown ${dropdownOpen ? "show" : ""}`}>
-            {/* User info header */}
+            
             <div className="dd-user">
               <div className="dd-avatar-sm">
                 {profileImage

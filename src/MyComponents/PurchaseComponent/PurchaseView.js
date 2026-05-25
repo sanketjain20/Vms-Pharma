@@ -53,12 +53,12 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
       <div className="pfx-modal pfx-modal-view">
         <div className="pfx-top-beam" />
 
-        {/* ── HEADER ── */}
+        
         <div className="pfx-header">
           <div className="pfx-header-left">
             <div className="pfx-eyebrow"><span className="pfx-eyebrow-dot" />PURCHASE RECORD</div>
             <h2 className="pfx-title">
-              <span className="pfx-title-acc">//</span>
+              <span className="pfx-title-acc"></span>
               {purchase ? purchase.purchaseNumber : "Loading…"}
             </h2>
           </div>
@@ -81,7 +81,7 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
 
         <div className="pfx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="pfx-body">
 
           {error && <div className="pfx-alert pfx-alert-error">{error}</div>}
@@ -95,7 +95,7 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
 
           {purchase && (
             <>
-              {/* ── STATUS ROW ── */}
+              
               <div className="pfx-view-status-row">
                 <span className="pfx-code-tag">{purchase.purchaseNumber}</span>
                 <span className={`pfx-badge ${statusColor(purchase.paymentStatus)}`}>
@@ -106,7 +106,7 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
                 )}
               </div>
 
-              {/* ── META GRID ── */}
+              
               <div className="pfx-view-meta">
                 <div className="pfx-view-card">
                   <span className="pfx-view-label">Supplier</span>
@@ -145,7 +145,7 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
                 )}
               </div>
 
-              {/* ── ITEMS TABLE ── */}
+              
               <div className="pfx-view-table-section">
                 <div className="pfx-view-table-header">
                   <div className="pfx-view-table-title">
@@ -204,7 +204,7 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
                 </div>
               </div>
 
-              {/* ── TOTALS ── */}
+              
               <div className="pfx-view-totals">
                 <div className="pfx-view-totals-row"><span>Subtotal</span><span>₹{fmt(grandTotal - totalGst)}</span></div>
                 <div className="pfx-view-totals-row"><span>Total GST</span><span>₹{fmt(totalGst)}</span></div>
@@ -224,7 +224,7 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         {purchase && (
           <div className="pfx-footer">
             <button type="button" className="pfx-btn-ghost" onClick={onClose}>Close</button>

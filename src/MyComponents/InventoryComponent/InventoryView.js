@@ -32,7 +32,7 @@ export default function InventoryView({ uKey, onClose }) {
     <div className="modal-backdrop show">
       <div className="modal">
 
-        {/* ── HEADER ── */}
+        
         <div className="modal-header">
           <div className="modal-title">
             <h3>View Inventory {inventory?.inventoryCode && `· ${inventory.inventoryCode}`}</h3>
@@ -55,11 +55,11 @@ export default function InventoryView({ uKey, onClose }) {
           </div>
         </div>
 
-        {/* ── BODY ── */}
+        
         <div className="modal-body">
           <div className="form-col scrollable">
 
-            {/* Loading */}
+            
             {loading && (
               <div className="mf-loading">
                 <div className="loader-ring"><div/><div/><div/><div/></div>
@@ -67,12 +67,12 @@ export default function InventoryView({ uKey, onClose }) {
               </div>
             )}
 
-            {/* Error */}
+            
             {error && (
               <div className="mf-error">{error}</div>
             )}
 
-            {/* ── PRODUCT TAB ── */}
+            
             {!loading && inventory && activeTab === "details" && (
               <div className="form-grid">
 
@@ -102,7 +102,7 @@ export default function InventoryView({ uKey, onClose }) {
               </div>
             )}
 
-            {/* ── STOCK & PRICING TAB ── */}
+            
             {!loading && inventory && activeTab === "stock" && (
               <div className="form-grid">
 
@@ -137,7 +137,7 @@ export default function InventoryView({ uKey, onClose }) {
           </div>
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="modal-footer-fixed">
           <div className="modal-actions">
             <button className="btn-ghost" onClick={onClose}>Close</button>

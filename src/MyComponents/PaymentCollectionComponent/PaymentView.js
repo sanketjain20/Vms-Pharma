@@ -65,12 +65,12 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
         <div className="pyx-corner pyx-tl" /><div className="pyx-corner pyx-tr" />
         <div className="pyx-corner pyx-bl" /><div className="pyx-corner pyx-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="pyx-header">
           <div className="pyx-header-left">
             <div className="pyx-eyebrow"><span className="pyx-eyebrow-dot" />PAYMENT RECORD</div>
             <h3 className="pyx-title">
-              <span className="pyx-title-acc">//</span>
+              <span className="pyx-title-acc"></span>
               {data ? `₹${fmt(data.amount)} collected` : "Loading…"}
             </h3>
           </div>
@@ -84,7 +84,7 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
 
         <div className="pyx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="pyx-body">
           {error && <div className="pyx-alert">{error}</div>}
 
@@ -97,7 +97,7 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
 
           {data && (
             <>
-              {/* ── STATUS ROW ── */}
+              
               <div className="pyx-view-status-row">
                 <span className={`pyx-badge ${modeBadge(data.paymentMode)}`}>
                   {data.paymentMode}
@@ -105,14 +105,14 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
                 <span className="pyx-amount-badge">₹{fmt(data.amount)}</span>
               </div>
 
-              {/* ── RETAILER SECTION ── */}
+              
               <div className="pyx-section-label">Retailer</div>
               <div className="pyx-view-grid">
                 <Card label="Shop name"      value={data.retailerShopName} />
                 <Card label="Retailer code"  value={data.retailerCode} mono />
               </div>
 
-              {/* ── INVOICE LINK ── */}
+              
               {data.invoiceNumber && (
                 <>
                   <div className="pyx-section-label">Linked invoice</div>
@@ -126,7 +126,7 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
                 </>
               )}
 
-              {/* ── PAYMENT DETAILS ── */}
+              
               <div className="pyx-section-label">Payment details</div>
               <div className="pyx-view-grid">
                 <Card label="Amount"          value={`₹${fmt(data.amount)}`} accent />
@@ -142,7 +142,7 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
                 </>
               )}
 
-              {/* ── REVERSAL WARNING ── */}
+              
               <div className="pyx-reversal-info">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                   <path d="M6.5 1L12 11.5H1L6.5 1Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
@@ -154,7 +154,7 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         {data && (
           <div className="pyx-footer">
             {confirmDel ? (

@@ -144,7 +144,7 @@ export default function ExpiryAlert() {
       <div className="ea-header">
         <div>
           <div className="ea-badge"><span /> Pharma Compliance</div>
-          <h1 className="ea-title"><span>{"//"}</span> Expiry Alerts</h1>
+          <h1 className="ea-title"><span></span> Expiry Alerts</h1>
           <p className="ea-subtitle">Batch-wise inventory expiring within 30, 60 and 90 days.</p>
         </div>
         <button className="ea-refresh" onClick={loadAlerts} disabled={loading}>

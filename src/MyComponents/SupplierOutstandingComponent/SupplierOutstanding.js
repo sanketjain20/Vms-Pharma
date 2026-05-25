@@ -27,7 +27,7 @@ export default function SupplierOutstanding() {
             ACCOUNTS PAYABLE
           </div>
           <h2 className="ro-title">
-            <span className="ro-title-slash">//</span>
+            <span className="ro-title-slash"></span>
             Supplier Outstanding
           </h2>
         </div>

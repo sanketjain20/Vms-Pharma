@@ -183,11 +183,11 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
         <div className="spx-corner spx-tl" /><div className="spx-corner spx-tr" />
         <div className="spx-corner spx-bl" /><div className="spx-corner spx-br" />
 
-        {/* HEADER */}
+        
         <div className="spx-header">
           <div className="spx-header-left">
             <div className="spx-eyebrow"><span className="spx-eyebrow-dot" />PAY SUPPLIER</div>
-            <h3 className="spx-title"><span className="spx-title-acc">//</span> Settle Supplier Payment</h3>
+            <h3 className="spx-title"><span className="spx-title-acc"></span> Settle Supplier Payment</h3>
           </div>
           <button className="spx-close" type="button" onClick={onClose}>
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -199,11 +199,11 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
 
         <div className="spx-divider" />
 
-        {/* BODY */}
+        
         <div className="spx-body">
           {errors.general && <div className="spx-alert">{errors.general}</div>}
 
-          {/* Supplier select */}
+          
           <div className="spx-field spx-field-full">
             <label className="spx-label">Supplier <span className="spx-req">*</span></label>
             <SearchDrop
@@ -215,7 +215,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
             {errors.supplier && <span className="spx-error">{errors.supplier}</span>}
           </div>
 
-          {/* Outstanding display */}
+          
           {selectedSupplier && (
             <div className="spx-outstanding-card">
               <div className="spx-outstanding-row">
@@ -231,7 +231,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
             </div>
           )}
 
-          {/* Link to specific purchase (optional) */}
+          
           {selectedSupplier && (
             <div className="spx-field spx-field-full">
               <label className="spx-label">
@@ -258,7 +258,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
           )}
 
           <div className="spx-grid">
-            {/* Amount */}
+            
             <div className="spx-field">
               <label className="spx-label">
                 Amount (₹) <span className="spx-req">*</span>
@@ -273,7 +273,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
               {errors.amount && <span className="spx-error">{errors.amount}</span>}
             </div>
 
-            {/* Payment date */}
+            
             <div className="spx-field">
               <label className="spx-label">Payment Date <span className="spx-req">*</span></label>
               <input className={`spx-input ${errors.paymentDate ? "spx-input-err" : ""}`}
@@ -283,7 +283,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
               {errors.paymentDate && <span className="spx-error">{errors.paymentDate}</span>}
             </div>
 
-            {/* Payment mode */}
+            
             <div className="spx-field spx-field-full">
               <label className="spx-label">Payment Mode <span className="spx-req">*</span></label>
               <div className="spx-mode-row">
@@ -296,7 +296,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
               </div>
             </div>
 
-            {/* Reference number */}
+            
             {needsRef && (
               <div className="spx-field spx-field-full">
                 <label className="spx-label">
@@ -318,7 +318,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
               </div>
             )}
 
-            {/* Notes */}
+            
             <div className="spx-field spx-field-full">
               <label className="spx-label">Notes <span className="spx-opt">(optional)</span></label>
               <textarea className="spx-input spx-textarea" rows={2}
@@ -328,7 +328,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* Live summary */}
+          
           {selectedSupplier && form.amount && parseFloat(form.amount) > 0 && (
             <div className="spx-summary">
               <div className="spx-summary-row">
@@ -348,7 +348,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
           )}
         </div>
 
-        {/* FOOTER */}
+        
         <div className="spx-footer">
           <button type="button" className="spx-btn-ghost" onClick={onClose}>Cancel</button>
           <button type="button" className="spx-btn-primary" onClick={submit} disabled={loading}>

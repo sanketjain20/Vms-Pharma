@@ -65,7 +65,7 @@ export default function ProductView({ uKey, onClose }) {
     <div className="modal-backdrop show">
       <div className="modal">
 
-        {/* ── HEADER ── */}
+        
         <div className="modal-header">
           <div className="modal-title">
             <h3>View Product | {product.productCode}</h3>
@@ -82,11 +82,11 @@ export default function ProductView({ uKey, onClose }) {
           </div>
         </div>
 
-        {/* ── BODY ── */}
+        
         <div className="modal-body">
           <div className="form-col scrollable">
 
-            {/* ════ DETAILS TAB ════ */}
+            
             {activeTab === "details" && (
               <div className="form-grid">
                 <ViewField label="Product Code" value={product.productCode} mono />
@@ -117,7 +117,7 @@ export default function ProductView({ uKey, onClose }) {
               </div>
             )}
 
-            {/* ════ PHARMA TAB ════ */}
+            
             {activeTab === "pharma" && (
               <div className="form-grid">
 
@@ -132,7 +132,7 @@ export default function ProductView({ uKey, onClose }) {
                   </div>
                 </div>
 
-                {/* Empty state if no pharma data entered yet */}
+                
                 {!product.genericName && !product.hsnCode && !product.manufacturerName && (
                   <div className="full pf-info-banner" style={{ color: "var(--mf-text-3)", fontStyle: "italic" }}>
                     No pharma details entered yet. Edit the product to add manufacturer, HSN code and schedule type.
@@ -141,7 +141,7 @@ export default function ProductView({ uKey, onClose }) {
               </div>
             )}
 
-            {/* ════ PRICING & UNITS TAB ════ */}
+            
             {activeTab === "pricing" && (
               <div className="form-grid">
                 <ViewField label="Cost Price"  value={`₹ ${fmt(product.price)}`} />
@@ -152,7 +152,7 @@ export default function ProductView({ uKey, onClose }) {
                 />
                 <ViewField label="Pack Unit" value={product.packUnit} />
 
-                {/* Pack summary */}
+                
                 {product.packSize && product.packUnit && (
                   <div className="full pf-info-banner">
                     Each <strong>{product.unit || "unit"}</strong> contains <strong>{product.packSize}</strong> × <strong>{product.packUnit}</strong>
@@ -164,7 +164,7 @@ export default function ProductView({ uKey, onClose }) {
           </div>
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="modal-footer-fixed">
           <div className="modal-actions">
             <button className="btn-ghost" onClick={onClose}>Close</button>

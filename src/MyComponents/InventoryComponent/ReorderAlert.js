@@ -132,7 +132,7 @@ export default function ReorderAlert() {
       <div className="ea-header">
         <div>
           <div className="ea-badge"><span /> Inventory Control</div>
-          <h1 className="ea-title"><span>{"//"}</span> Reorder Alerts</h1>
+          <h1 className="ea-title"><span></span> Reorder Alerts</h1>
           <p className="ea-subtitle">Products at or below reorder level from live inventory stock.</p>
         </div>
         <button className="ea-refresh" onClick={loadAlerts} disabled={loading}>

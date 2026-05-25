@@ -251,7 +251,7 @@ export default function Settings() {
       <div className="s-blob-1" /><div className="s-blob-2" />
 
       <div className="s-inner">
-        {/* Header */}
+        
         <div className="s-head">
           <div className="s-eyebrow">
             <div className="s-eyebrow-dot" />
@@ -261,14 +261,14 @@ export default function Settings() {
           <p className="s-subtitle">Update your shop info, avatar, and security settings.</p>
         </div>
 
-        {/* Nav Tabs */}
+        
         <nav className="s-nav">
           <NavBtn icon="user"   label="Profile"   active={tab==="profile"}  onClick={() => setTab("profile")}  />
           <NavBtn icon="lock"   label="Password"  active={tab==="password"} onClick={() => setTab("password")} />
           <NavBtn icon="shield" label="Security"  active={tab==="security"} onClick={() => setTab("security")} />
         </nav>
 
-        {/* ── PROFILE ── */}
+        
         <div className={`s-panel ${tab === "profile" ? "visible" : ""}`}>
           <div className="s-card">
             <div className="s-card-head">
@@ -276,7 +276,7 @@ export default function Settings() {
               <span className="s-card-label">Profile Information</span>
             </div>
             <div className="s-card-body">
-              {/* Avatar row */}
+              
               <div className="s-avatar-section">
                 <div className="s-avatar-ring">
                   <img src={previewPhoto || profilePhoto} alt="Avatar" className="s-avatar" />
@@ -293,7 +293,7 @@ export default function Settings() {
                        style={{ display: "none" }} onChange={handlePhotoChange} />
               </div>
 
-              {/* Form */}
+              
               <div className="s-grid">
                 <Field label="Shop Name">
                   <div className="s-input-wrap">
@@ -329,7 +329,7 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* ── PASSWORD ── */}
+        
         <div className={`s-panel ${tab === "password" ? "visible" : ""}`}>
           <div className="s-card">
             <div className="s-card-head">
@@ -379,7 +379,7 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* ── SECURITY ── */}
+        
         <div className={`s-panel ${tab === "security" ? "visible" : ""}`}>
           <div className="s-card">
             <div className="s-card-head">

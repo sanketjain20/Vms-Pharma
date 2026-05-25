@@ -66,7 +66,7 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
     <div className="modal-backdrop show">
       <div className="modal">
 
-        {/* Header */}
+        
         <div className="modal-header">
           <div className="modal-title">
             <h3>Edit Product Type {formData.typeCode && `· ${formData.typeCode}`}</h3>
@@ -75,7 +75,7 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
           <button className="btn-ghost" onClick={onClose} title="Close">✕ ESC</button>
         </div>
 
-        {/* Form */}
+        
         <form className="modal-body" onSubmit={handleSubmit}>
           <div className="form-col">
             <div className="form-grid">
@@ -107,7 +107,7 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* Footer */}
+          
           <div className="modal-footer-fixed">
             <div className="modal-actions">
               <button className="btn-ghost" type="button" onClick={onClose}>Cancel</button>

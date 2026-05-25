@@ -9,10 +9,10 @@ function LayoutModule({ theme, onToggleTheme }) {
 
   return (
     <div className="layout">
-      {/* Sidebar */}
+      
       <Sidebar />
 
-      {/* Main content */}
+      
       <div className="layout-main ">
         <NavBarModule theme={theme} onToggleTheme={onToggleTheme} />
         <div className="layout-content">

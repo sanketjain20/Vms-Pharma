@@ -228,11 +228,11 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
       <div className="pfx-modal">
         <div className="pfx-top-beam" />
 
-        {/* ── HEADER ── */}
+        
         <div className="pfx-header">
           <div className="pfx-header-left">
             <div className="pfx-eyebrow"><span className="pfx-eyebrow-dot" />EDIT PURCHASE</div>
-            <h2 className="pfx-title"><span className="pfx-title-acc">//</span> Update Purchase Entry</h2>
+            <h2 className="pfx-title"><span className="pfx-title-acc"></span> Update Purchase Entry</h2>
           </div>
           <div className="pfx-header-right">
             <div className="pfx-tab-row">
@@ -256,7 +256,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
 
         <div className="pfx-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="pfx-body">
           {fetching ? (
             <div className="pfx-loading">
@@ -265,7 +265,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
             </div>
           ) : (
             <>
-              {/* ════ DETAILS ════ */}
+              
               {activeTab === "DETAILS" && (
                 <div className="pfx-details-grid">
                   <div className="pfx-field">
@@ -326,7 +326,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
                 </div>
               )}
 
-              {/* ════ ITEMS ════ */}
+              
               {activeTab === "ITEMS" && (
                 <div className="pfx-items-section">
                   {errors.items_empty && <div className="pfx-alert">{errors.items_empty}</div>}
@@ -416,7 +416,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         <div className="pfx-footer">
           <button type="button" className="pfx-btn-ghost" onClick={onClose}>Cancel</button>
           <button type="button" className="pfx-btn-primary" onClick={handleSubmit} disabled={loading || fetching}>

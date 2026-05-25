@@ -52,12 +52,12 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
         <div className="sup-corner sup-tl" /><div className="sup-corner sup-tr" />
         <div className="sup-corner sup-bl" /><div className="sup-corner sup-br" />
 
-        {/* ── HEADER ── */}
+        
         <div className="sup-header">
           <div className="sup-header-left">
             <div className="sup-eyebrow"><span className="sup-eyebrow-dot" />SUPPLIER RECORD</div>
             <h3 className="sup-title">
-              <span className="sup-title-acc">//</span>
+              <span className="sup-title-acc"></span>
               {supplier ? supplier.shopName : "Loading…"}
             </h3>
           </div>
@@ -81,7 +81,7 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
 
         <div className="sup-divider" />
 
-        {/* ── BODY ── */}
+        
         <div className="sup-body">
           {error && <div className="sup-alert sup-alert-error">{error}</div>}
 
@@ -94,7 +94,7 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
 
           {supplier && (
             <>
-              {/* ── SUPPLIER CODE + STATUS ROW ── */}
+              
               <div className="sup-view-status-row">
                 <div className="sup-code-badge">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -109,7 +109,7 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
                 </span>
               </div>
 
-              {/* ── INFO GRID ── */}
+              
               <div className="sup-view-grid">
                 <InfoCard label="Shop Name"          value={supplier.shopName} />
                 <InfoCard label="Contact Person"      value={supplier.contactPerson} />
@@ -136,7 +136,7 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
           )}
         </div>
 
-        {/* ── FOOTER ── */}
+        
         {supplier && (
           <div className="sup-footer">
             <button className="sup-btn-ghost" onClick={onClose}>Close</button>

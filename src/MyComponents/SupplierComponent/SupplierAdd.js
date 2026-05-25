@@ -82,11 +82,11 @@ export default function SupplierAdd({ onClose, onSubmit }) {
                 <div className="sup-corner sup-tl" /><div className="sup-corner sup-tr" />
                 <div className="sup-corner sup-bl" /><div className="sup-corner sup-br" />
 
-                {/* ── HEADER ── */}
+                
                 <div className="sup-header">
                     <div className="sup-header-left">
                         <div className="sup-eyebrow"><span className="sup-eyebrow-dot" />NEW SUPPLIER</div>
-                        <h3 className="sup-title"><span className="sup-title-acc">//</span> Add Supplier</h3>
+                        <h3 className="sup-title"><span className="sup-title-acc"></span> Add Supplier</h3>
                     </div>
                     <button className="sup-close" onClick={onClose}>
                         <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -98,7 +98,7 @@ export default function SupplierAdd({ onClose, onSubmit }) {
 
                 <div className="sup-divider" />
 
-                {/* ── BODY ── */}
+                
                 <div className="sup-body">
                     {errors.general && (
                         <div className="sup-alert sup-alert-error">{errors.general}</div>
@@ -134,7 +134,7 @@ export default function SupplierAdd({ onClose, onSubmit }) {
                     </div>
                 </div>
 
-                {/* ── FOOTER ── */}
+                
                 <div className="sup-footer">
                     <button className="sup-btn-ghost" onClick={onClose}>Cancel</button>
                     <button className="sup-btn-primary" onClick={submit} disabled={loading}>
