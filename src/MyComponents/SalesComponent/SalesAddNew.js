@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import "../../Styles/Sales/SalesAddNew.css";
 import { toast } from "react-toastify";
 import SalesView from "./SalesView";
+import { toastApiError } from "../../utils/toastMessage";
 
 /* ─────────────────────────────────────────
    SEARCHABLE DROPDOWN  (san- styling)
@@ -342,7 +343,10 @@ export default function SalesAddNew({ onClose, onSubmit }) {
       tempErrors.quantity = "Exceeds available stock";
 
     setErrors(tempErrors);
-    if (Object.keys(tempErrors).length > 0) return;
+    if (Object.keys(tempErrors).length > 0) {
+      toast.error(Object.values(tempErrors)[0]);
+      return;
+    }
 
     const product   = products.find(p => p.id === parseInt(selectedProduct));
     const taxAmount = taxMode === "PRODUCT"
@@ -484,8 +488,11 @@ const payload = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Failed");
       const data = await res.json();
+      if (!res.ok || !(data?.status === 200 || data?.success)) {
+        toastApiError(data, "Failed to add sale");
+        return;
+      }
       toast.success("Sale added successfully");
       if (onSubmit) onSubmit();
       setViewUkey(data.data?.uKey || null);
@@ -493,7 +500,7 @@ const payload = {
       resetAll();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to add sale");
+      toast.error(err?.message || "Failed to add sale");
     }
   };
 

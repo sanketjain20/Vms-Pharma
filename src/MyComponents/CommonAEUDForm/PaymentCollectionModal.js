@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 
 import PaymentCollect from "../PaymentCollectionComponent/PaymentCollect";
 import RetailerCollectPayment from "../RetailerOutstandingComponent/CollectPayment";
+import SupplierMakePayment from "../SupplierOutstandingComponent/MakePayment";
 
 export default function PaymentCollectionModal({ isOpen, onClose, moduleName, uKey, onSubmit }) {
   if (!isOpen) return null;
@@ -21,6 +22,15 @@ export default function PaymentCollectionModal({ isOpen, onClose, moduleName, uK
     case "Retailer Outstanding":
       content = (
         <RetailerCollectPayment
+          uKey={uKey}
+          onSuccess={onSubmit}
+          onClose={onClose}
+        />
+      );
+      break;
+    case "Supplier Outstanding":
+      content = (
+        <SupplierMakePayment
           uKey={uKey}
           onSuccess={onSubmit}
           onClose={onClose}

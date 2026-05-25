@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/Report/Report.css";
+import { useCanvasThemeKey, isLightTheme } from "../../utils/canvasTheme";
 
 /* ── Canvas background ────────────────────────────────────── */
 function ReportCanvas() {
   const cvRef = useRef(null);
+  const canvasThemeKey = useCanvasThemeKey();
+
   useEffect(() => {
     const cv = cvRef.current;
     const ctx = cv.getContext("2d");
@@ -34,8 +37,10 @@ function ReportCanvas() {
     resize();
     window.addEventListener("resize", resize);
 
+    const light = isLightTheme();
+
     const drawGrid = () => {
-      ctx.strokeStyle = "rgba(0,200,255,0.018)";
+      ctx.strokeStyle = light ? "rgba(59,130,246,0.08)" : "rgba(0,200,255,0.018)";
       ctx.lineWidth = 1;
       for (let x = 0; x < W; x += 80) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
       for (let y = 0; y < H; y += 80) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
@@ -46,9 +51,15 @@ function ReportCanvas() {
       t += 0.006;
 
       const bg = ctx.createRadialGradient(W * 0.25, H * 0.2, 0, W * 0.5, H * 0.5, Math.max(W, H));
-      bg.addColorStop(0, "rgba(0,6,20,1)");
-      bg.addColorStop(0.6, "rgba(0,3,12,1)");
-      bg.addColorStop(1, "rgba(0,0,4,1)");
+      if (light) {
+        bg.addColorStop(0, "rgba(244,247,251,1)");
+        bg.addColorStop(0.6, "rgba(236,242,252,1)");
+        bg.addColorStop(1, "rgba(226,235,248,1)");
+      } else {
+        bg.addColorStop(0, "rgba(0,6,20,1)");
+        bg.addColorStop(0.6, "rgba(0,3,12,1)");
+        bg.addColorStop(1, "rgba(0,0,4,1)");
+      }
       ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
       drawGrid();
@@ -83,7 +94,7 @@ function ReportCanvas() {
     loop();
 
     return () => { cancelAnimationFrame(raf); clearInterval(si); window.removeEventListener("resize", resize); };
-  }, []);
+  }, [canvasThemeKey]);
   return <canvas ref={cvRef} className="rpt-canvas" />;
 }
 

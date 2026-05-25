@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/Sales/AddSales.css";
+import { toastApiError } from "../../utils/toastMessage";
 
 const GST_RATES = [0, 5, 12, 18, 28];
 
@@ -219,7 +220,10 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     let taxValue = parseFloat(taxInput || 0);
     if (taxValue < 0) tempErrors.taxInput = "Tax cannot be negative";
     setErrors(tempErrors);
-    if (Object.keys(tempErrors).length > 0) return;
+    if (Object.keys(tempErrors).length > 0) {
+      toast.error(Object.values(tempErrors)[0]);
+      return;
+    }
 
     const taxAmount = taxType === "PERCENT" ? (price * quantity * taxValue) / 100 : taxValue;
     const item = {
@@ -323,8 +327,9 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
       .then(safeJson)
       .then(json => {
         if (json?.status === 200 || json?.success) { toast.success("Sales updated"); onSubmit(); onClose(); }
-        else toast.error(json?.message || "Update failed");
-      });
+        else toastApiError(json, "Update failed");
+      })
+      .catch((err) => toast.error(err?.message || "Network error. Please try again."));
   };
 
   const totalAmount = lineItems.reduce((s, i) => s + i.totalAmount, 0);

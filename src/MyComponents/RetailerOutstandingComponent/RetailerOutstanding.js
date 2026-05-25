@@ -1,7 +1,5 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import "../../Styles/Inventory.css";
 import "../../Styles/RetailerOutstanding/RetailerOutstanding.css";
 
@@ -69,7 +67,6 @@ export default function RetailerOutstanding() {
         noPagination={true}
       />
 
-      <ToastContainer position="top-center" autoClose={2000} />
     </div>
   );
 }

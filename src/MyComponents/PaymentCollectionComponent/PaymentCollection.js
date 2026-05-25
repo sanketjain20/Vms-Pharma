@@ -1,8 +1,6 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 export default function PaymentCollection() {
 const columns = [
@@ -26,7 +24,6 @@ return ( <div className="i-container"> <h2 className="i-title"> 💳
   />
 
   {/* Toast container here */}
-  <ToastContainer position="top-center" autoClose={2000} />
 </div>
 
 );

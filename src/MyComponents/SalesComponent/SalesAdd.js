@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
+import { toast } from "react-toastify";
 import "../../Styles/Sales/AddSales.css";
+import { toastApiError } from "../../utils/toastMessage";
 
 /* ─────────────────────────────────────────
    SEARCHABLE DROPDOWN — unchanged, reused
@@ -207,7 +209,10 @@ export default function SalesAdd({ onClose, onSubmit }) {
     let taxValue = taxMode === "COMMON" ? parseFloat(commonTax || 0) : parseFloat(taxInput || 0);
     if (taxValue < 0) tempErrors.taxInput = "Tax cannot be negative";
     setErrors(tempErrors);
-    if (Object.keys(tempErrors).length > 0) return;
+    if (Object.keys(tempErrors).length > 0) {
+      toast.error(Object.values(tempErrors)[0]);
+      return;
+    }
 
     const product = products.find(p => p.id === parseInt(selectedProduct));
     let taxAmount = taxType === "PERCENT" ? (price * quantity * taxValue) / 100 : taxValue;
@@ -336,9 +341,17 @@ if (creditPaymentType === "CREDIT") {
           })),
         }),
       });
-      const result = await response.json();
-      if (response.ok && result.status === 200) { onSubmit(); onClose(); }
-    } catch (err) { }
+      const result = await safeJson(response);
+      if (response.ok && result?.status === 200) {
+        toast.success(result?.message || "Sale added successfully");
+        onSubmit();
+        onClose();
+      } else {
+        toastApiError(result, "Failed to add sale");
+      }
+    } catch (err) {
+      toast.error(err?.message || "Network error. Please try again.");
+    }
   };
 
   return (

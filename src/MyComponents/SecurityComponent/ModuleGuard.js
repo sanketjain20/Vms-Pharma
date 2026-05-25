@@ -1,6 +1,8 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 
+const normalize = (value = "") => String(value).toUpperCase().replace(/[^A-Z0-9]/g, "");
+
 export default function ModuleGuard({ children, moduleName }) {
   let userModules = [];
 
@@ -12,8 +14,9 @@ export default function ModuleGuard({ children, moduleName }) {
     userModules = [];
   }
 
-  // Convert everything to uppercase for perfect matching
-  const allowed = userModules.map(m => m.toUpperCase()).includes(moduleName.toUpperCase());
+  const allowedModules = Array.isArray(moduleName) ? moduleName : [moduleName];
+  const normalizedUserModules = userModules.map(normalize);
+  const allowed = allowedModules.some((name) => normalizedUserModules.includes(normalize(name)));
 
   if (!allowed) {
     return <Navigate to="/unauthorized" replace />;

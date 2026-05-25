@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import "../../Styles/JobScheduler/JobScheduler.css";
 
 /* ── Canvas background ────────────────────────────────────── */
@@ -223,7 +222,6 @@ export default function JobSchedulerPage() {
       <div className="js-orb js-orb-a" />
       <div className="js-orb js-orb-b" />
 
-      <ToastContainer position="top-right" autoClose={3000} theme="dark" />
 
       <div className="js-inner">
 

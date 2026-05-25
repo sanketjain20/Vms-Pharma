@@ -112,6 +112,10 @@
   flex-shrink: 0;
   transition: color 0.2s;
 }
+
+.sb-icon svg {
+  fill: currentColor;
+}
 .sb-item:hover .sb-icon,
 .sb-item.hovered .sb-icon { color: rgba(255,255,255,0.95); }
 
@@ -227,6 +231,57 @@
   transition: background 0.18s, color 0.18s;
   position: relative;
 }
+
+.sb-submenu-item.nested {
+  padding: 10px 18px 10px 34px;
+  font-size: 12px;
+}
+
+.sb-sub-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(160, 195, 255, 0.62);
+  flex-shrink: 0;
+}
+
+.sb-sub-icon svg {
+  fill: currentColor;
+}
+
+.sb-submenu-item:hover .sb-sub-icon,
+.sb-subgroup-header:hover .sb-sub-icon {
+  color: #fff;
+}
+
+.sb-sub-group {
+  margin: 5px 10px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.sb-subgroup-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.sb-subgroup-items {
+  padding: 4px 0;
+}
+
 .sb-submenu-item:hover {
   background: rgba(160, 60, 255, 0.07);
   color: #fff;

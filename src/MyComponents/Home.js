@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Home.css";
+import { useCanvasThemeKey, getPerspectiveCanvasPalette, isLightTheme } from "../utils/canvasTheme";
 
 /* ── Live Clock ── */
 function LiveClock() {
@@ -70,11 +71,15 @@ export default function Home() {
     return () => window.removeEventListener("storage", loadPhoto);
   }, []);
 
+  const canvasThemeKey = useCanvasThemeKey();
+
   /* ── 3D Canvas background ── */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
+    const palette = getPerspectiveCanvasPalette();
+    const light = isLightTheme();
 
     const resize = () => {
       canvas.width  = canvas.offsetWidth;
@@ -90,7 +95,7 @@ export default function Home() {
       vx: (Math.random() - 0.5) * 0.15,
       vy: (Math.random() - 0.5) * 0.15,
       hue: [215, 230, 245, 200, 260][i],
-      alpha: 0.016 + Math.random() * 0.018,
+      alpha: (0.016 + Math.random() * 0.018) * palette.orbAlphaScale,
     }));
 
     const pts = Array.from({ length: 40 }, () => ({
@@ -99,21 +104,20 @@ export default function Home() {
       r: 0.5 + Math.random() * 0.9,
       vx: (Math.random() - 0.5) * 0.2,
       vy: (Math.random() - 0.5) * 0.2,
-      alpha: 0.1 + Math.random() * 0.2,
+      alpha: (light ? 0.15 : 0.1) + Math.random() * 0.2,
     }));
 
     let tick = 0;
     const draw = () => {
       tick++;
       const W = canvas.width, H = canvas.height;
-     ctx.fillStyle = "rgba(0,0,0,0.4)";
-ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = palette.background;
+      ctx.fillRect(0, 0, W, H);
 
       /* perspective grid */
       const hor = H * 0.38, vanX = W / 2, gc = 10;
       const spd = (tick * 0.14) % (H / gc);
-      ctx.save(); ctx.globalAlpha = 0.032; ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 0.5;
+      ctx.save(); ctx.globalAlpha = palette.gridAlpha; ctx.strokeStyle = palette.gridColor; ctx.lineWidth = 0.5;
       for (let i = 0; i <= gc; i++) {
         const y = hor + spd + (i * (H - hor)) / gc;
         if (y > H) continue;
@@ -132,7 +136,7 @@ ctx.fillRect(0, 0, W, H);
         if (o.x < -o.r) o.x = W + o.r; if (o.x > W + o.r) o.x = -o.r;
         if (o.y < -o.r) o.y = H + o.r; if (o.y > H + o.r) o.y = -o.r;
         const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
-        g.addColorStop(0, `hsla(${o.hue},70%,55%,${o.alpha})`);
+        g.addColorStop(0, `hsla(${o.hue},70%,${light ? 45 : 55}%,${o.alpha})`);
         g.addColorStop(1, "transparent");
         ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
         ctx.fillStyle = g; ctx.fill();
@@ -152,21 +156,22 @@ ctx.fillRect(0, 0, W, H);
           const d = Math.sqrt(dx * dx + dy * dy);
           if (d < 90) {
             ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y);
-            ctx.strokeStyle = `rgba(59,130,246,${(1 - d / 90) * 0.07})`; ctx.lineWidth = 0.5; ctx.stroke();
+            ctx.strokeStyle = `rgba(59,130,246,${(1 - d / 90) * (light ? 0.14 : 0.07)})`; ctx.lineWidth = 0.5; ctx.stroke();
           }
         }
       }
 
       /* vignette */
       const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.08, W / 2, H / 2, H * 0.85);
-      vig.addColorStop(0, "rgba(0,0,0,0)"); vig.addColorStop(1, "rgba(0,0,0,0.65)");
+      vig.addColorStop(0, palette.vignetteInner);
+      vig.addColorStop(1, palette.vignetteOuter);
       ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
 
       rafRef.current = requestAnimationFrame(draw);
     };
     draw();
     return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(rafRef.current); };
-  }, []);
+  }, [canvasThemeKey]);
 
   const modules = [
     { key: "purchase",  label: "Purchase",   hint: "Stock in · batches · supplier dues", color: "#06b6d4", path: "/master/purchase"  },

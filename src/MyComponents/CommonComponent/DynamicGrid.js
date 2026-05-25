@@ -9,6 +9,12 @@ import DownloadModal from "../CommonAEUDForm/DownloadModal";
 import PaymentCollectionModal from "../CommonAEUDForm/PaymentCollectionModal";
 import { Status } from "../Enums/Status.js";
 import { toast } from "react-toastify";
+import {
+  useCanvasThemeKey,
+  getPerspectiveCanvasPalette,
+  createOrbField,
+  drawPerspectiveScene,
+} from "../../utils/canvasTheme";
 
 /* ─── tiny xlsx writer ──────────────────────────────────────────────────────── */
 function s2ab(s) {
@@ -196,7 +202,7 @@ function ViewToggle({ view, onChange }) {
 }
 
 /* ── GRID CARD ─────────────────────────────────────────────────────────────── */
-function GridCard({ row, columns, index, selectedStatus, can, Module, onEdit, onView, onDisable, onActivate, onDownload, onPaymentCollection }) {
+function GridCard({ row, columns, index, selectedStatus, can, Module, isReadOnlyModule, onEdit, onView, onDisable, onActivate, onDownload, onPaymentCollection }) {
   const dataCols = columns.filter(c => c.field !== "Action").slice(0, 6);
 
   const IconEdit = () => (
@@ -243,7 +249,10 @@ function GridCard({ row, columns, index, selectedStatus, can, Module, onEdit, on
     "supplierpaymnet",
     "salesreturn",
     "purchasereturn",
+    "stockadjustment",
     "retaileroutstanding",
+    "supplieroutstanding",
+    "batch",
   ].includes(cardModuleKey);
   const isActive = row.disable === 0;
   const statusColor = Module === "Sales"
@@ -252,7 +261,8 @@ function GridCard({ row, columns, index, selectedStatus, can, Module, onEdit, on
   const statusLabel = Module === "Sales"
     ? row.statusId === Status?.PaymentDone ? "Paid" : "Pending"
     : isActive ? "Active" : "Inactive";
-  const canCollectPayment = Module === "Retailer Outstanding";
+  const canCollectPayment = Module === "Retailer Outstanding" || Module === "Supplier Outstanding";
+  const paymentActionTitle = Module === "Supplier Outstanding" ? "Pay Supplier" : "Payment Collection";
 
   return (
     <div className="dg-card" style={{ animationDelay: `${index * 0.04}s` }}>
@@ -302,11 +312,11 @@ function GridCard({ row, columns, index, selectedStatus, can, Module, onEdit, on
           </>
         ) : (
           <>
-            {can("Edit") && <button className="dg-card-btn edit" title="Edit" onClick={() => onEdit(row)}><IconEdit /></button>}
+            {can("Edit") && !isReadOnlyModule && <button className="dg-card-btn edit" title="Edit" onClick={() => onEdit(row)}><IconEdit /></button>}
             <button className="dg-card-btn view" title="View" onClick={() => onView(row)}><IconView /></button>
-            {canCollectPayment && <button className="dg-card-btn payment-collection" title="Payment Collection" onClick={() => onPaymentCollection(row)}><IconPaymentCollection /></button>}
+            {canCollectPayment && <button className="dg-card-btn payment-collection" title={paymentActionTitle} onClick={() => onPaymentCollection(row)}><IconPaymentCollection /></button>}
             {Module === "Sales" && can("Download") && <button className="dg-card-btn download" title="Download" onClick={() => onDownload(row)}><IconDownload /></button>}
-            {(Module !== "Sales") && can("Disable") && <button className="dg-card-btn disable" title="Disable" onClick={() => onDisable(row)}><IconDisable /></button>}
+            {(Module !== "Sales") && can("Disable") && !isReadOnlyModule && <button className="dg-card-btn disable" title="Disable" onClick={() => onDisable(row)}><IconDisable /></button>}
           </>
         )}
       </div>
@@ -356,6 +366,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
 
   const can = (perm) => accessList.includes(perm);
   const moduleKey = String(Module || "").toLowerCase().replace(/\s+/g, "");
+  const isReadOnlyModule = ["batch"].includes(moduleKey);
   const hideActiveInactiveTabs = [
     "purchase",
     "paymentcollection",
@@ -363,7 +374,10 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
     "supplierpaymnet",
     "salesreturn",
     "purchasereturn",
+    "stockadjustment",
     "retaileroutstanding",
+    "supplieroutstanding",
+    "batch",
   ].includes(moduleKey);
 
   useEffect(() => {
@@ -390,6 +404,9 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
   };
 
   /* 3D CANVAS BACKGROUND */
+  const canvasThemeKey = useCanvasThemeKey();
+  const orbsRef = useRef(null);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -398,77 +415,24 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
     resize();
     window.addEventListener("resize", resize);
 
-    const orbs = Array.from({ length: 4 }, (_, i) => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: 80 + Math.random() * 160,
-      vx: (Math.random() - 0.5) * 0.18,
-      vy: (Math.random() - 0.5) * 0.18,
-      hue: [215, 225, 230, 210][i],
-      alpha: 0.018 + Math.random() * 0.022,
-    }));
+    const palette = getPerspectiveCanvasPalette();
+    orbsRef.current = createOrbField(4, canvas.width, canvas.height, [215, 225, 230, 210], palette);
 
     let tick = 0;
     const draw = () => {
       tick++;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      const horizon = canvas.height * 0.48;
-      const vanishX = canvas.width / 2;
-      const gridCount = 10;
-      const speed = (tick * 0.2) % (canvas.height / gridCount);
-
-      ctx.save();
-      ctx.globalAlpha = 0.04;
-      ctx.strokeStyle = "#3b82f6";
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i <= gridCount; i++) {
-        const y = horizon + speed + (i * (canvas.height - horizon)) / gridCount;
-        if (y > canvas.height) continue;
-        const spread = ((y - horizon) / (canvas.height - horizon)) * canvas.width * 1.3;
-        ctx.beginPath();
-        ctx.moveTo(vanishX - spread / 2, y);
-        ctx.lineTo(vanishX + spread / 2, y);
-        ctx.stroke();
-      }
-      for (let i = 0; i <= 14; i++) {
-        const t = i / 14;
-        const bx = vanishX - canvas.width * 0.65 + t * canvas.width * 1.3;
-        ctx.beginPath();
-        ctx.moveTo(vanishX, horizon);
-        ctx.lineTo(bx, canvas.height + 10);
-        ctx.stroke();
-      }
-      ctx.restore();
-
-      orbs.forEach((o) => {
-        o.x += o.vx; o.y += o.vy;
-        if (o.x < -o.r) o.x = canvas.width + o.r;
-        if (o.x > canvas.width + o.r) o.x = -o.r;
-        if (o.y < -o.r) o.y = canvas.height + o.r;
-        if (o.y > canvas.height + o.r) o.y = -o.r;
-        const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
-        g.addColorStop(0, `hsla(${o.hue},75%,55%,${o.alpha})`);
-        g.addColorStop(1, "transparent");
-        ctx.beginPath();
-        ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
-        ctx.fillStyle = g;
-        ctx.fill();
+      drawPerspectiveScene(ctx, canvas, tick, {
+        horizonRatio: 0.48,
+        gridCount: 10,
+        radialCount: 14,
+        speed: 0.2,
+        orbs: orbsRef.current,
       });
-
-      const vig = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, canvas.height * 0.1, canvas.width / 2, canvas.height / 2, canvas.height * 0.9);
-      vig.addColorStop(0, "rgba(0,0,0,0)");
-      vig.addColorStop(1, "rgba(0,0,0,0.6)");
-      ctx.fillStyle = vig;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
       animFrameRef.current = requestAnimationFrame(draw);
     };
     draw();
     return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(animFrameRef.current); };
-  }, []);
+  }, [canvasThemeKey]);
 
   const roleId = localStorage.getItem("roleId");
 
@@ -550,7 +514,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
   }, []);
 
   const handleEdit = (row) => { setEditUkey(row.uKey); setIsEditOpen(true); };
-  const handleView = (row) => { setViewUkey(row.uKey); setIsViewOpen(true); };
+  const handleView = (row) => { setViewUkey(row.uKey || row.ukey || row.batchUKey || row.batchId || row.id); setIsViewOpen(true); };
   const handleDisable = (row) => { setStatusUkey(row.uKey); setStatusDisableValue(0); setIsStatusOpen(true); };
   const handleActivate = (row) => { setStatusUkey(row.uKey); setStatusDisableValue(1); setIsStatusOpen(true); };
   const handleDownload = (row) => { setDownloadId(row.id); setIsDownloadOpen(true); };
@@ -646,7 +610,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
             {/* ── VIEW TOGGLE ── */}
             <ViewToggle view={viewMode} onChange={handleViewChange} />
 
-            {can("Add") && (
+            {can("Add") && !isReadOnlyModule && (
               <button className="dg-add-btn" onClick={() => setIsModalOpen(true)}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
@@ -803,13 +767,19 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
                                   </>
                                 ) : (
                                   <>
-                                    {can("Edit") && <button className="dg-action-btn edit" title="Edit" onClick={() => handleEdit(row)}><IconEdit /></button>}
+                                    {can("Edit") && !isReadOnlyModule && <button className="dg-action-btn edit" title="Edit" onClick={() => handleEdit(row)}><IconEdit /></button>}
                                     <button className="dg-action-btn view" title="View" onClick={() => handleView(row)}><IconView /></button>
-                                    {Module === "Retailer Outstanding" && (
-                                      <button className="dg-action-btn payment-collection" title="Payment Collection" onClick={() => handlePaymentCollection(row)}><IconPaymentCollection /></button>
+                                    {(Module === "Retailer Outstanding" || Module === "Supplier Outstanding") && (
+                                      <button
+                                        className="dg-action-btn payment-collection"
+                                        title={Module === "Supplier Outstanding" ? "Pay Supplier" : "Payment Collection"}
+                                        onClick={() => handlePaymentCollection(row)}
+                                      >
+                                        <IconPaymentCollection />
+                                      </button>
                                     )}
                                     {Module === "Sales" && can("Download") && <button className="dg-action-btn download" title="Download" onClick={() => handleDownload(row)}><IconDownload /></button>}
-                                    {(Module !== "Sales") && can("Disable") && <button className="dg-action-btn disable" title="Disable" onClick={() => handleDisable(row)}><IconDisable /></button>}
+                                    {(Module !== "Sales") && can("Disable") && !isReadOnlyModule && <button className="dg-action-btn disable" title="Disable" onClick={() => handleDisable(row)}><IconDisable /></button>}
                                   </>
                                 )}
                               </td>
@@ -891,6 +861,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
                       selectedStatus={selectedStatus}
                       can={can}
                       Module={Module}
+                      isReadOnlyModule={isReadOnlyModule}
                       onEdit={handleEdit}
                       onView={handleView}
                       onDisable={handleDisable}

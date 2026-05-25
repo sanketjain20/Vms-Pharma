@@ -52,6 +52,9 @@ export const runReportByModule = async (moduleId, filters) => {
     case ReportEntity.DayBook:
         apiUrl = "http://localhost:8080/api/Reports/DayBookReport";
         break;
+    case ReportEntity.GSTR1:
+        apiUrl = "http://localhost:8080/api/Reports/GstReport";
+        break;
     default:
       throw new Error("Invalid module ID");
   }

@@ -18,9 +18,9 @@
 .rpt-page {
   position: relative;
   min-height: 100vh;
-  background: #000;
+  background: var(--bg-base, #000);
   font-family: var(--font-body, 'Inter', sans-serif);
-  color: #fff;
+  color: var(--text-primary, #fff);
   overflow-x: hidden;
 }
 

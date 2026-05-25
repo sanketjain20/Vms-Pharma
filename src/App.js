@@ -25,6 +25,9 @@ import ProductType from "./MyComponents/ProductTypeComponent/ProductType";
 import Vendor from "./MyComponents/VendorComponent/Vendor";
 import Report from "./MyComponents/ReportComponent/Reports";
 import Inventory from "./MyComponents/InventoryComponent/Inventory";
+import ExpiryAlert from "./MyComponents/InventoryComponent/ExpiryAlert";
+import ReorderAlert from "./MyComponents/InventoryComponent/ReorderAlert";
+import Batch from "./MyComponents/InventoryComponent/Batch";
 import Sales from "./MyComponents/SalesComponent/Sales";
 import Role from "./MyComponents/RoleComponent/Role";
 import Unauthorized from "./MyComponents/SecurityComponent/Unauthorized";
@@ -48,6 +51,8 @@ import LoginPage from "./MyComponents/LoginComponent/LoginPage";
 import SalesReturn from "./MyComponents/SalesReturnComponent/SalesReturn";
 import PurchaseReturn from "./MyComponents/PurchaseReturnComponent/PurchaseReturn";
 import RetailerOutstanding from "./MyComponents/RetailerOutstandingComponent/RetailerOutstanding";
+import SupplierOutstanding from "./MyComponents/SupplierOutstandingComponent/SupplierOutstanding";
+import StockAdjustment from "./MyComponents/StockAdjustmentComponent/StockAdjustment";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
@@ -74,6 +79,7 @@ function App() {
         hideProgressBar={false}
         closeOnClick
         pauseOnHover
+        className="vms-toast-container"
       />
       <Routes>
         {/* LOGIN PAGE */}
@@ -229,6 +235,15 @@ function App() {
               </ModuleGuard>
             }
           />
+
+          <Route
+            path="supplier-outstanding"
+            element={
+              <ModuleGuard moduleName="SUPPLIER_OUTSTANDING">
+                <SupplierOutstanding />
+              </ModuleGuard>
+            }
+          />
           {/* VENDOR */}
           <Route
             path="vendor"
@@ -273,6 +288,42 @@ function App() {
             element={
               <ModuleGuard moduleName="INVENTORY">
                 <Inventory />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="alerts"
+            element={
+              <ModuleGuard moduleName="ALERTS">
+                <ExpiryAlert />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="reorder-alerts"
+            element={
+              <ModuleGuard moduleName={["ALERTS", "REORDER_ALERTS", "LOW_STOCK_ALERTS"]}>
+                <ReorderAlert />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="batch"
+            element={
+              <ModuleGuard moduleName="BATCH">
+                <Batch />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="stock-adjustment"
+            element={
+              <ModuleGuard moduleName={["STOCK_ADJUSTMENT", "STOCKADJUSTMENT", "STOCK ADJUSTMENT"]}>
+                <StockAdjustment />
               </ModuleGuard>
             }
           />

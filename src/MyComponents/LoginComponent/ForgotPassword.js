@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import "../../Styles/Login/ForgotPassword.css";
 
 /* ── Step indicator ───────────────────────────────────────── */
@@ -151,7 +150,6 @@ export default function ForgotPassword() {
 
   return (
     <div className="fp-page">
-      <ToastContainer position="top-right" autoClose={3000} theme="dark" />
 
       {/* Background grid */}
       <div className="fp-grid" />

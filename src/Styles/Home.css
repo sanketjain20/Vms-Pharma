@@ -5,7 +5,7 @@
 ========================= */
 .hw-root {
   min-height: 100vh;
-  background: #000;
+  background: var(--hw-page-bg, #000);
   color: #e8eaf2;
   font-family: 'Space Grotesk', sans-serif;
   font-size: 14px;
@@ -18,7 +18,7 @@
   content: "";
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5); /* dark overlay */
+  background: var(--hw-overlay, rgba(0, 0, 0, 0.5));
   backdrop-filter: blur(6px);
   z-index: 0;
 }

@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import CustomChart from "../CommonComponent/CustomChart";
 import "../../Styles/Dashboard/Dashboard.css";
+import {
+  useCanvasThemeKey,
+  getPerspectiveCanvasPalette,
+  createOrbField,
+  drawPerspectiveScene,
+} from "../../utils/canvasTheme";
 
 const API = "http://localhost:8080/api/Dashboard/Summary";
 
@@ -142,6 +148,9 @@ export default function Dashboard() {
   const canvasRef = useRef(null);
   const animRef   = useRef(null);
 
+  const canvasThemeKey = useCanvasThemeKey();
+  const orbsRef = useRef(null);
+
   /* ── Canvas BG ── */
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -150,46 +159,35 @@ export default function Dashboard() {
     const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     resize();
     window.addEventListener("resize", resize);
-    const orbs = Array.from({ length: 5 }, (_, i) => ({
-      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-      r: 120 + Math.random() * 200, vx: (Math.random() - 0.5) * 0.2, vy: (Math.random() - 0.5) * 0.2,
-      hue: [215, 225, 205, 235, 210][i], alpha: 0.02 + Math.random() * 0.025,
+
+    const palette = getPerspectiveCanvasPalette();
+    orbsRef.current = Array.from({ length: 5 }, (_, i) => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: 120 + Math.random() * 200,
+      vx: (Math.random() - 0.5) * 0.2,
+      vy: (Math.random() - 0.5) * 0.2,
+      hue: [215, 225, 205, 235, 210][i],
+      alpha: (0.02 + Math.random() * 0.025) * palette.orbAlphaScale,
     }));
+
     let tick = 0;
     const draw = () => {
       tick++;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const hor = canvas.height * 0.5, vanX = canvas.width / 2, gc = 14;
-      const spd = (tick * 0.22) % (canvas.height / gc);
-      ctx.save(); ctx.globalAlpha = 0.045; ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 0.5;
-      for (let i = 0; i <= gc; i++) {
-        const y = hor + spd + (i * (canvas.height - hor)) / gc;
-        if (y > canvas.height) continue;
-        const sp = ((y - hor) / (canvas.height - hor)) * canvas.width * 1.4;
-        ctx.beginPath(); ctx.moveTo(vanX - sp / 2, y); ctx.lineTo(vanX + sp / 2, y); ctx.stroke();
-      }
-      for (let i = 0; i <= 18; i++) {
-        const t = i / 18, bx = vanX - canvas.width * 0.7 + t * canvas.width * 1.4;
-        ctx.beginPath(); ctx.moveTo(vanX, hor); ctx.lineTo(bx, canvas.height + 10); ctx.stroke();
-      }
-      ctx.restore();
-      orbs.forEach(o => {
-        o.x += o.vx; o.y += o.vy;
-        if (o.x < -o.r) o.x = canvas.width + o.r; if (o.x > canvas.width + o.r) o.x = -o.r;
-        if (o.y < -o.r) o.y = canvas.height + o.r; if (o.y > canvas.height + o.r) o.y = -o.r;
-        const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
-        g.addColorStop(0, `hsla(${o.hue},75%,55%,${o.alpha})`); g.addColorStop(1, "transparent");
-        ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+      drawPerspectiveScene(ctx, canvas, tick, {
+        horizonRatio: 0.5,
+        gridCount: 14,
+        radialCount: 18,
+        speed: 0.22,
+        gridWidthMult: 1.4,
+        radialWidthMult: 0.7,
+        orbs: orbsRef.current,
       });
-      const vig = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, canvas.height * 0.1, canvas.width / 2, canvas.height / 2, canvas.height * 0.9);
-      vig.addColorStop(0, "rgba(0,0,0,0)"); vig.addColorStop(1, "rgba(0,0,0,0.72)");
-      ctx.fillStyle = vig; ctx.fillRect(0, 0, canvas.width, canvas.height);
       animRef.current = requestAnimationFrame(draw);
     };
     draw();
     return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(animRef.current); };
-  }, []);
+  }, [canvasThemeKey]);
 
   /* ── Fetch ── */
   useEffect(() => {

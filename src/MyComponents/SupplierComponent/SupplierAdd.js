@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 import "../../Styles/Supplier/Supplier.css";
+import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 
 const FIELD_META = [
     { key: "shopName", label: "Shop Name", type: "text", required: true, placeholder: "e.g. Cipla Distributors Pvt Ltd" },
@@ -35,7 +37,11 @@ export default function SupplierAdd({ onClose, onSubmit }) {
 
     const submit = async () => {
         const e = validate();
-        if (Object.keys(e).length) { setErrors(e); return; }
+        if (Object.keys(e).length) {
+            setErrors(e);
+            toast.error(Object.values(e)[0]);
+            return;
+        }
         setLoading(true);
         try {
             const createdBy = 1; // or get from logged-in user
@@ -53,9 +59,19 @@ export default function SupplierAdd({ onClose, onSubmit }) {
                 }
             );
             const json = await res.json();
-            if (json?.status === 200 || json?.success) { onSubmit(); onClose(); }
-            else setErrors({ general: json?.message || "Failed to create supplier" });
-        } catch { setErrors({ general: "Network error. Please try again." }); }
+            if (json?.status === 200 || json?.success) {
+                toast.success(json?.message || "Supplier created successfully");
+                onSubmit();
+                onClose();
+            } else {
+                const message = getApiMessage(json, "Failed to create supplier");
+                setErrors({ general: message });
+                toastApiError(json, "Failed to create supplier");
+            }
+        } catch {
+            setErrors({ general: "Network error. Please try again." });
+            toast.error("Network error. Please try again.");
+        }
         finally { setLoading(false); }
     };
 

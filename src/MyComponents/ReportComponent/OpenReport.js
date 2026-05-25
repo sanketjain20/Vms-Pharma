@@ -3,6 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ReportEntity } from "../Enums/ReportEntity.js";
 import { runReportByModule } from "./ReportService.js";
 import "../../Styles/Report/OpenReport.css";
+import {
+  useCanvasThemeKey,
+  getPerspectiveCanvasPalette,
+  drawPerspectiveScene,
+  isLightTheme,
+} from "../../utils/canvasTheme";
 
 /* =========================
    UTILS
@@ -32,6 +38,7 @@ function getModuleIdByReportName(reportName) {
   if (name.includes("supplier"))       return ReportEntity.Supplier;
   if (name.includes("payment"))        return ReportEntity.PaymentCollection;
   if (name.includes("day"))        return ReportEntity.DayBook;
+  if (name.includes("gst"))        return ReportEntity.GSTR1;
 
   return null;
 }
@@ -160,11 +167,16 @@ export default function OpenReport() {
     setActiveFilters(Object.values(selectedFilters).filter(Boolean).length);
   }, [selectedFilters]);
 
+  const canvasThemeKey = useCanvasThemeKey();
+  const orbsRef = useRef(null);
+
   /* 3D CANVAS BACKGROUND */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
+    const palette = getPerspectiveCanvasPalette();
+    const light = isLightTheme();
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -173,89 +185,34 @@ export default function OpenReport() {
     resize();
     window.addEventListener("resize", resize);
 
-    const orbs = Array.from({ length: 5 }, (_, i) => ({
+    orbsRef.current = Array.from({ length: 5 }, (_, i) => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       r: 100 + Math.random() * 200,
       vx: (Math.random() - 0.5) * 0.25,
       vy: (Math.random() - 0.5) * 0.25,
       hue: [215, 225, 205, 235, 210][i],
-      alpha: 0.025 + Math.random() * 0.035,
+      alpha: (0.025 + Math.random() * 0.035) * palette.orbAlphaScale,
     }));
 
     let tick = 0;
 
     const draw = () => {
       tick++;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Perspective grid
-      const horizon = canvas.height * 0.52;
-      const vanishX = canvas.width / 2;
-      const gridCount = 16;
-      const speed = (tick * 0.28) % (canvas.height / gridCount);
-
-      ctx.save();
-      ctx.globalAlpha = 0.055;
-      ctx.strokeStyle = "#3b82f6";
-      ctx.lineWidth = 0.5;
-
-      for (let i = 0; i <= gridCount; i++) {
-        const y = horizon + speed + (i * (canvas.height - horizon)) / gridCount;
-        if (y > canvas.height) continue;
-        const spread = ((y - horizon) / (canvas.height - horizon)) * canvas.width * 1.5;
-        ctx.beginPath();
-        ctx.moveTo(vanishX - spread / 2, y);
-        ctx.lineTo(vanishX + spread / 2, y);
-        ctx.stroke();
-      }
-
-      const vLineCount = 18;
-      for (let i = 0; i <= vLineCount; i++) {
-        const t = i / vLineCount;
-        const bottomX = vanishX - canvas.width * 0.75 + t * canvas.width * 1.5;
-        ctx.beginPath();
-        ctx.moveTo(vanishX, horizon);
-        ctx.lineTo(bottomX, canvas.height + 20);
-        ctx.stroke();
-      }
-      ctx.restore();
-
-      // Orbs
-      orbs.forEach((orb) => {
-        orb.x += orb.vx;
-        orb.y += orb.vy;
-        if (orb.x < -orb.r) orb.x = canvas.width + orb.r;
-        if (orb.x > canvas.width + orb.r) orb.x = -orb.r;
-        if (orb.y < -orb.r) orb.y = canvas.height + orb.r;
-        if (orb.y > canvas.height + orb.r) orb.y = -orb.r;
-
-        const grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.r);
-        grad.addColorStop(0, `hsla(${orb.hue}, 75%, 55%, ${orb.alpha})`);
-        grad.addColorStop(1, `hsla(${orb.hue}, 75%, 55%, 0)`);
-        ctx.beginPath();
-        ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
+      drawPerspectiveScene(ctx, canvas, tick, {
+        horizonRatio: 0.52,
+        gridCount: 16,
+        radialCount: 18,
+        speed: 0.28,
+        gridWidthMult: 1.5,
+        radialWidthMult: 0.75,
+        orbs: orbsRef.current,
       });
 
-      // Scanlines
       for (let y = 0; y < canvas.height; y += 4) {
-        ctx.fillStyle = "rgba(0,0,0,0.035)";
+        ctx.fillStyle = light ? "rgba(59,130,246,0.02)" : "rgba(0,0,0,0.035)";
         ctx.fillRect(0, y, canvas.width, 1);
       }
-
-      // Vignette
-      const vignette = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height / 2, canvas.height * 0.15,
-        canvas.width / 2, canvas.height / 2, canvas.height * 0.9
-      );
-      vignette.addColorStop(0, "rgba(0,0,0,0)");
-      vignette.addColorStop(1, "rgba(0,0,0,0.72)");
-      ctx.fillStyle = vignette;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       animFrameRef.current = requestAnimationFrame(draw);
     };
@@ -265,7 +222,7 @@ export default function OpenReport() {
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(animFrameRef.current);
     };
-  }, []);
+  }, [canvasThemeKey]);
 
   /* FETCH FILTERS */
   useEffect(() => {

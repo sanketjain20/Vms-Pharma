@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import "../../Styles/Login/Login.css";
 
 /* ══════════════════════════════════════════════════════
@@ -394,11 +393,6 @@ function VMSRight() {
 export default function LoginPage() {
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        theme="dark"
-        toastStyle={{ background: "#0d1018", border: "1px solid rgba(245,166,35,0.2)", color: "#eef2ff" }}
-      />
       <div className="vms-login-page">
         <VMSCanvas />
         <div className="vms-split" />

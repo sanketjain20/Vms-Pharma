@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 import "../../Styles/SalesReturn/SalesReturnAdd.css";
+import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 
 export default function PurchaseReturnAdd({ onClose, onSubmit }) {
   const [step, setStep] = useState(1);
@@ -46,11 +48,16 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
           }))
         );
         setStep(2);
+        toast.success("Purchase loaded successfully");
       } else {
-        setFetchErr(json.message || "Purchase not found");
+        const message = getApiMessage(json, "Purchase not found");
+        setFetchErr(message);
+        toastApiError(json, "Purchase not found");
       }
     } catch (e) {
-      setFetchErr("Network error: " + e.message);
+      const message = "Network error: " + e.message;
+      setFetchErr(message);
+      toast.error(message);
     } finally {
       setFetching(false);
     }
@@ -76,7 +83,10 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
     if (!anySelected) errs.lines = "Select at least one item to return";
     if (!returnReason.trim()) errs.reason = "Return reason is required";
     setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+    if (Object.keys(errs).length > 0) {
+      toast.error(Object.values(errs)[0]);
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -101,13 +111,18 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
       const json = await res.json();
 
       if (json.status === 200) {
+        toast.success(json?.message || "Purchase return submitted successfully");
         onSubmit?.();
         onClose?.();
       } else {
-        setErrors({ submit: json.message || "Submission failed" });
+        const message = getApiMessage(json, "Submission failed");
+        setErrors({ submit: message });
+        toastApiError(json, "Submission failed");
       }
     } catch (e) {
-      setErrors({ submit: "Network error: " + e.message });
+      const message = "Network error: " + e.message;
+      setErrors({ submit: message });
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

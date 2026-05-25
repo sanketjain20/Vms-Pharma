@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import "../../Styles/Supplier/Supplier.css";
+import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 
 const FIELD_META = [
   { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Cipla Distributors Pvt Ltd" },
@@ -41,9 +43,13 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
           });
         } else {
           setErrors({ general: "Failed to load supplier data" });
+          toast.error("Failed to load supplier data");
         }
       })
-      .catch(() => setErrors({ general: "Network error loading supplier" }))
+      .catch(() => {
+        setErrors({ general: "Network error loading supplier" });
+        toast.error("Network error loading supplier");
+      })
       .finally(() => setFetching(false));
   }, [uKey]);
 
@@ -64,7 +70,11 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
 
   const submit = async () => {
     const e = validate();
-    if (Object.keys(e).length) { setErrors(e); return; }
+    if (Object.keys(e).length) {
+      setErrors(e);
+      toast.error(Object.values(e)[0]);
+      return;
+    }
     setLoading(true);
     try {
       const res  = await fetch(`http://localhost:8080/api/Supplier/UpdateSupplier/${uKey}/1`, {
@@ -73,9 +83,19 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
         body: JSON.stringify({ ...form, gstNumber: form.gstNumber?.toUpperCase() || null }),
       });
       const json = await res.json();
-      if (json?.status === 200 || json?.success) { onSubmit(); onClose(); }
-      else setErrors({ general: json?.message || "Failed to update supplier" });
-    } catch { setErrors({ general: "Network error. Please try again." }); }
+      if (json?.status === 200 || json?.success) {
+        toast.success(json?.message || "Supplier updated successfully");
+        onSubmit();
+        onClose();
+      } else {
+        const message = getApiMessage(json, "Failed to update supplier");
+        setErrors({ general: message });
+        toastApiError(json, "Failed to update supplier");
+      }
+    } catch {
+      setErrors({ general: "Network error. Please try again." });
+      toast.error("Network error. Please try again.");
+    }
     finally { setLoading(false); }
   };
 

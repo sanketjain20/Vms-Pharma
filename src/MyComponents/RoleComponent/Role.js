@@ -1,8 +1,6 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 export default function Role() {
 const columns = [
   { header: "Role Code", field: "roleCode", width: "240px" },
@@ -31,7 +29,6 @@ const columns = [
         ModuleId ="6"
       />
       
-      <ToastContainer position="top-center" autoClose={2000} />
     </div>
   );
 }

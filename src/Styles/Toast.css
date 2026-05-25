@@ -79,5 +79,11 @@
 
 /* ===== Z-INDEX ===== */
 .Toastify__toast-container {
-  z-index: 999999 !important;
+  position: fixed !important;
+  z-index: 2147483647 !important;
+}
+
+.Toastify__toast-container.vms-toast-container {
+  position: fixed !important;
+  z-index: 2147483647 !important;
 }

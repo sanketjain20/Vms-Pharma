@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
+import { useCanvasThemeKey, getChartTheme } from "../../utils/canvasTheme";
 import {
   ResponsiveContainer,
   BarChart,
@@ -21,6 +22,7 @@ import {
 ───────────────────────────────────────── */
 const CustomTooltip = ({ active, payload, label, lineLabels }) => {
   if (!active || !payload || !payload.length) return null;
+  const t = getChartTheme();
 
   const fmt = (val) =>
     typeof val === "number" && val > 999
@@ -29,17 +31,17 @@ const CustomTooltip = ({ active, payload, label, lineLabels }) => {
 
   return (
     <div style={{
-      background: "rgba(5,6,14,0.98)",
-      border: "1px solid rgba(59,130,246,0.35)",
+      background: t.tooltipBg,
+      border: t.tooltipBorder,
       borderRadius: 12,
       padding: "12px 16px",
-      boxShadow: "0 20px 50px rgba(0,0,0,0.95)",
+      boxShadow: "0 20px 50px rgba(15, 23, 42, 0.15)",
       backdropFilter: "blur(24px)",
       fontFamily: "'JetBrains Mono', monospace",
       zIndex: 9999,
       minWidth: 160,
     }}>
-      <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "#525667", marginBottom: 8 }}>
+      <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: t.tooltipLabel, marginBottom: 8 }}>
         {label}
       </div>
       {payload.map((p, i) => (
@@ -50,10 +52,10 @@ const CustomTooltip = ({ active, payload, label, lineLabels }) => {
             flexShrink: 0,
             boxShadow: `0 0 6px ${p.color || p.fill}`,
           }} />
-          <span style={{ fontSize: 10, color: "#6b7280", flex: 1 }}>
+          <span style={{ fontSize: 10, color: t.tooltipMuted, flex: 1 }}>
             {lineLabels?.[i] || p.name || p.dataKey}
           </span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#e6e8f0", fontFamily: "'Oxanium', sans-serif" }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: t.tooltipValue, fontFamily: "'Oxanium', sans-serif" }}>
             {fmt(p.value)}
           </span>
         </div>
@@ -252,7 +254,7 @@ const SeriesLegend = ({ keys, colors, labels }) => (
   <div style={{
     display: "flex", gap: 16, flexWrap: "wrap",
     padding: "6px 14px 2px",
-    borderBottom: "1px solid rgba(255,255,255,0.05)",
+    borderBottom: `1px solid ${getChartTheme().legendBorder}`,
   }}>
     {keys.map((k, i) => (
       <div key={k} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -280,6 +282,7 @@ const SeriesLegend = ({ keys, colors, labels }) => (
    BAR CHART — single + multi-series
 ───────────────────────────────────────── */
 const BarChartInner = ({ data, xKey, yKey, barColor, lineColors, lineLabels, formatYAxis, yAxisMax, gradId }) => {
+  const ct = getChartTheme();
   const isMulti = Array.isArray(yKey);
   const keys = isMulti ? yKey : [yKey];
   const colors = isMulti ? (lineColors || ["#3b82f6", "#10b981"]) : [barColor];
@@ -325,7 +328,7 @@ const BarChartInner = ({ data, xKey, yKey, barColor, lineColors, lineLabels, for
           </linearGradient>
         ))}
       </defs>
-      <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
+      <CartesianGrid vertical={false} stroke={ct.gridStroke} strokeDasharray="3 3" />
       <XAxis
         dataKey={xKey}
         tickFormatter={formatX}
@@ -335,7 +338,7 @@ const BarChartInner = ({ data, xKey, yKey, barColor, lineColors, lineLabels, for
         height={64}
         axisLine={false}
         tickLine={false}
-        tick={{ fill: "#5a5f78", fontSize: count > 25 ? 9 : 10, fontFamily: "'JetBrains Mono', monospace" }}
+        tick={{ fill: ct.tickFill, fontSize: count > 25 ? 9 : 10, fontFamily: "'JetBrains Mono', monospace" }}
         padding={{ left: 12, right: 12 }}
       />
       <YAxis
@@ -343,10 +346,10 @@ const BarChartInner = ({ data, xKey, yKey, barColor, lineColors, lineLabels, for
         tickFormatter={formatYAxis}
         axisLine={false}
         tickLine={false}
-        tick={{ fill: "#383a4d", fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
+        tick={{ fill: ct.tickFill, fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
         width={LEFT_W}
       />
-      <Tooltip content={<CustomTooltip lineLabels={lineLabels} />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+      <Tooltip content={<CustomTooltip lineLabels={lineLabels} />} cursor={{ fill: ct.gridStroke }} />
       {keys.map((k, i) => (
         <Bar
           key={k}
@@ -499,6 +502,7 @@ const PieChartInner = ({ data, xKey, yKey, pieColors }) => {
    LINE / AREA CHART — single + multi-series
 ───────────────────────────────────────── */
 const LineChartInner = ({ data, xKey, yKey, barColor, lineColors, lineLabels, formatYAxis, yAxisMax, gradId }) => {
+  const ct = getChartTheme();
   const isMulti = Array.isArray(yKey);
   const keys = isMulti ? yKey : [yKey];
   const MULTI_COLORS = lineColors || ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#f43f5e"];
@@ -531,7 +535,7 @@ const LineChartInner = ({ data, xKey, yKey, barColor, lineColors, lineLabels, fo
               ))}
             </defs>
 
-            <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
+            <CartesianGrid vertical={false} stroke={ct.gridStroke} strokeDasharray="3 3" />
             <XAxis
               dataKey={xKey}
               tickFormatter={formatX}
@@ -541,7 +545,7 @@ const LineChartInner = ({ data, xKey, yKey, barColor, lineColors, lineLabels, fo
               height={56}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#5a5f78", fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
+              tick={{ fill: ct.tickFill, fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
               padding={{ left: 12, right: 12 }}
             />
             <YAxis
@@ -549,7 +553,7 @@ const LineChartInner = ({ data, xKey, yKey, barColor, lineColors, lineLabels, fo
               tickFormatter={formatYAxis}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#383a4d", fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
+              tick={{ fill: ct.tickFill, fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
               width={50}
             />
             <Tooltip
@@ -598,14 +602,17 @@ const CustomChart = ({
     "#818cf8", "#fb7185", "#fbbf24", "#2dd4bf",
   ],
 }) => {
+  useCanvasThemeKey();
+  const ct = getChartTheme();
+
   if (!data || data.length === 0) {
     return (
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "center",
-        minHeight: 260, background: "rgba(4,5,10,0.85)", borderRadius: 14,
-        border: "1px solid rgba(255,255,255,0.045)",
+        minHeight: 260, background: ct.shellBg, borderRadius: 14,
+        border: ct.shellBorder,
         fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-        color: "rgba(80,90,110,0.8)", letterSpacing: "0.1em",
+        color: ct.emptyColor, letterSpacing: "0.1em",
       }}>
         NO DATA
       </div>
@@ -633,13 +640,13 @@ const CustomChart = ({
     <div style={{
       position: "relative",
       width: "100%",
-      background: "rgba(4,5,10,0.85)",
+      background: ct.shellBg,
       borderRadius: 14,
-      border: "1px solid rgba(255,255,255,0.05)",
+      border: ct.shellBorder,
       overflow: "hidden",
       display: "flex",
       flexDirection: "column",
-      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+      boxShadow: "inset 0 1px 0 rgba(15, 23, 42, 0.04)",
     }}>
       <ChartCanvas3D color={glowHex} />
 
