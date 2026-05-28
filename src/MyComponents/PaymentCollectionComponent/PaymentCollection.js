@@ -1,7 +1,7 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function PaymentCollection() {
 const columns = [
   { header: "Payment Date", field: "paymentDate", width: "160px" },
@@ -18,7 +18,7 @@ return ( <div className="i-container"> <h2 className="i-title"> 💳
 
   <DynamicGrid
     columns={columns}
-    apiUrl="http://localhost:8080/api/PaymentCollection/GetAllPayments"
+    apiUrl={`${API_BASE_URL}/api/PaymentCollection/GetAllPayments`}
     Module="Payment Collection"
     ModuleId ="13"
   />

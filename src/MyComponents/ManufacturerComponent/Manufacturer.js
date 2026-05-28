@@ -2,7 +2,6 @@ import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
 import API_BASE_URL from "../../Config/api.config";
-
 export default function Manufacturer() {
 const columns = [
   { header: "Code", field: "manufacturerCode", width: "130px" },

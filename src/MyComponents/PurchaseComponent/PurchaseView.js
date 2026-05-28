@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/Purchase/Purchase.css";
-
+import API_BASE_URL from "../../Config/api.config";
 const statusColor = s => {
   if (s === "PAID")    return "pfx-badge-green";
   if (s === "CREDIT")  return "pfx-badge-red";
@@ -24,7 +24,7 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`http://localhost:8080/api/Purchase/GetPurchaseByUKey/${uKey}`, {
+    fetch(`${API_BASE_URL}/api/Purchase/GetPurchaseByUKey/${uKey}`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/StatusUpdateCommon.css";
+import API_BASE_URL from "../../Config/api.config";
 
 export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClose }) {
   const [loading, setLoading] = useState(false);
@@ -11,15 +12,15 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
     setLoading(true);
 
     const apiMap = {
-      "Product":      `http://localhost:8080/api/Product/ToggleProductDisable/${uKey}/${isDisable}`,
-      "Vendor":       `http://localhost:8080/api/Vendor/ToggleVendorDisable/${uKey}/${isDisable}`,
-      "Inventory":    `http://localhost:8080/api/Inventory/ToggleInventoryDisable/${uKey}/${isDisable}`,
-      "Sales":        `/api/sales/ToggleStatus?uKey=${uKey}&isDisable=${isDisable}`,
-      "Product Type": `http://localhost:8080/api/ProductType/ToggleProdTypeDisable/${uKey}/${isDisable}`,
-      "Roles":        `http://localhost:8080/api/Roles/ToggleRoleDisable/${uKey}/${isDisable}`,
-      "Manufacturer": `http://localhost:8080/api/Manufacturer/ToggleManufacturer/${uKey}/${isDisable}`,
-      "Retailer":     `http://localhost:8080/api/Retailer/ToggleDisable/${uKey}/${isDisable}`,
-      "Supplier":     `http://localhost:8080/api/Supplier/ToggleDisable/${uKey}/${isDisable}`,
+      "Product":      `${API_BASE_URL}/api/Product/ToggleProductDisable/${uKey}/${isDisable}`,
+      "Vendor":       `${API_BASE_URL}/api/Vendor/ToggleVendorDisable/${uKey}/${isDisable}`,
+      "Inventory":    `${API_BASE_URL}/api/Inventory/ToggleInventoryDisable/${uKey}/${isDisable}`,
+      "Sales":        `${API_BASE_URL}/api/sales/ToggleStatus?uKey=${uKey}&isDisable=${isDisable}`,
+      "Product Type": `${API_BASE_URL}/api/ProductType/ToggleProdTypeDisable/${uKey}/${isDisable}`,
+      "Roles":        `${API_BASE_URL}/api/Roles/ToggleRoleDisable/${uKey}/${isDisable}`,
+      "Manufacturer": `${API_BASE_URL}/api/Manufacturer/ToggleManufacturer/${uKey}/${isDisable}`,
+      "Retailer":     `${API_BASE_URL}/api/Retailer/ToggleDisable/${uKey}/${isDisable}`,
+      "Supplier":     `${API_BASE_URL}/api/Supplier/ToggleDisable/${uKey}/${isDisable}`,
     };
 
     const apiUrl = apiMap[moduleName];

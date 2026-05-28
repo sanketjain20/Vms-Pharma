@@ -1,7 +1,7 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function PurchaseReturn() {
   const columns = [
     { header: "Return Number", field: "returnNumber", width: "170px" },
@@ -20,7 +20,7 @@ export default function PurchaseReturn() {
 
       <DynamicGrid
         columns={columns}
-        apiUrl="http://localhost:8080/api/PurchaseReturn/GetAllPurchaseReturn"
+        apiUrl={`${API_BASE_URL}/api/PurchaseReturn/GetAllPurchaseReturn`}
         Module="Purchase Return"
         ModuleId="17"
       />

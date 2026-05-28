@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../../Styles/Vendor/VendorAdd.css";
 import { toast } from "react-toastify";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function VendorAdd({ onClose, onSubmit }) {
   const [name, setName]               = useState("");
   const [email, setEmail]             = useState("");
@@ -18,7 +18,7 @@ export default function VendorAdd({ onClose, onSubmit }) {
   const [showPass, setShowPass]       = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/Roles/getAll", {
+    fetch(`${API_BASE_URL}/api/Roles/getAll`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -51,7 +51,7 @@ export default function VendorAdd({ onClose, onSubmit }) {
     const payload = { name, email, password, shopName, phone, roleId: Number(roleId), address, vendorPrefix, expiryDate };
 
     try {
-      const response = await fetch("http://localhost:8080/api/Vendor/AddVendor", {
+      const response = await fetch(`${API_BASE_URL}/api/Vendor/AddVendor`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

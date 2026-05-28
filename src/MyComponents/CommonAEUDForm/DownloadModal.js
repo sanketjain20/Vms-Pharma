@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { toast } from "react-toastify";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import API_BASE_URL from "../../Config/api.config";
 
 export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmit }) {
 
@@ -11,7 +12,7 @@ export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmi
         const downloadInvoice = async () => {
             try {
                 const response = await fetch(
-                    `http://localhost:8080/api/Invoice/GenerateInvoice/${id}/1`,
+                    `${API_BASE_URL}/api/Invoice/GenerateInvoice/${id}/1`,
                     {
                         method: "GET",
                         credentials: "include",

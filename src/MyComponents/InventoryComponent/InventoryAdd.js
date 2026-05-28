@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/Product/ProductForm.css"; // Reuse same modal CSS
 import { toast } from "react-toastify";
+import API_BASE_URL from "../../Config/api.config";
 
 export default function InventoryAdd({ onSubmit, onClose }) {
   const [products, setProducts] = useState([]);
@@ -15,6 +16,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const typeDropdownRef = useRef(null);
   const lastLoadedType = useRef(null);
+
   /* ================================================= */
 
   const [activeTab, setActiveTab] = useState("details");
@@ -32,7 +34,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
 
   const [errors, setErrors] = useState({});
 
-  const fetchUrl = "http://localhost:8080/api/Product/GetAllProduct";
+  const fetchUrl = `${API_BASE_URL}/api/Product/GetAllProduct`;
 
   /** FETCH ALL PRODUCTS FOR DROPDOWN */
   useEffect(() => {
@@ -61,7 +63,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
 
   /* ================= FETCH PRODUCT TYPES ================= */
   useEffect(() => {
-    fetch("http://localhost:8080/api/ProductType/GetAllProductType", {
+    fetch(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
       credentials: "include",
     })
       .then(res => res.json())
@@ -122,7 +124,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/Inventory/AddInventory",
+        `${API_BASE_URL}/api/Inventory/AddInventory`,
         {
           method: "POST",
           credentials: "include",
@@ -165,7 +167,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     if (lastLoadedType.current === productTypeId) return;
     lastLoadedType.current = productTypeId;
 
-    fetch(`http://localhost:8080/api/Product/GetProdByProdId/${productTypeId}`, {
+    fetch(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, {
       credentials: "include",
     })
       .then(res => res.json())
@@ -176,7 +178,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   useEffect(() => {
     if (!formData.product_id) return;
 
-    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, {
+    fetch(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, {
       credentials: "include",
     })
       .then(res => res.json())

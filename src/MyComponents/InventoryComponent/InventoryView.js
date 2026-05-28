@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/Product/ProductForm.css";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function InventoryView({ uKey, onClose }) {
   const [inventory, setInventory] = useState(null);
   const [error, setError]         = useState("");
@@ -9,7 +9,7 @@ export default function InventoryView({ uKey, onClose }) {
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`http://localhost:8080/api/Inventory/GetInventoryByUkey/${uKey}`, {
+    fetch(`${API_BASE_URL}/api/Inventory/GetInventoryByUkey/${uKey}`, {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json" },

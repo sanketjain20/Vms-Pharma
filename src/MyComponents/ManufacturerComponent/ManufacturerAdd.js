@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../../Styles/Manufacturer/Manufacturer.css";
 import { toast } from "react-toastify";
+import API_BASE_URL from "../../Config/api.config";
 
 const FIELDS = [
   { key: "name",              label: "Manufacturer Name",    type: "text",     required: true,  placeholder: "e.g. Cipla Ltd" },
@@ -42,7 +43,7 @@ export default function ManufacturerAdd({ onClose, onSubmit }) {
     if (Object.keys(e).length) { setErrors(e); return; }
     setLoading(true);
     try {
-      const res  = await fetch("http://localhost:8080/api/Manufacturer/Add", {
+      const res  = await fetch(`${API_BASE_URL}/api/Manufacturer/Add`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

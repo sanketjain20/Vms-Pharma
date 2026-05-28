@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/SalesReturn/SalesReturnAdd.css";
 import { getApiMessage, toastApiError } from "../../utils/toastMessage";
-
+import API_BASE_URL from "../../Config/api.config";
 /* ── Searchable Dropdown (reused pattern) ── */
 const SearchableDropdown = ({
   label, options, selectedId, onSelect,
@@ -62,7 +62,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
     setFetching(true); setFetchErr(""); setSaleData(null);
     try {
       const res  = await fetch(
-        `http://localhost:8080/api/Sales/GetSalesByInvoiceNumber/${salesInvoiceNumber.trim()}`,
+        `${API_BASE_URL}/api/Sales/GetSalesByInvoiceNumber/${salesInvoiceNumber.trim()}`,
         { method: "GET", credentials: "include" }
       );
       const json = await res.json();
@@ -131,7 +131,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
           .filter(l => l.returnQuantity > 0)
           .map(l => ({ salesItemId: l.salesItemId, returnQuantity: l.returnQuantity })),
       };
-      const res  = await fetch("http://localhost:8080/api/SalesReturn/AddSalesReturn", {
+      const res  = await fetch(`${API_BASE_URL}/api/SalesReturn/AddSalesReturn`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

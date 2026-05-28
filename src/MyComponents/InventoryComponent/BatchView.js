@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../../Styles/Purchase/Purchase.css";
+import API_BASE_URL from "../../Config/api.config";
 
 const fmtMoney = (value) =>
   Number(value || 0).toLocaleString("en-IN", {
@@ -49,7 +50,7 @@ const FieldCard = ({ label, value, accent, mono }) => (
 
 const fetchBatch = async (uKey) => {
   const endpoints = [
-    `http://localhost:8080/api/Batch/GetBatchByUkey/${uKey}`
+    `${API_BASE_URL}/api/Batch/GetBatchByUkey/${uKey}`
   ];
 
   let lastError = "Failed to fetch batch";

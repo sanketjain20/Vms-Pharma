@@ -1,7 +1,7 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function sales() {
 const columns = [
   { header: "Invoice Number", field: "invoiceNumber", width: "200px" },
@@ -22,7 +22,7 @@ SALES</h2>
       
       <DynamicGrid 
         columns={columns} 
-        apiUrl="http://localhost:8080/api/Sales/GetAllSales" 
+        apiUrl={`${API_BASE_URL}/api/Sales/GetAllSales`} 
         Module="Sales"
         ModuleId ="5"
       />

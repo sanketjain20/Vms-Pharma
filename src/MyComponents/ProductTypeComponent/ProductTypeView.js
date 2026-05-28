@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/Product/ProductForm.css";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function ProductTypeView({ uKey, onClose }) {
   const [productType, setProductType] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByUkey/${uKey}`, {
+    fetch(`${API_BASE_URL}/api/ProductType/GetProdTypeByUkey/${uKey}`, {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json" },

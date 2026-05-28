@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import "../../Styles/PaymentCollection/Payment.css";
 import PaymentCollect from "./PaymentCollect";
 import PaymentView    from "./PaymentView";
-
+import API_BASE_URL from "../../Config/api.config";
 const fmt = n => parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
 const MODES = ["ALL", "CASH", "UPI", "CARD", "CHEQUE"];
@@ -41,7 +41,7 @@ export default function PaymentCollectionPage() {
       ...(fromDate  && { fromDate }),
       ...(toDate    && { toDate }),
     });
-    fetch(`http://localhost:8080/api/payments?${params}`, { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/payments?${params}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         if (json?.status === 200 && json.data) {
@@ -56,7 +56,7 @@ export default function PaymentCollectionPage() {
 
   /* ── FETCH TODAY'S COLLECTION ── */
   const fetchToday = () => {
-    fetch("http://localhost:8080/api/payments/today-collection", { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/payments/today-collection`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setTodayTotal(json?.data || 0))
       .catch(() => {});
@@ -64,7 +64,7 @@ export default function PaymentCollectionPage() {
 
   /* ── FETCH OUTSTANDING ── */
   const fetchOutstanding = () => {
-    fetch("http://localhost:8080/api/payments/outstanding", { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/payments/outstanding`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setOutstanding(json?.data || []))
       .catch(() => {});

@@ -7,8 +7,9 @@ import {
   createOrbField,
   drawPerspectiveScene,
 } from "../../utils/canvasTheme";
+import API_BASE_URL from "../../Config/api.config";
 
-const API = "http://localhost:8080/api/Dashboard/Summary";
+const API = `${API_BASE_URL}/api/Dashboard/Summary`;
 
 const fmt    = n => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
 const fmtNum = n => new Intl.NumberFormat("en-IN").format(n || 0);

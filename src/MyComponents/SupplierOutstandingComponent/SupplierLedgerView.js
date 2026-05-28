@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/RetailerOutstanding/RetailerLedgerView.css";
 import { toast } from "react-toastify";
-
+import API_BASE_URL from "../../Config/api.config";
 /* ─── helpers ─────────────────────────────────────────────────────────── */
 const fmt = n =>
   parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
@@ -105,7 +105,7 @@ function PayForm({ invoice, onSuccess, onCancel }) {
     setSubmitting(true);
     try {
       const res  = await fetch(
-        "http://localhost:8080/api/SupplierLedger/CollectPayment",
+        `${API_BASE_URL}/api/SupplierLedger/CollectPayment`,
         {
           method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -224,7 +224,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
     setLoading(true); setError("");
     try {
       const res  = await fetch(
-        `http://localhost:8080/api/SupplierLedger/Ledger/${uKey}`,
+        `${API_BASE_URL}/api/SupplierLedger/Ledger/${uKey}`,
         { method: "GET", credentials: "include" }
       );
       const json = await res.json();

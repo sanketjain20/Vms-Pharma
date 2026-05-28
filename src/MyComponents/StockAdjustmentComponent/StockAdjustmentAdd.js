@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../../Styles/Product/ProductForm.css";
 import { toast } from "react-toastify";
-
+import API_BASE_URL from "../../Config/api.config";
 const ADJUSTMENT_TYPES = [
   { value: "BREAKAGE", label: "BREAKAGE" },
   { value: "SAMPLE", label: "SAMPLE" },
@@ -35,8 +35,8 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
 
     const loadInventory = async () => {
       const urls = [
-        "http://localhost:8080/api/Inventory/GetAllInventory/0/100000",
-        "http://localhost:8080/api/Inventory/GetAllInventory",
+        `${API_BASE_URL}/api/Inventory/GetAllInventory/0/100000`,
+        `${API_BASE_URL}/api/Inventory/GetAllInventory`,
       ];
 
       for (const url of urls) {
@@ -128,7 +128,7 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
 
     setSaving(true);
     try {
-      const response = await fetch("http://localhost:8080/api/Inventory/StockAdjustment", {
+      const response = await fetch(`${API_BASE_URL}/api/Inventory/StockAdjustment`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

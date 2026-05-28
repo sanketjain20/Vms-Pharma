@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/Product/ProductForm.css";
-
+import API_BASE_URL from "../../Config/api.config";
 const fmt = n => parseFloat(n || 0).toFixed(2);
 
 /* ── Read-only field ── */
@@ -37,7 +37,7 @@ export default function ProductView({ uKey, onClose }) {
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`http://localhost:8080/api/Product/GetProductByUkey/${uKey}`, {
+    fetch(`${API_BASE_URL}/api/Product/GetProductByUkey/${uKey}`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })

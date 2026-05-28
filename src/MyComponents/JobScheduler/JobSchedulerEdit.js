@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../../Styles/JobScheduler/JobSchedulerEdit.css";
-
+import API_BASE_URL from "../../Config/api.config";
 /* ── Layout helpers ───────────────────────────────────────── */
 const Section = ({ title, icon, children, delay = 0 }) => (
   <div className="jse-section" style={{ animationDelay: `${delay}s` }}>
@@ -38,7 +38,7 @@ export default function JobSchedulerEdit() {
   useEffect(() => {
     (async () => {
       try {
-        const res    = await fetch(`http://localhost:8080/api/SystemJob/GetJobById/${id}`, { credentials: "include" });
+        const res    = await fetch(`${API_BASE_URL}/api/SystemJob/GetJobById/${id}`, { credentials: "include" });
         const result = await res.json();
         if (result.status === 200) {
           const j = result.data;
@@ -74,7 +74,7 @@ export default function JobSchedulerEdit() {
         successEmail:   job.successEmail,
         failureEmail:   job.failureEmail,
       };
-      const res    = await fetch(`http://localhost:8080/api/SystemJob/UpdateJob/${id}`, {
+      const res    = await fetch(`${API_BASE_URL}/api/SystemJob/UpdateJob/${id}`, {
         method: "PUT", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/Retailer/Retailer.css";
-
+import API_BASE_URL from "../../Config/api.config";
 /* ── Info card ── */
 const Card = ({ label, value, mono, accent, danger, full }) => (
   <div className={`rtx-view-card ${full ? "rtx-view-card-full" : ""}`}>
@@ -77,7 +77,7 @@ export default function RetailerView({ uKey, onClose, onEdit }) {
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`http://localhost:8080/api/Retailer/Get/${uKey}`, {
+    fetch(`${API_BASE_URL}/api/Retailer/Get/${uKey}`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/Purchase/Purchase.css";
 import { toast } from "react-toastify";
-
+import API_BASE_URL from "../../Config/api.config";
 /* ── reuse same SearchDrop ── */
 const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setOpen }) => {
   const [search, setSearch] = useState("");
@@ -60,10 +60,10 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
 
   /* ── FETCH DROPDOWNS ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/suppliers/dropdown", { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/suppliers/dropdown`, { credentials: "include" })
       .then(r => r.json()).then(json => setSuppliers(json.data || [])).catch(() => {});
 
-    fetch("http://localhost:8080/api/Product/GetAllProduct", { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Product/GetAllProduct`, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         const d = json?.data;
@@ -76,7 +76,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
   useEffect(() => {
     if (!uKey) return;
     setFetching(true);
-    fetch(`http://localhost:8080/api/Purchase/GetPurchaseByUKey/${uKey}`, { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Purchase/GetPurchaseByUKey/${uKey}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         if (json?.status === 200 && json.data) {
@@ -208,7 +208,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
         })),
       };
 
-      const res  = await fetch(`http://localhost:8080/api/Purchase/UpdatePurchase/${uKey}`, {
+      const res  = await fetch(`${API_BASE_URL}/api/Purchase/UpdatePurchase/${uKey}`, {
         method: "PUT", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

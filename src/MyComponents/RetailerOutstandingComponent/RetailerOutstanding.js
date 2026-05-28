@@ -2,7 +2,7 @@ import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
 import "../../Styles/RetailerOutstanding/RetailerOutstanding.css";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function RetailerOutstanding() {
 
   const [ledgerRetailerId, setLedgerRetailerId] = React.useState(null);
@@ -55,7 +55,7 @@ export default function RetailerOutstanding() {
       
       <DynamicGrid
         columns={columns}
-        apiUrl="http://localhost:8080/api/RetailerLedger/Outstanding"
+        apiUrl={`${API_BASE_URL}/api/RetailerLedger/Outstanding`}
         Module="Retailer Outstanding"
         ModuleId="18"
         noPagination={true}

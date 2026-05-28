@@ -1,6 +1,7 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
+import API_BASE_URL from "../../Config/api.config";
 
 export default function Batch() {
   const columns = [
@@ -23,7 +24,7 @@ export default function Batch() {
 
       <DynamicGrid
         columns={columns}
-        apiUrl="http://localhost:8080/api/Batch/GetAllBatch"
+        apiUrl={`${API_BASE_URL}/api/Batch/GetAllBatch`} 
         Module="Batch"
         ModuleId="20"
       />

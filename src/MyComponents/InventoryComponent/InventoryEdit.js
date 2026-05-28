@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/Product/ProductForm.css";
 import "../../Styles/Inventory/InventoryEdit.css";
 import { toast } from "react-toastify";
+import API_BASE_URL from "../../Config/api.config";
 
 export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   const dropdownRef     = useRef(null);
@@ -32,9 +33,9 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   const [originalData, setOriginalData] = useState(null);
   const [errors, setErrors]             = useState({});
 
-  const apiGetAllProducts   = "http://localhost:8080/api/Product/GetAllProduct";
-  const apiGetInventory     = `http://localhost:8080/api/Inventory/GetInventoryByUkey/${uKey}`;
-  const apiUpdateInventoryBase = "http://localhost:8080/api/Inventory/UpdateInventory";
+  const apiGetAllProducts   = `${API_BASE_URL}/api/Product/GetAllProduct`;
+  const apiGetInventory     = `${API_BASE_URL}/api/Inventory/GetInventoryByUkey/${uKey}`;
+  const apiUpdateInventoryBase = `${API_BASE_URL}/api/Inventory/UpdateInventory`;
 
   /* ── FETCH PRODUCTS ── */
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH PRODUCT TYPES ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/ProductType/GetAllProductType", { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/ProductType/GetAllProductType`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setProductTypes(json?.data?.productTypes || []));
   }, []);
@@ -96,7 +97,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   /* ── PRODUCT → TYPE ── */
   useEffect(() => {
     if (!formData.product_id) return;
-    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => { if (json?.data?.id) setProductTypeId(json.data.id); });
   }, [formData.product_id]);
@@ -104,7 +105,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   /* ── TYPE → PRODUCTS ── */
   useEffect(() => {
     if (!productTypeId) { setProducts(allProducts); return; }
-    fetch(`http://localhost:8080/api/Product/GetProdByProdId/${productTypeId}`, { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setProducts(json?.data || []));
   }, [productTypeId]);

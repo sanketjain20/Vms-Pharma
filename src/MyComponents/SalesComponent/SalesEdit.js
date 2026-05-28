@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/Sales/AddSales.css";
 import { toastApiError } from "../../utils/toastMessage";
-
+import API_BASE_URL from "../../Config/api.config";
 const GST_RATES = [0, 5, 12, 18, 28];
 
 const SearchableDropdown = ({
@@ -87,7 +87,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH RETAILERS ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/Retailer/Dropdown", { method: "GET", credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Retailer/Dropdown`, { method: "GET", credentials: "include" })
       .then(r => r.json())
       .then(json => setRetailers(
         (json?.data ?? []).map(r => ({ id: r.id, name: r.shopName + " · " + r.ownerName }))
@@ -97,7 +97,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH ALL PRODUCTS — unchanged ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/Product/GetAllProduct", { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    fetch(`${API_BASE_URL}/api/Product/GetAllProduct`, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(json => {
         const dataObj = json?.data;
@@ -108,7 +108,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH PRODUCT TYPES — unchanged ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/ProductType/GetAllProductType", { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    fetch(`${API_BASE_URL}/api/ProductType/GetAllProductType`, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
       .then(safeJson)
       .then(json => { const list = json?.data?.productTypes ?? []; setProductTypes(Array.isArray(list) ? list : []); });
   }, []);
@@ -117,7 +117,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   useEffect(() => { if (uKey) fetchSaleByUkey(); }, [uKey]);
 
   const fetchSaleByUkey = () => {
-    fetch(`http://localhost:8080/api/Sales/GetSalesByUkey/${uKey}`, {
+    fetch(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${uKey}`, {
       method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
     })
       .then(safeJson)
@@ -154,7 +154,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   /* ── FETCH BATCHES when product selected ── */
   useEffect(() => {
     if (!selectedProduct) { setAvailableBatches([]); setSelectedBatchId(""); return; }
-    fetch(`http://localhost:8080/api/Sales/GetAvailableBatches/${selectedProduct}`, { method: "GET", credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Sales/GetAvailableBatches/${selectedProduct}`, { method: "GET", credentials: "include" })
       .then(r => r.json())
       .then(json => { if (json?.status === 200) setAvailableBatches(json.data ?? []); else setAvailableBatches([]); })
       .catch(() => setAvailableBatches([]));
@@ -165,14 +165,14 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setSelectedType(typeId); setSelectedProduct(""); setInventory(null); setErrors({});
     setAvailableBatches([]); setSelectedBatchId("");
     if (!typeId) { setProducts(allProducts); return; }
-    fetch(`http://localhost:8080/api/Product/GetProdByProdId/${typeId}`, { method: "GET", credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { method: "GET", credentials: "include" })
       .then(safeJson).then(json => setProducts(json?.data ?? []));
   };
 
   /* ── AUTO SET TYPE — unchanged ── */
   useEffect(() => {
     if (!selectedProduct) return;
-    fetch(`http://localhost:8080/api/ProductType/GetProdTypeByProductId/${selectedProduct}`, { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${selectedProduct}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         const typeId = json?.data?.productTypeId || json?.data?.id;
@@ -180,7 +180,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           setSelectedType(typeId);
           if (lastLoadedType.current !== typeId) {
             lastLoadedType.current = typeId;
-            fetch(`http://localhost:8080/api/Product/GetProdByProdId/${typeId}`, { credentials: "include" })
+            fetch(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { credentials: "include" })
               .then(r => r.json())
               .then(json => { const list = json?.data ?? []; setProducts(Array.isArray(list) ? list : []); });
           }
@@ -193,7 +193,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setSelectedProduct(prodId); setInventory(null); setErrors({});
     setAvailableBatches([]); setSelectedBatchId("");
     if (!prodId) return;
-    fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${prodId}`, { method: "GET", credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${prodId}`, { method: "GET", credentials: "include" })
       .then(safeJson).then(json => setInventory(json?.data || null));
   };
 
@@ -265,7 +265,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setManualPrice(it.sellingPrice);  setTaxInput(it.taxAmount);
     setTaxType("FLAT"); setErrors({});
     setSelectedBatchId(it.batchId ? String(it.batchId) : "");
-    const iRes  = await fetch(`http://localhost:8080/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET", credentials: "include" });
+    const iRes  = await fetch(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET", credentials: "include" });
     const iJson = await safeJson(iRes);
     if (iJson?.data) setInventory(iJson.data);
   };
@@ -303,7 +303,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setErrors(tempErrors);
     if (Object.keys(tempErrors).length > 0) return;
 
-    fetch(`http://localhost:8080/api/Sales/UpdateSales/${saleId}`, {
+    fetch(`${API_BASE_URL}/api/Sales/UpdateSales/${saleId}`, {
       method: "PUT", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

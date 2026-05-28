@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/SupplierPayment/SupplierPayment.css";
-
-const API = "http://localhost:8080/api/SupplierPayment";
+import API_BASE_URL from "../../Config/api.config";
+const API = `${API_BASE_URL}/api/SupplierPayment`;
 const fmt = n => parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
 const modeBadge = mode => {

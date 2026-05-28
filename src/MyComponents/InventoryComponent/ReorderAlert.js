@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../../Styles/Inventory/ExpiryAlert.css";
-
-const API_URL = "http://localhost:8080/api/Inventory/ReorderAlerts";
+import API_BASE_URL from "../../Config/api.config";
+const API_URL = `${API_BASE_URL}/api/Inventory/ReorderAlerts`;
 
 const fmtNumber = (value) => {
   const number = Number(value);

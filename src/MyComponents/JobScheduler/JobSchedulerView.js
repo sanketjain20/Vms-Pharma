@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../../Styles/JobScheduler/JobSchedulerView.css";
-
+import API_BASE_URL from "../../Config/api.config";
 /* ── Field ────────────────────────────────────────────────── */
 function Field({ label, value, full }) {
   return (
@@ -50,7 +50,7 @@ export default function JobSchedulerView() {
     const load = async () => {
       try {
         setLoading(true);
-        const res    = await fetch(`http://localhost:8080/api/SystemJob/GetJobById/${id}`, { credentials: "include" });
+        const res    = await fetch(`${API_BASE_URL}/api/SystemJob/GetJobById/${id}`, { credentials: "include" });
         const result = await res.json();
         if (result.status === 200) setJob(result.data);
       } catch (e) { console.error("Error loading job:", e); }

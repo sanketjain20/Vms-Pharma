@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/SalesReturn/SalesReturnAdd.css";
 import { getApiMessage, toastApiError } from "../../utils/toastMessage";
+import API_BASE_URL from "../../Config/api.config";
 
 export default function PurchaseReturnAdd({ onClose, onSubmit }) {
   const [step, setStep] = useState(1);
@@ -27,7 +28,7 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/Purchase/GetPurchaseByPurchaseNumber/${purchaseNumber.trim()}`,
+        `${API_BASE_URL}/api/Purchase/GetPurchaseByPurchaseNumber/${purchaseNumber.trim()}`,
         { method: "GET", credentials: "include" }
       );
       const json = await res.json();
@@ -102,7 +103,7 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
           })),
       };
 
-      const res = await fetch("http://localhost:8080/api/PurchaseReturn/AddPurchaseReturn", {
+      const res = await fetch(`${API_BASE_URL}/api/PurchaseReturn/AddPurchaseReturn`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

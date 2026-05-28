@@ -1,7 +1,7 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function Vendor() {
 const columns = [
   { header: "Vendor Code", field: "vendorCode",width:"140px" },
@@ -24,7 +24,7 @@ const columns = [
       
       <DynamicGrid 
         columns={columns} 
-        apiUrl="http://localhost:8080/api/Vendor/GetAllVendor" 
+        apiUrl={`${API_BASE_URL}/api/Vendor/GetAllVendor`} 
         Module="Vendor"
         ModuleId ="1"
       />

@@ -1,6 +1,7 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
+import API_BASE_URL from "../../Config/api.config";
 export default function Role() {
 const columns = [
   { header: "Role Code", field: "roleCode", width: "240px" },
@@ -24,7 +25,7 @@ const columns = [
       
       <DynamicGrid 
         columns={columns} 
-        apiUrl="http://localhost:8080/api/Roles/GetAllPaged" 
+        apiUrl={`${API_BASE_URL}/api/Roles/GetAllPaged`} 
         Module="Roles"
         ModuleId ="6"
       />

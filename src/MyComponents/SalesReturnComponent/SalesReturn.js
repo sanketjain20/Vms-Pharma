@@ -1,7 +1,7 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function SalesReturn() {
 const columns = [
 
@@ -26,7 +26,7 @@ SALES RETURN</h2>
       
       <DynamicGrid 
         columns={columns} 
-        apiUrl="http://localhost:8080/api/SalesReturn/GetAllSalesReturn" 
+        apiUrl={`${API_BASE_URL}/api/SalesReturn/GetAllSalesReturn`} 
         Module="Sales Return"
         ModuleId ="16"
       />

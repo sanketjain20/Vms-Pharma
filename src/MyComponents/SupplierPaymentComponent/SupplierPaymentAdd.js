@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/SupplierPayment/SupplierPayment.css";
 import { toast } from "react-toastify";
-
-const API = "http://localhost:8080/api/SupplierPayment";
+import API_BASE_URL from "../../Config/api.config";
+const API = `${API_BASE_URL}/api/SupplierPayment`;
 const fmt = n => parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
 const PAYMENT_MODES = [
@@ -104,7 +104,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
     setForm(p => ({ ...p, amount: "" }));
     setErrors({});
     // Load unpaid purchases
-    fetch(`http://localhost:8080/api/Purchase/GetUnpaidInvoice/${supplier.id}`, { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Purchase/GetUnpaidInvoice/${supplier.id}`, { credentials: "include" })
       .then(r => r.json())
       .then(j => {
         const list = (j?.data || []).map(p => ({

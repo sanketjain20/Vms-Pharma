@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/Product/ProductForm.css";
 import { toast } from "react-toastify";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
   const [formData, setFormData] = useState({ id: "", name: "", description: "", typeCode: "" });
   const [originalData, setOriginalData] = useState(null);
   const [errors, setErrors] = useState({});
 
-  const apiGet    = `http://localhost:8080/api/ProductType/GetProdTypeByUkey/${uKey}`;
-  const apiUpdate = `http://localhost:8080/api/ProductType/UpdateProdType`;
+  const apiGet    = `${API_BASE_URL}/api/ProductType/GetProdTypeByUkey/${uKey}`;
+  const apiUpdate = `${API_BASE_URL}/api/ProductType/UpdateProdType`;
 
   useEffect(() => {
     fetch(apiGet, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })

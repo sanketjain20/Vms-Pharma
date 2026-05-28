@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../../Styles/Retailer/Retailer.css";
 import { toast } from "react-toastify";
-
+import API_BASE_URL from "../../Config/api.config";
 const FIELDS = [
   { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Sharma Medical Store",   half: false },
   { key: "ownerName",          label: "Owner Name",           type: "text",     required: false, placeholder: "e.g. Vijay Sharma",           half: false },
@@ -47,7 +47,7 @@ export default function RetailerAdd({ onClose, onSubmit }) {
     if (Object.keys(e).length) { setErrors(e); return; }
     setLoading(true);
     try {
-      const res  = await fetch("http://localhost:8080/api/Retailer/Add", {
+      const res  = await fetch(`${API_BASE_URL}/api/Retailer/Add`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/Product/ProductForm.css";
 import { toast } from "react-toastify";
-
+import API_BASE_URL from "../../Config/api.config";
 /* ── Reusable searchable dropdown — same as Add ── */
 const SearchDrop = ({ label, options, value, onChange, placeholder, error }) => {
   const [search, setSearch] = useState("");
@@ -77,7 +77,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH PRODUCT TYPES ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/ProductType/GetAllProductType", {
+    fetch(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
       method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())
@@ -93,7 +93,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH MANUFACTURERS ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/Manufacturer/GetDropdown", {
+    fetch(`${API_BASE_URL}/api/Manufacturer/GetDropdown`, {
       method: "GET", credentials: "include",
     })
       .then(r => r.json())
@@ -104,7 +104,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
   /* ── LOAD PRODUCT ── */
   useEffect(() => {
     if (!uKey) return;
-    fetch(`http://localhost:8080/api/Product/GetProductByUkey/${uKey}`, {
+    fetch(`${API_BASE_URL}/api/Product/GetProductByUkey/${uKey}`, {
       method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())
@@ -217,7 +217,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
     };
 
     try {
-      const res    = await fetch(`http://localhost:8080/api/Product/UpdateProd/${formData.id}`, {
+      const res    = await fetch(`${API_BASE_URL}/api/Product/UpdateProd/${formData.id}`, {
         method: "PUT", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/Purchase/Purchase.css";
 import { toast } from "react-toastify";
-
+import API_BASE_URL from "../../Config/api.config";
 /* ── Searchable dropdown — same pattern as your Sales ── */
 const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setOpen }) => {
   const [search, setSearch] = useState("");
@@ -72,7 +72,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
 
   /* ── FETCH SUPPLIERS ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/Supplier/GetSupplierDropdown", { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Supplier/GetSupplierDropdown`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setSuppliers(json.data || []))
       .catch(() => {});
@@ -80,7 +80,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
 
   /* ── FETCH PRODUCTS ── */
   useEffect(() => {
-    fetch("http://localhost:8080/api/Product/GetAllProduct", { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Product/GetAllProduct`, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         const d = json?.data;
@@ -201,7 +201,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
         })),
       };
 
-      const res  = await fetch("http://localhost:8080/api/Purchase/CreatePurchase?createdBy=1", {
+      const res  = await fetch(`${API_BASE_URL}/api/Purchase/CreatePurchase?createdBy=1`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

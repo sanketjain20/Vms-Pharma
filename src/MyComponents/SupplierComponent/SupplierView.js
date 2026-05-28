@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/Supplier/Supplier.css";
-
+import API_BASE_URL from "../../Config/api.config";
 /* ── Info card helper ── */
 const InfoCard = ({ label, value, mono, accent, full }) => (
   <div className={`sup-view-card ${full ? "sup-view-card-full" : ""}`}>
@@ -28,7 +28,7 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`http://localhost:8080/api/Supplier/GetSupplierByUKey/${uKey}`, {
+    fetch(`${API_BASE_URL}/api/Supplier/GetSupplierByUKey/${uKey}`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })

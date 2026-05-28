@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../../Styles/Inventory/ExpiryAlert.css";
+import API_BASE_URL from "../../Config/api.config";
 
-const API_URL = "http://localhost:8080/api/Inventory/ExpiryAlerts";
+const API_URL = `${API_BASE_URL}/api/Inventory/ExpiryAlerts`;
 
 const WINDOWS = [
   { key: "30", label: "30 Days", maxDays: 30, color: "#dd6c2a" },

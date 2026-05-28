@@ -2,7 +2,7 @@ import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
 import "../../Styles/RetailerOutstanding/RetailerOutstanding.css";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function SupplierOutstanding() {
   const columns = [
     { header: "Supplier Code",    field: "supplierCode",        width: "140px" },
@@ -49,7 +49,7 @@ export default function SupplierOutstanding() {
 
       <DynamicGrid
         columns={columns}
-        apiUrl="http://localhost:8080/api/SupplierLedger/Outstanding"
+        apiUrl={`${API_BASE_URL}/api/SupplierLedger/Outstanding`}
         Module="Supplier Outstanding"
         ModuleId="19"
         noPagination={true}

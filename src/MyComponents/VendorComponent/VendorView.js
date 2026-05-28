@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/Vendor/VendorView.css";
 import { toast } from "react-toastify";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function VendorView({ uKey, onClose }) {
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`http://localhost:8080/api/Vendor/GetVendorByUkey/${uKey}`, {
+    fetch(`${API_BASE_URL}/api/Vendor/GetVendorByUkey/${uKey}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

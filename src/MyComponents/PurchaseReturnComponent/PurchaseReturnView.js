@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/SalesReturn/SalesReturnView.css";
-
+import API_BASE_URL from "../../Config/api.config";
 export default function PurchaseReturnView({ uKey, onClose }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -11,7 +11,7 @@ export default function PurchaseReturnView({ uKey, onClose }) {
     setLoading(true);
     setError("");
 
-    fetch(`http://localhost:8080/api/PurchaseReturn/GetByUkey/${uKey}`, {
+    fetch(`${API_BASE_URL}/api/PurchaseReturn/GetByUkey/${uKey}`, {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
