@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "../../Styles/Login/Login.css";
+import API_BASE_URL from "../../Config/api.config";
 
 /* ══════════════════════════════════════════════════════
    CANVAS — Amber grid + drift particles + data-lines
@@ -225,7 +226,7 @@ function VMSRight() {
     if (!password.trim() || loading) return;
     setLoading(true);
     try {
-      const res  = await fetch("https://vms-ui-backend-3.onrender.com/api/auth/login", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

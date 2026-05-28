@@ -8,6 +8,7 @@ import {
   drawPerspectiveScene,
   isLightTheme,
 } from "../../utils/canvasTheme";
+import API_BASE_URL from "../../Config/api.config";
 
 /* ═══════════════════════════════════════════════════════════════
    GSTR TABLE COMPONENTS — defined OUTSIDE the main component so
@@ -478,7 +479,7 @@ export default function GenerateReport() {
   /* ── Fetch fields ── */
   useEffect(() => {
     if (!moduleId) return;
-    fetch(`http://localhost:8080/api/Reports/GetFieldByModuleId/${moduleId}`, {
+    fetch(`${API_BASE_URL}/api/Reports/GetFieldByModuleId/${moduleId}`, {
       credentials: "include",
     })
       .then((r) => r.json())
@@ -490,41 +491,41 @@ export default function GenerateReport() {
 
   /* ── API map ── */
   const apiMap = {
-    [ReportEntity.Vendor]:            "http://localhost:8080/api/Vendor/GetVendorReport",
-    [ReportEntity.ProductType]:       "http://localhost:8080/api/ProductType/GetProductTypeReport",
-    [ReportEntity.Product]:           "http://localhost:8080/api/Product/GetProductReport",
-    [ReportEntity.Inventory]:         "http://localhost:8080/api/Inventory/GetInventoryReport",
-    [ReportEntity.Sales]:             "http://localhost:8080/api/Sales/GetSaleReport",
-    [ReportEntity.Roles]:             "http://localhost:8080/api/Roles/GetRoleReport",
-    [ReportEntity.Reports]:           "http://localhost:8080/api/Reports/GetReportData",
-    [ReportEntity.Revenue]:           "http://localhost:8080/api/Reports/RevenueReportData",
-    [ReportEntity.StockMovement]:     "http://localhost:8080/api/Inventory/GetInvMovementReport",
-    [ReportEntity.Outstanding]:       "http://localhost:8080/api/Reports/OutstandingReportData",
-    [ReportEntity.RetailerCustomer]:  "http://localhost:8080/api/Reports/CustomerReportData",
-    [ReportEntity.Purchase]:          "http://localhost:8080/api/Purchase/PurchaseReportData",
-    [ReportEntity.Supplier]:          "http://localhost:8080/api/Supplier/SupplierReportData",
-    [ReportEntity.PaymentCollection]: "http://localhost:8080/api/PaymentCollection/PaymentCollectionReportData",
-    [ReportEntity.DayBook]:           "http://localhost:8080/api/Reports/DayBookReportData",
-    [ReportEntity.GSTR1]:             "http://localhost:8080/api/Reports/GstReportData",
+    [ReportEntity.Vendor]:            `${API_BASE_URL}/api/Vendor/GetVendorReport`,
+    [ReportEntity.ProductType]:       `${API_BASE_URL}/api/ProductType/GetProductTypeReport`,
+    [ReportEntity.Product]:           `${API_BASE_URL}/api/Product/GetProductReport`,
+    [ReportEntity.Inventory]:         `${API_BASE_URL}/api/Inventory/GetInventoryReport`,
+    [ReportEntity.Sales]:             `${API_BASE_URL}/api/Sales/GetSaleReport`,
+    [ReportEntity.Roles]:             `${API_BASE_URL}/api/Roles/GetRoleReport`,
+    [ReportEntity.Reports]:           `${API_BASE_URL}/api/Reports/GetReportData`,
+    [ReportEntity.Revenue]:           `${API_BASE_URL}/api/Reports/RevenueReportData`,
+    [ReportEntity.StockMovement]:     `${API_BASE_URL}/api/Inventory/GetInvMovementReport`,
+    [ReportEntity.Outstanding]:       `${API_BASE_URL}/api/Reports/OutstandingReportData`,
+    [ReportEntity.RetailerCustomer]:  `${API_BASE_URL}/api/Reports/CustomerReportData`,
+    [ReportEntity.Purchase]:          `${API_BASE_URL}/api/Purchase/PurchaseReportData`,
+    [ReportEntity.Supplier]:          `${API_BASE_URL}/api/Supplier/SupplierReportData`,
+    [ReportEntity.PaymentCollection]: `${API_BASE_URL}/api/PaymentCollection/PaymentCollectionReportData`,
+    [ReportEntity.DayBook]:           `${API_BASE_URL}/api/Reports/DayBookReportData`,
+    [ReportEntity.GSTR1]:             `${API_BASE_URL}/api/Reports/GstReportData`,
   };
 
   const downloadApiMap = {
-    [ReportEntity.Vendor]:            "http://localhost:8080/api/Vendor/report",
-    [ReportEntity.ProductType]:       "http://localhost:8080/api/ProductType/Report",
-    [ReportEntity.Product]:           "http://localhost:8080/api/Product/Report",
-    [ReportEntity.Inventory]:         "http://localhost:8080/api/Inventory/Report",
-    [ReportEntity.Sales]:             "http://localhost:8080/api/Sales/Report",
-    [ReportEntity.Roles]:             "http://localhost:8080/api/Roles/GenerateReport",
-    [ReportEntity.Reports]:           "http://localhost:8080/api/Reports/GenerateReport",
-    [ReportEntity.Revenue]:           "http://localhost:8080/api/Reports/RevenueReport",
-    [ReportEntity.StockMovement]:     "http://localhost:8080/api/Inventory/InvMovementFileReport",
-    [ReportEntity.Outstanding]:       "http://localhost:8080/api/Reports/OutstandingReport",
-    [ReportEntity.RetailerCustomer]:  "http://localhost:8080/api/Reports/CustomerReport",
-    [ReportEntity.Purchase]:          "http://localhost:8080/api/Purchase/PurchaseReport",
-    [ReportEntity.Supplier]:          "http://localhost:8080/api/Supplier/SupplierReport",
-    [ReportEntity.PaymentCollection]: "http://localhost:8080/api/PaymentCollection/PaymentCollectionReport",
-    [ReportEntity.DayBook]:           "http://localhost:8080/api/Reports/DayBookReport",
-    [ReportEntity.GSTR1]:             "http://localhost:8080/api/Reports/GstReport",
+    [ReportEntity.Vendor]:            `${API_BASE_URL}/api/Vendor/report`,
+    [ReportEntity.ProductType]:       `${API_BASE_URL}/api/ProductType/Report`,
+    [ReportEntity.Product]:           `${API_BASE_URL}/api/Product/Report`,
+    [ReportEntity.Inventory]:         `${API_BASE_URL}/api/Inventory/Report`,
+    [ReportEntity.Sales]:             `${API_BASE_URL}/api/Sales/Report`,
+    [ReportEntity.Roles]:             `${API_BASE_URL}/api/Roles/GenerateReport`,
+    [ReportEntity.Reports]:           `${API_BASE_URL}/api/Reports/GenerateReport`,
+    [ReportEntity.Revenue]:           `${API_BASE_URL}/api/Reports/RevenueReport`,
+    [ReportEntity.StockMovement]:     `${API_BASE_URL}/api/Inventory/InvMovementFileReport`,
+    [ReportEntity.Outstanding]:       `${API_BASE_URL}/api/Reports/OutstandingReport`,
+    [ReportEntity.RetailerCustomer]:  `${API_BASE_URL}/api/Reports/CustomerReport`,
+    [ReportEntity.Purchase]:          `${API_BASE_URL}/api/Purchase/PurchaseReport`,
+    [ReportEntity.Supplier]:          `${API_BASE_URL}/api/Supplier/SupplierReport`,
+    [ReportEntity.PaymentCollection]: `${API_BASE_URL}/api/PaymentCollection/PaymentCollectionReport`,
+    [ReportEntity.DayBook]:           `${API_BASE_URL}/api/Reports/DayBookReport`,
+    [ReportEntity.GSTR1]:             `${API_BASE_URL}/api/Reports/GstReport`,
   };
 
   /* ── Fetch report data ── */

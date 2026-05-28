@@ -15,6 +15,7 @@ import {
   createOrbField,
   drawPerspectiveScene,
 } from "../../utils/canvasTheme";
+import API_BASE_URL from "../../Config/api.config";
 
 /* ─── tiny xlsx writer ──────────────────────────────────────────────────────── */
 function s2ab(s) {
@@ -438,7 +439,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
 
   useEffect(() => {
     if (!Module) return;
-    fetch(`http://localhost:8080/api/Access/GetUserModuleAccess/${ModuleId}/${roleId}`, { method: "GET", credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Access/GetUserModuleAccess/${ModuleId}/${roleId}`, { method: "GET", credentials: "include" })
       .then(r => r.json())
       .then(res => { if (res.status === 200 && Array.isArray(res.data)) setAccessList(res.data); });
   }, [Module]);

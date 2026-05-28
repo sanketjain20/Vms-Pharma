@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/Report/Report.css";
 import { useCanvasThemeKey, isLightTheme } from "../../utils/canvasTheme";
+import API_BASE_URL from "../../Config/api.config";
 
 /* ── Canvas background ────────────────────────────────────── */
 function ReportCanvas() {
@@ -252,8 +253,8 @@ const roleId = localStorage.getItem("roleId");
 /* ── Main ─────────────────────────────────────────────────── */
 export default function ReportsDashboard() {
   const moduleId = 7;
-  const apiUrl   = "http://localhost:8080/api/Reports/GetAllReports";
-  const accessApi = `http://localhost:8080/api/Access/GetUserModuleAccess/${moduleId}/${roleId}`;
+  const apiUrl   = `${API_BASE_URL}/api/Reports/GetAllReports`;
+  const accessApi = `${API_BASE_URL}/api/Access/GetUserModuleAccess/${moduleId}/${roleId}`;
 
   const [search, setSearch]                   = useState("");
   const [reports, setReports]                 = useState([]);

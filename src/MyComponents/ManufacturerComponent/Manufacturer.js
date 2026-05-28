@@ -1,6 +1,7 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
+import API_BASE_URL from "../../Config/api.config";
 
 export default function Manufacturer() {
 const columns = [
@@ -18,7 +19,7 @@ return ( <div className="i-container"> <h2 className="i-title"> 🏭
 
   <DynamicGrid
     columns={columns}
-    apiUrl="http://localhost:8080/api/Manufacturer/GetAllManufacturerPaged"
+    apiUrl={`${API_BASE_URL}/api/Manufacturer/GetAllManufacturerPaged`}
     Module="Manufacturer"
     ModuleId ="11"
   />

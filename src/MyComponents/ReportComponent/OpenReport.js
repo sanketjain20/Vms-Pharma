@@ -9,7 +9,7 @@ import {
   drawPerspectiveScene,
   isLightTheme,
 } from "../../utils/canvasTheme";
-
+import API_BASE_URL from "../../Config/api.config";
 /* =========================
    UTILS
 ========================= */
@@ -227,7 +227,7 @@ export default function OpenReport() {
   /* FETCH FILTERS */
   useEffect(() => {
     if (!moduleId) return;
-    fetch(`http://localhost:8080/api/Filters/GetFiltersByModule/${moduleId}`, { credentials: "include" })
+    fetch(`${API_BASE_URL}/api/Filters/GetFiltersByModule/${moduleId}`, { credentials: "include" })
       .then((r) => r.json())
       .then((d) => {
         if (d.status === 200) setFilters(d.data);
@@ -238,12 +238,12 @@ export default function OpenReport() {
   /* FETCH OPTIONS */
   useEffect(() => {
     const map = {
-      [ReportEntity.Product]:     "http://localhost:8080/api/Product/GetFilterData",
-      [ReportEntity.ProductType]: "http://localhost:8080/api/ProductType/GetFilterData",
-      [ReportEntity.Inventory]:   "http://localhost:8080/api/Inventory/InvReportFilterData",
-      [ReportEntity.Sales]:       "http://localhost:8080/api/Sales/SalesReportFilterData",
-      [ReportEntity.Revenue]:     "http://localhost:8080/api/Reports/RevenueReportFilterData",
-      [ReportEntity.StockMovement]: "http://localhost:8080/api/Inventory/StockMovReportFilterData",
+      [ReportEntity.Product]:     `${API_BASE_URL}/api/Product/GetFilterData`,
+      [ReportEntity.ProductType]: `${API_BASE_URL}/api/ProductType/GetFilterData`,
+      [ReportEntity.Inventory]:   `${API_BASE_URL}/api/Inventory/InvReportFilterData`,
+      [ReportEntity.Sales]:       `${API_BASE_URL}/api/Sales/SalesReportFilterData`,
+      [ReportEntity.Revenue]:     `${API_BASE_URL}/api/Reports/RevenueReportFilterData`,
+      [ReportEntity.StockMovement]: `${API_BASE_URL}/api/Inventory/StockMovReportFilterData`,
     };
     if (!map[moduleId]) return;
     fetch(map[moduleId], { credentials: "include" })

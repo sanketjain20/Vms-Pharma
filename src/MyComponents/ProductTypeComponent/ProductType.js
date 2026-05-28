@@ -1,6 +1,7 @@
 import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
+import API_BASE_URL from "../../Config/api.config";
 
 export default function ProductType() {
 const columns = [
@@ -19,7 +20,7 @@ PRODUCT TYPES</h2>
       
       <DynamicGrid 
         columns={columns} 
-        apiUrl="http://localhost:8080/api/ProductType/GetAllProductTypePaged" 
+        apiUrl={`${API_BASE_URL}/api/ProductType/GetAllProductTypePaged`} 
         Module="Product Type"
         ModuleId ="2"
       />

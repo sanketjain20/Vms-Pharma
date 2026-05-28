@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/Sidebar.css";
+import API_BASE_URL from "../../Config/api.config";
 
 /* ── Icon Map ─────────────────────────────────────────────── */
 const iconMap = {
@@ -145,7 +146,7 @@ export default function Sidebar() {
   const toggleRef = useRef(null);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/Access/GetModules", {
+    fetch(`${API_BASE_URL}/api/Access/GetModules`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
