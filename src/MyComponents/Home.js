@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Home.css";
 import { useCanvasThemeKey, getPerspectiveCanvasPalette, isLightTheme } from "../utils/canvasTheme";
-import API_BASE_URL from "../../Config/api.config";
+import API_BASE_URL from "../Config/api.config";
 
 /* ── Live Clock ── */
 function LiveClock() {
