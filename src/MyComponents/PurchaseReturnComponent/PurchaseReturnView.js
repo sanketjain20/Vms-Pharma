@@ -14,7 +14,6 @@ export default function PurchaseReturnView({ uKey, onClose }) {
 
     apiClient(`${API_BASE_URL}/api/PurchaseReturn/GetByUkey/${uKey}`, {
       method: "GET",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
       .then(async res => {

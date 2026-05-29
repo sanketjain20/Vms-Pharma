@@ -91,7 +91,6 @@ export default function ExpiryAlert() {
 
     apiClient(API_URL, {
       method: "GET",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {

@@ -108,7 +108,7 @@ function PayForm({ invoice, onSuccess, onCancel }) {
       const res  = await apiClient(
         `${API_BASE_URL}/api/SupplierLedger/CollectPayment`,
         {
-          method: "POST", credentials: "include",
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             purchaseId:      invoice.purchaseId ?? invoice.salesId,
@@ -226,7 +226,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
     try {
       const res  = await apiClient(
         `${API_BASE_URL}/api/SupplierLedger/Ledger/${uKey}`,
-        { method: "GET", credentials: "include" }
+        { method: "GET" }
       );
       const json = await res.json();
       if (json.status === 200) setLedger(json.data);

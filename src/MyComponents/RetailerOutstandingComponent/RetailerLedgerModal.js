@@ -42,7 +42,7 @@ function CollectPaymentForm({ invoice, onSuccess, onCancel }) {
       const res  = await apiClient(
         `${API_BASE_URL}/api/RetailerLedger/CollectPayment`,
         {
-          method: "POST", credentials: "include",
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             salesId:         invoice.salesId,
@@ -152,7 +152,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
     try {
       const res  = await apiClient(
         `${API_BASE_URL}/api/RetailerLedger/Ledger/${retailerId}`,
-        { method: "GET", credentials: "include" }
+        { method: "GET" }
       );
       const json = await res.json();
       if (json.status === 200) setLedger(json.data);

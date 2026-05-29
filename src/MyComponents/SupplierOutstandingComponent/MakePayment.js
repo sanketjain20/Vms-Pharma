@@ -52,7 +52,6 @@ function InvoiceRow({ invoice, active, onCollect, onCancel, onSuccess }) {
     try {
       const res = await apiClient(`${API_BASE_URL}/api/SupplierLedger/CollectPayment`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           purchaseId: invoice.purchaseId ?? invoice.salesId,
@@ -172,7 +171,6 @@ export default function MakePayment({ uKey, onClose, onSuccess }) {
     try {
       const res = await apiClient(`${API_BASE_URL}/api/SupplierLedger/Ledger/${uKey}`, {
         method: "GET",
-        credentials: "include",
       });
       const json = await res.json();
       if (json.status === 200) {

@@ -270,7 +270,7 @@ export default function ReportsDashboard() {
   };
 
   useEffect(() => {
-    apiClient(accessApi, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(accessApi, { method: "GET", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(res => {
         if (res.status === 200 && Array.isArray(res.data))
@@ -280,7 +280,7 @@ export default function ReportsDashboard() {
   }, [accessApi]);
 
   useEffect(() => {
-    apiClient(apiUrl, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(apiUrl, { method: "GET", headers: { "Content-Type": "application/json" } })
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(res => {
         if (res.status === 200 && res.data) {

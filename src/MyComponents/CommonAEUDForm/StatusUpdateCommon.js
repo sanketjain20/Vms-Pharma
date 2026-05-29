@@ -34,7 +34,6 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
     try {
       const response = await apiClient(apiUrl, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
       const result = await response.json();

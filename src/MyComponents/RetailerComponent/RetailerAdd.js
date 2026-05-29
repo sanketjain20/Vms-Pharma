@@ -49,7 +49,7 @@ export default function RetailerAdd({ onClose, onSubmit }) {
     setLoading(true);
     try {
       const res  = await apiClient(`${API_BASE_URL}/api/Retailer/Add`, {
-        method: "POST", credentials: "include",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           shopName:           form.shopName?.trim(),

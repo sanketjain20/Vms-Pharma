@@ -40,7 +40,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH PRODUCTS ── */
   useEffect(() => {
-    apiClient(apiGetAllProducts, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(apiGetAllProducts, { method: "GET", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(res => {
         if (res.status === 200 && Array.isArray(res.data?.products)) {
@@ -53,7 +53,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH PRODUCT TYPES ── */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`)
       .then(r => r.json())
       .then(json => setProductTypes(json?.data?.productTypes || []));
   }, []);
@@ -61,7 +61,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   /* ── FETCH INVENTORY ── */
   useEffect(() => {
     if (products.length === 0 || !isInitialLoad.current) return;
-    apiClient(apiGetInventory, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(apiGetInventory, { method: "GET", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(res => {
         if (!res.data) { toast.error("Inventory not found"); return; }
@@ -98,7 +98,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   /* ── PRODUCT → TYPE ── */
   useEffect(() => {
     if (!formData.product_id) return;
-    apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`)
       .then(r => r.json())
       .then(json => { if (json?.data?.id) setProductTypeId(json.data.id); });
   }, [formData.product_id]);
@@ -106,7 +106,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   /* ── TYPE → PRODUCTS ── */
   useEffect(() => {
     if (!productTypeId) { setProducts(allProducts); return; }
-    apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`)
       .then(r => r.json())
       .then(json => setProducts(json?.data || []));
   }, [productTypeId]);
@@ -147,7 +147,6 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     apiClient(`${apiUpdateInventoryBase}/${inventoryId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify({
         product_id: Number(formData.product_id),
         currentQuantity: Number(formData.currentQuantity),

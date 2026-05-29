@@ -43,7 +43,6 @@ export default function Home() {
  useEffect(() => {
   apiClient(`${API_BASE_URL}/api/Vendor/GetUserRoleId`, {
     method: "GET",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
   })
     .then((r) => r.json())

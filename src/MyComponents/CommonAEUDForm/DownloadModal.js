@@ -16,7 +16,6 @@ export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmi
                     `${API_BASE_URL}/api/Invoice/GenerateInvoice/${id}/1`,
                     {
                         method: "GET",
-                        credentials: "include",
                         headers: { "Content-Type": "application/json" },
                     }
                 );

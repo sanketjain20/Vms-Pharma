@@ -174,7 +174,7 @@ export default function Settings() {
   /* fetch */
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Vendor/SettingDetails`, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then((r) => r.json())
@@ -212,7 +212,7 @@ export default function Settings() {
       push("No changes to save", "info"); return;
     }
     apiClient(`${API_BASE_URL}/api/Vendor/UpdateVendorSetting`, {
-      method: "PUT", credentials: "include",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, shopName, profilePicture: finalPhoto }),
     })
@@ -234,7 +234,7 @@ export default function Settings() {
     if (newPw !== conPw)            { push("New passwords do not match", "error"); return; }
     if (getPasswordStrength(newPw) < 1) { push("Password is too weak", "warn"); return; }
     apiClient(`${API_BASE_URL}/api/Vendor/UpdatePassword`, {
-      method: "PUT", credentials: "include",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, oldPassword: curPw, newPassword: newPw }),
     })

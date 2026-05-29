@@ -30,7 +30,7 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
   useEffect(() => {
     if (!uKey) return;
     apiClient(`${API_BASE_URL}/api/Supplier/GetSupplierByUKey/${uKey}`, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(async r => {

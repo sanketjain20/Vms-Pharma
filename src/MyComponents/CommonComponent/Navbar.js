@@ -46,7 +46,6 @@ export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
     try {
       const res = await apiClient(`${API_BASE_URL}/api/auth/logout`, {
         method: "POST",
-        credentials: "include",
       });
       if (res.ok) {
         localStorage.removeItem("vmsUser");

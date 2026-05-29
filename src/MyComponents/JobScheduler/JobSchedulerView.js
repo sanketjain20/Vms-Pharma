@@ -51,7 +51,7 @@ export default function JobSchedulerView() {
     const load = async () => {
       try {
         setLoading(true);
-        const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/GetJobById/${id}`, { credentials: "include" });
+        const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/GetJobById/${id}`);
         const result = await res.json();
         if (result.status === 200) setJob(result.data);
       } catch (e) { console.error("Error loading job:", e); }

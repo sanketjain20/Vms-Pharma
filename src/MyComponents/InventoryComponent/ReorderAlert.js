@@ -77,7 +77,6 @@ export default function ReorderAlert() {
 
     apiClient(API_URL, {
       method: "GET",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {

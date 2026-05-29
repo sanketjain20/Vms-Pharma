@@ -26,7 +26,6 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
         apiClient(`${API_BASE_URL}/api/Roles/getAll`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
-            credentials: "include",
         })
             .then(r => r.json())
             .then(res => { if (res.status === 200) setRoles(res.data); })
@@ -39,7 +38,6 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
         apiClient(`${API_BASE_URL}/api/Vendor/GetVendorByUkey/${uKey}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
-            credentials: "include",
         })
             .then(r => r.json())
             .then(res => {
@@ -87,7 +85,6 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
             const response = await apiClient(`${API_BASE_URL}/api/Vendor/UpdateVendor/${vendorId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include",
                 body: JSON.stringify(payload),
             });
             const result = await response.json();

@@ -28,8 +28,7 @@ export default function ManufacturerEdit({ uKey, onClose, onSubmit }) {
     if (!uKey) return;
     setFetching(true);
     apiClient(`${API_BASE_URL}/api/Manufacturer/GetManufacturerByUKey/${uKey}`, {
-      credentials: "include",
-    })
+      })
       .then(r => r.json())
       .then(json => {
         if (json?.status === 200 && json.data) {
@@ -76,7 +75,7 @@ export default function ManufacturerEdit({ uKey, onClose, onSubmit }) {
     setLoading(true);
     try {
       const res  = await apiClient(`${API_BASE_URL}/api/Manufacturer/UpdateManufacturer/${uKey}`, {
-        method: "PUT", credentials: "include",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,

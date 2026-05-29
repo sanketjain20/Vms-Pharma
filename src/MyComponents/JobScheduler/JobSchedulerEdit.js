@@ -39,7 +39,7 @@ export default function JobSchedulerEdit() {
   useEffect(() => {
     (async () => {
       try {
-        const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/GetJobById/${id}`, { credentials: "include" });
+        const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/GetJobById/${id}`);
         const result = await res.json();
         if (result.status === 200) {
           const j = result.data;
@@ -76,7 +76,7 @@ export default function JobSchedulerEdit() {
         failureEmail:   job.failureEmail,
       };
       const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/UpdateJob/${id}`, {
-        method: "PUT", credentials: "include",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

@@ -61,10 +61,10 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
 
   /* ── FETCH DROPDOWNS ── */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/suppliers/dropdown`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/suppliers/dropdown`)
       .then(r => r.json()).then(json => setSuppliers(json.data || [])).catch(() => {});
 
-    apiClient(`${API_BASE_URL}/api/Product/GetAllProduct`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Product/GetAllProduct`)
       .then(r => r.json())
       .then(json => {
         const d = json?.data;
@@ -77,7 +77,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
   useEffect(() => {
     if (!uKey) return;
     setFetching(true);
-    apiClient(`${API_BASE_URL}/api/Purchase/GetPurchaseByUKey/${uKey}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Purchase/GetPurchaseByUKey/${uKey}`)
       .then(r => r.json())
       .then(json => {
         if (json?.status === 200 && json.data) {
@@ -210,7 +210,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
       };
 
       const res  = await apiClient(`${API_BASE_URL}/api/Purchase/UpdatePurchase/${uKey}`, {
-        method: "PUT", credentials: "include",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

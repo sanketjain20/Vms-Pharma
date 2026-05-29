@@ -9,7 +9,7 @@ export default function SalesView({ uKey, onClose }) {
   useEffect(() => {
     if (!uKey) return;
     apiClient(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${uKey}`, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {
@@ -27,7 +27,7 @@ export default function SalesView({ uKey, onClose }) {
     try {
       const response = await apiClient(
         `${API_BASE_URL}/api/Invoice/GenerateInvoice/${sales.id}/1`,
-        { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } }
+        { method: "GET", headers: { "Content-Type": "application/json" } }
       );
       const result = await response.json();
       if (result.status !== 200 || !result.data) throw new Error(result.message || "Failed to generate invoice");

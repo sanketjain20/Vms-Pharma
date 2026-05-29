@@ -41,7 +41,6 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   useEffect(() => {
     apiClient(fetchUrl, {
       method: "GET",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
       .then((res) => res.json())
@@ -65,8 +64,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   /* ================= FETCH PRODUCT TYPES ================= */
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
-      credentials: "include",
-    })
+      })
       .then(res => res.json())
       .then(json => setProductTypes(json?.data?.productTypes || []));
   }, []);
@@ -128,7 +126,6 @@ export default function InventoryAdd({ onSubmit, onClose }) {
         `${API_BASE_URL}/api/Inventory/AddInventory`,
         {
           method: "POST",
-          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
@@ -169,8 +166,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     lastLoadedType.current = productTypeId;
 
     apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, {
-      credentials: "include",
-    })
+      })
       .then(res => res.json())
       .then(json => setProducts((json?.data || []).filter(p => p.disable === 0)));
   }, [productTypeId, allProducts]);
@@ -180,8 +176,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     if (!formData.product_id) return;
 
     apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, {
-      credentials: "include",
-    })
+      })
       .then(res => res.json())
       .then(json => {
         const typeId = json?.data?.productTypeId || json?.data?.id;

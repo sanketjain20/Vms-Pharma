@@ -12,7 +12,7 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
   const apiUpdate = `${API_BASE_URL}/api/ProductType/UpdateProdType`;
 
   useEffect(() => {
-    apiClient(apiGet, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(apiGet, { method: "GET", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(res => {
         if (res.status === 200) {
@@ -48,7 +48,6 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
     try {
       const response = await apiClient(`${apiUpdate}/${formData.id}`, {
         method: "PUT",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: formData.name.trim(), description: formData.description.trim() }),
       });

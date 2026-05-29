@@ -30,7 +30,7 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
     try {
       const res = await apiClient(
         `${API_BASE_URL}/api/Purchase/GetPurchaseByPurchaseNumber/${purchaseNumber.trim()}`,
-        { method: "GET", credentials: "include" }
+        { method: "GET" }
       );
       const json = await res.json();
 
@@ -106,7 +106,6 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
 
       const res = await apiClient(`${API_BASE_URL}/api/PurchaseReturn/AddPurchaseReturn`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

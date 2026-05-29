@@ -180,7 +180,6 @@ export default function LoginSection() {
     try {
       const res = await apiClient(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password: password.trim() }),
       });

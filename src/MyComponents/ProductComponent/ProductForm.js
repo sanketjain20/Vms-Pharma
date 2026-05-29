@@ -74,7 +74,7 @@ export default function ProductForm({ onSubmit, onClose }) {
   /* ── FETCH PRODUCT TYPES ── */
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
-      method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
+      method: "GET", headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())
       .then(res => {
@@ -90,7 +90,7 @@ export default function ProductForm({ onSubmit, onClose }) {
   /* ── FETCH MANUFACTURERS ── */
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Manufacturer/GetManufacturerDropdown`, {
-      method: "GET", credentials: "include",
+      method: "GET",
     })
       .then(r => r.json())
       .then(res => setManufacturers(res.data || []))
@@ -138,7 +138,7 @@ export default function ProductForm({ onSubmit, onClose }) {
 
     try {
       const res    = await apiClient(`${API_BASE_URL}/api/Product/AddProduct`, {
-        method: "POST", credentials: "include",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

@@ -51,7 +51,6 @@ export default function SupplierAdd({ onClose, onSubmit }) {
                 `${API_BASE_URL}/api/Supplier/CreateSupplier?createdBy=${createdBy}`,
                 {
                     method: "POST",
-                    credentials: "include",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         ...form,

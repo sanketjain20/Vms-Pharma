@@ -42,7 +42,7 @@ export default function PaymentCollectionPage() {
       ...(fromDate  && { fromDate }),
       ...(toDate    && { toDate }),
     });
-    apiClient(`${API_BASE_URL}/api/payments?${params}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/payments?${params}`)
       .then(r => r.json())
       .then(json => {
         if (json?.status === 200 && json.data) {
@@ -57,7 +57,7 @@ export default function PaymentCollectionPage() {
 
   /* ── FETCH TODAY'S COLLECTION ── */
   const fetchToday = () => {
-    apiClient(`${API_BASE_URL}/api/payments/today-collection`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/payments/today-collection`)
       .then(r => r.json())
       .then(json => setTodayTotal(json?.data || 0))
       .catch(() => {});
@@ -65,7 +65,7 @@ export default function PaymentCollectionPage() {
 
   /* ── FETCH OUTSTANDING ── */
   const fetchOutstanding = () => {
-    apiClient(`${API_BASE_URL}/api/payments/outstanding`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/payments/outstanding`)
       .then(r => r.json())
       .then(json => setOutstanding(json?.data || []))
       .catch(() => {});

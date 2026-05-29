@@ -11,7 +11,7 @@ export default function SalesReturnView({ uKey, onClose }) {
     if (!uKey) return;
     setLoading(true); setError("");
     apiClient(`${API_BASE_URL}/api/SalesReturn/GetByUkey/${uKey}`, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(async res => {

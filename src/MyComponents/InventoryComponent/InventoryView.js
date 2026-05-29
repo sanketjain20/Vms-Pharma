@@ -12,7 +12,6 @@ export default function InventoryView({ uKey, onClose }) {
     if (!uKey) return;
     apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByUkey/${uKey}`, {
       method: "GET",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {

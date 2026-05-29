@@ -193,7 +193,7 @@ export default function Dashboard() {
 
   /* ── Fetch ── */
   useEffect(() => {
-    apiClient(API, { credentials: "include" })
+    apiClient(API)
       .then(r => r.json())
       .then(j => { if (j?.status === 200) setData(j.data); })
       .catch(() => {})

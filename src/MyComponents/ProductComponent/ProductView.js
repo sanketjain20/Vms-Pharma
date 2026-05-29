@@ -39,7 +39,7 @@ export default function ProductView({ uKey, onClose }) {
   useEffect(() => {
     if (!uKey) return;
     apiClient(`${API_BASE_URL}/api/Product/GetProductByUkey/${uKey}`, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())

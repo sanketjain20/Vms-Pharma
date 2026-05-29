@@ -45,7 +45,7 @@ export default function ManufacturerAdd({ onClose, onSubmit }) {
     setLoading(true);
     try {
       const res  = await apiClient(`${API_BASE_URL}/api/Manufacturer/Add`, {
-        method: "POST", credentials: "include",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,

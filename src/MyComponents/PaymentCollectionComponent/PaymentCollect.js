@@ -81,7 +81,7 @@ export default function PaymentCollect({
   useEffect(() => {
     if (!prefillSalesUKey || prefillRetailerId) return;
 
-    apiClient(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${prefillSalesUKey}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${prefillSalesUKey}`)
       .then(r => r.json())
       .then(json => {
         if (json?.status === 200 && json.data) setSalesPrefill(json.data);
@@ -91,7 +91,7 @@ export default function PaymentCollect({
 
   /* ── FETCH RETAILERS WITH OUTSTANDING ── */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/PaymentCollection/GetRetailersOutstanding`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/PaymentCollection/GetRetailersOutstanding`)
       .then(r => r.json())
       .then(json => {
         const list = (json?.data || []).map(r => ({
@@ -115,7 +115,7 @@ export default function PaymentCollect({
     setForm(p => ({ ...p, amount: prefill.amount ? String(prefill.amount) : "" }));
     setErrors({});
 
-    apiClient(`${API_BASE_URL}/api/Sales/GetUnpaidInvoice/${retailer.id}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Sales/GetUnpaidInvoice/${retailer.id}`)
       .then(r => r.json())
       .then(json => {
         const list = (json?.data || [])
@@ -238,7 +238,7 @@ export default function PaymentCollect({
         notes:           form.notes || null,
       };
       const res  = await apiClient(`${API_BASE_URL}/api/PaymentCollection/CollectPayment`, {
-        method: "POST", credentials: "include",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

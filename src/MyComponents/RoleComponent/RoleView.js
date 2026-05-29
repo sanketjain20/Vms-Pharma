@@ -8,7 +8,7 @@ export default function RoleView({ uKey, onClose }) {
 
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Roles/GetByUkey/${uKey}`, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())

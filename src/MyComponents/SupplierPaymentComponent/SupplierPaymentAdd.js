@@ -74,7 +74,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
 
   /* ── Fetch suppliers with outstanding ── */
   useEffect(() => {
-    apiClient(`${API}/SuppliersWithOutstanding`, { credentials: "include" })
+    apiClient(`${API}/SuppliersWithOutstanding`)
       .then(r => r.json())
       .then(j => {
         const list = (j?.data || []).map(s => ({
@@ -105,7 +105,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
     setForm(p => ({ ...p, amount: "" }));
     setErrors({});
     // Load unpaid purchases
-    apiClient(`${API_BASE_URL}/api/Purchase/GetUnpaidInvoice/${supplier.id}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Purchase/GetUnpaidInvoice/${supplier.id}`)
       .then(r => r.json())
       .then(j => {
         const list = (j?.data || []).map(p => ({
@@ -148,7 +148,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
     setLoading(true);
     try {
       const res  = await apiClient(`${API}/Record`, {
-        method: "POST", credentials: "include",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           supplierId:      selectedSupplier.id,

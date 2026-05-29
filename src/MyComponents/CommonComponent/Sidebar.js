@@ -148,7 +148,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Access/GetModules`, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then((res) => { if (!res.ok) throw new Error(); return res.json(); })

@@ -12,7 +12,6 @@ export default function VendorView({ uKey, onClose }) {
     apiClient(`${API_BASE_URL}/api/Vendor/GetVendorByUkey/${uKey}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
     })
       .then(r => r.json())
       .then(res => {

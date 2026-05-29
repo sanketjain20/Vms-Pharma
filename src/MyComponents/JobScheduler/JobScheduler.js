@@ -178,7 +178,7 @@ export default function JobSchedulerPage() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/GetAllJobs`, { credentials: "include" });
+      const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/GetAllJobs`);
       const result = await res.json();
       if (result.status === 200) { setJobs(result.data || []); setTimeout(() => setLoaded(true), 80); }
       else throw new Error(result.message);
@@ -191,7 +191,7 @@ export default function JobSchedulerPage() {
   const toggleJob = async (job) => {
     setLoading(true);
     try {
-      const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/ToggleJob/${job.id}`, { method: "PUT", credentials: "include" });
+      const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/ToggleJob/${job.id}`, { method: "PUT" });
       const result = await res.json();
       if (result.status === 200) { toast.success(result.message || "Job status updated"); fetchJobs(); }
       else throw new Error(result.message);
@@ -203,7 +203,7 @@ export default function JobSchedulerPage() {
     setConfirmRunId(null);
     setRunningId(id);
     try {
-      const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/RunJob/${id}`, { method: "POST", credentials: "include" });
+      const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/RunJob/${id}`, { method: "POST" });
       const result = await res.json();
       if (result.status === 200) { toast.success(result.message || "Job executed successfully"); fetchJobs(); }
       else throw new Error(result.message);

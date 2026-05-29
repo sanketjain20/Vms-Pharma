@@ -10,7 +10,6 @@ export default function ProductTypeView({ uKey, onClose }) {
     if (!uKey) return;
     apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByUkey/${uKey}`, {
       method: "GET",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {

@@ -79,7 +79,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
   /* ── FETCH PRODUCT TYPES ── */
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
-      method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
+      method: "GET", headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())
       .then(res => {
@@ -95,7 +95,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
   /* ── FETCH MANUFACTURERS ── */
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Manufacturer/GetDropdown`, {
-      method: "GET", credentials: "include",
+      method: "GET",
     })
       .then(r => r.json())
       .then(res => setManufacturers(res.data || []))
@@ -106,7 +106,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
   useEffect(() => {
     if (!uKey) return;
     apiClient(`${API_BASE_URL}/api/Product/GetProductByUkey/${uKey}`, {
-      method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
+      method: "GET", headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())
       .then(res => {
@@ -219,7 +219,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
 
     try {
       const res    = await apiClient(`${API_BASE_URL}/api/Product/UpdateProd/${formData.id}`, {
-        method: "PUT", credentials: "include",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

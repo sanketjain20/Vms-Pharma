@@ -27,7 +27,7 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
     if (!uKey) return;
     setFetching(true);
     apiClient(`${API_BASE_URL}/api/Supplier/GetSupplierByUKey/${uKey}`, {
-      method: "GET", credentials: "include",
+      method: "GET",
     })
       .then(r => r.json())
       .then(json => {
@@ -79,7 +79,7 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
     setLoading(true);
     try {
       const res  = await apiClient(`${API_BASE_URL}/api/Supplier/UpdateSupplier/${uKey}/1`, {
-        method: "PUT", credentials: "include",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, gstNumber: form.gstNumber?.toUpperCase() || null }),
       });

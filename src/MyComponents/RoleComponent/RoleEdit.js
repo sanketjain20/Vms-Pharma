@@ -16,7 +16,7 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
   /* ── LOAD ALL PERMISSIONS ── */
   useEffect(() => {
     apiClient(apiGetPermissions, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())
@@ -40,7 +40,7 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
   /* ── LOAD ROLE BY UKEY ── */
   useEffect(() => {
     apiClient(apiGetRole, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())
@@ -107,7 +107,7 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
 
     try {
       const response = await apiClient(`${API_BASE_URL}/api/Roles/Update/${formData.id}`, {
-        method: "PUT", credentials: "include",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roleName: formData.roleName, permissionIds: formData.permissionIds }),
       });

@@ -44,7 +44,6 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
         try {
           const response = await apiClient(url, {
             method: "GET",
-            credentials: "include",
             headers: { "Content-Type": "application/json" },
           });
           if (!response.ok) continue;
@@ -131,7 +130,6 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
     try {
       const response = await apiClient(`${API_BASE_URL}/api/Inventory/StockAdjustment`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

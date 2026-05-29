@@ -22,7 +22,6 @@ export default function VendorAdd({ onClose, onSubmit }) {
     apiClient(`${API_BASE_URL}/api/Roles/getAll`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
     })
       .then(r => r.json())
       .then(res => { if (res.status === 200) setRoles(res.data); })
@@ -55,7 +54,6 @@ export default function VendorAdd({ onClose, onSubmit }) {
       const response = await apiClient(`${API_BASE_URL}/api/Vendor/AddVendor`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(payload),
       });
       const result = await response.json();

@@ -12,7 +12,7 @@ export default function RoleForm({ onSubmit, onClose }) {
 
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Permissions/GetAll`, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())
@@ -81,7 +81,7 @@ export default function RoleForm({ onSubmit, onClose }) {
     if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
     try {
       const response = await apiClient(`${API_BASE_URL}/api/Roles/Add`, {
-        method: "POST", credentials: "include",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });

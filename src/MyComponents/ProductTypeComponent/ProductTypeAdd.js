@@ -27,7 +27,6 @@ export default function ProductTypeAdd({ onSubmit, onClose }) {
     try {
       const response = await apiClient(`${API_BASE_URL}/api/ProductType/AddProdType`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: formData.name, description: formData.description }),
       });

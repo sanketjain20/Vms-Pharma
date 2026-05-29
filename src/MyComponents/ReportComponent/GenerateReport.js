@@ -481,8 +481,7 @@ export default function GenerateReport() {
   useEffect(() => {
     if (!moduleId) return;
     apiClient(`${API_BASE_URL}/api/Reports/GetFieldByModuleId/${moduleId}`, {
-      credentials: "include",
-    })
+      })
       .then((r) => r.json())
       .then((d) => {
         if (d.status === 200) setFields(d.data);
@@ -553,7 +552,6 @@ export default function GenerateReport() {
 
     apiClient(apiUrl, {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
@@ -611,7 +609,6 @@ export default function GenerateReport() {
 
       const response = await apiClient(apiUrl, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

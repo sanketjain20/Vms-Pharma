@@ -27,7 +27,7 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
   useEffect(() => {
     if (!uKey) return;
     apiClient(`${API_BASE_URL}/api/PaymentCollection/GetPaymentByUKey/${uKey}`, {
-      method: "GET", credentials: "include",
+      method: "GET",
     })
       .then(async r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(json => {
@@ -42,7 +42,7 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
     setDeleting(true);
     try {
       const res  = await apiClient(`${API_BASE_URL}/api/PaymentCollection/DeletePayment/${uKey}`, {
-        method: "DELETE", credentials: "include",
+        method: "DELETE",
       });
       const json = await res.json();
       if (json?.status === 200 || json?.success) {

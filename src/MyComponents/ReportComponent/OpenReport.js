@@ -228,7 +228,7 @@ export default function OpenReport() {
   /* FETCH FILTERS */
   useEffect(() => {
     if (!moduleId) return;
-    apiClient(`${API_BASE_URL}/api/Filters/GetFiltersByModule/${moduleId}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Filters/GetFiltersByModule/${moduleId}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.status === 200) setFilters(d.data);
@@ -247,7 +247,7 @@ export default function OpenReport() {
       [ReportEntity.StockMovement]: `${API_BASE_URL}/api/Inventory/StockMovReportFilterData`,
     };
     if (!map[moduleId]) return;
-    apiClient(map[moduleId], { credentials: "include" })
+    apiClient(map[moduleId])
       .then((r) => r.json())
       .then((d) => d.status === 200 && setFilterOptions(d.data));
   }, [moduleId]);

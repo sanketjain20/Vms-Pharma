@@ -73,7 +73,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
 
   /* ── FETCH SUPPLIERS ── */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/Supplier/GetSupplierDropdown`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Supplier/GetSupplierDropdown`)
       .then(r => r.json())
       .then(json => setSuppliers(json.data || []))
       .catch(() => {});
@@ -81,7 +81,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
 
   /* ── FETCH PRODUCTS ── */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/Product/GetAllProduct`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Product/GetAllProduct`)
       .then(r => r.json())
       .then(json => {
         const d = json?.data;
@@ -203,7 +203,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
       };
 
       const res  = await apiClient(`${API_BASE_URL}/api/Purchase/CreatePurchase?createdBy=1`, {
-        method: "POST", credentials: "include",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

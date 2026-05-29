@@ -26,7 +26,7 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
   useEffect(() => {
     if (!uKey) return;
     apiClient(`${API_BASE_URL}/api/Purchase/GetPurchaseByUKey/${uKey}`, {
-      method: "GET", credentials: "include",
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(async r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })

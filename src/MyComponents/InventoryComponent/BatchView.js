@@ -59,7 +59,6 @@ const fetchBatch = async (uKey) => {
     try {
       const response = await apiClient(endpoint, {
         method: "GET",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
       const payload = await response.json().catch(() => null);

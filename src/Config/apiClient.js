@@ -31,7 +31,6 @@ const apiClient = async (endpoint, options = {}) => {
 
   const response = await fetch(url, {
     ...options,
-    credentials: "include",
     headers,
   });
 

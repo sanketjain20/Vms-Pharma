@@ -64,7 +64,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
     try {
       const res  = await apiClient(
         `${API_BASE_URL}/api/Sales/GetSalesByInvoiceNumber/${salesInvoiceNumber.trim()}`,
-        { method: "GET", credentials: "include" }
+        { method: "GET" }
       );
       const json = await res.json();
       if (json.status === 200 && json.data) {
@@ -133,7 +133,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
           .map(l => ({ salesItemId: l.salesItemId, returnQuantity: l.returnQuantity })),
       };
       const res  = await apiClient(`${API_BASE_URL}/api/SalesReturn/AddSalesReturn`, {
-        method: "POST", credentials: "include",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

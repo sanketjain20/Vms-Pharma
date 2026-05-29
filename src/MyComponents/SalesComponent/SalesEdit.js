@@ -88,7 +88,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH RETAILERS ── */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/Retailer/Dropdown`, { method: "GET", credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Retailer/Dropdown`, { method: "GET" })
       .then(r => r.json())
       .then(json => setRetailers(
         (json?.data ?? []).map(r => ({ id: r.id, name: r.shopName + " · " + r.ownerName }))
@@ -98,7 +98,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH ALL PRODUCTS — unchanged ── */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/Product/GetAllProduct`, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(`${API_BASE_URL}/api/Product/GetAllProduct`, { method: "GET", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(json => {
         const dataObj = json?.data;
@@ -109,7 +109,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH PRODUCT TYPES — unchanged ── */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, { method: "GET", headers: { "Content-Type": "application/json" } })
       .then(safeJson)
       .then(json => { const list = json?.data?.productTypes ?? []; setProductTypes(Array.isArray(list) ? list : []); });
   }, []);
@@ -119,7 +119,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
 
   const fetchSaleByUkey = () => {
     apiClient(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${uKey}`, {
-      method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
+      method: "GET", headers: { "Content-Type": "application/json" },
     })
       .then(safeJson)
       .then(json => {
@@ -155,7 +155,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   /* ── FETCH BATCHES when product selected ── */
   useEffect(() => {
     if (!selectedProduct) { setAvailableBatches([]); setSelectedBatchId(""); return; }
-    apiClient(`${API_BASE_URL}/api/Sales/GetAvailableBatches/${selectedProduct}`, { method: "GET", credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Sales/GetAvailableBatches/${selectedProduct}`, { method: "GET" })
       .then(r => r.json())
       .then(json => { if (json?.status === 200) setAvailableBatches(json.data ?? []); else setAvailableBatches([]); })
       .catch(() => setAvailableBatches([]));
@@ -166,14 +166,14 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setSelectedType(typeId); setSelectedProduct(""); setInventory(null); setErrors({});
     setAvailableBatches([]); setSelectedBatchId("");
     if (!typeId) { setProducts(allProducts); return; }
-    apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { method: "GET", credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { method: "GET" })
       .then(safeJson).then(json => setProducts(json?.data ?? []));
   };
 
   /* ── AUTO SET TYPE — unchanged ── */
   useEffect(() => {
     if (!selectedProduct) return;
-    apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${selectedProduct}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${selectedProduct}`)
       .then(r => r.json())
       .then(json => {
         const typeId = json?.data?.productTypeId || json?.data?.id;
@@ -181,7 +181,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
           setSelectedType(typeId);
           if (lastLoadedType.current !== typeId) {
             lastLoadedType.current = typeId;
-            apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { credentials: "include" })
+            apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`)
               .then(r => r.json())
               .then(json => { const list = json?.data ?? []; setProducts(Array.isArray(list) ? list : []); });
           }
@@ -194,7 +194,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setSelectedProduct(prodId); setInventory(null); setErrors({});
     setAvailableBatches([]); setSelectedBatchId("");
     if (!prodId) return;
-    apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${prodId}`, { method: "GET", credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${prodId}`, { method: "GET" })
       .then(safeJson).then(json => setInventory(json?.data || null));
   };
 
@@ -266,7 +266,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setManualPrice(it.sellingPrice);  setTaxInput(it.taxAmount);
     setTaxType("FLAT"); setErrors({});
     setSelectedBatchId(it.batchId ? String(it.batchId) : "");
-    const iRes  = await apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET", credentials: "include" });
+    const iRes  = await apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET" });
     const iJson = await safeJson(iRes);
     if (iJson?.data) setInventory(iJson.data);
   };
@@ -305,7 +305,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     if (Object.keys(tempErrors).length > 0) return;
 
     apiClient(`${API_BASE_URL}/api/Sales/UpdateSales/${saleId}`, {
-      method: "PUT", credentials: "include",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         totalDiscount: parseFloat(discountInput || 0),
