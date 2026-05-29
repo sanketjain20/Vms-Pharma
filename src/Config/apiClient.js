@@ -5,9 +5,9 @@ import API_BASE_URL from "./api.config";
 const getToken = () => {
   try {
     const user = JSON.parse(localStorage.getItem("vmsUser"));
-    const raw = user?.token;
+    const raw = user?.data?.token;
     console.log("Raw:", raw);
-    return user?.token;
+    return user?.data?.token;
   } catch {
     return null;
   }
