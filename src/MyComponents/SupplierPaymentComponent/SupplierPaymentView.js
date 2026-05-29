@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/SupplierPayment/SupplierPayment.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 const API = `${API_BASE_URL}/api/SupplierPayment`;
 const fmt = n => parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
@@ -30,7 +31,7 @@ export default function SupplierPaymentView({ uKey, onClose, onReverse }) {
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`${API}/GetByUKey/${uKey}`, { credentials: "include" })
+    apiClient(`${API}/GetByUKey/${uKey}`, { credentials: "include" })
       .then(async r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(j => { if (j?.status === 200) setData(j.data); else setError(j?.message || "Failed to load"); })
       .catch(err => setError(err.message));
@@ -40,7 +41,7 @@ export default function SupplierPaymentView({ uKey, onClose, onReverse }) {
     if (!confirmRev) { setConfirmRev(true); return; }
     setReversing(true);
     try {
-      const res  = await fetch(`${API}/Reverse/${uKey}`, { method: "DELETE", credentials: "include" });
+      const res  = await apiClient(`${API}/Reverse/${uKey}`, { method: "DELETE", credentials: "include" });
       const json = await res.json();
       if (json?.status === 200) { onReverse?.(); onClose?.(); }
       else setError(json?.message || "Failed to reverse");

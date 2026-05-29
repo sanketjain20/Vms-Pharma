@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "../../Styles/RetailerOutstanding/RetailerLedgerView.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 /* ─── helpers ─────────────────────────────────────────────────────────── */
 const fmt = n =>
   parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
@@ -104,7 +105,7 @@ function CollectForm({ invoice, onSuccess, onCancel }) {
 
     setSubmitting(true);
     try {
-      const res  = await fetch(
+      const res  = await apiClient(
         `${API_BASE_URL}/api/RetailerLedger/CollectPayment`,
         {
           method: "POST", credentials: "include",
@@ -223,7 +224,7 @@ export default function RetailerLedgerView({ uKey, onClose }) {
   const fetchLedger = async () => {
     setLoading(true); setError("");
     try {
-      const res  = await fetch(
+      const res  = await apiClient(
         `${API_BASE_URL}/api/RetailerLedger/Ledger/${uKey}`,
         { method: "GET", credentials: "include" }
       );

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/Sales/SalesView.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 export default function SalesView({ uKey, onClose }) {
   const [sales, setSales] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${uKey}`, {
+    apiClient(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${uKey}`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
@@ -24,7 +25,7 @@ export default function SalesView({ uKey, onClose }) {
 
   const handlePrint = async () => {
     try {
-      const response = await fetch(
+      const response = await apiClient(
         `${API_BASE_URL}/api/Invoice/GenerateInvoice/${sales.id}/1`,
         { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } }
       );

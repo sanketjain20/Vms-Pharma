@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../Styles/Home.css";
 import { useCanvasThemeKey, getPerspectiveCanvasPalette, isLightTheme } from "../utils/canvasTheme";
 import API_BASE_URL from "../Config/api.config";
+import apiClient from "../Config/apiClient";
 
 /* ── Live Clock ── */
 function LiveClock() {
@@ -40,7 +41,7 @@ export default function Home() {
 
 
  useEffect(() => {
-  fetch(`${API_BASE_URL}/api/Vendor/GetUserRoleId`, {
+  apiClient(`${API_BASE_URL}/api/Vendor/GetUserRoleId`, {
     method: "GET",
     credentials: "include",
     headers: { "Content-Type": "application/json" },

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "../../Styles/Login/ForgotPassword.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 /* ── Step indicator ───────────────────────────────────────── */
 const STEPS = ["email", "code", "password"];
 const STEP_LABELS = ["Email", "Verify", "Reset"];
@@ -99,7 +100,7 @@ export default function ForgotPassword() {
     if (!email.trim()) { toast.error("Please enter your email"); return; }
     setLoading(true);
     try {
-      const res  = await fetch(`${API_BASE_URL}/api/auth/SendVerificationCode`, {
+      const res  = await apiClient(`${API_BASE_URL}/api/auth/SendVerificationCode`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim() }),
       });
@@ -115,7 +116,7 @@ export default function ForgotPassword() {
     if (code.length !== 6) { toast.error("Enter the 6-digit code"); return; }
     setLoading(true);
     try {
-      const res  = await fetch(`${API_BASE_URL}/api/auth/VerifyCode`, {
+      const res  = await apiClient(`${API_BASE_URL}/api/auth/VerifyCode`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), otp: code.trim() }),
       });
@@ -132,7 +133,7 @@ export default function ForgotPassword() {
     if (password !== confirmPassword)  { toast.error("Passwords do not match"); return; }
     setLoading(true);
     try {
-      const res  = await fetch(`${API_BASE_URL}/api/auth/ResetPassword`, {
+      const res  = await apiClient(`${API_BASE_URL}/api/auth/ResetPassword`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password }),
       });

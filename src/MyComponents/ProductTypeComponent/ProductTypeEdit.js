@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "../../Styles/Product/ProductForm.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
   const [formData, setFormData] = useState({ id: "", name: "", description: "", typeCode: "" });
   const [originalData, setOriginalData] = useState(null);
@@ -11,7 +12,7 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
   const apiUpdate = `${API_BASE_URL}/api/ProductType/UpdateProdType`;
 
   useEffect(() => {
-    fetch(apiGet, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(apiGet, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(res => {
         if (res.status === 200) {
@@ -45,7 +46,7 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
     if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
 
     try {
-      const response = await fetch(`${apiUpdate}/${formData.id}`, {
+      const response = await apiClient(`${apiUpdate}/${formData.id}`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

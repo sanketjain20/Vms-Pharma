@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/PaymentCollection/Payment.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setOpen, displayKey = "name" }) => {
   const [search, setSearch] = useState("");
   const selected = options.find(o => String(o.id) === String(value));
@@ -80,7 +81,7 @@ export default function PaymentCollect({
   useEffect(() => {
     if (!prefillSalesUKey || prefillRetailerId) return;
 
-    fetch(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${prefillSalesUKey}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${prefillSalesUKey}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         if (json?.status === 200 && json.data) setSalesPrefill(json.data);
@@ -90,7 +91,7 @@ export default function PaymentCollect({
 
   /* ── FETCH RETAILERS WITH OUTSTANDING ── */
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/PaymentCollection/GetRetailersOutstanding`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/PaymentCollection/GetRetailersOutstanding`, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         const list = (json?.data || []).map(r => ({
@@ -114,7 +115,7 @@ export default function PaymentCollect({
     setForm(p => ({ ...p, amount: prefill.amount ? String(prefill.amount) : "" }));
     setErrors({});
 
-    fetch(`${API_BASE_URL}/api/Sales/GetUnpaidInvoice/${retailer.id}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Sales/GetUnpaidInvoice/${retailer.id}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         const list = (json?.data || [])
@@ -236,7 +237,7 @@ export default function PaymentCollect({
         paymentDate:     form.paymentDate,
         notes:           form.notes || null,
       };
-      const res  = await fetch(`${API_BASE_URL}/api/PaymentCollection/CollectPayment`, {
+      const res  = await apiClient(`${API_BASE_URL}/api/PaymentCollection/CollectPayment`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

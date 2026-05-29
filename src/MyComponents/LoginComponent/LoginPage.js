@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "../../Styles/Login/Login.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 /* ══════════════════════════════════════════════════════
    CANVAS — Amber grid + drift particles + data-lines
@@ -226,13 +227,14 @@ function VMSRight() {
     if (!password.trim() || loading) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const res = await apiClient(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password: password.trim() }),
       });
       const data = await res.json();
+      localStorage.setItem("vmsUser", JSON.stringify(data));
       if (data.status !== 200) { toast.error(data?.message || "Login failed"); return; }
       localStorage.setItem("vmsUser", JSON.stringify(data));
       navigate("/home");

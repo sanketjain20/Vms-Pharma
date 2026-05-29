@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../../Styles/Report/Report.css";
 import { useCanvasThemeKey, isLightTheme } from "../../utils/canvasTheme";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 /* ── Canvas background ────────────────────────────────────── */
 function ReportCanvas() {
@@ -269,7 +270,7 @@ export default function ReportsDashboard() {
   };
 
   useEffect(() => {
-    fetch(accessApi, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(accessApi, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(res => {
         if (res.status === 200 && Array.isArray(res.data))
@@ -279,7 +280,7 @@ export default function ReportsDashboard() {
   }, [accessApi]);
 
   useEffect(() => {
-    fetch(apiUrl, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(apiUrl, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(res => {
         if (res.status === 200 && res.data) {

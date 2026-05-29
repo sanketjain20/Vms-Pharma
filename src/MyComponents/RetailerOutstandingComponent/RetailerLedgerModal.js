@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/RetailerOutstanding/RetailerLedgerModal.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 const PAYMENT_MODES = ["CASH", "UPI", "CARD", "BANK"];
 
 /* ── Status badge helper ── */
@@ -38,7 +39,7 @@ function CollectPaymentForm({ invoice, onSuccess, onCancel }) {
 
     setSubmitting(true);
     try {
-      const res  = await fetch(
+      const res  = await apiClient(
         `${API_BASE_URL}/api/RetailerLedger/CollectPayment`,
         {
           method: "POST", credentials: "include",
@@ -149,7 +150,7 @@ export default function RetailerLedgerModal({ retailerId, onClose }) {
   const fetchLedger = async () => {
     setLoading(true); setError("");
     try {
-      const res  = await fetch(
+      const res  = await apiClient(
         `${API_BASE_URL}/api/RetailerLedger/Ledger/${retailerId}`,
         { method: "GET", credentials: "include" }
       );

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../../Styles/Retailer/Retailer.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 const FIELDS = [
   { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Sharma Medical Store" },
   { key: "ownerName",          label: "Owner Name",           type: "text",     required: false, placeholder: "e.g. Vijay Sharma" },
@@ -27,7 +28,7 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
   useEffect(() => {
     if (!uKey) return;
     setFetching(true);
-    fetch(`${API_BASE_URL}/api/Retailer/Get/${uKey}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Retailer/Get/${uKey}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         if (json?.status === 200 && json.data) {
@@ -74,7 +75,7 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
     if (Object.keys(e).length) { setErrors(e); return; }
     setLoading(true);
     try {
-      const res  = await fetch(`${API_BASE_URL}/api/Retailer/Update/${uKey}`, {
+      const res  = await apiClient(`${API_BASE_URL}/api/Retailer/Update/${uKey}`, {
         method: "PUT", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

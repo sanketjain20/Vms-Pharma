@@ -8,6 +8,7 @@ import {
   drawPerspectiveScene,
 } from "../../utils/canvasTheme";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 const API = `${API_BASE_URL}/api/Dashboard/Summary`;
 
@@ -192,7 +193,7 @@ export default function Dashboard() {
 
   /* ── Fetch ── */
   useEffect(() => {
-    fetch(API, { credentials: "include" })
+    apiClient(API, { credentials: "include" })
       .then(r => r.json())
       .then(j => { if (j?.status === 200) setData(j.data); })
       .catch(() => {})

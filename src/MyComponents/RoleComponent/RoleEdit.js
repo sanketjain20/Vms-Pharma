@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../../Styles/Role/RoleAdd.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 export default function RoleEdit({ uKey, onClose, onSubmit }) {
   const [permissions, setPermissions]               = useState([]);
   const [groupedPermissions, setGroupedPermissions] = useState({});
@@ -14,7 +15,7 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
 
   /* ── LOAD ALL PERMISSIONS ── */
   useEffect(() => {
-    fetch(apiGetPermissions, {
+    apiClient(apiGetPermissions, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
@@ -38,7 +39,7 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
 
   /* ── LOAD ROLE BY UKEY ── */
   useEffect(() => {
-    fetch(apiGetRole, {
+    apiClient(apiGetRole, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
@@ -105,7 +106,7 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
     if (Object.keys(validation).length > 0) { setErrors(validation); return; }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/Roles/Update/${formData.id}`, {
+      const response = await apiClient(`${API_BASE_URL}/api/Roles/Update/${formData.id}`, {
         method: "PUT", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roleName: formData.roleName, permissionIds: formData.permissionIds }),

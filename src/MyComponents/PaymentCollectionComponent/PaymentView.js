@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/PaymentCollection/Payment.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 const fmt = n => parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
 const Card = ({ label, value, mono, accent, danger }) => (
@@ -25,7 +26,7 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`${API_BASE_URL}/api/PaymentCollection/GetPaymentByUKey/${uKey}`, {
+    apiClient(`${API_BASE_URL}/api/PaymentCollection/GetPaymentByUKey/${uKey}`, {
       method: "GET", credentials: "include",
     })
       .then(async r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
@@ -40,7 +41,7 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
     if (!confirmDel) { setConfirmDel(true); return; }
     setDeleting(true);
     try {
-      const res  = await fetch(`${API_BASE_URL}/api/PaymentCollection/DeletePayment/${uKey}`, {
+      const res  = await apiClient(`${API_BASE_URL}/api/PaymentCollection/DeletePayment/${uKey}`, {
         method: "DELETE", credentials: "include",
       });
       const json = await res.json();

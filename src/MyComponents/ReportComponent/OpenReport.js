@@ -10,6 +10,7 @@ import {
   isLightTheme,
 } from "../../utils/canvasTheme";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 /* =========================
    UTILS
 ========================= */
@@ -227,7 +228,7 @@ export default function OpenReport() {
   /* FETCH FILTERS */
   useEffect(() => {
     if (!moduleId) return;
-    fetch(`${API_BASE_URL}/api/Filters/GetFiltersByModule/${moduleId}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Filters/GetFiltersByModule/${moduleId}`, { credentials: "include" })
       .then((r) => r.json())
       .then((d) => {
         if (d.status === 200) setFilters(d.data);
@@ -246,7 +247,7 @@ export default function OpenReport() {
       [ReportEntity.StockMovement]: `${API_BASE_URL}/api/Inventory/StockMovReportFilterData`,
     };
     if (!map[moduleId]) return;
-    fetch(map[moduleId], { credentials: "include" })
+    apiClient(map[moduleId], { credentials: "include" })
       .then((r) => r.json())
       .then((d) => d.status === 200 && setFilterOptions(d.data));
   }, [moduleId]);

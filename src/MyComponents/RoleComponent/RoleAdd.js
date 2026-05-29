@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../../Styles/Role/RoleAdd.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 export default function RoleForm({ onSubmit, onClose }) {
   const [permissions, setPermissions]               = useState([]);
   const [groupedPermissions, setGroupedPermissions] = useState({});
@@ -10,7 +11,7 @@ export default function RoleForm({ onSubmit, onClose }) {
   const [errors, setErrors]     = useState({});
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/Permissions/GetAll`, {
+    apiClient(`${API_BASE_URL}/api/Permissions/GetAll`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
@@ -79,7 +80,7 @@ export default function RoleForm({ onSubmit, onClose }) {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
     try {
-      const response = await fetch(`${API_BASE_URL}/api/Roles/Add`, {
+      const response = await apiClient(`${API_BASE_URL}/api/Roles/Add`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

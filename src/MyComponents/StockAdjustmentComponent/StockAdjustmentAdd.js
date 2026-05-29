@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../../Styles/Product/ProductForm.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 const ADJUSTMENT_TYPES = [
   { value: "BREAKAGE", label: "BREAKAGE" },
   { value: "SAMPLE", label: "SAMPLE" },
@@ -41,7 +42,7 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
 
       for (const url of urls) {
         try {
-          const response = await fetch(url, {
+          const response = await apiClient(url, {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -128,7 +129,7 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
 
     setSaving(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/Inventory/StockAdjustment`, {
+      const response = await apiClient(`${API_BASE_URL}/api/Inventory/StockAdjustment`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

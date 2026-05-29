@@ -9,6 +9,7 @@ import {
   isLightTheme,
 } from "../../utils/canvasTheme";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 /* ═══════════════════════════════════════════════════════════════
    GSTR TABLE COMPONENTS — defined OUTSIDE the main component so
@@ -479,7 +480,7 @@ export default function GenerateReport() {
   /* ── Fetch fields ── */
   useEffect(() => {
     if (!moduleId) return;
-    fetch(`${API_BASE_URL}/api/Reports/GetFieldByModuleId/${moduleId}`, {
+    apiClient(`${API_BASE_URL}/api/Reports/GetFieldByModuleId/${moduleId}`, {
       credentials: "include",
     })
       .then((r) => r.json())
@@ -550,7 +551,7 @@ export default function GenerateReport() {
       setGstrLoaded(false);
     }
 
-    fetch(apiUrl, {
+    apiClient(apiUrl, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -608,7 +609,7 @@ export default function GenerateReport() {
         payload[k] = initialFilters[k]?.trim() !== "" ? initialFilters[k] : null;
       });
 
-      const response = await fetch(apiUrl, {
+      const response = await apiClient(apiUrl, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

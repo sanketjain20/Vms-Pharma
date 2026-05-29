@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../../Styles/Inventory/ExpiryAlert.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 const API_URL = `${API_BASE_URL}/api/Inventory/ExpiryAlerts`;
 
@@ -88,7 +89,7 @@ export default function ExpiryAlert() {
     setLoading(true);
     setError("");
 
-    fetch(API_URL, {
+    apiClient(API_URL, {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json" },

@@ -5,6 +5,7 @@ import udoyralogo from "../../Images/udoyraname.png";
 import udyorawingslogo from "../../Images/udyora_wings.svg";
 import ThemeToggle from "./ThemeToggle";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -43,7 +44,7 @@ export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      const res = await apiClient(`${API_BASE_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
       });

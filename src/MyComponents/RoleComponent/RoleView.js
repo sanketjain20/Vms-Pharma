@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "../../Styles/Role/RoleAdd.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 export default function RoleView({ uKey, onClose }) {
   const [roleData, setRoleData] = useState(null);
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/Roles/GetByUkey/${uKey}`, {
+    apiClient(`${API_BASE_URL}/api/Roles/GetByUkey/${uKey}`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })

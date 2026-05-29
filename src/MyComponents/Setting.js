@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Setting.css";
 import API_BASE_URL from "../Config/api.config";
+import apiClient from "../Config/apiClient";
 
 
 /* ─── Helpers ──────────────────────────────────────────────── */
@@ -172,7 +173,7 @@ export default function Settings() {
 
   /* fetch */
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/Vendor/SettingDetails`, {
+    apiClient(`${API_BASE_URL}/api/Vendor/SettingDetails`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
@@ -210,7 +211,7 @@ export default function Settings() {
     if (shopName === origShopName && finalPhoto === origPhoto) {
       push("No changes to save", "info"); return;
     }
-    fetch(`${API_BASE_URL}/api/Vendor/UpdateVendorSetting`, {
+    apiClient(`${API_BASE_URL}/api/Vendor/UpdateVendorSetting`, {
       method: "PUT", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, shopName, profilePicture: finalPhoto }),
@@ -232,7 +233,7 @@ export default function Settings() {
     if (!curPw || !newPw || !conPw) { push("All password fields are required", "warn"); return; }
     if (newPw !== conPw)            { push("New passwords do not match", "error"); return; }
     if (getPasswordStrength(newPw) < 1) { push("Password is too weak", "warn"); return; }
-    fetch(`${API_BASE_URL}/api/Vendor/UpdatePassword`, {
+    apiClient(`${API_BASE_URL}/api/Vendor/UpdatePassword`, {
       method: "PUT", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, oldPassword: curPw, newPassword: newPw }),

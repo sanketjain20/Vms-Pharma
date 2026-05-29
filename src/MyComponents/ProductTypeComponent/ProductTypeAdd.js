@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "../../Styles/Product/ProductForm.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 export default function ProductTypeAdd({ onSubmit, onClose }) {
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [errors, setErrors] = useState({});
@@ -24,7 +25,7 @@ export default function ProductTypeAdd({ onSubmit, onClose }) {
     if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/ProductType/AddProdType`, {
+      const response = await apiClient(`${API_BASE_URL}/api/ProductType/AddProdType`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

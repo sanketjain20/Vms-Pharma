@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/Product/ProductForm.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 /* ── Reusable searchable dropdown ── */
 const SearchDrop = ({ label, options, value, onChange, placeholder, error }) => {
   const [search, setSearch] = useState("");
@@ -72,7 +73,7 @@ export default function ProductForm({ onSubmit, onClose }) {
 
   /* ── FETCH PRODUCT TYPES ── */
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
+    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
       method: "GET", credentials: "include", headers: { "Content-Type": "application/json" },
     })
       .then(r => r.json())
@@ -88,7 +89,7 @@ export default function ProductForm({ onSubmit, onClose }) {
 
   /* ── FETCH MANUFACTURERS ── */
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/Manufacturer/GetManufacturerDropdown`, {
+    apiClient(`${API_BASE_URL}/api/Manufacturer/GetManufacturerDropdown`, {
       method: "GET", credentials: "include",
     })
       .then(r => r.json())
@@ -136,7 +137,7 @@ export default function ProductForm({ onSubmit, onClose }) {
     };
 
     try {
-      const res    = await fetch(`${API_BASE_URL}/api/Product/AddProduct`, {
+      const res    = await apiClient(`${API_BASE_URL}/api/Product/AddProduct`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

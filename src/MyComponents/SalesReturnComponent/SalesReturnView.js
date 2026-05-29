@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../../Styles/SalesReturn/SalesReturnView.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 export default function SalesReturnView({ uKey, onClose }) {
   const [data,    setData]    = useState(null);
   const [error,   setError]   = useState("");
@@ -9,7 +10,7 @@ export default function SalesReturnView({ uKey, onClose }) {
   useEffect(() => {
     if (!uKey) return;
     setLoading(true); setError("");
-    fetch(`${API_BASE_URL}/api/SalesReturn/GetByUkey/${uKey}`, {
+    apiClient(`${API_BASE_URL}/api/SalesReturn/GetByUkey/${uKey}`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })

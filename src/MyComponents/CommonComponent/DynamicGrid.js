@@ -16,6 +16,7 @@ import {
   drawPerspectiveScene,
 } from "../../utils/canvasTheme";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 /* ─── tiny xlsx writer ──────────────────────────────────────────────────────── */
 function s2ab(s) {
@@ -439,13 +440,13 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
 
   useEffect(() => {
     if (!Module) return;
-    fetch(`${API_BASE_URL}/api/Access/GetUserModuleAccess/${ModuleId}/${roleId}`, { method: "GET", credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Access/GetUserModuleAccess/${ModuleId}/${roleId}`, { method: "GET", credentials: "include" })
       .then(r => r.json())
       .then(res => { if (res.status === 200 && Array.isArray(res.data)) setAccessList(res.data); });
   }, [Module]);
 
   const refreshGrid = React.useCallback(() => {
-    fetch(noPagination ? apiUrl : `${apiUrl}/0/100000`, { method: "GET", credentials: "include" })
+    apiClient(noPagination ? apiUrl : `${apiUrl}/0/100000`, { method: "GET", credentials: "include" })
       .then(r => r.json())
       .then(res => {
         if (res.status === 200) {
@@ -459,7 +460,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
   useEffect(() => { refreshGrid(); }, [refreshGrid]);
 
   useEffect(() => {
-    fetch(noPagination ? apiUrl : `${apiUrl}/0/100000`, { method: "GET", credentials: "include" })
+    apiClient(noPagination ? apiUrl : `${apiUrl}/0/100000`, { method: "GET", credentials: "include" })
       .then(r => r.json())
       .then(res => {
         const dataObj = res.data;

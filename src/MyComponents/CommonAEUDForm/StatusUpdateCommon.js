@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/StatusUpdateCommon.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClose }) {
   const [loading, setLoading] = useState(false);
@@ -31,7 +32,7 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
     }
 
     try {
-      const response = await fetch(apiUrl, {
+      const response = await apiClient(apiUrl, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

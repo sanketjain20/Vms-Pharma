@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../../Styles/Manufacturer/Manufacturer.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 /* ── Info card ── */
 const Card = ({ label, value, mono, accent, full }) => (
   <div className={`mfx-view-card ${full ? "mfx-view-card-full" : ""}`}>
@@ -17,7 +18,7 @@ export default function ManufacturerView({ uKey, onClose, onEdit }) {
 
   useEffect(() => {
     if (!uKey) return;
-    fetch(`${API_BASE_URL}/api/Manufacturer/GetManufacturerByUKey/${uKey}`, {
+    apiClient(`${API_BASE_URL}/api/Manufacturer/GetManufacturerByUKey/${uKey}`, {
       method: "GET", credentials: "include",
       headers: { "Content-Type": "application/json" },
     })

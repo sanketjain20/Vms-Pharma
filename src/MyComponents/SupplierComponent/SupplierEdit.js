@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import "../../Styles/Supplier/Supplier.css";
 import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 const FIELD_META = [
   { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Cipla Distributors Pvt Ltd" },
   { key: "contactPerson",      label: "Contact Person",       type: "text",     required: false, placeholder: "e.g. Ramesh Kumar" },
@@ -25,7 +26,7 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
   useEffect(() => {
     if (!uKey) return;
     setFetching(true);
-    fetch(`${API_BASE_URL}/api/Supplier/GetSupplierByUKey/${uKey}`, {
+    apiClient(`${API_BASE_URL}/api/Supplier/GetSupplierByUKey/${uKey}`, {
       method: "GET", credentials: "include",
     })
       .then(r => r.json())
@@ -77,7 +78,7 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
     }
     setLoading(true);
     try {
-      const res  = await fetch(`${API_BASE_URL}/api/Supplier/UpdateSupplier/${uKey}/1`, {
+      const res  = await apiClient(`${API_BASE_URL}/api/Supplier/UpdateSupplier/${uKey}/1`, {
         method: "PUT", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, gstNumber: form.gstNumber?.toUpperCase() || null }),

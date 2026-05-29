@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/Product/ProductForm.css"; // Reuse same modal CSS
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 export default function InventoryAdd({ onSubmit, onClose }) {
   const [products, setProducts] = useState([]);
@@ -38,7 +39,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
 
   /** FETCH ALL PRODUCTS FOR DROPDOWN */
   useEffect(() => {
-    fetch(fetchUrl, {
+    apiClient(fetchUrl, {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -63,7 +64,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
 
   /* ================= FETCH PRODUCT TYPES ================= */
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
+    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
       credentials: "include",
     })
       .then(res => res.json())
@@ -123,7 +124,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     };
 
     try {
-      const response = await fetch(
+      const response = await apiClient(
         `${API_BASE_URL}/api/Inventory/AddInventory`,
         {
           method: "POST",
@@ -167,7 +168,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     if (lastLoadedType.current === productTypeId) return;
     lastLoadedType.current = productTypeId;
 
-    fetch(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, {
+    apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, {
       credentials: "include",
     })
       .then(res => res.json())
@@ -178,7 +179,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   useEffect(() => {
     if (!formData.product_id) return;
 
-    fetch(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, {
+    apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, {
       credentials: "include",
     })
       .then(res => res.json())

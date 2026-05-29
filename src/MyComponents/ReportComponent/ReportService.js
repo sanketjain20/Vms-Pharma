@@ -1,6 +1,7 @@
 // src/MyComponents/Services/reportServices.js
 import { ReportEntity } from "../Enums/ReportEntity";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 
 // Each function constructs payload and calls the respective API
@@ -74,7 +75,7 @@ Object.keys(filters).forEach((key) => {
   }
 });
 
-  const res = await fetch(apiUrl, {
+  const res = await apiClient(apiUrl, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../../Styles/Purchase/Purchase.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 const fmtMoney = (value) =>
   Number(value || 0).toLocaleString("en-IN", {
@@ -56,7 +57,7 @@ const fetchBatch = async (uKey) => {
   let lastError = "Failed to fetch batch";
   for (const endpoint of endpoints) {
     try {
-      const response = await fetch(endpoint, {
+      const response = await apiClient(endpoint, {
         method: "GET",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

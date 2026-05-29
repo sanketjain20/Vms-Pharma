@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import "../../Styles/JobScheduler/JobScheduler.css";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 /* ── Canvas background ────────────────────────────────────── */
 function JobCanvas() {
@@ -177,7 +178,7 @@ export default function JobSchedulerPage() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const res    = await fetch(`${API_BASE_URL}/api/SystemJob/GetAllJobs`, { credentials: "include" });
+      const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/GetAllJobs`, { credentials: "include" });
       const result = await res.json();
       if (result.status === 200) { setJobs(result.data || []); setTimeout(() => setLoaded(true), 80); }
       else throw new Error(result.message);
@@ -190,7 +191,7 @@ export default function JobSchedulerPage() {
   const toggleJob = async (job) => {
     setLoading(true);
     try {
-      const res    = await fetch(`${API_BASE_URL}/api/SystemJob/ToggleJob/${job.id}`, { method: "PUT", credentials: "include" });
+      const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/ToggleJob/${job.id}`, { method: "PUT", credentials: "include" });
       const result = await res.json();
       if (result.status === 200) { toast.success(result.message || "Job status updated"); fetchJobs(); }
       else throw new Error(result.message);
@@ -202,7 +203,7 @@ export default function JobSchedulerPage() {
     setConfirmRunId(null);
     setRunningId(id);
     try {
-      const res    = await fetch(`${API_BASE_URL}/api/SystemJob/RunJob/${id}`, { method: "POST", credentials: "include" });
+      const res    = await apiClient(`${API_BASE_URL}/api/SystemJob/RunJob/${id}`, { method: "POST", credentials: "include" });
       const result = await res.json();
       if (result.status === 200) { toast.success(result.message || "Job executed successfully"); fetchJobs(); }
       else throw new Error(result.message);

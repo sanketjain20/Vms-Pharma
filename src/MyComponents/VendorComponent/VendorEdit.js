@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../../Styles/Vendor/VendorAdd.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 export default function VendorEdit({ uKey, onClose, onSubmit }) {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -22,7 +23,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
 
     /* ── FETCH ROLES ── */
     useEffect(() => {
-        fetch(`${API_BASE_URL}/api/Roles/getAll`, {
+        apiClient(`${API_BASE_URL}/api/Roles/getAll`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
@@ -35,7 +36,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
     /* ── FETCH VENDOR ── */
     useEffect(() => {
         if (!uKey) return;
-        fetch(`${API_BASE_URL}/api/Vendor/GetVendorByUkey/${uKey}`, {
+        apiClient(`${API_BASE_URL}/api/Vendor/GetVendorByUkey/${uKey}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
@@ -83,7 +84,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
         const payload = { name, email, password, shopName, phone, roleId: Number(roleId), address, expiryDate };
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/Vendor/UpdateVendor/${vendorId}`, {
+            const response = await apiClient(`${API_BASE_URL}/api/Vendor/UpdateVendor/${vendorId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

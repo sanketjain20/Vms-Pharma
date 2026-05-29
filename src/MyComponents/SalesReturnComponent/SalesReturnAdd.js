@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import "../../Styles/SalesReturn/SalesReturnAdd.css";
 import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 /* ── Searchable Dropdown (reused pattern) ── */
 const SearchableDropdown = ({
   label, options, selectedId, onSelect,
@@ -61,7 +62,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
     if (!salesInvoiceNumber.trim()) { setFetchErr("Enter a sales invoice number"); return; }
     setFetching(true); setFetchErr(""); setSaleData(null);
     try {
-      const res  = await fetch(
+      const res  = await apiClient(
         `${API_BASE_URL}/api/Sales/GetSalesByInvoiceNumber/${salesInvoiceNumber.trim()}`,
         { method: "GET", credentials: "include" }
       );
@@ -131,7 +132,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
           .filter(l => l.returnQuantity > 0)
           .map(l => ({ salesItemId: l.salesItemId, returnQuantity: l.returnQuantity })),
       };
-      const res  = await fetch(`${API_BASE_URL}/api/SalesReturn/AddSalesReturn`, {
+      const res  = await apiClient(`${API_BASE_URL}/api/SalesReturn/AddSalesReturn`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

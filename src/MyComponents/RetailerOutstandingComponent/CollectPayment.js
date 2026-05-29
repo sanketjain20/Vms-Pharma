@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "../../Styles/RetailerOutstanding/CollectPayment.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 const fmt = n =>
   parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
@@ -50,7 +51,7 @@ function InvoiceRow({ invoice, active, onCollect, onCancel, onSuccess }) {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/RetailerLedger/CollectPayment`, {
+      const res = await apiClient(`${API_BASE_URL}/api/RetailerLedger/CollectPayment`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -170,7 +171,7 @@ export default function CollectPayment({ uKey, onClose, onSuccess }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API_BASE_URL}/api/RetailerLedger/Ledger/${uKey}`, {
+      const res = await apiClient(`${API_BASE_URL}/api/RetailerLedger/Ledger/${uKey}`, {
         method: "GET",
         credentials: "include",
       });

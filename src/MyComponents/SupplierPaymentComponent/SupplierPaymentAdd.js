@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../../Styles/SupplierPayment/SupplierPayment.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 const API = `${API_BASE_URL}/api/SupplierPayment`;
 const fmt = n => parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
@@ -73,7 +74,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
 
   /* ── Fetch suppliers with outstanding ── */
   useEffect(() => {
-    fetch(`${API}/SuppliersWithOutstanding`, { credentials: "include" })
+    apiClient(`${API}/SuppliersWithOutstanding`, { credentials: "include" })
       .then(r => r.json())
       .then(j => {
         const list = (j?.data || []).map(s => ({
@@ -104,7 +105,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
     setForm(p => ({ ...p, amount: "" }));
     setErrors({});
     // Load unpaid purchases
-    fetch(`${API_BASE_URL}/api/Purchase/GetUnpaidInvoice/${supplier.id}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Purchase/GetUnpaidInvoice/${supplier.id}`, { credentials: "include" })
       .then(r => r.json())
       .then(j => {
         const list = (j?.data || []).map(p => ({
@@ -146,7 +147,7 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
     if (Object.keys(e).length) { setErrors(e); return; }
     setLoading(true);
     try {
-      const res  = await fetch(`${API}/Record`, {
+      const res  = await apiClient(`${API}/Record`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

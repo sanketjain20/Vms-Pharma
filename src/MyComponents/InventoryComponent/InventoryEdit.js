@@ -3,6 +3,7 @@ import "../../Styles/Product/ProductForm.css";
 import "../../Styles/Inventory/InventoryEdit.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 
 export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   const dropdownRef     = useRef(null);
@@ -39,7 +40,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH PRODUCTS ── */
   useEffect(() => {
-    fetch(apiGetAllProducts, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(apiGetAllProducts, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(res => {
         if (res.status === 200 && Array.isArray(res.data?.products)) {
@@ -52,7 +53,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
 
   /* ── FETCH PRODUCT TYPES ── */
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/ProductType/GetAllProductType`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setProductTypes(json?.data?.productTypes || []));
   }, []);
@@ -60,7 +61,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   /* ── FETCH INVENTORY ── */
   useEffect(() => {
     if (products.length === 0 || !isInitialLoad.current) return;
-    fetch(apiGetInventory, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
+    apiClient(apiGetInventory, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(res => {
         if (!res.data) { toast.error("Inventory not found"); return; }
@@ -97,7 +98,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   /* ── PRODUCT → TYPE ── */
   useEffect(() => {
     if (!formData.product_id) return;
-    fetch(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => { if (json?.data?.id) setProductTypeId(json.data.id); });
   }, [formData.product_id]);
@@ -105,7 +106,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   /* ── TYPE → PRODUCTS ── */
   useEffect(() => {
     if (!productTypeId) { setProducts(allProducts); return; }
-    fetch(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setProducts(json?.data || []));
   }, [productTypeId]);
@@ -143,7 +144,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     if (!detectChanges() && !stockMovementPayload) return toast.info("No changes to update");
     if (!inventoryId) return toast.error("Inventory ID missing");
 
-    fetch(`${apiUpdateInventoryBase}/${inventoryId}`, {
+    apiClient(`${apiUpdateInventoryBase}/${inventoryId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

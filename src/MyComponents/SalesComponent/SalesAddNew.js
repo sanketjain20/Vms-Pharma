@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import SalesView from "./SalesView";
 import { toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 /* ─────────────────────────────────────────
    SEARCHABLE DROPDOWN  (san- styling)
 ───────────────────────────────────────── */
@@ -222,18 +223,18 @@ export default function SalesAddNew({ onClose, onSubmit }) {
 
   /* ══════════ FETCH ══════════ */
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/Retailer/Dropdown`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Retailer/Dropdown`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setRetailers(
         (json?.data ?? []).map(r => ({ id: r.id, name: `${r.shopName} · ${r.ownerName}` }))
       ))
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/ProductType/GetAllProductType`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setProductTypes(json?.data?.productTypes ?? []));
 
-    fetch(`${API_BASE_URL}/api/Product/GetAllProduct`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Product/GetAllProduct`, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         const d    = json?.data;
@@ -246,7 +247,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   /* ── Fetch batches when product changes ── */
   useEffect(() => {
     if (!selectedProduct) { setAvailableBatches([]); setSelectedBatchId(""); return; }
-    fetch(`${API_BASE_URL}/api/Sales/GetAvailableBatches/${selectedProduct}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Sales/GetAvailableBatches/${selectedProduct}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setAvailableBatches(json?.status === 200 ? json.data ?? [] : []))
       .catch(() => setAvailableBatches([]));
@@ -268,7 +269,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     setAvailableBatches([]); setSelectedBatchId("");
 
     if (!typeId) { setProducts(allProducts); return; }
-    fetch(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setProducts(json?.data ?? []));
   };
@@ -283,14 +284,14 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     // Auto-set type if not already set
     if (!selectedType) {
       try {
-        const res  = await fetch(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${prodId}`, { credentials: "include" });
+        const res  = await apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${prodId}`, { credentials: "include" });
         const json = await res.json();
         const typeId = json?.data?.productTypeId || json?.data?.id;
         if (typeId && typeId !== selectedType) {
           setSelectedType(typeId);
           if (lastLoadedType.current !== typeId) {
             lastLoadedType.current = typeId;
-            fetch(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { credentials: "include" })
+            apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { credentials: "include" })
               .then(r => r.json())
               .then(json => setProducts(json?.data ?? []));
           }
@@ -299,7 +300,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     }
 
     // Inventory
-    fetch(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${prodId}`, { credentials: "include" })
+    apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${prodId}`, { credentials: "include" })
       .then(r => r.json())
       .then(json => setInventory(json?.status === 200 ? json.data : null));
   };
@@ -390,14 +391,14 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     setErrors({});
 
     try {
-      const pRes  = await fetch(`${API_BASE_URL}/api/Product/GetProductById/${it.productId}`, { credentials: "include" });
+      const pRes  = await apiClient(`${API_BASE_URL}/api/Product/GetProductById/${it.productId}`, { credentials: "include" });
       const pJson = await pRes.json();
       if (pJson?.data) {
         const typeId = pJson.data.productTypeId;
         setSelectedType(typeId); lastLoadedType.current = typeId;
         const [lRes, iRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { credentials: "include" }),
-          fetch(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${it.productId}`, { credentials: "include" }),
+          apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { credentials: "include" }),
+          apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${it.productId}`, { credentials: "include" }),
         ]);
         const lJson = await lRes.json();
         const iJson = await iRes.json();
@@ -483,7 +484,7 @@ const payload = {
   }),
 };
     try {
-      const res  = await fetch(`${API_BASE_URL}/api/Sales/AddSales`, {
+      const res  = await apiClient(`${API_BASE_URL}/api/Sales/AddSales`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

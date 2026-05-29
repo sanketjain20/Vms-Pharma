@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import "../../Styles/Supplier/Supplier.css";
 import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
 const FIELD_META = [
     { key: "shopName", label: "Shop Name", type: "text", required: true, placeholder: "e.g. Cipla Distributors Pvt Ltd" },
     { key: "contactPerson", label: "Contact Person", type: "text", required: false, placeholder: "e.g. Ramesh Kumar" },
@@ -46,7 +47,7 @@ export default function SupplierAdd({ onClose, onSubmit }) {
         try {
             const createdBy = 1; // or get from logged-in user
 
-            const res = await fetch(
+            const res = await apiClient(
                 `${API_BASE_URL}/api/Supplier/CreateSupplier?createdBy=${createdBy}`,
                 {
                     method: "POST",
