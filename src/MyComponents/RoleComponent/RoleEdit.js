@@ -9,6 +9,8 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
   const [expandedModules, setExpandedModules]       = useState({});
   const [formData, setFormData] = useState({ id: "", roleName: "", permissionIds: [], roleCode: "" });
   const [errors, setErrors]     = useState({});
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
+  const [roleLoaded, setRoleLoaded] = useState(false);
 
   const apiGetRole        = `${API_BASE_URL}/api/Roles/GetByUkey/${uKey}`;
   const apiGetPermissions = `${API_BASE_URL}/api/Permissions/GetAll`;
@@ -34,7 +36,8 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
           setExpandedModules(allOpen);
         }
       })
-      .catch(err => console.error("Error loading permissions:", err));
+      .catch(err => console.error("Error loading permissions:", err))
+      .finally(() => setPermissionsLoaded(true));
   }, []);
 
   /* ── LOAD ROLE BY UKEY ── */
@@ -55,7 +58,8 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
           });
         } else { toast.error("Error loading role"); }
       })
-      .catch(err => console.error("Role load error:", err));
+      .catch(err => console.error("Role load error:", err))
+      .finally(() => setRoleLoaded(true));
   }, [apiGetRole]);
 
   const handleChange = (e) => {
@@ -124,10 +128,17 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
 
   const totalSelected = formData.permissionIds.length;
   const totalPerms    = permissions.length;
+  const initialLoading = !permissionsLoaded || !roleLoaded;
 
   return (
     <div className="rl-backdrop">
       <div className="rl-modal">
+        {initialLoading ? (
+          <div className="rl-body rl-loading-only">
+            <div className="rl-loader-ring"><div/><div/><div/><div/></div>
+          </div>
+        ) : (
+        <>
 
         <div className="rl-top-beam" />
         <div className="rl-corner rl-tl" /><div className="rl-corner rl-tr" />
@@ -273,6 +284,8 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
           </div>
 
         </form>
+        </>
+        )}
 
       </div>
     </div>

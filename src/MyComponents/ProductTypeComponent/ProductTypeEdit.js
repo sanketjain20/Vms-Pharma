@@ -7,11 +7,13 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
   const [formData, setFormData] = useState({ id: "", name: "", description: "", typeCode: "" });
   const [originalData, setOriginalData] = useState(null);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
 
   const apiGet    = `${API_BASE_URL}/api/ProductType/GetProdTypeByUkey/${uKey}`;
   const apiUpdate = `${API_BASE_URL}/api/ProductType/UpdateProdType`;
 
   useEffect(() => {
+    setLoading(true);
     apiClient(apiGet, { method: "GET", headers: { "Content-Type": "application/json" } })
       .then(r => r.json())
       .then(res => {
@@ -21,7 +23,8 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
           setOriginalData({ name: d.name, description: d.description });
         } else { toast.error("Failed to load product type"); }
       })
-      .catch(err => console.error("Fetch error:", err));
+      .catch(err => console.error("Fetch error:", err))
+      .finally(() => setLoading(false));
   }, [apiGet]);
 
   const handleChange = (e) => {
@@ -65,6 +68,12 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
   return (
     <div className="modal-backdrop show">
       <div className="modal">
+        {loading ? (
+          <div className="modal-body mf-modal-loading">
+            <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+          </div>
+        ) : (
+        <>
 
         
         <div className="modal-header">
@@ -117,6 +126,8 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
             </div>
           </div>
         </form>
+        </>
+        )}
 
       </div>
     </div>

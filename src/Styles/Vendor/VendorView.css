@@ -254,6 +254,13 @@
   padding: 30px 0;
 }
 
+.vv-loading-only {
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  padding: 44px 28px;
+}
+
 .vv-loader-ring {
   position: relative;
   width: 22px; height: 22px;

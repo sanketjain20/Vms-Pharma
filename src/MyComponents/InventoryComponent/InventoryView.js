@@ -27,6 +27,15 @@ export default function InventoryView({ uKey, onClose }) {
   }, [uKey]);
 
   if (!uKey) return null;
+  if (loading) return (
+    <div className="modal-backdrop show">
+      <div className="modal">
+        <div className="modal-body mf-modal-loading">
+          <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="modal-backdrop show">
@@ -59,15 +68,6 @@ export default function InventoryView({ uKey, onClose }) {
         <div className="modal-body">
           <div className="form-col scrollable">
 
-            
-            {loading && (
-              <div className="mf-loading">
-                <div className="loader-ring"><div/><div/><div/><div/></div>
-                Loading inventory…
-              </div>
-            )}
-
-            
             {error && (
               <div className="mf-error">{error}</div>
             )}

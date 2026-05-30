@@ -16,6 +16,7 @@ export default function VendorAdd({ onClose, onSubmit }) {
   const [roles, setRoles]             = useState([]);
   const [errors, setErrors]           = useState({});
   const [loading, setLoading]         = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [showPass, setShowPass]       = useState(false);
 
   useEffect(() => {
@@ -25,7 +26,8 @@ export default function VendorAdd({ onClose, onSubmit }) {
     })
       .then(r => r.json())
       .then(res => { if (res.status === 200) setRoles(res.data); })
-      .catch(err => console.log(err));
+      .catch(err => console.log(err))
+      .finally(() => setInitialLoading(false));
   }, []);
 
   const validate = () => {
@@ -69,6 +71,14 @@ export default function VendorAdd({ onClose, onSubmit }) {
 
   const clearError = (field) => setErrors(p => ({ ...p, [field]: "" }));
 
+  if (initialLoading) return (
+    <div className="vd-backdrop">
+      <div className="vd-modal vd-loading-only">
+        <div className="vd-loader-ring"><div/><div/><div/><div/></div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="vd-backdrop">
 
@@ -78,7 +88,6 @@ export default function VendorAdd({ onClose, onSubmit }) {
           <div className="vd-loader-ring">
             <div /><div /><div /><div />
           </div>
-          <span className="vd-loader-label">Creating vendor…</span>
         </div>
       )}
 

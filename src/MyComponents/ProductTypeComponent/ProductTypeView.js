@@ -5,6 +5,7 @@ import apiClient from "../../Config/apiClient";
 export default function ProductTypeView({ uKey, onClose }) {
   const [productType, setProductType] = useState(null);
   const [error, setError] = useState("");
+  const loading = !productType && !error;
 
   useEffect(() => {
     if (!uKey) return;
@@ -28,6 +29,12 @@ export default function ProductTypeView({ uKey, onClose }) {
   return (
     <div className="modal-backdrop show">
       <div className="modal">
+        {loading ? (
+          <div className="modal-body mf-modal-loading">
+            <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+          </div>
+        ) : (
+        <>
 
         
         <div className="modal-header">
@@ -41,7 +48,6 @@ export default function ProductTypeView({ uKey, onClose }) {
         
         <div className="modal-body">
           {error && <div className="mf-error">{error}</div>}
-          {!productType && !error && <div className="mf-loading">Loading…</div>}
 
           {productType && (
             <div className="form-col">
@@ -72,6 +78,8 @@ export default function ProductTypeView({ uKey, onClose }) {
             <button className="btn-ghost" onClick={onClose}>Close</button>
           </div>
         </div>
+        </>
+        )}
 
       </div>
     </div>

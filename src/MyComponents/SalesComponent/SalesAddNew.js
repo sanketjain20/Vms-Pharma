@@ -154,6 +154,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   const [errors, setErrors]         = useState({});
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewUkey, setViewUkey]     = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   /* ══════════ 3-D CANVAS ══════════ */
   useEffect(() => {
@@ -241,7 +242,9 @@ export default function SalesAddNew({ onClose, onSubmit }) {
         const list = Array.isArray(d) ? d
           : typeof d === "object" ? Object.values(d).find(v => Array.isArray(v)) ?? [] : [];
         setAllProducts(list); setProducts(list);
-      });
+      })
+      .catch(() => {})
+      .finally(() => setInitialLoading(false));
   }, []);
 
   /* ── Fetch batches when product changes ── */
@@ -515,6 +518,12 @@ const payload = {
       <div className="san-noise" />
       <div className="san-top-beam" />
 
+      {initialLoading ? (
+        <div className="san-screen-loading">
+          <div className="san-loader"><div/><div/><div/><div/></div>
+        </div>
+      ) : (
+      <>
       <div className="san-content">
         
         <div className="san-page-header">
@@ -948,6 +957,8 @@ const payload = {
           uKey={viewUkey}
           onClose={() => { setIsViewOpen(false); setViewUkey(null); }}
         />
+      )}
+      </>
       )}
     </div>
   );

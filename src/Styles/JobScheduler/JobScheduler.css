@@ -140,6 +140,10 @@ html, body {
   font-family: var(--font-hud); font-size: 12px; letter-spacing: 2px;
   color: rgba(0,220,255,0.5);
 }
+.js-loading-only {
+  min-height: 100vh;
+  padding: 0;
+}
 .js-loading-spin {
   width: 20px; height: 20px;
   border: 2px solid rgba(0,220,255,.15);

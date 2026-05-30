@@ -51,6 +51,15 @@ export default function SalesView({ uKey, onClose }) {
   };
 
   if (!uKey) return null;
+  if (!sales && !error) return (
+    <div className="sv-backdrop">
+      <div className="sv-modal">
+        <div className="sv-body" style={{ minHeight: 220, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="sv-loader"><div/><div/><div/><div/></div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="sv-backdrop">
@@ -90,13 +99,6 @@ export default function SalesView({ uKey, onClose }) {
                 <path d="M7 4.5V7.5M7 9.5h.01" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
               </svg>
               {error}
-            </div>
-          )}
-
-          {!sales && !error && (
-            <div className="sv-loading">
-              <div className="sv-loader"><div/><div/><div/><div/></div>
-              Loading invoice data…
             </div>
           )}
 

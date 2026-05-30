@@ -71,6 +71,14 @@
   border-radius: var(--vd-r-xl);
 }
 
+.vd-loading-only {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
 /* Multi-ring loader */
 .vd-loader-ring {
   position: relative;

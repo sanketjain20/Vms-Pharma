@@ -9,6 +9,7 @@ export default function RoleForm({ onSubmit, onClose }) {
   const [expandedModules, setExpandedModules]       = useState({});
   const [formData, setFormData] = useState({ roleName: "", permissionIds: [] });
   const [errors, setErrors]     = useState({});
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Permissions/GetAll`, {
@@ -30,7 +31,8 @@ export default function RoleForm({ onSubmit, onClose }) {
           setExpandedModules(allOpen);
         }
       })
-      .catch(err => console.error("Error fetching permissions:", err));
+      .catch(err => console.error("Error fetching permissions:", err))
+      .finally(() => setInitialLoading(false));
   }, []);
 
   const handleChange = (e) => {
@@ -102,6 +104,12 @@ export default function RoleForm({ onSubmit, onClose }) {
   return (
     <div className="rl-backdrop">
       <div className="rl-modal">
+        {initialLoading ? (
+          <div className="rl-body rl-loading-only">
+            <div className="rl-loader-ring"><div/><div/><div/><div/></div>
+          </div>
+        ) : (
+        <>
 
         <div className="rl-top-beam" />
         <div className="rl-corner rl-tl" /><div className="rl-corner rl-tr" />
@@ -224,6 +232,8 @@ export default function RoleForm({ onSubmit, onClose }) {
           </div>
 
         </form>
+        </>
+        )}
 
       </div>
     </div>

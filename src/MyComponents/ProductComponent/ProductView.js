@@ -50,8 +50,10 @@ export default function ProductView({ uKey, onClose }) {
   if (!uKey)    return null;
   if (!product) return (
     <div className="modal-backdrop show">
-      <div className="modal" style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "var(--mf-text-2)", fontFamily: "var(--mf-font-m)", fontSize: 12 }}>Loading…</p>
+      <div className="modal">
+        <div className="modal-body mf-modal-loading">
+          <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+        </div>
       </div>
     </div>
   );

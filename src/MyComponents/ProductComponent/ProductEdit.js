@@ -56,6 +56,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
   const [activeTab,     setActiveTab]     = useState("details");
   const [errors,        setErrors]        = useState({});
   const [originalData,  setOriginalData]  = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     id:              "",
@@ -105,6 +106,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
   /* ── LOAD PRODUCT ── */
   useEffect(() => {
     if (!uKey) return;
+    setInitialLoading(true);
     apiClient(`${API_BASE_URL}/api/Product/GetProductByUkey/${uKey}`, {
       method: "GET", headers: { "Content-Type": "application/json" },
     })
@@ -148,7 +150,8 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
           toast.error("Error loading product details");
         }
       })
-      .catch(err => console.error("Product load error:", err));
+      .catch(err => console.error("Product load error:", err))
+      .finally(() => setInitialLoading(false));
   }, [uKey]);
 
   /* ── MAP productType name → id (backwards compat) ── */
@@ -245,6 +248,12 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
   return (
     <div className="modal-backdrop show">
       <div className="modal">
+        {initialLoading ? (
+          <div className="modal-body mf-modal-loading">
+            <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+          </div>
+        ) : (
+        <>
         <div className="modal-header">
           <div className="modal-title">
             <h3>Edit Product | {formData.productCode}</h3>
@@ -371,6 +380,8 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
             </div>
           </div>
         </form>
+        </>
+        )}
       </div>
     </div>
   );

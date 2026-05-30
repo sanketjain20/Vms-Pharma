@@ -28,6 +28,16 @@ export default function RoleView({ uKey, onClose }) {
 
   const totalPerms = roleData?.permissions?.length || 0;
 
+  if (loading) return (
+    <div className="rl-backdrop">
+      <div className="rl-modal">
+        <div className="rl-body rl-loading-only">
+          <div className="rl-loader-ring"><div/><div/><div/><div/></div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="rl-backdrop">
       <div className="rl-modal">
@@ -61,14 +71,6 @@ export default function RoleView({ uKey, onClose }) {
 
           
           <div className="rl-body">
-
-            
-            {loading && (
-              <div className="rl-view-loading">
-                <div className="rl-loader-ring"><div/><div/><div/><div/></div>
-                Loading role…
-              </div>
-            )}
 
             {!loading && roleData && (
               <>

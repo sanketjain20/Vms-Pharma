@@ -34,6 +34,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   /* ========================================================== */
 
   const [errors, setErrors] = useState({});
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const fetchUrl = `${API_BASE_URL}/api/Product/GetAllProduct`;
 
@@ -58,7 +59,8 @@ export default function InventoryAdd({ onSubmit, onClose }) {
           setAllProducts(list); // NEW
         }
       })
-      .catch((err) => console.error("Error fetching products:", err));
+      .catch((err) => console.error("Error fetching products:", err))
+      .finally(() => setInitialLoading(false));
   }, []);
 
   /* ================= FETCH PRODUCT TYPES ================= */
@@ -188,6 +190,12 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   return (
     <div className="modal-backdrop show">
       <div className="modal">
+        {initialLoading ? (
+          <div className="modal-body mf-modal-loading">
+            <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+          </div>
+        ) : (
+        <>
         
         <div className="modal-header">
           <div className="modal-title">
@@ -365,6 +373,8 @@ export default function InventoryAdd({ onSubmit, onClose }) {
             </div>
           </div>
         </form>
+        </>
+        )}
       </div>
     </div>
   );

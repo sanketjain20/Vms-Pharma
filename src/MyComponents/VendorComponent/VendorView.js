@@ -36,6 +36,16 @@ export default function VendorView({ uKey, onClose }) {
     { label: "Vendor Prefix",        value: vendor.vendorPrefix || "N/A" },
   ] : [];
 
+  if (loading) return (
+    <div className="vv-backdrop">
+      <div className="vv-modal">
+        <div className="vv-body vv-loading vv-loading-only">
+          <div className="vv-loader-ring"><div/><div/><div/><div/></div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="vv-backdrop">
       <div className="vv-modal">
@@ -69,15 +79,6 @@ export default function VendorView({ uKey, onClose }) {
         
         <div className="vv-body">
 
-          
-          {loading && (
-            <div className="vv-loading">
-              <div className="vv-loader-ring"><div/><div/><div/><div/></div>
-              Loading vendor details…
-            </div>
-          )}
-
-          
           {!loading && !vendor && (
             <div className="vv-empty">
               <svg width="28" height="28" viewBox="0 0 28 28" fill="none">

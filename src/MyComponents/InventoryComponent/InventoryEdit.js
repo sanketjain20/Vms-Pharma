@@ -33,6 +33,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   const [inventoryId, setInventoryId]   = useState(null);
   const [originalData, setOriginalData] = useState(null);
   const [errors, setErrors]             = useState({});
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const apiGetAllProducts   = `${API_BASE_URL}/api/Product/GetAllProduct`;
   const apiGetInventory     = `${API_BASE_URL}/api/Inventory/GetInventoryByUkey/${uKey}`;
@@ -46,9 +47,9 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
         if (res.status === 200 && Array.isArray(res.data?.products)) {
           setProducts(res.data.products);
           setAllProducts(res.data.products);
-        } else { toast.error("Failed to load products"); }
+        } else { toast.error("Failed to load products"); setInitialLoading(false); }
       })
-      .catch(() => toast.error("Failed to load products"));
+      .catch(() => { toast.error("Failed to load products"); setInitialLoading(false); });
   }, []);
 
   /* ── FETCH PRODUCT TYPES ── */
@@ -81,7 +82,8 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
         if (inv.productTypeId) setProductTypeId(inv.productTypeId);
         isInitialLoad.current = false;
       })
-      .catch(() => toast.error("Error loading inventory"));
+      .catch(() => toast.error("Error loading inventory"))
+      .finally(() => setInitialLoading(false));
   }, [products]);
 
   /* ── CLICK OUTSIDE ── */
@@ -206,6 +208,12 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   return (
     <div className="modal-backdrop show">
       <div className="modal">
+        {initialLoading ? (
+          <div className="modal-body mf-modal-loading">
+            <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+          </div>
+        ) : (
+        <>
 
         
         <div className="modal-header">
@@ -399,6 +407,8 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
             </div>
           </div>
         </form>
+        </>
+        )}
 
       </div>
     </div>

@@ -47,6 +47,18 @@
   color: rgba(0, 220, 255, 0.45);
 }
 
+.jsv-spin {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border: 2.5px solid rgba(0,220,255,.12);
+  border-top-color: var(--jsv-cyan);
+  border-radius: 50%;
+  animation: jsvSpin .8s linear infinite;
+}
+
+@keyframes jsvSpin { to { transform: rotate(360deg); } }
+
 .jsv-not-found {
   background: #0a0a0a;
   border: 1px solid rgba(255, 255, 255, 0.08);

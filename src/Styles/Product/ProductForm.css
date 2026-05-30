@@ -526,6 +526,38 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
 .mf-error { color: #fca5a5; }
 
+.mf-modal-loading {
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  padding: 44px 26px;
+}
+
+.mf-loader-ring {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.mf-loader-ring div {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.8px solid transparent;
+  animation: mfRing 1.2s cubic-bezier(0.5,0,0.5,1) infinite;
+}
+
+.mf-loader-ring div:nth-child(1) { border-top-color: var(--mf-accent); animation-delay: -0.45s; }
+.mf-loader-ring div:nth-child(2) { border-right-color: rgba(59,130,246,0.4); animation-delay: -0.3s; inset: 5px; }
+.mf-loader-ring div:nth-child(3) { border-bottom-color: rgba(59,130,246,0.18); animation-delay: -0.15s; inset: 10px; }
+.mf-loader-ring div:nth-child(4) { border-left-color: rgba(59,130,246,0.07); inset: 15px; }
+
+@keyframes mfRing {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* =========================
    APPEND THESE TO YOUR EXISTING
    ProductForm.css — new pharma styles

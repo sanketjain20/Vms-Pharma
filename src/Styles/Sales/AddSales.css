@@ -82,6 +82,37 @@
   animation: slModalIn 0.42s var(--sl-ease-spring) both;
 }
 
+.sales-container-loading {
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sl-loader {
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+
+.sl-loader div {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.8px solid transparent;
+  animation: slRing 1.2s cubic-bezier(0.5,0,0.5,1) infinite;
+}
+
+.sl-loader div:nth-child(1) { border-top-color: var(--sl-accent); animation-delay: -0.45s; }
+.sl-loader div:nth-child(2) { border-right-color: rgba(59,130,246,0.4); animation-delay: -0.3s; inset: 5px; }
+.sl-loader div:nth-child(3) { border-bottom-color: rgba(59,130,246,0.18); animation-delay: -0.15s; inset: 10px; }
+.sl-loader div:nth-child(4) { border-left-color: rgba(59,130,246,0.07); inset: 15px; }
+
+@keyframes slRing {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 @keyframes slModalIn {
   from {
     opacity: 0;

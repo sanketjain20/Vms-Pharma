@@ -17,6 +17,8 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
     const [errors, setErrors] = useState({});
     const [vendorId, setVendorId] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [rolesLoaded, setRolesLoaded] = useState(false);
+    const [vendorLoaded, setVendorLoaded] = useState(false);
     const [showPass, setShowPass] = useState(false);
 
     const clearError = (field) => setErrors(p => ({ ...p, [field]: "" }));
@@ -29,12 +31,14 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
         })
             .then(r => r.json())
             .then(res => { if (res.status === 200) setRoles(res.data); })
-            .catch(err => console.log(err));
+            .catch(err => console.log(err))
+            .finally(() => setRolesLoaded(true));
     }, []);
 
     /* ── FETCH VENDOR ── */
     useEffect(() => {
         if (!uKey) return;
+        setVendorLoaded(false);
         apiClient(`${API_BASE_URL}/api/Vendor/GetVendorByUkey/${uKey}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
@@ -58,7 +62,8 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                     }
                 } else { toast.error(res.message || "Failed to fetch vendor"); }
             })
-            .catch(() => toast.error("Network error"));
+            .catch(() => toast.error("Network error"))
+            .finally(() => setVendorLoaded(true));
     }, [uKey, roles]);
 
     const validate = () => {
@@ -98,6 +103,16 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
         } finally { setLoading(false); }
     };
 
+    const initialLoading = !rolesLoaded || !vendorLoaded;
+
+    if (initialLoading) return (
+        <div className="vd-backdrop">
+            <div className="vd-modal vd-loading-only">
+                <div className="vd-loader-ring"><div/><div/><div/><div/></div>
+            </div>
+        </div>
+    );
+
     return (
         <div className="vd-backdrop">
 
@@ -107,7 +122,6 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                     <div className="vd-loader-ring">
                         <div /><div /><div /><div />
                     </div>
-                    <span className="vd-loader-label">Updating vendor…</span>
                 </div>
             )}
 

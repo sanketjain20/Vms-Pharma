@@ -661,6 +661,13 @@
   padding: 28px 0;
 }
 
+.rl-loading-only {
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  padding: 44px 28px;
+}
+
 .rl-loader-ring {
   position: relative;
   width: 22px; height: 22px;

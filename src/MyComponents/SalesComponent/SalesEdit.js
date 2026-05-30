@@ -80,6 +80,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   const [dueDate, setDueDate]               = useState("");
   const [availableBatches, setAvailableBatches] = useState([]);
   const [selectedBatchId, setSelectedBatchId]   = useState("");
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const safeJson = async (res) => {
     try { const text = await res.text(); return text ? JSON.parse(text) : null; }
@@ -118,6 +119,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   useEffect(() => { if (uKey) fetchSaleByUkey(); }, [uKey]);
 
   const fetchSaleByUkey = () => {
+    setInitialLoading(true);
     apiClient(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${uKey}`, {
       method: "GET", headers: { "Content-Type": "application/json" },
     })
@@ -149,7 +151,9 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
         if (sale.retailerId) setSelectedRetailer(String(sale.retailerId));
         setCreditPaymentType(sale.paymentType || "PAID");
         setDueDate(sale.dueDate || "");
-      });
+      })
+      .catch(() => toast.error("Sale not found"))
+      .finally(() => setInitialLoading(false));
   };
 
   /* ── FETCH BATCHES when product selected ── */
@@ -334,6 +338,14 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   };
 
   const totalAmount = lineItems.reduce((s, i) => s + i.totalAmount, 0);
+
+  if (initialLoading) return (
+    <div className="sales-modal show">
+      <div className="sales-container sales-container-loading">
+        <div className="sl-loader"><div/><div/><div/><div/></div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="sales-modal show">

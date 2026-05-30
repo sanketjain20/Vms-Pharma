@@ -55,6 +55,7 @@ export default function ProductForm({ onSubmit, onClose }) {
   const [manufacturers,  setManufacturers]  = useState([]);
   const [activeTab,      setActiveTab]      = useState("details");
   const [errors,         setErrors]         = useState({});
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     name:           "",
@@ -71,30 +72,36 @@ export default function ProductForm({ onSubmit, onClose }) {
     packUnit:        "STRIP",
   });
 
-  /* ── FETCH PRODUCT TYPES ── */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
-      method: "GET", headers: { "Content-Type": "application/json" },
-    })
-      .then(r => r.json())
-      .then(res => {
-        if (res.status === 200 && res.data) {
-          const d = res.data;
+    let alive = true;
+    const load = async () => {
+      try {
+        const [typeRes, manufacturerRes] = await Promise.allSettled([
+          apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
+            method: "GET", headers: { "Content-Type": "application/json" },
+          }).then(r => r.json()),
+          apiClient(`${API_BASE_URL}/api/Manufacturer/GetManufacturerDropdown`, {
+            method: "GET",
+          }).then(r => r.json()),
+        ]);
+
+        if (!alive) return;
+        if (typeRes.status === "fulfilled") {
+          const d = typeRes.value?.data;
           const list = Array.isArray(d) ? d : typeof d === "object" ? Object.values(d).find(v => Array.isArray(v)) || [] : [];
           setProductTypes(list);
+        } else {
+          console.error("Product types error:", typeRes.reason);
         }
-      })
-      .catch(err => console.error("Product types error:", err));
-  }, []);
-
-  /* ── FETCH MANUFACTURERS ── */
-  useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/Manufacturer/GetManufacturerDropdown`, {
-      method: "GET",
-    })
-      .then(r => r.json())
-      .then(res => setManufacturers(res.data || []))
-      .catch(() => {});
+        if (manufacturerRes.status === "fulfilled") {
+          setManufacturers(manufacturerRes.value?.data || []);
+        }
+      } finally {
+        if (alive) setInitialLoading(false);
+      }
+    };
+    load();
+    return () => { alive = false; };
   }, []);
 
   const set = (key, val) => {
@@ -164,6 +171,12 @@ export default function ProductForm({ onSubmit, onClose }) {
   return (
     <div className="modal-backdrop show">
       <div className="modal">
+        {initialLoading ? (
+          <div className="modal-body mf-modal-loading">
+            <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+          </div>
+        ) : (
+        <>
         <div className="modal-header">
           <div className="modal-title">
             <h3>Add Product</h3>
@@ -289,6 +302,8 @@ export default function ProductForm({ onSubmit, onClose }) {
             </div>
           </div>
         </form>
+        </>
+        )}
       </div>
     </div>
   );
