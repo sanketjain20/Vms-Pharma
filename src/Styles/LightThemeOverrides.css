@@ -566,6 +566,769 @@ body[data-theme="light"] .san-total-row span:last-child {
   color: #0f172a !important;
 }
 
+/* Final light-theme hardening for module CSS that ships dark defaults. */
+body[data-theme="light"] {
+  --light-control-bg: #ffffff;
+  --light-control-border: rgba(15, 23, 42, 0.14);
+  --light-control-border-focus: rgba(37, 99, 235, 0.48);
+  --light-panel-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  --light-popup-shadow: 0 22px 52px rgba(15, 23, 42, 0.18);
+}
+
+body[data-theme="light"] .san-page,
+body[data-theme="light"] .vms-root,
+body[data-theme="light"] .vo-root,
+body[data-theme="light"] .dg-wrapper,
+body[data-theme="light"] .inventory-container,
+body[data-theme="light"] .i-container {
+  background: var(--light-page) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] .san-content,
+body[data-theme="light"] .vo-content,
+body[data-theme="light"] .dg-inner {
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] .san-page-header,
+body[data-theme="light"] .san-billing-section,
+body[data-theme="light"] .vo-main-card,
+body[data-theme="light"] .vo-card-left,
+body[data-theme="light"] .vo-card-right,
+body[data-theme="light"] .vo-action-row,
+body[data-theme="light"] .vo-tip-box,
+body[data-theme="light"] .dg-shell,
+body[data-theme="light"] .dg-view-toggle,
+body[data-theme="light"] .dg-chip,
+body[data-theme="light"] .dg-card,
+body[data-theme="light"] .dg-card-pagination,
+body[data-theme="light"] .tab-row,
+body[data-theme="light"] .pfx-tab-row,
+body[data-theme="light"] .pfx-mode-row,
+body[data-theme="light"] .pyx-mode-row,
+body[data-theme="light"] .rtx-mode-row,
+body[data-theme="light"] .san-toggle-group {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: var(--light-control-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: var(--light-panel-shadow) !important;
+}
+
+body[data-theme="light"] .san-page-header,
+body[data-theme="light"] .san-toggle-group {
+  box-shadow: none !important;
+}
+
+body[data-theme="light"] .san-panel,
+body[data-theme="light"] .san-items-list,
+body[data-theme="light"] .san-totals,
+body[data-theme="light"] .san-item-row,
+body[data-theme="light"] .san-qty-ctrl,
+body[data-theme="light"] .san-inv-box,
+body[data-theme="light"] .pfx-item-row,
+body[data-theme="light"] .pfx-view-card,
+body[data-theme="light"] .pfx-view-table-section,
+body[data-theme="light"] .srv-meta-card,
+body[data-theme="light"] .srv-table-section,
+body[data-theme="light"] .rtx-view-card,
+body[data-theme="light"] .sup-view-card,
+body[data-theme="light"] .spx-view-card,
+body[data-theme="light"] .pyx-view-card,
+body[data-theme="light"] .rlv-view-card,
+body[data-theme="light"] .rlm-summary-card,
+body[data-theme="light"] .cp-card {
+  background: #ffffff !important;
+  border-color: var(--light-control-border) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] .san-panel-header,
+body[data-theme="light"] .dg-shell-header,
+body[data-theme="light"] .modal-header,
+body[data-theme="light"] .modal-footer-fixed,
+body[data-theme="light"] .pfx-header,
+body[data-theme="light"] .pfx-footer,
+body[data-theme="light"] .srv-header,
+body[data-theme="light"] .srv-footer,
+body[data-theme="light"] .sra-header,
+body[data-theme="light"] .sra-footer,
+body[data-theme="light"] .rtx-header,
+body[data-theme="light"] .rtx-footer,
+body[data-theme="light"] .sup-header,
+body[data-theme="light"] .sup-footer,
+body[data-theme="light"] .spx-header,
+body[data-theme="light"] .spx-footer,
+body[data-theme="light"] .pyx-header,
+body[data-theme="light"] .pyx-footer {
+  background: #f8fafc !important;
+  border-color: var(--light-control-border) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] label,
+body[data-theme="light"] .form-grid label,
+body[data-theme="light"] .san-field label,
+body[data-theme="light"] .san-dd label,
+body[data-theme="light"] .san-section-label,
+body[data-theme="light"] .san-panel-title,
+body[data-theme="light"] .san-inv-label,
+body[data-theme="light"] .vo-actions-label,
+body[data-theme="light"] .vo-tip-label,
+body[data-theme="light"] .pfx-label,
+body[data-theme="light"] .small-muted,
+body[data-theme="light"] .form-section-label,
+body[data-theme="light"] .dg-shell-title,
+body[data-theme="light"] .dg-record-count,
+body[data-theme="light"] .dg-shell-meta {
+  color: #334155 !important;
+}
+
+body[data-theme="light"] .san-page-title,
+body[data-theme="light"] .san-inv-value,
+body[data-theme="light"] .san-item-name,
+body[data-theme="light"] .san-total-net,
+body[data-theme="light"] .vo-step-title,
+body[data-theme="light"] .vo-action-text,
+body[data-theme="light"] .modal-title h3,
+body[data-theme="light"] .dg-title,
+body[data-theme="light"] .dg-card-title,
+body[data-theme="light"] .dg-card-main {
+  color: #0f172a !important;
+}
+
+body[data-theme="light"] .vo-step-desc,
+body[data-theme="light"] .vo-tip-text,
+body[data-theme="light"] .san-item-unit,
+body[data-theme="light"] .san-item-count,
+body[data-theme="light"] .san-empty-cart,
+body[data-theme="light"] .dg-card-sub,
+body[data-theme="light"] .dg-card-label,
+body[data-theme="light"] .dg-card-meta {
+  color: #475569 !important;
+}
+
+body[data-theme="light"] input,
+body[data-theme="light"] textarea,
+body[data-theme="light"] select,
+body[data-theme="light"] .form-grid input,
+body[data-theme="light"] .form-grid textarea,
+body[data-theme="light"] .form-grid select,
+body[data-theme="light"] .san-page input,
+body[data-theme="light"] .san-field input,
+body[data-theme="light"] .san-select,
+body[data-theme="light"] .san-dd-box,
+body[data-theme="light"] .san-dd-input,
+body[data-theme="light"] .pfx-input,
+body[data-theme="light"] .pfx-cell-input,
+body[data-theme="light"] .pfx-drop-box,
+body[data-theme="light"] .pfx-drop-input,
+body[data-theme="light"] .custom-select .select-box,
+body[data-theme="light"] .custom-select .select-input,
+body[data-theme="light"] .dg-search,
+body[data-theme="light"] .dg-size-select {
+  background: var(--light-control-bg) !important;
+  border-color: var(--light-control-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: none !important;
+  color-scheme: light !important;
+}
+
+body[data-theme="light"] input:focus,
+body[data-theme="light"] textarea:focus,
+body[data-theme="light"] select:focus,
+body[data-theme="light"] .san-dd-open,
+body[data-theme="light"] .pfx-drop-open,
+body[data-theme="light"] .custom-select .select-box.active,
+body[data-theme="light"] .dropdown-selected.open {
+  background: #ffffff !important;
+  border-color: var(--light-control-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+body[data-theme="light"] input::placeholder,
+body[data-theme="light"] textarea::placeholder,
+body[data-theme="light"] .san-dd-input::placeholder,
+body[data-theme="light"] .pfx-drop-input::placeholder,
+body[data-theme="light"] .custom-select .select-input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+body[data-theme="light"] input[readonly],
+body[data-theme="light"] input:disabled,
+body[data-theme="light"] textarea:disabled,
+body[data-theme="light"] select:disabled,
+body[data-theme="light"] button:disabled {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  color: #64748b !important;
+  opacity: 0.75 !important;
+}
+
+body[data-theme="light"] .san-toggle-btn,
+body[data-theme="light"] .tab,
+body[data-theme="light"] .pfx-tab,
+body[data-theme="light"] .pyx-mode-btn,
+body[data-theme="light"] .rtx-mode-btn,
+body[data-theme="light"] .dg-vt-btn,
+body[data-theme="light"] .dg-chip {
+  background: #ffffff !important;
+  border-color: var(--light-control-border) !important;
+  color: #334155 !important;
+}
+
+body[data-theme="light"] .san-toggle-btn:hover,
+body[data-theme="light"] .tab:hover,
+body[data-theme="light"] .pfx-tab:hover,
+body[data-theme="light"] .pyx-mode-btn:hover,
+body[data-theme="light"] .rtx-mode-btn:hover,
+body[data-theme="light"] .dg-vt-btn:hover,
+body[data-theme="light"] .dg-chip:hover {
+  background: #eff6ff !important;
+  border-color: rgba(37, 99, 235, 0.28) !important;
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .san-toggle-active,
+body[data-theme="light"] .tab.active,
+body[data-theme="light"] .pfx-tab-active,
+body[data-theme="light"] .pyx-mode-active,
+body[data-theme="light"] .rtx-mode-active,
+body[data-theme="light"] .dg-vt-btn.active,
+body[data-theme="light"] .dg-chip-active {
+  background: #eff6ff !important;
+  border-color: rgba(37, 99, 235, 0.38) !important;
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .san-toggle-credit.san-toggle-active,
+body[data-theme="light"] .dg-chip-red.dg-chip-active {
+  background: #fef2f2 !important;
+  border-color: rgba(220, 38, 38, 0.28) !important;
+  color: #b91c1c !important;
+}
+
+body[data-theme="light"] .san-toggle-partial.san-toggle-active,
+body[data-theme="light"] .dg-chip-amber.dg-chip-active {
+  background: #fffbeb !important;
+  border-color: rgba(217, 119, 6, 0.3) !important;
+  color: #92400e !important;
+}
+
+body[data-theme="light"] .dg-chip-green.dg-chip-active {
+  background: #ecfdf5 !important;
+  border-color: rgba(5, 150, 105, 0.3) !important;
+  color: #047857 !important;
+}
+
+body[data-theme="light"] .dg-vt-pill {
+  background: #dbeafe !important;
+  border-color: rgba(37, 99, 235, 0.26) !important;
+}
+
+body[data-theme="light"] .san-dd-list,
+body[data-theme="light"] .sra-options,
+body[data-theme="light"] .pfx-drop-list,
+body[data-theme="light"] .pyx-drop-list,
+body[data-theme="light"] .spx-drop-list,
+body[data-theme="light"] .custom-select .options,
+body[data-theme="light"] .dropdown-menu,
+body[data-theme="light"] .dropdown-search-wrap,
+body[data-theme="light"] .dropdown-list,
+body[data-theme="light"] .dg-xl-drop,
+body[data-theme="light"] .profile-dropdown,
+body[data-theme="light"] .nbm-dropdown,
+body[data-theme="light"] .ymg-dropdown {
+  position: absolute;
+  z-index: 45000 !important;
+  background: #ffffff !important;
+  border-color: var(--light-control-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: var(--light-popup-shadow) !important;
+}
+
+body[data-theme="light"] .custom-select,
+body[data-theme="light"] .san-dd,
+body[data-theme="light"] .sra-dropdown,
+body[data-theme="light"] .pfx-dropdown,
+body[data-theme="light"] .pyx-dropdown,
+body[data-theme="light"] .spx-dropdown,
+body[data-theme="light"] .dropdown-wrap,
+body[data-theme="light"] .custom-dropdown,
+body[data-theme="light"] .dg-xl-wrap {
+  position: relative;
+  z-index: 30;
+}
+
+body[data-theme="light"] .custom-select:focus-within,
+body[data-theme="light"] .san-dd:focus-within,
+body[data-theme="light"] .sra-dropdown:focus-within,
+body[data-theme="light"] .pfx-dropdown:focus-within,
+body[data-theme="light"] .pyx-dropdown:focus-within,
+body[data-theme="light"] .spx-dropdown:focus-within,
+body[data-theme="light"] .custom-dropdown:focus-within,
+body[data-theme="light"] .dg-xl-wrap:focus-within {
+  z-index: 45001 !important;
+}
+
+body[data-theme="light"] .san-dd-list li,
+body[data-theme="light"] .sra-options li,
+body[data-theme="light"] .pfx-drop-list li,
+body[data-theme="light"] .pyx-drop-list li,
+body[data-theme="light"] .spx-drop-list li,
+body[data-theme="light"] .custom-select .options li,
+body[data-theme="light"] .dropdown-item,
+body[data-theme="light"] .dg-xl-drop-item {
+  background: transparent !important;
+  color: #334155 !important;
+}
+
+body[data-theme="light"] .san-dd-list li:hover,
+body[data-theme="light"] .san-dd-selected,
+body[data-theme="light"] .sra-options li:hover,
+body[data-theme="light"] .sra-selected,
+body[data-theme="light"] .pfx-drop-list li:hover,
+body[data-theme="light"] .pfx-drop-selected,
+body[data-theme="light"] .pyx-drop-list li:hover,
+body[data-theme="light"] .pyx-drop-selected,
+body[data-theme="light"] .spx-drop-list li:hover,
+body[data-theme="light"] .spx-drop-selected,
+body[data-theme="light"] .custom-select .options li:hover,
+body[data-theme="light"] .custom-select .selected,
+body[data-theme="light"] .dropdown-item:hover,
+body[data-theme="light"] .dropdown-item.selected,
+body[data-theme="light"] .dg-xl-drop-item:hover {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .modal-backdrop,
+body[data-theme="light"] .pfx-backdrop,
+body[data-theme="light"] .sra-backdrop,
+body[data-theme="light"] .srv-backdrop,
+body[data-theme="light"] .su-backdrop,
+body[data-theme="light"] .vd-backdrop,
+body[data-theme="light"] .vv-backdrop,
+body[data-theme="light"] .rtx-backdrop,
+body[data-theme="light"] .sup-backdrop,
+body[data-theme="light"] .spx-backdrop,
+body[data-theme="light"] .pyx-backdrop,
+body[data-theme="light"] .cp-backdrop,
+body[data-theme="light"] .gen-modal-overlay {
+  z-index: 30000 !important;
+}
+
+body[data-theme="light"] .modal,
+body[data-theme="light"] .pfx-modal,
+body[data-theme="light"] .sra-modal,
+body[data-theme="light"] .srv-modal,
+body[data-theme="light"] .su-modal,
+body[data-theme="light"] .vd-modal,
+body[data-theme="light"] .vv-modal,
+body[data-theme="light"] .rtx-modal,
+body[data-theme="light"] .sup-modal,
+body[data-theme="light"] .spx-modal,
+body[data-theme="light"] .pyx-modal,
+body[data-theme="light"] .cp-modal,
+body[data-theme="light"] .gen-modal-content {
+  z-index: 30001 !important;
+}
+
+body[data-theme="light"] .topbar,
+body[data-theme="light"] .nbm-bar,
+body[data-theme="light"] .sb-sidebar,
+body[data-theme="light"] .sb-submenu {
+  z-index: 10000 !important;
+}
+
+/* View/detail readability across Manufacturer, Retailer, Product, Product Type and Inventory. */
+body[data-theme="light"] [class*="-view-card"],
+body[data-theme="light"] .view-value,
+body[data-theme="light"] .pf-info-banner,
+body[data-theme="light"] .rtx-credit-bar-wrap,
+body[data-theme="light"] .rtx-credit-bar-track,
+body[data-theme="light"] .stock-card {
+  background: #ffffff !important;
+  border-color: var(--light-control-border) !important;
+  color: var(--light-text) !important;
+}
+
+body[data-theme="light"] [class*="-view-label"],
+body[data-theme="light"] [class*="-field"] label,
+body[data-theme="light"] [class*="-label"],
+body[data-theme="light"] .view-value::after,
+body[data-theme="light"] .stock-card-label,
+body[data-theme="light"] .inventory-card-title,
+body[data-theme="light"] .rtx-credit-bar-labels,
+body[data-theme="light"] .rtx-credit-bar-sub {
+  color: #334155 !important;
+}
+
+body[data-theme="light"] [class*="-view-value"],
+body[data-theme="light"] [class*="-view-value"] *,
+body[data-theme="light"] .form-grid input[readonly],
+body[data-theme="light"] .form-grid textarea[readonly],
+body[data-theme="light"] .modal-body input[readonly],
+body[data-theme="light"] .modal-body textarea[readonly],
+body[data-theme="light"] .custom-select .selected,
+body[data-theme="light"] .select-box .selected,
+body[data-theme="light"] .inventory-card-value,
+body[data-theme="light"] .stock-card-value {
+  color: #0f172a !important;
+}
+
+body[data-theme="light"] [class*="-view-empty"],
+body[data-theme="light"] .view-value input[readonly]::placeholder,
+body[data-theme="light"] .modal-body input[readonly]::placeholder,
+body[data-theme="light"] .modal-body textarea[readonly]::placeholder {
+  color: #64748b !important;
+}
+
+body[data-theme="light"] .form-grid input[readonly],
+body[data-theme="light"] .form-grid textarea[readonly],
+body[data-theme="light"] .modal-body input[readonly],
+body[data-theme="light"] .modal-body textarea[readonly],
+body[data-theme="light"] .custom-select .select-box {
+  background: #f8fafc !important;
+  border-color: rgba(15, 23, 42, 0.16) !important;
+  -webkit-text-fill-color: #0f172a !important;
+  opacity: 1 !important;
+}
+
+body[data-theme="light"] .mfx-label,
+body[data-theme="light"] .mfx-view-label,
+body[data-theme="light"] .rtx-label,
+body[data-theme="light"] .rtx-view-label,
+body[data-theme="light"] .vd-label,
+body[data-theme="light"] .vv-label,
+body[data-theme="light"] .sup-label,
+body[data-theme="light"] .spx-label,
+body[data-theme="light"] .pyx-label,
+body[data-theme="light"] .pfx-label,
+body[data-theme="light"] .srv-label,
+body[data-theme="light"] .sra-label,
+body[data-theme="light"] .rlv-label,
+body[data-theme="light"] .rlm-label,
+body[data-theme="light"] .cp-label {
+  color: #334155 !important;
+}
+
+body[data-theme="light"] .mfx-view-value,
+body[data-theme="light"] .rtx-view-value,
+body[data-theme="light"] .vd-view-value,
+body[data-theme="light"] .vv-view-value,
+body[data-theme="light"] .sup-view-value,
+body[data-theme="light"] .spx-view-value,
+body[data-theme="light"] .pyx-view-value,
+body[data-theme="light"] .pfx-view-value,
+body[data-theme="light"] .srv-view-value,
+body[data-theme="light"] .sra-view-value,
+body[data-theme="light"] .rlv-view-value,
+body[data-theme="light"] .rlm-view-value,
+body[data-theme="light"] .cp-view-value {
+  color: #0f172a !important;
+}
+
+body[data-theme="light"] .mfx-accent,
+body[data-theme="light"] .rtx-accent,
+body[data-theme="light"] .pfx-accent,
+body[data-theme="light"] .pyx-accent,
+body[data-theme="light"] .spx-accent,
+body[data-theme="light"] .srv-accent,
+body[data-theme="light"] .sra-accent {
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .mfx-danger,
+body[data-theme="light"] .rtx-danger,
+body[data-theme="light"] .pfx-danger,
+body[data-theme="light"] .pyx-danger,
+body[data-theme="light"] .spx-danger,
+body[data-theme="light"] .srv-danger,
+body[data-theme="light"] .sra-danger {
+  color: #b91c1c !important;
+}
+
+body[data-theme="light"] .mfx-badge-green,
+body[data-theme="light"] .rtx-badge-green,
+body[data-theme="light"] .pfx-badge-green,
+body[data-theme="light"] .pyx-badge-green,
+body[data-theme="light"] .spx-badge-green {
+  background: #ecfdf5 !important;
+  border-color: rgba(5, 150, 105, 0.28) !important;
+  color: #047857 !important;
+}
+
+body[data-theme="light"] .mfx-badge-red,
+body[data-theme="light"] .rtx-badge-red,
+body[data-theme="light"] .pfx-badge-red,
+body[data-theme="light"] .pyx-badge-red,
+body[data-theme="light"] .spx-badge-red {
+  background: #fef2f2 !important;
+  border-color: rgba(220, 38, 38, 0.28) !important;
+  color: #b91c1c !important;
+}
+
+body[data-theme="light"] .mfx-badge-blue,
+body[data-theme="light"] .rtx-badge-blue,
+body[data-theme="light"] .pfx-badge-blue,
+body[data-theme="light"] .pyx-badge-blue,
+body[data-theme="light"] .spx-badge-blue,
+body[data-theme="light"] .mfx-code-badge,
+body[data-theme="light"] .rtx-code-badge {
+  background: #eff6ff !important;
+  border-color: rgba(37, 99, 235, 0.25) !important;
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .mfx-badge-amber,
+body[data-theme="light"] .rtx-badge-amber,
+body[data-theme="light"] .pfx-badge-amber,
+body[data-theme="light"] .pyx-badge-amber,
+body[data-theme="light"] .spx-badge-amber {
+  background: #fffbeb !important;
+  border-color: rgba(217, 119, 6, 0.3) !important;
+  color: #92400e !important;
+}
+
+body[data-theme="light"] .rtx-credit-bar-sub strong[style],
+body[data-theme="light"] .pf-info-banner strong,
+body[data-theme="light"] .form-grid span[style*="color"] {
+  color: #0f172a !important;
+}
+
+body[data-theme="light"] .form-grid span[style*="rgba(16,185,129"],
+body[data-theme="light"] .form-grid span[style*="#6ee7b7"] {
+  background: #ecfdf5 !important;
+  border-color: rgba(5, 150, 105, 0.28) !important;
+  color: #047857 !important;
+}
+
+body[data-theme="light"] .form-grid span[style*="rgba(239,68,68"],
+body[data-theme="light"] .form-grid span[style*="#fca5a5"] {
+  background: #fef2f2 !important;
+  border-color: rgba(220, 38, 38, 0.28) !important;
+  color: #b91c1c !important;
+}
+
+body[data-theme="light"] .san-page {
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.05), transparent 260px), var(--light-page) !important;
+}
+
+body[data-theme="light"] .san-canvas {
+  display: none !important;
+}
+
+body[data-theme="light"] .san-noise {
+  opacity: 0.025 !important;
+  mix-blend-mode: multiply !important;
+}
+
+body[data-theme="light"] .san-top-beam {
+  background: linear-gradient(to right, transparent, rgba(37, 99, 235, 0.25), transparent) !important;
+}
+
+body[data-theme="light"] .san-btn-submit {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+body[data-theme="light"] .san-btn-submit svg,
+body[data-theme="light"] .san-btn-submit svg *,
+body[data-theme="light"] .san-btn-submit path {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Sales Add/Edit modal light-mode fixes. */
+body[data-theme="light"] .sales-modal.show {
+  background: rgba(241, 245, 249, 0.78) !important;
+  backdrop-filter: blur(10px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.08) !important;
+  z-index: 30000 !important;
+}
+
+body[data-theme="light"] .sales-container {
+  --sl-surface: #ffffff;
+  --sl-raised: #f8fafc;
+  --sl-border: rgba(15, 23, 42, 0.08);
+  --sl-border-mid: rgba(15, 23, 42, 0.14);
+  --sl-border-hi: rgba(15, 23, 42, 0.22);
+  --sl-text-1: #0f172a;
+  --sl-text-2: #334155;
+  --sl-text-3: #64748b;
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.18) !important;
+  z-index: 30001 !important;
+}
+
+body[data-theme="light"] .sales-header,
+body[data-theme="light"] .sales-footer {
+  background: #f8fafc !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+}
+
+body[data-theme="light"] .sales-header h3,
+body[data-theme="light"] .sales-section,
+body[data-theme="light"] .sales-section h4,
+body[data-theme="light"] .sales-table td,
+body[data-theme="light"] .inv-box b,
+body[data-theme="light"] .total-amount {
+  color: #0f172a !important;
+}
+
+body[data-theme="light"] .sales-section {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+body[data-theme="light"] .sales-section label,
+body[data-theme="light"] .sales-section .custom-select label,
+body[data-theme="light"] .tax-option,
+body[data-theme="light"] .radio-option,
+body[data-theme="light"] .inv-box > div,
+body[data-theme="light"] .sales-table th {
+  color: #334155 !important;
+}
+
+body[data-theme="light"] .tabs-header,
+body[data-theme="light"] .tax-row-single,
+body[data-theme="light"] .radio-option,
+body[data-theme="light"] .inv-box,
+body[data-theme="light"] .total-amount {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #334155 !important;
+  box-shadow: none !important;
+}
+
+body[data-theme="light"] .tabs-header button {
+  background: #ffffff !important;
+  border-color: transparent !important;
+  color: #334155 !important;
+}
+
+body[data-theme="light"] .tabs-header button:hover {
+  background: #eff6ff !important;
+  border-color: rgba(37, 99, 235, 0.22) !important;
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .tabs-header button.active-tab {
+  background: #dbeafe !important;
+  border-color: rgba(37, 99, 235, 0.35) !important;
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .tax-row-single.selected,
+body[data-theme="light"] .tax-row-single:has(input:checked),
+body[data-theme="light"] .radio-option.checked,
+body[data-theme="light"] .radio-option:has(input:checked) {
+  background: #eff6ff !important;
+  border-color: rgba(37, 99, 235, 0.35) !important;
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .tax-option input[type="radio"],
+body[data-theme="light"] .radio-option input[type="radio"] {
+  accent-color: #2563eb !important;
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.22) !important;
+}
+
+body[data-theme="light"] .sales-section input:not(.select-input):not([type="radio"]),
+body[data-theme="light"] .sales-section select,
+body[data-theme="light"] .sales-container input[type="number"],
+body[data-theme="light"] .sales-container input[type="text"],
+body[data-theme="light"] .sales-container .select-box,
+body[data-theme="light"] .sales-container .select-input {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+body[data-theme="light"] .sales-section input:focus:not([type="radio"]),
+body[data-theme="light"] .sales-section select:focus,
+body[data-theme="light"] .sales-container .select-box.active,
+body[data-theme="light"] .sales-container .select-input:focus {
+  background: #ffffff !important;
+  border-color: rgba(37, 99, 235, 0.48) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+body[data-theme="light"] .sales-container input::placeholder,
+body[data-theme="light"] .sales-container .select-input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+body[data-theme="light"] .sales-container select option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+body[data-theme="light"] .sales-container .options {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+  box-shadow: 0 22px 52px rgba(15, 23, 42, 0.18) !important;
+  z-index: 45000 !important;
+}
+
+body[data-theme="light"] .sales-container .options li {
+  background: transparent !important;
+  color: #334155 !important;
+}
+
+body[data-theme="light"] .sales-container .options li:hover,
+body[data-theme="light"] .sales-container .options li[style] {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+body[data-theme="light"] .gst-badge {
+  background: #ecfdf5 !important;
+  border-color: rgba(5, 150, 105, 0.28) !important;
+  color: #047857 !important;
+}
+
+body[data-theme="light"] .sales-table {
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+body[data-theme="light"] .sales-table th {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+body[data-theme="light"] .sales-table td {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+body[data-theme="light"] .sales-table tbody tr:hover td {
+  background: #eff6ff !important;
+  color: #0f172a !important;
+}
+
+body[data-theme="light"] .cancel-btn {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #334155 !important;
+}
+
+body[data-theme="light"] .submit-btn,
+body[data-theme="light"] .add-btn {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 @media (max-width: 900px) {
   body[data-theme="light"] .hw-modules-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;

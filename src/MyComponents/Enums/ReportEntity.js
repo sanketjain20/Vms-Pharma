@@ -14,5 +14,6 @@ export const ReportEntity={
     Supplier:13,
     PaymentCollection:14,
     DayBook:15,
-    GSTR1:16
+    GSTR1:16,
+    ProfitLoss:17,
 }

@@ -58,6 +58,9 @@ export const runReportByModule = async (moduleId, filters) => {
     case ReportEntity.GSTR1:
         apiUrl = `${API_BASE_URL}/api/Reports/GstReport`;
         break;
+    case ReportEntity.ProfitLoss:
+        apiUrl = `${API_BASE_URL}/api/Reports/PnlReport`;
+        break;
     default:
       throw new Error("Invalid module ID");
   }

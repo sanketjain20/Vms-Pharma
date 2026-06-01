@@ -13,6 +13,7 @@ import VMSSection from "./MyComponents/LoginComponent/VMSSection";
 import Home from "./MyComponents/Home";
 import Setting from "./MyComponents/Setting";
 import Footer from "./MyComponents/CommonComponent/Footer";
+import VmsAssistant from "./MyComponents/CommonComponent/VmsAssistant";
 
 // Layouts
 import Layout from "./MyComponents/CommonComponent/Layout";
@@ -398,6 +399,7 @@ function App() {
         
         <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>
+      <VmsAssistant />
     </>
   );
 }
