@@ -12,67 +12,66 @@ import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 
 /* ═══════════════════════════════════════════════════════════════
-   GSTR TABLE COMPONENTS — defined OUTSIDE the main component so
-   React never recreates their identity on re-renders (mouse moves,
-   etc.), which was causing the blink / remount animation loop.
+   SHARED FORMAT HELPER
 ═══════════════════════════════════════════════════════════════ */
 const fmt = (n) =>
   parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
-/* ── Shared GSTR Pagination ── */
-const GstrPagination = React.memo(({ page, totalPages, pageSize, onPageChange, onPageSizeChange }) => (
-  <div className="gstr-pagination">
-    <button
-      className="gstr-page-btn"
-      disabled={page === 1}
-      onClick={() => onPageChange(Math.max(page - 1, 1))}
-    >
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-        <path d="M7 2L3 5L7 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      Prev
-    </button>
-
-    <div className="gstr-page-indicator">
-      <span className="page-num">{page}</span>
-      <span className="page-sep">/</span>
-      <span className="page-total">{totalPages || 1}</span>
+/* ═══════════════════════════════════════════════════════════════
+   GSTR PAGINATION  (defined outside — stable identity)
+═══════════════════════════════════════════════════════════════ */
+const GstrPagination = React.memo(
+  ({ page, totalPages, pageSize, onPageChange, onPageSizeChange }) => (
+    <div className="gstr-pagination">
+      <button
+        className="gstr-page-btn"
+        disabled={page === 1}
+        onClick={() => onPageChange(Math.max(page - 1, 1))}
+      >
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M7 2L3 5L7 8" stroke="currentColor" strokeWidth="1.5"
+            strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Prev
+      </button>
+      <div className="gstr-page-indicator">
+        <span className="page-num">{page}</span>
+        <span className="page-sep">/</span>
+        <span className="page-total">{totalPages || 1}</span>
+      </div>
+      <button
+        className="gstr-page-btn"
+        disabled={page === totalPages || totalPages === 0}
+        onClick={() => onPageChange(Math.min(page + 1, totalPages))}
+      >
+        Next
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.5"
+            strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <select
+        className="gstr-page-select"
+        value={pageSize}
+        onChange={(e) => { onPageSizeChange(Number(e.target.value)); onPageChange(1); }}
+      >
+        {[10, 20, 50, 100].map((s) => (
+          <option key={s} value={s}>{s} / page</option>
+        ))}
+      </select>
     </div>
-
-    <button
-      className="gstr-page-btn"
-      disabled={page === totalPages || totalPages === 0}
-      onClick={() => onPageChange(Math.min(page + 1, totalPages))}
-    >
-      Next
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-        <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </button>
-
-    <select
-      className="gstr-page-select"
-      value={pageSize}
-      onChange={(e) => {
-        onPageSizeChange(Number(e.target.value));
-        onPageChange(1);
-      }}
-    >
-      {[10, 20, 50, 100].map((s) => (
-        <option key={s} value={s}>{s} / page</option>
-      ))}
-    </select>
-  </div>
-));
+  )
+);
 GstrPagination.displayName = "GstrPagination";
 
-/* ── B2B Table ── */
+/* ═══════════════════════════════════════════════════════════════
+   GSTR B2B TABLE
+═══════════════════════════════════════════════════════════════ */
 const GstrB2BTable = React.memo(({ data }) => {
-  const [page, setPage] = useState(1);
+  const [page, setPage]         = useState(1);
   const [pageSize, setPageSize] = useState(10);
-
   const totalPages = Math.ceil(data.length / pageSize);
-  const paged = data.slice((page - 1) * pageSize, page * pageSize);
+  const paged      = data.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="gstr-table-section">
@@ -80,20 +79,9 @@ const GstrB2BTable = React.memo(({ data }) => {
         <table className="gstr-table">
           <thead>
             <tr>
-              {[
-                "GSTIN",
-                "Receiver Name",
-                "Phone",
-                "Invoice No",
-                "Date",
-                "Type",
-                "Place of Supply",
-                "Taxable (₹)",
-                "IGST (₹)",
-                "CGST (₹)",
-                "SGST (₹)",
-                "Total (₹)",
-              ].map((h, i) => (
+              {["GSTIN","Receiver Name","Phone","Invoice No","Date","Type",
+                "Place of Supply","Taxable (₹)","IGST (₹)","CGST (₹)",
+                "SGST (₹)","Total (₹)"].map((h, i) => (
                 <th key={i}>
                   <span className="col-index">{String(i + 1).padStart(2, "0")}</span>
                   {h}
@@ -103,85 +91,56 @@ const GstrB2BTable = React.memo(({ data }) => {
           </thead>
           <tbody>
             {paged.length === 0 ? (
-              <tr>
-                <td colSpan={12} className="gstr-empty">
-                  No B2B entries for this period
-                </td>
+              <tr><td colSpan={12} className="gstr-empty">No B2B entries for this period</td></tr>
+            ) : paged.map((r, i) => (
+              <tr key={i}>
+                <td className="gstr-td-mono gstr-accent">{r.receiverGstin}</td>
+                <td>{r.receiverName}</td>
+                <td className="gstr-td-mono">{r.receiverPhone || "—"}</td>
+                <td className="gstr-td-mono">{r.invoiceNumber}</td>
+                <td className="gstr-td-dim">{r.invoiceDate || "—"}</td>
+                <td><span className="gstr-type-tag">{r.invoiceType}</span></td>
+                <td className="gstr-td-dim">{r.placeOfSupply}</td>
+                <td className="gstr-td-amount">₹{fmt(r.taxableValue)}</td>
+                <td className="gstr-td-tax">{r.igst > 0 ? `₹${fmt(r.igst)}` : "—"}</td>
+                <td className="gstr-td-tax">{r.cgst > 0 ? `₹${fmt(r.cgst)}` : "—"}</td>
+                <td className="gstr-td-tax">{r.sgst > 0 ? `₹${fmt(r.sgst)}` : "—"}</td>
+                <td className="gstr-td-total">₹{fmt(r.totalInvoiceValue)}</td>
               </tr>
-            ) : (
-              paged.map((r, i) => (
-                <tr key={i}>
-                  <td className="gstr-td-mono gstr-accent">{r.receiverGstin}</td>
-                  <td>{r.receiverName}</td>
-                  <td className="gstr-td-mono">{r.receiverPhone || "—"}</td>
-                  <td className="gstr-td-mono">{r.invoiceNumber}</td>
-                  <td className="gstr-td-dim">{r.invoiceDate || "—"}</td>
-                  <td>
-                    <span className="gstr-type-tag">{r.invoiceType}</span>
-                  </td>
-                  <td className="gstr-td-dim">{r.placeOfSupply}</td>
-                  <td className="gstr-td-amount">₹{fmt(r.taxableValue)}</td>
-                  <td className="gstr-td-tax">
-                    {r.igst > 0 ? `₹${fmt(r.igst)}` : "—"}
-                  </td>
-                  <td className="gstr-td-tax">
-                    {r.cgst > 0 ? `₹${fmt(r.cgst)}` : "—"}
-                  </td>
-                  <td className="gstr-td-tax">
-                    {r.sgst > 0 ? `₹${fmt(r.sgst)}` : "—"}
-                  </td>
-                  <td className="gstr-td-total">₹{fmt(r.totalInvoiceValue)}</td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
           {data.length > 0 && (
             <tfoot>
               <tr>
-                <td colSpan={7} className="gstr-tf-label">
-                  Totals ({data.length} invoices)
-                </td>
-                <td className="gstr-td-amount">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.taxableValue || 0), 0))}
-                </td>
-                <td className="gstr-td-tax">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.igst || 0), 0))}
-                </td>
-                <td className="gstr-td-tax">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.cgst || 0), 0))}
-                </td>
-                <td className="gstr-td-tax">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.sgst || 0), 0))}
-                </td>
-                <td className="gstr-td-total">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.totalInvoiceValue || 0), 0))}
-                </td>
+                <td colSpan={7} className="gstr-tf-label">Totals ({data.length} invoices)</td>
+                <td className="gstr-td-amount">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.taxableValue||0),0))}</td>
+                <td className="gstr-td-tax">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.igst||0),0))}</td>
+                <td className="gstr-td-tax">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.cgst||0),0))}</td>
+                <td className="gstr-td-tax">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.sgst||0),0))}</td>
+                <td className="gstr-td-total">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.totalInvoiceValue||0),0))}</td>
               </tr>
             </tfoot>
           )}
         </table>
       </div>
       {data.length > pageSize && (
-        <GstrPagination
-          page={page}
-          totalPages={totalPages}
-          pageSize={pageSize}
+        <GstrPagination page={page} totalPages={totalPages} pageSize={pageSize}
           onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
-        />
+          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
       )}
     </div>
   );
 });
 GstrB2BTable.displayName = "GstrB2BTable";
 
-/* ── B2C Table ── */
+/* ═══════════════════════════════════════════════════════════════
+   GSTR B2C TABLE
+═══════════════════════════════════════════════════════════════ */
 const GstrB2CTable = React.memo(({ data }) => {
-  const [page, setPage] = useState(1);
+  const [page, setPage]         = useState(1);
   const [pageSize, setPageSize] = useState(10);
-
   const totalPages = Math.ceil(data.length / pageSize);
-  const paged = data.slice((page - 1) * pageSize, page * pageSize);
+  const paged      = data.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="gstr-table-section">
@@ -189,17 +148,8 @@ const GstrB2CTable = React.memo(({ data }) => {
         <table className="gstr-table">
           <thead>
             <tr>
-              {[
-                "Invoice No",
-                "Date",
-                "Customer Name",
-                "Place of Supply",
-                "Taxable (₹)",
-                "IGST (₹)",
-                "CGST (₹)",
-                "SGST (₹)",
-                "Total (₹)",
-              ].map((h, i) => (
+              {["Invoice No","Date","Customer Name","Place of Supply",
+                "Taxable (₹)","IGST (₹)","CGST (₹)","SGST (₹)","Total (₹)"].map((h, i) => (
                 <th key={i}>
                   <span className="col-index">{String(i + 1).padStart(2, "0")}</span>
                   {h}
@@ -209,80 +159,53 @@ const GstrB2CTable = React.memo(({ data }) => {
           </thead>
           <tbody>
             {paged.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="gstr-empty">
-                  No B2C entries for this period
-                </td>
+              <tr><td colSpan={9} className="gstr-empty">No B2C entries for this period</td></tr>
+            ) : paged.map((r, i) => (
+              <tr key={i}>
+                <td className="gstr-td-mono">{r.invoiceNumber}</td>
+                <td className="gstr-td-dim">{r.invoiceDate || "—"}</td>
+                <td>{r.customerName || "Walk-in"}</td>
+                <td className="gstr-td-dim">{r.placeOfSupply}</td>
+                <td className="gstr-td-amount">₹{fmt(r.taxableValue)}</td>
+                <td className="gstr-td-tax">{r.igst > 0 ? `₹${fmt(r.igst)}` : "—"}</td>
+                <td className="gstr-td-tax">{r.cgst > 0 ? `₹${fmt(r.cgst)}` : "—"}</td>
+                <td className="gstr-td-tax">{r.sgst > 0 ? `₹${fmt(r.sgst)}` : "—"}</td>
+                <td className="gstr-td-total">₹{fmt(r.totalInvoiceValue)}</td>
               </tr>
-            ) : (
-              paged.map((r, i) => (
-                <tr key={i}>
-                  <td className="gstr-td-mono">{r.invoiceNumber}</td>
-                  <td className="gstr-td-dim">{r.invoiceDate || "—"}</td>
-                  <td>{r.customerName || "Walk-in"}</td>
-                  <td className="gstr-td-dim">{r.placeOfSupply}</td>
-                  <td className="gstr-td-amount">₹{fmt(r.taxableValue)}</td>
-                  <td className="gstr-td-tax">
-                    {r.igst > 0 ? `₹${fmt(r.igst)}` : "—"}
-                  </td>
-                  <td className="gstr-td-tax">
-                    {r.cgst > 0 ? `₹${fmt(r.cgst)}` : "—"}
-                  </td>
-                  <td className="gstr-td-tax">
-                    {r.sgst > 0 ? `₹${fmt(r.sgst)}` : "—"}
-                  </td>
-                  <td className="gstr-td-total">₹{fmt(r.totalInvoiceValue)}</td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
           {data.length > 0 && (
             <tfoot>
               <tr>
-                <td colSpan={4} className="gstr-tf-label">
-                  Totals ({data.length} invoices)
-                </td>
-                <td className="gstr-td-amount">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.taxableValue || 0), 0))}
-                </td>
-                <td className="gstr-td-tax">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.igst || 0), 0))}
-                </td>
-                <td className="gstr-td-tax">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.cgst || 0), 0))}
-                </td>
-                <td className="gstr-td-tax">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.sgst || 0), 0))}
-                </td>
-                <td className="gstr-td-total">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.totalInvoiceValue || 0), 0))}
-                </td>
+                <td colSpan={4} className="gstr-tf-label">Totals ({data.length} invoices)</td>
+                <td className="gstr-td-amount">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.taxableValue||0),0))}</td>
+                <td className="gstr-td-tax">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.igst||0),0))}</td>
+                <td className="gstr-td-tax">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.cgst||0),0))}</td>
+                <td className="gstr-td-tax">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.sgst||0),0))}</td>
+                <td className="gstr-td-total">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.totalInvoiceValue||0),0))}</td>
               </tr>
             </tfoot>
           )}
         </table>
       </div>
       {data.length > pageSize && (
-        <GstrPagination
-          page={page}
-          totalPages={totalPages}
-          pageSize={pageSize}
+        <GstrPagination page={page} totalPages={totalPages} pageSize={pageSize}
           onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
-        />
+          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
       )}
     </div>
   );
 });
 GstrB2CTable.displayName = "GstrB2CTable";
 
-/* ── HSN Table ── */
+/* ═══════════════════════════════════════════════════════════════
+   GSTR HSN TABLE
+═══════════════════════════════════════════════════════════════ */
 const GstrHsnTable = React.memo(({ data }) => {
-  const [page, setPage] = useState(1);
+  const [page, setPage]         = useState(1);
   const [pageSize, setPageSize] = useState(10);
-
   const totalPages = Math.ceil(data.length / pageSize);
-  const paged = data.slice((page - 1) * pageSize, page * pageSize);
+  const paged      = data.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="gstr-table-section">
@@ -290,19 +213,8 @@ const GstrHsnTable = React.memo(({ data }) => {
         <table className="gstr-table">
           <thead>
             <tr>
-              {[
-                "HSN Code",
-                "Description",
-                "UOM",
-                "Qty",
-                "Taxable (₹)",
-                "Tax Rate %",
-                "IGST (₹)",
-                "CGST (₹)",
-                "SGST (₹)",
-                "Total Tax (₹)",
-                "Total Value (₹)",
-              ].map((h, i) => (
+              {["HSN Code","Description","UOM","Qty","Taxable (₹)","Tax Rate %",
+                "IGST (₹)","CGST (₹)","SGST (₹)","Total Tax (₹)","Total Value (₹)"].map((h, i) => (
                 <th key={i}>
                   <span className="col-index">{String(i + 1).padStart(2, "0")}</span>
                   {h}
@@ -312,83 +224,217 @@ const GstrHsnTable = React.memo(({ data }) => {
           </thead>
           <tbody>
             {paged.length === 0 ? (
-              <tr>
-                <td colSpan={11} className="gstr-empty">
-                  No HSN entries for this period
-                </td>
+              <tr><td colSpan={11} className="gstr-empty">No HSN entries for this period</td></tr>
+            ) : paged.map((r, i) => (
+              <tr key={i}>
+                <td className="gstr-td-mono gstr-accent">{r.hsnCode}</td>
+                <td>{r.description}</td>
+                <td className="gstr-td-dim">{r.uom}</td>
+                <td className="gstr-td-mono">{r.totalQuantity}</td>
+                <td className="gstr-td-amount">₹{fmt(r.taxableValue)}</td>
+                <td><span className="gstr-rate-tag">{r.taxRate}%</span></td>
+                <td className="gstr-td-tax">{r.igst > 0 ? `₹${fmt(r.igst)}` : "—"}</td>
+                <td className="gstr-td-tax">{r.cgst > 0 ? `₹${fmt(r.cgst)}` : "—"}</td>
+                <td className="gstr-td-tax">{r.sgst > 0 ? `₹${fmt(r.sgst)}` : "—"}</td>
+                <td className="gstr-td-tax">₹{fmt(r.totalTax)}</td>
+                <td className="gstr-td-total">₹{fmt(r.totalValue)}</td>
               </tr>
-            ) : (
-              paged.map((r, i) => (
-                <tr key={i}>
-                  <td className="gstr-td-mono gstr-accent">{r.hsnCode}</td>
-                  <td>{r.description}</td>
-                  <td className="gstr-td-dim">{r.uom}</td>
-                  <td className="gstr-td-mono">{r.totalQuantity}</td>
-                  <td className="gstr-td-amount">₹{fmt(r.taxableValue)}</td>
-                  <td>
-                    <span className="gstr-rate-tag">{r.taxRate}%</span>
-                  </td>
-                  <td className="gstr-td-tax">
-                    {r.igst > 0 ? `₹${fmt(r.igst)}` : "—"}
-                  </td>
-                  <td className="gstr-td-tax">
-                    {r.cgst > 0 ? `₹${fmt(r.cgst)}` : "—"}
-                  </td>
-                  <td className="gstr-td-tax">
-                    {r.sgst > 0 ? `₹${fmt(r.sgst)}` : "—"}
-                  </td>
-                  <td className="gstr-td-tax">₹{fmt(r.totalTax)}</td>
-                  <td className="gstr-td-total">₹{fmt(r.totalValue)}</td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
           {data.length > 0 && (
             <tfoot>
               <tr>
-                <td colSpan={3} className="gstr-tf-label">
-                  Totals ({data.length} HSN codes)
-                </td>
-                <td className="gstr-td-mono">
-                  {data.reduce((s, r) => s + (r.totalQuantity || 0), 0)}
-                </td>
-                <td className="gstr-td-amount">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.taxableValue || 0), 0))}
-                </td>
+                <td colSpan={3} className="gstr-tf-label">Totals ({data.length} HSN codes)</td>
+                <td className="gstr-td-mono">{data.reduce((s,r)=>s+(r.totalQuantity||0),0)}</td>
+                <td className="gstr-td-amount">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.taxableValue||0),0))}</td>
                 <td />
-                <td className="gstr-td-tax">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.igst || 0), 0))}
-                </td>
-                <td className="gstr-td-tax">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.cgst || 0), 0))}
-                </td>
-                <td className="gstr-td-tax">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.sgst || 0), 0))}
-                </td>
-                <td className="gstr-td-tax">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.totalTax || 0), 0))}
-                </td>
-                <td className="gstr-td-total">
-                  ₹{fmt(data.reduce((s, r) => s + parseFloat(r.totalValue || 0), 0))}
-                </td>
+                <td className="gstr-td-tax">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.igst||0),0))}</td>
+                <td className="gstr-td-tax">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.cgst||0),0))}</td>
+                <td className="gstr-td-tax">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.sgst||0),0))}</td>
+                <td className="gstr-td-tax">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.totalTax||0),0))}</td>
+                <td className="gstr-td-total">₹{fmt(data.reduce((s,r)=>s+parseFloat(r.totalValue||0),0))}</td>
               </tr>
             </tfoot>
           )}
         </table>
       </div>
       {data.length > pageSize && (
-        <GstrPagination
-          page={page}
-          totalPages={totalPages}
-          pageSize={pageSize}
+        <GstrPagination page={page} totalPages={totalPages} pageSize={pageSize}
           onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
-        />
+          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
       )}
     </div>
   );
 });
 GstrHsnTable.displayName = "GstrHsnTable";
+
+/* ═══════════════════════════════════════════════════════════════
+   P&L STATEMENT COMPONENT  (outside — stable identity)
+═══════════════════════════════════════════════════════════════ */
+const PnlStatement = React.memo(({ data }) => {
+  const isProfit = parseFloat(data.netProfit || 0) >= 0;
+
+  const kpiConfig = [
+    { key: "grossSales",        label: "Gross Sales",   icon: "₹", color: "#3b82f6", glow: "rgba(59,130,246,0.4)"  },
+    { key: "netRevenue",        label: "Net Revenue",   icon: "→", color: "#06b6d4", glow: "rgba(6,182,212,0.4)"   },
+    { key: "cogs",              label: "COGS",          icon: "C", color: "#f59e0b", glow: "rgba(245,158,11,0.4)"  },
+    { key: "grossProfit",       label: "Gross Profit",  icon: "↑",
+      color: parseFloat(data.grossProfit||0) >= 0 ? "#10b981" : "#ef4444",
+      glow:  parseFloat(data.grossProfit||0) >= 0 ? "rgba(16,185,129,0.4)" : "rgba(239,68,68,0.4)" },
+    { key: "grossProfitMargin", label: "Gross Margin",  icon: "%", color: "#8b5cf6", glow: "rgba(139,92,246,0.4)", suffix: "%" },
+    { key: "netProfit",         label: "Net Profit",    icon: "N",
+      color: isProfit ? "#10b981" : "#ef4444",
+      glow:  isProfit ? "rgba(16,185,129,0.4)" : "rgba(239,68,68,0.4)" },
+    { key: "netProfitMargin",   label: "Net Margin",    icon: "%", color: "#ec4899", glow: "rgba(236,72,153,0.4)", suffix: "%" },
+    { key: "taxCollected",      label: "GST Collected", icon: "G", color: "#f97316", glow: "rgba(249,115,22,0.4)"  },
+  ];
+
+  return (
+    <>
+      {/* ── KPI Cards — reuses rev-card + rev-summary ── */}
+      <div className="rev-summary gstr-summary-grid">
+        {kpiConfig.map((cfg, i) => {
+          const val = data[cfg.key];
+          return (
+            <div key={cfg.key} className="rev-card"
+              style={{
+                "--card-accent": cfg.color,
+                "--card-glow":   cfg.glow,
+                animationDelay: `${i * 0.06}s`,
+              }}>
+              <div className="rev-card-bg" />
+              <div className="rev-card-corner tl" /><div className="rev-card-corner tr" />
+              <div className="rev-card-corner bl" /><div className="rev-card-corner br" />
+              <div className="rev-card-top-line" />
+              <div className="rev-card-icon">{cfg.icon}</div>
+              <div className="rev-card-label">{cfg.label}</div>
+              <div className="rev-card-value">
+                {cfg.suffix
+                  ? `${val}${cfg.suffix}`
+                  : `₹${fmt(val)}`}
+              </div>
+              <div className="rev-card-ticker" />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Period / meta bar — reuses gstr-period-bar ── */}
+      <div className="gstr-period-bar">
+        <div className="gstr-period-info">
+          <span className="gstr-period-label">Period</span>
+          <span className="gstr-period-val">{data.period}</span>
+        </div>
+        <div className="gstr-period-info">
+          <span className="gstr-period-label">From</span>
+          <span className="gstr-period-val">{data.fromDate}</span>
+        </div>
+        <div className="gstr-period-info">
+          <span className="gstr-period-label">To</span>
+          <span className="gstr-period-val">{data.toDate}</span>
+        </div>
+        <div className="gstr-period-info">
+          <span className="gstr-period-label">Total Invoices</span>
+          <span className="gstr-period-val">{data.totalInvoices}</span>
+        </div>
+        <div className="gstr-period-info">
+          <span className="gstr-period-label">Items Sold</span>
+          <span className="gstr-period-val">{data.totalItemsSold}</span>
+        </div>
+        <div className="gstr-period-info">
+          <span className="gstr-period-label">Result</span>
+          <span className={`gstr-period-val ${isProfit ? "gstr-badge-green" : "gstr-badge-red"}`}>
+            {isProfit ? "PROFIT" : "LOSS"}
+          </span>
+        </div>
+      </div>
+
+      {/* ── P&L Statement table ── */}
+      <div className="table-shell">
+        <div className="table-shell-header">
+          <div className="shell-title-row">
+            <div className="shell-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 4h10M2 7h7M2 10h5" stroke="currentColor"
+                  strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <span>Profit &amp; Loss Statement</span>
+          </div>
+          <div className="shell-status">
+            <span className={`pnl-result-indicator ${isProfit ? "pnl-profit" : "pnl-loss"}`}>
+              {isProfit ? "↑" : "↓"}
+              {isProfit ? " PROFIT" : " LOSS"}
+            </span>
+          </div>
+        </div>
+
+        <div className="pnl-table-wrap">
+          <table className="pnl-table">
+            <thead>
+              <tr>
+                <th className="pnl-th-particulars">Particulars</th>
+                <th className="pnl-th-sign"></th>
+                <th className="pnl-th-amount">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data.lines || []).map((line, idx) => {
+
+                // Separator row
+                if (line.isSeparator) {
+                  return (
+                    <tr key={idx} className="pnl-sep-row">
+                      <td colSpan={3} />
+                    </tr>
+                  );
+                }
+
+                // Section header row
+                if (line.isSubtotal && line.type === "HEADER") {
+                  return (
+                    <tr key={idx} className="pnl-section-row">
+                      <td colSpan={3} className="pnl-td-section">{line.label}</td>
+                    </tr>
+                  );
+                }
+
+                // Determine row class
+                const isNetTotal   = line.isTotal && line.type === "NET";
+                const isNetNeg     = isNetTotal && parseFloat(line.amount || 0) < 0;
+                const isNetPos     = isNetTotal && parseFloat(line.amount || 0) >= 0;
+                const isGrossTotal = line.isTotal && line.type === "GROSS";
+                const isGrossNeg   = isGrossTotal && parseFloat(line.amount || 0) < 0;
+
+                const rowClass = [
+                  line.isTotal    && !isNetTotal && !isGrossTotal ? "pnl-total-row"   : "",
+                  isGrossTotal && !isGrossNeg                     ? "pnl-gross-row"   : "",
+                  isGrossNeg                                      ? "pnl-loss-row"    : "",
+                  isNetPos                                        ? "pnl-profit-row"  : "",
+                  isNetNeg                                        ? "pnl-loss-row"    : "",
+                  line.isDeduction                                ? "pnl-deduct-row"  : "",
+                ].filter(Boolean).join(" ");
+
+                return (
+                  <tr key={idx} className={rowClass}>
+                    <td className="pnl-td-label">{line.label}</td>
+                    <td className="pnl-td-sign">{line.sign}</td>
+                    <td className="pnl-td-amount">
+                      {line.amount != null
+                        ? `₹${fmt(line.amount)}`
+                        : ""}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+});
+PnlStatement.displayName = "PnlStatement";
 
 /* ═══════════════════════════════════════════════════════════════
    MAIN COMPONENT
@@ -405,9 +451,10 @@ export default function GenerateReport() {
   const [modalInvoice,    setModalInvoice]    = useState(null);
   const [summary,         setSummary]         = useState(null);
   const [gstrData,        setGstrData]        = useState(null);
-  // ── NEW: tracks whether the GSTR API call has completed at least once ──
   const [gstrLoaded,      setGstrLoaded]      = useState(false);
   const [gstrTab,         setGstrTab]         = useState("b2b");
+  const [pnlData,         setPnlData]         = useState(null);
+  const [pnlLoaded,       setPnlLoaded]       = useState(false);
   const [hoveredRow,      setHoveredRow]      = useState(null);
   const [mousePos,        setMousePos]        = useState({ x: 0, y: 0 });
   const [downloading,     setDownloading]     = useState(false);
@@ -417,20 +464,19 @@ export default function GenerateReport() {
   const modalTableRef = useRef(null);
   const canvasRef     = useRef(null);
   const animFrameRef  = useRef(null);
+  const orbsRef       = useRef(null);
 
   /* ── Mouse parallax ── */
   useEffect(() => {
-    const h = (e) =>
-      setMousePos({
-        x: (e.clientX / window.innerWidth - 0.5) * 2,
-        y: (e.clientY / window.innerHeight - 0.5) * 2,
-      });
+    const h = (e) => setMousePos({
+      x: (e.clientX / window.innerWidth  - 0.5) * 2,
+      y: (e.clientY / window.innerHeight - 0.5) * 2,
+    });
     window.addEventListener("mousemove", h);
     return () => window.removeEventListener("mousemove", h);
   }, []);
 
   const canvasThemeKey = useCanvasThemeKey();
-  const orbsRef = useRef(null);
 
   /* ── Canvas background ── */
   useEffect(() => {
@@ -449,9 +495,9 @@ export default function GenerateReport() {
     orbsRef.current = Array.from({ length: 6 }, (_, i) => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      r: 80 + Math.random() * 220,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
+      r:   80 + Math.random() * 220,
+      vx:  (Math.random() - 0.5) * 0.3,
+      vy:  (Math.random() - 0.5) * 0.3,
       hue: [210, 230, 200, 240, 220, 215][i],
       alpha: (0.03 + Math.random() * 0.04) * palette.orbAlphaScale,
     }));
@@ -477,19 +523,31 @@ export default function GenerateReport() {
     };
   }, [canvasThemeKey]);
 
-  /* ── Fetch fields ── */
-  useEffect(() => {
-    if (!moduleId) return;
-    apiClient(`${API_BASE_URL}/api/Reports/GetFieldByModuleId/${moduleId}`, {
-      })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.status === 200) setFields(d.data);
-        setLoading(false);
-      });
-  }, [moduleId]);
+/* ── Fetch fields ── */
+useEffect(() => {
+  if (!moduleId) return;
 
-  /* ── API map ── */
+  setLoading(true);
+
+  apiClient(`${API_BASE_URL}/api/Reports/GetFieldByModuleId/${moduleId}`, {})
+    .then((r) => r.json())
+    .then((d) => {
+      if (d?.status === 200 && Array.isArray(d?.data)) {
+        setFields(d.data);
+      } else {
+        setFields([]); // fallback if data is null
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to fetch fields:", err);
+      setFields([]);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+}, [moduleId]);
+
+  /* ── API maps ── */
   const apiMap = {
     [ReportEntity.Vendor]:            `${API_BASE_URL}/api/Vendor/GetVendorReport`,
     [ReportEntity.ProductType]:       `${API_BASE_URL}/api/ProductType/GetProductTypeReport`,
@@ -507,6 +565,7 @@ export default function GenerateReport() {
     [ReportEntity.PaymentCollection]: `${API_BASE_URL}/api/PaymentCollection/PaymentCollectionReportData`,
     [ReportEntity.DayBook]:           `${API_BASE_URL}/api/Reports/DayBookReportData`,
     [ReportEntity.GSTR1]:             `${API_BASE_URL}/api/Reports/GstReportData`,
+    [ReportEntity.ProfitLoss]:        `${API_BASE_URL}/api/Reports/PnlReportData`,
   };
 
   const downloadApiMap = {
@@ -526,6 +585,7 @@ export default function GenerateReport() {
     [ReportEntity.PaymentCollection]: `${API_BASE_URL}/api/PaymentCollection/PaymentCollectionReport`,
     [ReportEntity.DayBook]:           `${API_BASE_URL}/api/Reports/DayBookReport`,
     [ReportEntity.GSTR1]:             `${API_BASE_URL}/api/Reports/GstReport`,
+    [ReportEntity.ProfitLoss]:        `${API_BASE_URL}/api/Reports/PnlReport`,
   };
 
   /* ── Fetch report data ── */
@@ -544,11 +604,9 @@ export default function GenerateReport() {
 
     setLoading(true);
 
-    // Reset gstrLoaded when a new fetch starts so the "not found" message
-    // is never shown while the spinner is visible
-    if (moduleId === ReportEntity.GSTR1) {
-      setGstrLoaded(false);
-    }
+    // Reset loaded flags so we never show "no data" during fetch
+    if (moduleId === ReportEntity.GSTR1)     setGstrLoaded(false);
+    if (moduleId === ReportEntity.ProfitLoss) setPnlLoaded(false);
 
     apiClient(apiUrl, {
       method: "POST",
@@ -557,39 +615,44 @@ export default function GenerateReport() {
     })
       .then((r) => r.json())
       .then((d) => {
+        setLoading(false);
+
         if (d.status !== 200) {
-          setLoading(false);
-          if (moduleId === ReportEntity.GSTR1) {
-            setGstrData(null);
-            setGstrLoaded(true); // API responded — just no data
-          }
+          if (moduleId === ReportEntity.GSTR1)     { setGstrData(null); setGstrLoaded(true); }
+          if (moduleId === ReportEntity.ProfitLoss) { setPnlData(null);  setPnlLoaded(true);  }
           return;
         }
 
+        // ── GSTR-1 ──────────────────────────────────────────────────────
         if (moduleId === ReportEntity.GSTR1) {
           setGstrData(d.data);
-          setGstrLoaded(true); // API responded successfully
+          setGstrLoaded(true);
           setReportData([]);
-          setLoading(false);
           return;
         }
 
+        // ── P&L ──────────────────────────────────────────────────────────
+        if (moduleId === ReportEntity.ProfitLoss) {
+          setPnlData(d.data);
+          setPnlLoaded(true);
+          setReportData([]);
+          return;
+        }
+
+        // ── Revenue ──────────────────────────────────────────────────────
         if (moduleId === ReportEntity.Revenue) {
           setSummary(d.data.summaryDto);
           setReportData(d.data.revenueDto || []);
-          setLoading(false);
           return;
         }
 
+        // ── Generic ──────────────────────────────────────────────────────
         setReportData(d.data);
-        setLoading(false);
       })
       .catch(() => {
         setLoading(false);
-        if (moduleId === ReportEntity.GSTR1) {
-          setGstrData(null);
-          setGstrLoaded(true);
-        }
+        if (moduleId === ReportEntity.GSTR1)     { setGstrData(null); setGstrLoaded(true); }
+        if (moduleId === ReportEntity.ProfitLoss) { setPnlData(null);  setPnlLoaded(true);  }
       });
   }, [moduleId, initialFilters, page, pageSize]);
 
@@ -599,8 +662,7 @@ export default function GenerateReport() {
     const apiUrl = downloadApiMap[moduleId];
     if (!apiUrl) return;
 
-    setDownloading(true);
-    setDownloadSuccess(false);
+    setDownloading(true); setDownloadSuccess(false);
     try {
       const payload = {};
       Object.keys(initialFilters).forEach((k) => {
@@ -652,9 +714,8 @@ export default function GenerateReport() {
       const onMove = (e) => {
         const w = Math.max(80, startWidth + (e.pageX - startX));
         header.style.width = w + "px";
-        tableEl
-          .querySelectorAll(`.gen-table-body-cell:nth-child(${index + 1})`)
-          .forEach((cell) => (cell.style.width = w + "px"));
+        tableEl.querySelectorAll(`.gen-table-body-cell:nth-child(${index + 1})`)
+               .forEach((cell) => (cell.style.width = w + "px"));
       };
       const onUp = () => {
         document.removeEventListener("mousemove", onMove);
@@ -673,13 +734,12 @@ export default function GenerateReport() {
   useEffect(() => { attachResizer(tableRef.current); },      [fields, reportData]);
   useEffect(() => { attachResizer(modalTableRef.current); }, [modalInvoice, fields]);
 
-  /* ── helpers ── */
+  /* ── Helpers ── */
   const toCamelCase = (str) =>
-    str
-      .replace(/\s(.)/g, (_, g) => g.toUpperCase())
-      .replace(/\s/g, "")
-      .replace(/^(.)/, (_, g) => g.toLowerCase())
-      .replace(/[()₹]/g, "");
+    str.replace(/\s(.)/g, (_, g) => g.toUpperCase())
+       .replace(/\s/g, "")
+       .replace(/^(.)/, (_, g) => g.toLowerCase())
+       .replace(/[()₹]/g, "");
 
   if (!moduleId) {
     return (
@@ -688,12 +748,7 @@ export default function GenerateReport() {
         <div className="gen-error-text">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4" />
-            <path
-              d="M8 5V8.5M8 11H8.01"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
+            <path d="M8 5V8.5M8 11H8.01" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
           </svg>
           Module information missing. Please go back and generate the report again.
         </div>
@@ -701,7 +756,7 @@ export default function GenerateReport() {
     );
   }
 
-  /* ── Invoice grouping (for generic table) ── */
+  /* ── Invoice grouping ── */
   const invoiceMap   = new Map();
   let lastInvoiceKey = null;
   reportData.forEach((row) => {
@@ -727,7 +782,7 @@ export default function GenerateReport() {
     { key: "netProfitMargin", label: "Net Margin",    icon: "M", color: "#f97316", glow: "rgba(249,115,22,0.4)", suffix: "%" },
   ];
 
-  /* ── GSTR summary cards config ── */
+  /* ── GSTR summary config ── */
   const gstrSummaryConfig = [
     { key: "totalTaxableValue", label: "Taxable Value",  icon: "₹", color: "#3b82f6", glow: "rgba(59,130,246,0.4)"  },
     { key: "totalCgst",         label: "CGST",           icon: "C", color: "#10b981", glow: "rgba(16,185,129,0.4)"  },
@@ -739,30 +794,36 @@ export default function GenerateReport() {
     { key: "b2cCount",          label: "B2C Invoices",   icon: "#", color: "#f97316", glow: "rgba(249,115,22,0.4)", raw: true },
   ];
 
+  /* ── Header badge label ── */
+  const headerBadgeLabel =
+    moduleId === ReportEntity.GSTR1     ? "GST COMPLIANCE"  :
+    moduleId === ReportEntity.ProfitLoss ? "FINANCIAL REPORT" :
+    "REPORT VIEWER";
+
   const parallaxStyle = {
     transform:  `translate(${mousePos.x * 4}px, ${mousePos.y * 4}px)`,
     transition: "transform 0.1s linear",
   };
 
-  /* ═══════════════════════════════════════════════════════════════
+  /* ─────────────────────────────────────────────────────────────
      RENDER
-  ═══════════════════════════════════════════════════════════════ */
+  ───────────────────────────────────────────────────────────── */
   return (
     <div className="r-container">
       <canvas ref={canvasRef} className="bg-canvas" />
       <div className="noise-overlay" />
       <div className="top-beam" />
 
-      
+      {/* ══ HEADER ══ */}
       <header className="report-header" style={parallaxStyle}>
         <div className="header-top-row">
           <div className="header-left">
             <div className="header-badge">
               <span className="badge-dot" />
-              {moduleId === ReportEntity.GSTR1 ? "GST COMPLIANCE" : "REPORT VIEWER"}
+              {headerBadgeLabel}
             </div>
             <h1 className="gen-report-title">
-              <span className="title-accent"></span>
+              <span className="title-accent">//</span>
               {reportName}
             </h1>
             <div className="header-meta">
@@ -782,6 +843,19 @@ export default function GenerateReport() {
                   <span className="meta-label">{gstrData.b2cCount} B2C</span>
                   <span className="meta-divider" />
                   <span className="meta-label">{gstrData.hsnCount} HSN codes</span>
+                </>
+              ) : moduleId === ReportEntity.ProfitLoss && pnlData ? (
+                <>
+                  <span className="meta-label">{pnlData.period}</span>
+                  <span className="meta-divider" />
+                  <span className="meta-label">{pnlData.totalInvoices} invoices</span>
+                  <span className="meta-divider" />
+                  <span className="meta-label">{pnlData.totalItemsSold} items sold</span>
+                  <span className="meta-divider" />
+                  <span className="meta-label"
+                    style={{ color: parseFloat(pnlData.netProfit||0) >= 0 ? "#6ee7b7" : "#fca5a5" }}>
+                    Net: ₹{fmt(pnlData.netProfit)}
+                  </span>
                 </>
               ) : (
                 <>
@@ -804,12 +878,8 @@ export default function GenerateReport() {
                 <>
                   <span className="download-spinner">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle
-                        cx="7" cy="7" r="5.5"
-                        stroke="currentColor" strokeWidth="1.5"
-                        strokeDasharray="28" strokeDashoffset="10"
-                        strokeLinecap="round"
-                      />
+                      <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5"
+                        strokeDasharray="28" strokeDashoffset="10" strokeLinecap="round" />
                     </svg>
                   </span>
                   <span>Exporting…</span>
@@ -817,22 +887,16 @@ export default function GenerateReport() {
               ) : downloadSuccess ? (
                 <>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path
-                      d="M2.5 7.5L5.5 10.5L11.5 4"
-                      stroke="currentColor" strokeWidth="1.6"
-                      strokeLinecap="round" strokeLinejoin="round"
-                    />
+                    <path d="M2.5 7.5L5.5 10.5L11.5 4" stroke="currentColor"
+                      strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span>Downloaded!</span>
                 </>
               ) : (
                 <>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path
-                      d="M7 2V9M7 9L4.5 6.5M7 9L9.5 6.5"
-                      stroke="currentColor" strokeWidth="1.5"
-                      strokeLinecap="round" strokeLinejoin="round"
-                    />
+                    <path d="M7 2V9M7 9L4.5 6.5M7 9L9.5 6.5" stroke="currentColor"
+                      strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M2 11H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                   <span>Export Excel</span>
@@ -845,68 +909,43 @@ export default function GenerateReport() {
         <div className="header-rule" />
       </header>
 
-      
+      {/* ══ REVENUE SUMMARY CARDS ══ */}
       {moduleId === ReportEntity.Revenue && summary && (
         <div className="rev-summary">
           {summaryConfig.map((cfg, i) => (
-            <div
-              key={cfg.key}
-              className="rev-card"
-              style={{
-                "--card-accent": cfg.color,
-                "--card-glow":   cfg.glow,
-                animationDelay:  `${i * 0.08}s`,
-              }}
-            >
+            <div key={cfg.key} className="rev-card"
+              style={{ "--card-accent": cfg.color, "--card-glow": cfg.glow, animationDelay: `${i * 0.08}s` }}>
               <div className="rev-card-bg" />
-              <div className="rev-card-corner tl" />
-              <div className="rev-card-corner tr" />
-              <div className="rev-card-corner bl" />
-              <div className="rev-card-corner br" />
+              <div className="rev-card-corner tl" /><div className="rev-card-corner tr" />
+              <div className="rev-card-corner bl" /><div className="rev-card-corner br" />
               <div className="rev-card-top-line" />
               <div className="rev-card-icon">{cfg.icon}</div>
               <div className="rev-card-label">{cfg.label}</div>
-              <div className="rev-card-value">
-                {summary[cfg.key]}
-                {cfg.suffix || ""}
-              </div>
+              <div className="rev-card-value">{summary[cfg.key]}{cfg.suffix || ""}</div>
               <div className="rev-card-ticker" />
             </div>
           ))}
         </div>
       )}
 
-      
+      {/* ══ GSTR-1 LAYOUT ══ */}
       {moduleId === ReportEntity.GSTR1 && (
         <>
-          
           {loading ? (
             <div className="gen-loading-text">
-              <div className="loader-ring">
-                <div /><div /><div /><div />
-              </div>
+              <div className="loader-ring"><div /><div /><div /><div /></div>
               Generating GSTR-1…
             </div>
           ) : gstrData ? (
-            /* ── Data loaded successfully ── */
             <>
-              
+              {/* GSTR KPI Cards */}
               <div className="rev-summary gstr-summary-grid">
                 {gstrSummaryConfig.map((cfg, i) => (
-                  <div
-                    key={cfg.key}
-                    className="rev-card"
-                    style={{
-                      "--card-accent": cfg.color,
-                      "--card-glow":   cfg.glow,
-                      animationDelay:  `${i * 0.06}s`,
-                    }}
-                  >
+                  <div key={cfg.key} className="rev-card"
+                    style={{ "--card-accent": cfg.color, "--card-glow": cfg.glow, animationDelay: `${i * 0.06}s` }}>
                     <div className="rev-card-bg" />
-                    <div className="rev-card-corner tl" />
-                    <div className="rev-card-corner tr" />
-                    <div className="rev-card-corner bl" />
-                    <div className="rev-card-corner br" />
+                    <div className="rev-card-corner tl" /><div className="rev-card-corner tr" />
+                    <div className="rev-card-corner bl" /><div className="rev-card-corner br" />
                     <div className="rev-card-top-line" />
                     <div className="rev-card-icon">{cfg.icon}</div>
                     <div className="rev-card-label">{cfg.label}</div>
@@ -918,7 +957,7 @@ export default function GenerateReport() {
                 ))}
               </div>
 
-              
+              {/* Period bar */}
               <div className="gstr-period-bar">
                 <div className="gstr-period-info">
                   <span className="gstr-period-label">Period</span>
@@ -942,7 +981,7 @@ export default function GenerateReport() {
                 </div>
               </div>
 
-              
+              {/* Tabbed tables */}
               <div className="table-shell" style={{ marginTop: 0 }}>
                 <div className="table-shell-header">
                   <div className="gstr-tabs">
@@ -951,30 +990,22 @@ export default function GenerateReport() {
                       { key: "b2c", label: "B2C Invoices", count: gstrData.b2cCount, color: "#10b981" },
                       { key: "hsn", label: "HSN Summary",  count: gstrData.hsnCount,  color: "#f59e0b" },
                     ].map((t) => (
-                      <button
-                        key={t.key}
+                      <button key={t.key}
                         className={`gstr-tab ${gstrTab === t.key ? "active" : ""}`}
                         onClick={() => setGstrTab(t.key)}
-                        style={{ "--tab-color": t.color }}
-                      >
+                        style={{ "--tab-color": t.color }}>
                         {t.label}
                         <span className="gstr-tab-count">{t.count}</span>
                       </button>
                     ))}
                   </div>
-
                   <div className="shell-status">
                     <span className="status-pulse" />
-                    {gstrTab === "b2b"
-                      ? gstrData.b2bCount
-                      : gstrTab === "b2c"
-                      ? gstrData.b2cCount
-                      : gstrData.hsnCount}{" "}
-                    entries
+                    {gstrTab === "b2b" ? gstrData.b2bCount
+                     : gstrTab === "b2c" ? gstrData.b2cCount
+                     : gstrData.hsnCount} entries
                   </div>
                 </div>
-
-                
                 <div className="gstr-tab-content">
                   {gstrTab === "b2b" && <GstrB2BTable data={gstrData.b2b || []} />}
                   {gstrTab === "b2c" && <GstrB2CTable data={gstrData.b2c || []} />}
@@ -983,7 +1014,6 @@ export default function GenerateReport() {
               </div>
             </>
           ) : (
-            /* ── API responded but returned no data — only shown after gstrLoaded is true ── */
             gstrLoaded && (
               <div className="gen-error-text">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -997,14 +1027,36 @@ export default function GenerateReport() {
         </>
       )}
 
-      
-      {moduleId !== ReportEntity.GSTR1 && (
+      {/* ══ P&L LAYOUT ══ */}
+      {moduleId === ReportEntity.ProfitLoss && (
         <>
           {loading ? (
             <div className="gen-loading-text">
-              <div className="loader-ring">
-                <div /><div /><div /><div />
+              <div className="loader-ring"><div /><div /><div /><div /></div>
+              Generating P&amp;L Statement…
+            </div>
+          ) : pnlData ? (
+            <PnlStatement data={pnlData} />
+          ) : (
+            pnlLoaded && (
+              <div className="gen-error-text">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4" />
+                  <path d="M8 5V8.5M8 11H8.01" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
+                No P&amp;L data found for this period.
               </div>
+            )
+          )}
+        </>
+      )}
+
+      {/* ══ GENERIC TABLE LAYOUT (all other reports) ══ */}
+      {moduleId !== ReportEntity.GSTR1 && moduleId !== ReportEntity.ProfitLoss && (
+        <>
+          {loading ? (
+            <div className="gen-loading-text">
+              <div className="loader-ring"><div /><div /><div /><div /></div>
               Initializing data stream…
             </div>
           ) : (
@@ -1032,55 +1084,38 @@ export default function GenerateReport() {
                   <div className="gen-table">
                     <div className="gen-table-header-row">
                       {fields.map((field, i) => (
-                        <div
-                          key={i}
-                          className="gen-table-header-cell"
-                          style={{ width: "170px", animationDelay: `${i * 0.04}s` }}
-                        >
+                        <div key={i} className="gen-table-header-cell"
+                          style={{ width: "170px", animationDelay: `${i * 0.04}s` }}>
                           <span className="col-index">{String(i + 1).padStart(2, "0")}</span>
                           {field}
                         </div>
                       ))}
                     </div>
-
                     {paginatedKeys.map((key, gIndex) => {
                       const items       = invoiceMap.get(key);
                       const hasMultiple = items.length > 1;
                       return (
-                        <div
-                          key={gIndex}
+                        <div key={gIndex}
                           className={`gen-table-body-row invoice-row ${hoveredRow === gIndex ? "row-hovered" : ""}`}
-                          style={{
-                            cursor:         hasMultiple ? "pointer" : "default",
-                            animationDelay: `${gIndex * 0.025}s`,
-                          }}
+                          style={{ cursor: hasMultiple ? "pointer" : "default", animationDelay: `${gIndex * 0.025}s` }}
                           onClick={() => hasMultiple && setModalInvoice(items)}
                           onMouseEnter={() => setHoveredRow(gIndex)}
-                          onMouseLeave={() => setHoveredRow(null)}
-                        >
+                          onMouseLeave={() => setHoveredRow(null)}>
                           {fields.map((field, fIndex) => {
                             const keyField = toCamelCase(field);
                             return (
-                              <div
-                                key={fIndex}
-                                className="gen-table-body-cell"
+                              <div key={fIndex} className="gen-table-body-cell"
                                 style={{
-                                  width:          "170px",
-                                  display:        fIndex === 0 && hasMultiple ? "flex"          : undefined,
+                                  width: "170px",
+                                  display: fIndex === 0 && hasMultiple ? "flex" : undefined,
                                   justifyContent: fIndex === 0 && hasMultiple ? "space-between" : undefined,
-                                }}
-                              >
+                                }}>
                                 {items[0][keyField] ?? "—"}
                                 {fIndex === 0 && hasMultiple && (
                                   <span className="expand-indicator">
                                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                                      <path
-                                        d="M2 3.5L5 6.5L8 3.5"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
+                                      <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor"
+                                        strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                   </span>
                                 )}
@@ -1094,18 +1129,12 @@ export default function GenerateReport() {
                 </div>
               </div>
 
-              
+              {/* Pagination */}
               <div className="gen-pagination">
-                <button
-                  disabled={page === 1}
-                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                >
+                <button disabled={page === 1} onClick={() => setPage((p) => Math.max(p - 1, 1))}>
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path
-                      d="M7 2L3 5L7 8"
-                      stroke="currentColor" strokeWidth="1.5"
-                      strokeLinecap="round" strokeLinejoin="round"
-                    />
+                    <path d="M7 2L3 5L7 8" stroke="currentColor" strokeWidth="1.5"
+                      strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   Prev
                 </button>
@@ -1114,45 +1143,30 @@ export default function GenerateReport() {
                   <span className="page-sep">/</span>
                   <span className="page-total">{totalPages || 1}</span>
                 </div>
-                <button
-                  disabled={page === totalPages || totalPages === 0}
-                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                >
+                <button disabled={page === totalPages || totalPages === 0}
+                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}>
                   Next
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path
-                      d="M3 2L7 5L3 8"
-                      stroke="currentColor" strokeWidth="1.5"
-                      strokeLinecap="round" strokeLinejoin="round"
-                    />
+                    <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.5"
+                      strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setPage(1);
-                  }}
-                >
+                <select value={pageSize}
+                  onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>
                   {[5, 10, 20, 50].map((s) => (
                     <option key={s} value={s}>{s} / page</option>
                   ))}
                 </select>
               </div>
 
-              
+              {/* Modal */}
               {modalInvoice && (
-                <div
-                  className="gen-modal-overlay"
-                  onClick={(e) => e.target === e.currentTarget && setModalInvoice(null)}
-                >
+                <div className="gen-modal-overlay"
+                  onClick={(e) => e.target === e.currentTarget && setModalInvoice(null)}>
                   <div className="gen-modal-content">
                     <div className="modal-top-beam" />
-                    <div className="modal-corner-tl" />
-                    <div className="modal-corner-tr" />
-                    <div className="modal-corner-bl" />
-                    <div className="modal-corner-br" />
-
+                    <div className="modal-corner-tl" /><div className="modal-corner-tr" />
+                    <div className="modal-corner-bl" /><div className="modal-corner-br" />
                     <div className="modal-header">
                       <div className="modal-title-group">
                         <div className="modal-eyebrow">
@@ -1161,48 +1175,31 @@ export default function GenerateReport() {
                         <h3>{modalInvoice[0]?.invoiceNumber || "—"}</h3>
                         <span className="modal-count">{modalInvoice.length} line items</span>
                       </div>
-                      <button
-                        className="gen-modal-close"
-                        onClick={() => setModalInvoice(null)}
-                      >
+                      <button className="gen-modal-close" onClick={() => setModalInvoice(null)}>
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                          <path
-                            d="M1 1L9 9M9 1L1 9"
-                            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-                          />
+                          <path d="M1 1L9 9M9 1L1 9" stroke="currentColor"
+                            strokeWidth="1.8" strokeLinecap="round" />
                         </svg>
                         CLOSE
                       </button>
                     </div>
-
                     <div className="gen-table-wrapper" ref={modalTableRef}>
                       <div className="gen-table">
                         <div className="gen-table-header-row">
                           {fields.map((field, i) => (
-                            <div
-                              key={i}
-                              className="gen-table-header-cell"
-                              style={{ width: "170px" }}
-                            >
+                            <div key={i} className="gen-table-header-cell" style={{ width: "170px" }}>
                               <span className="col-index">{String(i + 1).padStart(2, "0")}</span>
                               {field}
                             </div>
                           ))}
                         </div>
                         {modalInvoice.map((row, rIndex) => (
-                          <div
-                            key={rIndex}
-                            className="gen-table-body-row"
-                            style={{ animationDelay: `${rIndex * 0.04}s` }}
-                          >
+                          <div key={rIndex} className="gen-table-body-row"
+                            style={{ animationDelay: `${rIndex * 0.04}s` }}>
                             {fields.map((field, cIndex) => {
                               const keyField = toCamelCase(field);
                               return (
-                                <div
-                                  key={cIndex}
-                                  className="gen-table-body-cell"
-                                  style={{ width: "170px" }}
-                                >
+                                <div key={cIndex} className="gen-table-body-cell" style={{ width: "170px" }}>
                                   {row[keyField] ?? "—"}
                                 </div>
                               );

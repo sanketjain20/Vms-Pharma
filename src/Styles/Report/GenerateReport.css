@@ -1392,6 +1392,310 @@
 }
 
 /* =========================
+   GSTR PAGINATION
+   (was missing from CSS)
+========================= */
+.gstr-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+}
+
+.gstr-page-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(14,14,20,0.9);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-sm);
+  padding: 7px 13px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+}
+
+.gstr-page-btn:hover:not(:disabled) {
+  background: rgba(59,130,246,0.08);
+  border-color: var(--border-accent);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.gstr-page-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+.gstr-page-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: rgba(8,8,14,0.8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  min-width: 64px;
+  justify-content: center;
+}
+
+.gstr-page-select {
+  background: rgba(14,14,20,0.9);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color var(--transition);
+}
+
+.gstr-page-select:focus { border-color: var(--border-accent); }
+
+/* table-section wrapper used by GSTR tables */
+.gstr-table-section {
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   GSTR BADGE RED
+   (for loss / overdue states)
+========================= */
+.gstr-badge-red {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #fca5a5;
+  width: fit-content;
+}
+
+/* =========================
+   P&L TABLE
+========================= */
+.pnl-table-wrap {
+  overflow-x: auto;
+}
+
+.pnl-table-wrap::-webkit-scrollbar { height: 3px; }
+.pnl-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(59,130,246,0.2); border-radius: 10px;
+}
+
+.pnl-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 480px;
+}
+
+/* ── Header ── */
+.pnl-table thead tr {
+  background: rgba(0,0,0,0.6);
+  position: sticky; top: 0; z-index: 2;
+}
+
+.pnl-th-particulars {
+  padding: 12px 20px;
+  width: 60%;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border-mid);
+  text-align: left;
+}
+
+.pnl-th-sign {
+  padding: 12px 8px;
+  width: 5%;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  border-bottom: 1px solid var(--border-mid);
+  text-align: center;
+}
+
+.pnl-th-amount {
+  padding: 12px 20px;
+  width: 35%;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border-mid);
+  text-align: right;
+}
+
+/* ── Base TD ── */
+.pnl-table td {
+  padding: 11px 20px;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.022);
+  transition: background var(--transition), color var(--transition);
+  animation: rowIn 0.3s var(--ease-out) both;
+}
+
+/* ── Cell types ── */
+.pnl-td-label {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  width: 60%;
+}
+
+.pnl-td-sign {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--text-muted);
+  text-align: center;
+  width: 5%;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.pnl-td-amount {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: right;
+  width: 35%;
+  letter-spacing: 0.02em;
+}
+
+/* ── Section header rows ── */
+.pnl-section-row td,
+.pnl-td-section {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--accent) !important;
+  background: rgba(59,130,246,0.05) !important;
+  padding-top: 16px !important;
+  padding-bottom: 16px !important;
+  border-bottom: 1px solid rgba(59,130,246,0.12) !important;
+  border-top: 1px solid rgba(59,130,246,0.08) !important;
+}
+
+/* ── Standard total rows ── */
+.pnl-total-row td {
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  color: var(--text-primary) !important;
+  background: rgba(255,255,255,0.03) !important;
+  border-top: 1px solid var(--border-mid) !important;
+  border-bottom: 2px solid var(--border-strong) !important;
+}
+
+/* ── Gross profit row ── */
+.pnl-gross-row td {
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  color: #93c5fd !important;
+  background: rgba(59,130,246,0.05) !important;
+  border-top: 1px solid rgba(59,130,246,0.2) !important;
+  border-bottom: 2px solid rgba(59,130,246,0.2) !important;
+}
+
+/* ── Net profit row (positive) ── */
+.pnl-profit-row td {
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  color: #6ee7b7 !important;
+  background: rgba(16,185,129,0.07) !important;
+  border-top: 2px solid rgba(16,185,129,0.3) !important;
+  border-bottom: 2px solid rgba(16,185,129,0.3) !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* ── Net loss row (negative) ── */
+.pnl-loss-row td {
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  color: #fca5a5 !important;
+  background: rgba(239,68,68,0.07) !important;
+  border-top: 2px solid rgba(239,68,68,0.3) !important;
+  border-bottom: 2px solid rgba(239,68,68,0.3) !important;
+}
+
+/* ── Deduction rows ── */
+.pnl-deduct-row .pnl-td-label,
+.pnl-deduct-row .pnl-td-sign,
+.pnl-deduct-row .pnl-td-amount {
+  color: #fca5a5 !important;
+}
+
+/* ── Separator ── */
+.pnl-sep-row td {
+  padding: 3px 0 !important;
+  background: transparent !important;
+  border-bottom: none !important;
+  animation: none !important;
+}
+
+/* ── Row hover (non-special rows) ── */
+.pnl-table tbody tr:not(.pnl-section-row):not(.pnl-sep-row):not(.pnl-profit-row):not(.pnl-loss-row):hover td {
+  background: rgba(59,130,246,0.03);
+  color: var(--text-primary);
+}
+
+/* =========================
+   P&L RESULT INDICATOR
+   (shown in table-shell header)
+========================= */
+.pnl-result-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+
+.pnl-result-indicator.pnl-profit {
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: #6ee7b7;
+}
+
+.pnl-result-indicator.pnl-loss {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #fca5a5;
+}
+
+/* =========================
+   RESPONSIVE P&L
+========================= */
+@media (max-width: 768px) {
+  .pnl-table { min-width: 340px; }
+  .pnl-th-particulars,
+  .pnl-td-label { width: auto; }
+}
+/* =========================
    RESPONSIVE
 ========================= */
 @media (max-width: 1100px) {
