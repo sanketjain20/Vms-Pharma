@@ -1,388 +1,397 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Home.css";
-import { useCanvasThemeKey, getPerspectiveCanvasPalette, isLightTheme } from "../utils/canvasTheme";
 import API_BASE_URL from "../Config/api.config";
 import apiClient from "../Config/apiClient";
 
-/* ── Live Clock ── */
+/* ── Animated count-up number ── */
+function CountUp({ target, prefix = "", suffix = "", duration = 1100 }) {
+  const [val, setVal] = useState(0);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const start = performance.now();
+    const numeric = parseFloat(String(target).replace(/[^0-9.]/g, "")) || 0;
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setVal(numeric * eased);
+      if (p < 1) ref.current = requestAnimationFrame(tick);
+    };
+    ref.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(ref.current);
+  }, [target, duration]);
+
+  const isDecimal = String(target).includes(".");
+  const display = isDecimal ? val.toFixed(1) : Math.round(val).toLocaleString("en-IN");
+
+  return <>{prefix}{display}{suffix}</>;
+}
+
+/* ── Analog watch — smooth, real-time, neon-glow ──
+   Hands are rotated with CSS custom properties + a `transform: rotate(var(--deg))`
+   rule (see Home.css), driven every animation frame. Using a CSS var instead of
+   setAttribute("transform", ...) avoids any risk of React re-render fighting the
+   imperative DOM update or the attribute being stripped on parent re-paints. */
+function AnalogWatch() {
+  const secRef = useRef(null);
+  const minRef = useRef(null);
+  const hourRef = useRef(null);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const applyHandAngles = () => {
+      const now = new Date();
+      const ms = now.getMilliseconds();
+      const s = now.getSeconds() + ms / 1000;
+      const m = now.getMinutes() + s / 60;
+      const h = (now.getHours() % 12) + m / 60;
+
+      if (secRef.current) secRef.current.style.setProperty("--deg", `${s * 6}deg`);
+      if (minRef.current) minRef.current.style.setProperty("--deg", `${m * 6}deg`);
+      if (hourRef.current) hourRef.current.style.setProperty("--deg", `${h * 30}deg`);
+    };
+
+    const loop = () => {
+      applyHandAngles();
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    if (mql.matches) {
+      applyHandAngles();
+      const id = setInterval(applyHandAngles, 1000);
+      return () => clearInterval(id);
+    }
+
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  return (
+    <div className="vp-watch">
+      <svg viewBox="0 0 120 120" className="vp-watch-svg">
+        {/* Four cardinal markers at 12 / 3 / 6 / 9 only — kept minimal to
+            match the bare-needle look, no full tick ring or dial. */}
+        <circle cx="60" cy="8"   r="2.4" className="vp-watch-marker" />
+        <circle cx="112" cy="60" r="2.4" className="vp-watch-marker" />
+        <circle cx="60" cy="112" r="2.4" className="vp-watch-marker" />
+        <circle cx="8" cy="60"   r="2.4" className="vp-watch-marker" />
+
+        {/* Hour & minute hands: tapered needles — wide where they meet the
+            hub, narrowing to a sharp point at the tip that indicates the
+            time, with a short blunt counterbalance tail behind the hub.
+            This reads as a single directional pointer instead of a
+            symmetric double-ended spoke. */}
+        <polygon
+          ref={hourRef}
+          className="vp-watch-hand-hour"
+          points="60,64 64,60 60,22 56,60"
+        />
+        <polygon
+          ref={minRef}
+          className="vp-watch-hand-min"
+          points="60,68 63,60 60,10 57,60"
+        />
+        <polygon
+          ref={secRef}
+          className="vp-watch-hand-sec"
+          points="60,74 61.4,60 60,14 58.6,60"
+        />
+        <circle cx="60" cy="60" r="4.5" className="vp-watch-hub" />
+      </svg>
+    </div>
+  );
+}
+
 function LiveClock() {
-  const [time, setTime] = React.useState("");
+  const [time, setTime] = useState("");
   useEffect(() => {
     const tick = () =>
-      setTime(new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false }));
+      setTime(new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
-  return <span className="hw-clock">{time}</span>;
+  return <span className="vp-watch-time">{time}</span>;
 }
 
-/* ── Module icons ── */
 const ICONS = {
-  purchase: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M2 9h14M2 5h14M2 13h8"/><circle cx="14" cy="13" r="3"/><path d="M14 11.5v1.5l1 1"/></svg>,
-  sales: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M3 3h12l-1.5 9H4.5z"/><circle cx="7" cy="16" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>,
-  inventory: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><rect x="2" y="2" width="14" height="4" rx="1"/><rect x="2" y="8" width="14" height="4" rx="1"/><rect x="2" y="14" width="8" height="2" rx="1"/></svg>,
-  retailer: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16a6 6 0 0112 0"/></svg>,
-  payment: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><rect x="2" y="5" width="14" height="10" rx="2"/><path d="M2 9h14M6 9v6"/></svg>,
-  reports: <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M2 14l4-5 4 3 4-7"/><circle cx="14" cy="5" r="1" fill="currentColor"/></svg>,
+  purchase: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M2 9h14M2 5h14M2 13h8"/><circle cx="14" cy="13" r="3"/><path d="M14 11.5v1.5l1 1"/></svg>,
+  sales: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M3 3h12l-1.5 9H4.5z"/><circle cx="7" cy="16" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>,
+  inventory: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="2" y="2" width="14" height="4" rx="1"/><rect x="2" y="8" width="14" height="4" rx="1"/><rect x="2" y="14" width="8" height="2" rx="1"/></svg>,
+  retailer: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16a6 6 0 0112 0"/></svg>,
+  payment: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="2" y="5" width="14" height="10" rx="2"/><path d="M2 9h14M6 9v6"/></svg>,
+  reports: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M2 14l4-5 4 3 4-7"/><circle cx="14" cy="5" r="1" fill="currentColor"/></svg>,
+};
+
+const MODULES = [
+  { key: "purchase",  label: "Purchase",  hint: "Stock in · supplier dues",   from: "#7c3aed", to: "#ec4899", path: "/master/purchase" },
+  { key: "sales",     label: "Sales",     hint: "FIFO billing · invoices",    from: "#06b6d4", to: "#3b82f6", path: "/master/salesshrt" },
+  { key: "inventory", label: "Inventory", hint: "Live stock · expiry",        from: "#a3e635", to: "#16a34a", path: "/master/inventory" },
+  { key: "retailer",  label: "Retailers", hint: "Credit · outstanding",       from: "#fb923c", to: "#ef4444", path: "/master/retailer" },
+  { key: "payment",   label: "Payments",  hint: "Collect · due tracking",     from: "#facc15", to: "#f97316", path: "/master/payment-collection" },
+  { key: "reports",   label: "Reports",   hint: "GSTR-1 · recall trace",      from: "#818cf8", to: "#c084fc", path: "/master/reports" },
+];
+
+const FALLBACK_STATS = [
+  { key: "collectedToday", label: "Collected today", value: "0", prefix: "₹", color: "#22d3ee" },
+  { key: "billsGenerated", label: "Bills generated",  value: "0", prefix: "",  color: "#a3e635" },
+  { key: "expiring30d",    label: "Expiring in 30d",  value: "0", prefix: "",  color: "#fb923c" },
+  { key: "outstandingDues",label: "Outstanding dues", value: "0", prefix: "₹", color: "#ec4899" },
+];
+
+const FALLBACK_CHECKLIST = [
+  { label: "Auto FIFO batches",        sub: "Oldest expiry sold first, always automatic", color: "#22d3ee" },
+  { label: "Credit limit enforcement", sub: "Blocks a sale the instant a retailer's limit is hit", color: "#fb923c" },
+  { label: "Nightly expiry scheduler", sub: "1 AM scan marks expired batches, emails alerts", color: "#a3e635" },
+  { label: "GST-ready invoices",       sub: "HSN snapshot on every line, GSTR-1 ready", color: "#818cf8" },
+  { label: "Batch recall trace",       sub: "One batch traces to every retailer who received it", color: "#ec4899" },
+  { label: "Zero manual outstanding",  sub: "Every balance updates automatically, every action", color: "#facc15" },
+];
+
+const STAT_COLOR_BY_KEY = {
+  collectedToday: "#22d3ee",
+  billsGenerated: "#a3e635",
+  expiring30d: "#fb923c",
+  outstandingDues: "#ec4899",
 };
 
 export default function Home() {
-  const navigate   = useNavigate();
-  const canvasRef  = useRef(null);
-  const rafRef     = useRef(null);
-  const user       = (() => { try { return JSON.parse(localStorage.getItem("vmsUser")) || {}; } catch { return {}; } })();
-  const name       = user?.data?.name || "Vendor";
-  const isLoggedIn = !!user?.data;
+  const navigate = useNavigate();
+  const user = (() => { try { return JSON.parse(localStorage.getItem("vmsUser")) || {}; } catch { return {}; } })();
+  const name = user?.data?.name || "Vendor";
 
-  // ── Profile photo — single consolidated effect ──
-  const [profilePhoto, setProfilePhoto] = React.useState(null);
-
-
- useEffect(() => {
-  apiClient(`${API_BASE_URL}/api/Vendor/GetUserRoleId`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  })
-    .then((r) => r.json())
-    .then((d) => {
-      if (d.status === 200) {
-        // ✅ store role id in localStorage
-        localStorage.setItem("roleId", d.data);
-      } else {
-        console.log(d.message || "Failed to load role id");
-      }
-    })
-    .catch(() => {
-      console.log("Unable to fetch role id");
-    });
-}, []);
+  const [stats, setStats] = useState(FALLBACK_STATS);
+  const [ticker, setTicker] = useState([]);
+  const [checklist, setChecklist] = useState(FALLBACK_CHECKLIST);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
-    const loadPhoto = () => {
-      const photo = localStorage.getItem("profilePhoto");
-      setProfilePhoto(photo || null);
-    };
-
-    loadPhoto(); // load on mount
-
-    // Fires when localStorage changes in ANY tab (and same-tab if dispatched manually)
-    window.addEventListener("storage", loadPhoto);
-    return () => window.removeEventListener("storage", loadPhoto);
+    apiClient(`${API_BASE_URL}/api/Vendor/GetUserRoleId`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then(r => r.json())
+      .then(d => { if (d.status === 200) localStorage.setItem("roleId", d.data); })
+      .catch(() => {});
   }, []);
 
-  const canvasThemeKey = useCanvasThemeKey();
+  /* ── Live dashboard summary: collections, bills, expiry, dues ── */
+  const fetchSummary = useCallback(() => {
+    apiClient(`${API_BASE_URL}/api/Dashboard/GetHomeSummary`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d?.status === 200 && d.data) {
+          const next = FALLBACK_STATS.map(s => ({
+            ...s,
+            value: d.data[s.key] != null ? String(d.data[s.key]) : s.value,
+          }));
+          setStats(next);
+        }
+      })
+      .catch(() => {
+        /* keep last-known stats on transient failure */
+      })
+      .finally(() => setLoadingStats(false));
+  }, []);
 
-  /* ── 3D Canvas background ── */
+  /* ── Live activity ticker ── */
+  const fetchTicker = useCallback(() => {
+    apiClient(`${API_BASE_URL}/api/Dashboard/GetActivityFeed`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d?.status === 200 && Array.isArray(d.data) && d.data.length) {
+          setTicker(d.data.map(item => item.message || item));
+        }
+      })
+      .catch(() => {
+        /* keep last-known ticker on transient failure */
+      });
+  }, []);
+
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const palette = getPerspectiveCanvasPalette();
-    const light = isLightTheme();
+    fetchSummary();
+    fetchTicker();
 
-    const resize = () => {
-      canvas.width  = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+    // Keep the dashboard live: re-pull every 60s without a full page reload.
+    const statsId = setInterval(fetchSummary, 60000);
+    const tickerId = setInterval(fetchTicker, 45000);
+    return () => {
+      clearInterval(statsId);
+      clearInterval(tickerId);
     };
-    resize();
-    window.addEventListener("resize", resize);
+  }, [fetchSummary, fetchTicker]);
 
-    const orbs = Array.from({ length: 5 }, (_, i) => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: 150 + Math.random() * 180,
-      vx: (Math.random() - 0.5) * 0.15,
-      vy: (Math.random() - 0.5) * 0.15,
-      hue: [215, 230, 245, 200, 260][i],
-      alpha: (0.016 + Math.random() * 0.018) * palette.orbAlphaScale,
-    }));
-
-    const pts = Array.from({ length: 40 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: 0.5 + Math.random() * 0.9,
-      vx: (Math.random() - 0.5) * 0.2,
-      vy: (Math.random() - 0.5) * 0.2,
-      alpha: (light ? 0.15 : 0.1) + Math.random() * 0.2,
-    }));
-
-    let tick = 0;
-    const draw = () => {
-      tick++;
-      const W = canvas.width, H = canvas.height;
-      ctx.fillStyle = palette.background;
-      ctx.fillRect(0, 0, W, H);
-
-      /* perspective grid */
-      const hor = H * 0.38, vanX = W / 2, gc = 10;
-      const spd = (tick * 0.14) % (H / gc);
-      ctx.save(); ctx.globalAlpha = palette.gridAlpha; ctx.strokeStyle = palette.gridColor; ctx.lineWidth = 0.5;
-      for (let i = 0; i <= gc; i++) {
-        const y = hor + spd + (i * (H - hor)) / gc;
-        if (y > H) continue;
-        const sp = ((y - hor) / (H - hor)) * W * 1.5;
-        ctx.beginPath(); ctx.moveTo(vanX - sp / 2, y); ctx.lineTo(vanX + sp / 2, y); ctx.stroke();
-      }
-      for (let i = 0; i <= 16; i++) {
-        const t = i / 16, bx = vanX - W * 0.75 + t * W * 1.5;
-        ctx.beginPath(); ctx.moveTo(vanX, hor); ctx.lineTo(bx, H + 10); ctx.stroke();
-      }
-      ctx.restore();
-
-      /* orbs */
-      orbs.forEach(o => {
-        o.x += o.vx; o.y += o.vy;
-        if (o.x < -o.r) o.x = W + o.r; if (o.x > W + o.r) o.x = -o.r;
-        if (o.y < -o.r) o.y = H + o.r; if (o.y > H + o.r) o.y = -o.r;
-        const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
-        g.addColorStop(0, `hsla(${o.hue},70%,${light ? 45 : 55}%,${o.alpha})`);
-        g.addColorStop(1, "transparent");
-        ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
-        ctx.fillStyle = g; ctx.fill();
-      });
-
-      /* particles + connections */
-      pts.forEach(p => {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(96,165,250,${p.alpha})`; ctx.fill();
-      });
-      for (let i = 0; i < pts.length; i++) {
-        for (let j = i + 1; j < pts.length; j++) {
-          const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < 90) {
-            ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y);
-            ctx.strokeStyle = `rgba(59,130,246,${(1 - d / 90) * (light ? 0.14 : 0.07)})`; ctx.lineWidth = 0.5; ctx.stroke();
-          }
-        }
-      }
-
-      /* vignette */
-      const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.08, W / 2, H / 2, H * 0.85);
-      vig.addColorStop(0, palette.vignetteInner);
-      vig.addColorStop(1, palette.vignetteOuter);
-      ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
-
-      rafRef.current = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(rafRef.current); };
-  }, [canvasThemeKey]);
-
-  const modules = [
-    { key: "purchase",  label: "Purchase",   hint: "Stock in · batches · supplier dues", color: "#06b6d4", path: "/master/purchase"  },
-    { key: "sales",     label: "Sales",      hint: "Bill · FIFO batch · credit invoice",  color: "#3b82f6", path: "/master/salesshrt" },
-    { key: "inventory", label: "Inventory",  hint: "Live stock · low-stock alerts",       color: "#8b5cf6", path: "/master/inventory" },
-    { key: "retailer",  label: "Retailers",  hint: "Customers · credit · outstanding",    color: "#f59e0b", path: "/master/retailer"  },
-    { key: "payment",   label: "Payments",   hint: "Collect · reverse · due tracking",   color: "#10b981", path: "/master/payment-collection"   },
-    { key: "reports",   label: "Reports",    hint: "GSTR-1 · expiry · recall trace",     color: "#6366f1", path: "/master/reports"   },
+  const tickerItems = ticker.length ? ticker : [
+    "Live activity will appear here once today's first action is logged",
   ];
-
-  const features = [
-    { label: "Auto FIFO batches",       sub: "Oldest expiry sold first — always automatic" },
-    { label: "Credit limit enforcement", sub: "System blocks sale if retailer limit reached" },
-    { label: "Nightly expiry scheduler", sub: "1 AM marks expired batches, sends email alerts" },
-    { label: "GST-ready invoices",       sub: "HSN snapshot on every line — GSTR-1 ready" },
-    { label: "Batch recall trace",       sub: "One batch → every retailer who received it" },
-    { label: "Zero manual outstanding",  sub: "All balances update automatically on every action" },
-  ];
-
+// Add this constant near the top with MODULES
+const QUICK_ACTIONS = [
+  {
+    key: "billing",
+    label: "Start billing",
+    sub: "FIFO · invoice now",
+    path: "/master/salesshrt",
+    color: "#22d3ee",
+    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 3h12l-1.5 9H4.5z"/><circle cx="7" cy="16" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>,
+  },
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    sub: "Live metrics · trends",
+    path: "/master/dashboard",
+    color: "#a3e635",
+    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 14l4-5 4 3 4-7"/><circle cx="14" cy="5" r="1" fill="currentColor"/></svg>,
+  },
+  {
+    key: "onboarding",
+    label: "How it works",
+    sub: "Flow guide · setup",
+    path: "/onboarding",
+    color: "#fb923c",
+    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="5" r="2.5"/><path d="M4 15a5 5 0 0110 0"/><path d="M9 10v3M7.5 12h3"/></svg>,
+  },
+];
   return (
-    <div
-  className="hw-root"
-  style={
-    profilePhoto
-      ? {
-          backgroundImage: `url(${profilePhoto})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }
-      : {}
-  }
->
-      <canvas ref={canvasRef} className="hw-canvas" />
-
-      
-      <nav className="hw-nav">
-        <div className="hw-nav-logo">
-          <span className="hw-logo-dot" />
-          VMS<span className="hw-logo-acc">Pro</span>
+    <div className="vp-page">
+      <section className="vp-hero">
+        <div className="vp-hero-top">
+          <div className="vp-eyebrow">
+            <span className="vp-eyebrow-dot" /> LIVE
+          </div>
+          <div className="vp-watch-block">
+            <AnalogWatch />
+            <LiveClock />
+          </div>
         </div>
-        <div className="hw-nav-links">
-          {[
-            { label: "Dashboard", path: "/master/dashboard" },
-            { label: "Sales",     path: "/master/salesshrt" },
-            { label: "Purchase",  path: "/master/purchase"  },
-            { label: "Inventory", path: "/master/inventory" },
-            { label: "Reports",   path: "/master/reports"   },
-          ].map(l => (
-            <button key={l.label} className="hw-nav-link" onClick={() => navigate(l.path)}>
-              {l.label}
-            </button>
+
+        <h1 className="vp-greeting">
+          Namaste, {name}.<br />Here's your pulse today.
+        </h1>
+
+        <div className="vp-pulse-wrap">
+          <svg className="vp-pulse-svg" viewBox="0 0 1000 90" preserveAspectRatio="none">
+            <path
+              className="vp-pulse-path"
+              d="M0,45 L120,45 L145,12 L165,78 L185,45 L260,45 L285,28 L305,62 L325,45 L420,45 L445,8 L468,82 L490,45 L600,45 L625,20 L648,70 L670,45 L780,45 L805,15 L828,75 L850,45 L1000,45"
+              fill="none"
+            />
+          </svg>
+        </div>
+
+{/* ── Combined stat + quick-action panel ── */}
+<div className="vp-stataction-panel">
+  <div className="vp-stataction-stats">
+    {stats.map((s) => (
+      <div key={s.key} className="vp-sa-stat" style={{ "--stat-color": s.color }}>
+        <span className="vp-sa-dot" />
+        <div className="vp-sa-body">
+          <div className="vp-sa-val">
+            {loadingStats ? "—" : <CountUp target={s.value} prefix={s.prefix} />}
+          </div>
+          <div className="vp-sa-lbl">{s.label}</div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div className="vp-stataction-actions">
+    <div className="vp-sa-actions-label">Quick actions</div>
+    {QUICK_ACTIONS.map(a => (
+      <div
+        key={a.key}
+        className="vp-sa-qa"
+        style={{ "--qa-color": a.color }}
+        onClick={() => navigate(a.path)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => e.key === "Enter" && navigate(a.path)}
+      >
+        <div className="vp-sa-qa-icon">{a.icon}</div>
+        <div className="vp-sa-qa-text">
+          <div className="vp-sa-qa-title">{a.label}</div>
+          <div className="vp-sa-qa-sub">{a.sub}</div>
+        </div>
+        <div className="vp-sa-qa-arr">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+      </section>
+
+      <div className="vp-ticker">
+        <div className="vp-ticker-track">
+          {[...tickerItems, ...tickerItems].map((t, i) => (
+            <span key={i} className="vp-ticker-item">
+              <span className="vp-ticker-dot" /> {t}
+            </span>
           ))}
         </div>
-        <div className="hw-nav-right">
-          <LiveClock />
+      </div>
 
-          
-          {profilePhoto && (
-            <div
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: "50%",
-                backgroundImage: `url(${profilePhoto})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                border: "1.5px solid rgba(59,130,246,0.45)",
-                boxShadow: "0 0 8px rgba(59,130,246,0.3)",
-                flexShrink: 0,
-                cursor: "pointer",
-              }}
-              title={name}
-              onClick={() => navigate("/master/dashboard")}
-            />
-          )}
+      <section className="vp-section">
+        <div className="vp-section-head">
+          <h2>Open a module</h2>
         </div>
-      </nav>
-
-      <main className="hw-main">
-
-        
-        <section className="hw-hero">
-          <div className="hw-hero-eyebrow">
-            <span className="hw-eyebrow-dot" />
-            Medical Wholesale ERP
-          </div>
-          <h1 className="hw-h1">
-            Run your pharmacy<br />
-            wholesale <span className="hw-h1-grad">effortlessly</span>
-          </h1>
-          <p className="hw-hero-sub">
-            Namaste, <strong>{name}</strong>. One system for purchase, sales, batches,
-            expiry, payments and GST — built for Indian medical wholesale shops.
-          </p>
-          <div className="hw-hero-btns">
-            <button className="hw-btn-primary" onClick={() => navigate(isLoggedIn ? "/master/salesshrt" : "/")}>
-              Start billing today
-            </button>
-            <button className="hw-btn-ghost" onClick={() => navigate("/master/dashboard")}>
-              View dashboard
-            </button>
-          </div>
-        </section>
-
-        
-        <div className="hw-stats">
-          {[
-            { val: "Auto",  unit: "",   label: "Batch FIFO selection"  },
-            { val: "1",     unit: " AM", label: "Nightly expiry scan"  },
-            { val: "Zero",  unit: "",   label: "Manual outstanding"    },
-            { val: "GSTR-1", unit: "",  label: "Invoice-ready GST"     },
-          ].map(s => (
-            <div key={s.label} className="hw-stat">
-              <div className="hw-stat-val">{s.val}<span className="hw-stat-unit">{s.unit}</span></div>
-              <div className="hw-stat-lbl">{s.label}</div>
+        <div className="vp-tile-grid">
+          {MODULES.map(m => (
+            <div
+              key={m.key}
+              className="vp-tile"
+              style={{ "--from": m.from, "--to": m.to }}
+              onClick={() => navigate(m.path)}
+            >
+              <div className="vp-tile-glow" />
+              <div className="vp-tile-icon">{ICONS[m.key]}</div>
+              <div className="vp-tile-label">{m.label}</div>
+              <div className="vp-tile-hint">{m.hint}</div>
+              <div className="vp-tile-arrow">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+              </div>
             </div>
           ))}
         </div>
+      </section>
 
-        
-        <section className="hw-section">
-          <div className="hw-sec-label">Quick access</div>
-          <h2 className="hw-sec-title">All modules</h2>
-          <div className="hw-modules-grid">
-            {modules.map(m => (
-              <div key={m.key} className="hw-mod-card" onClick={() => navigate(m.path)}
-                style={{ "--mod-color": m.color }}>
-                <div className="hw-mod-icon" style={{ background: `${m.color}18`, border: `1px solid ${m.color}30` }}>
-                  <span style={{ color: m.color }}>{ICONS[m.key]}</span>
-                </div>
-                <div className="hw-mod-body">
-                  <div className="hw-mod-name">{m.label}</div>
-                  <div className="hw-mod-hint">{m.hint}</div>
-                </div>
-                <svg className="hw-mod-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-                  <path d="M3 7h8M7 3l4 4-4 4" />
-                </svg>
-              </div>
-            ))}
-          </div>
-        </section>
+      <section className="vp-section">
+        <div className="vp-section-head">
+          <h2>Why it runs itself</h2>
+        </div>
+        <div className="vp-check-grid">
+          {checklist.map((f, i) => (
+            <div key={i} className="vp-check-card" style={{ "--check-color": f.color }}>
+              <span className="vp-check-glowdot" />
+              <div className="vp-check-label">{f.label}</div>
+              <div className="vp-check-sub">{f.sub}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        
-        <section className="hw-section">
-          <div className="hw-sec-label">Core capabilities</div>
-          <h2 className="hw-sec-title">Built for pharma wholesale</h2>
-          <div className="hw-feat-grid">
-            {features.map((f, i) => (
-              <div key={i} className="hw-feat-card">
-                <div className="hw-feat-check">
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                    <path d="M2 5l2 2 4-4" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="hw-feat-name">{f.label}</div>
-                  <div className="hw-feat-sub">{f.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+      <section className="vp-cta">
+        <div className="vp-cta-orb" />
+        <div className="vp-cta-text">
+          <h2>Ready to close today's register?</h2>
+          <p>First bill in under 30 minutes. One owner, zero complexity.</p>
+        </div>
+       <div className="vp-cta-btns">
+  <button className="vp-btn-primary" onClick={() => navigate("/master/salesshrt")}>Start billing</button>
+  <button className="vp-btn-ghost" onClick={() => navigate("/master/dashboard")}>Dashboard</button>
+  <button className="vp-btn-ghost" onClick={() => navigate("/onboarding")}>How it works</button>
+</div>
+      </section>
 
-        
-        <section className="hw-section">
-          <div className="hw-sec-label">Daily workflow</div>
-          <h2 className="hw-sec-title">Your day in 5 steps</h2>
-          <div className="hw-flow">
-            {[
-              { n: "01", title: "Check alerts",    desc: "Expiry · low stock · overdue dues" },
-              { n: "02", title: "Enter purchase",   desc: "Stock in → batches auto-created"   },
-              { n: "03", title: "Bill retailer",    desc: "FIFO batch → invoice in seconds"   },
-              { n: "04", title: "Collect payment",  desc: "Cash/UPI → outstanding drops"      },
-              { n: "05", title: "System runs",      desc: "1 AM scheduler → expiry emails"   },
-            ].map((s, i) => (
-              <div key={i} className="hw-flow-step">
-                <div className="hw-flow-num">{s.n}</div>
-                <div className="hw-flow-name">{s.title}</div>
-                <div className="hw-flow-desc">{s.desc}</div>
-                {i < 4 && <div className="hw-flow-line" />}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        
-        <section className="hw-cta">
-          <div className="hw-cta-glow" />
-          <div className="hw-cta-text">
-            <h2 className="hw-cta-title">Ready to modernize your shop?</h2>
-            <p className="hw-cta-sub">First bill in under 30 minutes. One owner, zero complexity.</p>
-          </div>
-          <div className="hw-cta-btns">
-            <button className="hw-btn-primary" onClick={() => navigate(isLoggedIn ? "/onboarding" : "/")}>
-              Launch system
-            </button>
-            <button className="hw-btn-ghost" onClick={() => navigate("/master/dashboard")}>
-              View dashboard
-            </button>
-          </div>
-        </section>
-
-        
-        <footer className="hw-footer">
-          <span className="hw-footer-logo">VMS<span style={{ color: "#3b82f6" }}>Pro</span></span>
-          <span className="hw-footer-note">Medical Wholesale Management System · v2.0</span>
-        </footer>
-
-      </main>
     </div>
   );
 }

@@ -489,6 +489,9 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
               </div>
             </div>
 
+<button className="clear-all-btn" onClick={clearForm}>
+  ✕ Clear All
+</button>
             <button className="add-btn" onClick={addOrUpdateItem}>
               {editIndex !== null ? "✓ Update Item" : "+ Add Item"}
             </button>

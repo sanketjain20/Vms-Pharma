@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { toast } from "react-toastify";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
@@ -11,6 +10,8 @@ export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmi
         if (!isOpen || !id) return;
 
         const downloadInvoice = async () => {
+            let iframe = null;
+
             try {
                 const response = await apiClient(
                     `${API_BASE_URL}/api/Invoice/GenerateInvoice/${id}/1`,
@@ -26,116 +27,85 @@ export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmi
                     throw new Error(result.message || "Failed to generate invoice");
                 }
 
-                // ✅ Decode Base64
+                // ── Decode Base64 HTML ──────────────────────────────────────
                 const decodedHTML = atob(result.data);
 
-                // ✅ Parse HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(decodedHTML, "text/html");
+                // ── Render full HTML (head + body) into a hidden iframe ─────
+                // Using an iframe preserves the <style> block from <head>,
+                // Google Fonts, and all CSS — nothing gets stripped.
+                iframe = document.createElement("iframe");
+                iframe.style.position  = "fixed";
+                iframe.style.top       = "-9999px";
+                iframe.style.left      = "-9999px";
+                iframe.style.width     = "600px";   // matches .inv-paper width + padding
+                iframe.style.height    = "1px";      // will auto-expand
+                iframe.style.border    = "none";
+                iframe.style.visibility = "hidden";
+                document.body.appendChild(iframe);
 
-                // ✅ Create container
-                const container = document.createElement("div");
-                container.innerHTML = doc.body.innerHTML;
+                // Write the full decoded HTML into the iframe
+                iframe.contentDocument.open();
+                iframe.contentDocument.write(decodedHTML);
+                iframe.contentDocument.close();
 
-                container.style.position = "fixed";
-                container.style.top = "-9999px";
-                container.style.left = "-9999px";
-                container.style.width = "800px";
-                container.style.background = "#ffffff";
-                container.style.padding = "20px";
-
-                document.body.appendChild(container);
-
-                // ✅ Fix layout issues
-                container.querySelectorAll(".sv-backdrop").forEach(el => {
-                    el.style.display = "block";
+                // ── Wait for fonts & layout to settle ──────────────────────
+                await new Promise(resolve => {
+                    iframe.onload = resolve;
+                    // fallback in case onload already fired
+                    setTimeout(resolve, 1200);
                 });
 
-                container.querySelectorAll(".sv-modal").forEach(el => {
-                    el.style.margin = "0 auto";
-                    el.style.width = "800px";
-                    el.style.background = "#ffffff";
-                    el.style.color = "#000";
+                // Extra wait for Google Fonts to render
+                await new Promise(resolve => setTimeout(resolve, 600));
+
+                // ── Get the actual invoice element inside the iframe ────────
+                const iframeDoc  = iframe.contentDocument;
+                const invoiceEl  = iframeDoc.querySelector(".inv-paper")
+                                || iframeDoc.querySelector(".sv-modal")
+                                || iframeDoc.body;
+
+                // Resize iframe height to match content so nothing is clipped
+                iframe.style.height = `${invoiceEl.scrollHeight + 60}px`;
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+                // ── Capture with html2canvas ────────────────────────────────
+                // html2canvas runs inside the iframe's window context
+                const { default: html2canvas } = await import("html2canvas");
+
+                const canvas = await html2canvas(invoiceEl, {
+                    scale           : 2,
+                    useCORS         : true,
+                    allowTaint      : false,
+                    backgroundColor : "#0f1117",   // matches .inv-paper bg
+                    windowWidth     : 600,
+                    scrollX         : 0,
+                    scrollY         : 0,
+                    logging         : false,
                 });
 
-                container.querySelectorAll("table, th, td").forEach(el => {
-                    el.style.color = "#000";
-                });
-
-                // FORCE FULL LIGHT THEME FOR PDF
-container.querySelectorAll("*").forEach(el => {
-    el.style.background = "transparent";
-    el.style.color = "#000";
-    el.style.borderColor = "#ccc";
-});
-
-// Fix headers / highlights
-container.querySelectorAll("th").forEach(el => {
-    el.style.background = "#e5e7eb";
-    el.style.color = "#000";
-});
-
-// Fix cards (invoice number, date)
-container.querySelectorAll(".sv-meta-card").forEach(el => {
-    el.style.background = "#f3f4f6";
-    el.style.color = "#000";
-});
-
-// Fix totals section
-container.querySelectorAll(".sv-totals-row").forEach(el => {
-    el.style.color = "#000";
-});
-
-// Fix "Due" red box
-container.querySelectorAll(".sv-totals-due").forEach(el => {
-    el.style.color = "#dc2626";
-    el.style.border = "1px solid #dc2626";
-    el.style.background = "#fee2e2";
-});
-
-                // ✅ WAIT (important)
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // 🎯 VERY IMPORTANT: capture ONLY invoice
-                const target = container.querySelector(".sv-modal") || container;
-
-                target.style.display = "block";
-                target.style.opacity = "1";
-
-                // ✅ Canvas capture
-                const canvas = await html2canvas(target, {
-                    scale: 2,
-                    useCORS: true,
-                    backgroundColor: "#ffffff"
-                });
-
-                const imgData = canvas.toDataURL("image/png");
-
-                // ✅ PDF generate
-                const pdf = new jsPDF("p", "mm", "a4");
-
+                // ── Generate PDF ────────────────────────────────────────────
+                const imgData  = canvas.toDataURL("image/png");
+                const pdf      = new jsPDF("p", "mm", "a4");
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
                 pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
-                const timestamp = new Date()
-                    .toISOString()
-                    .replace(/[-:.]/g, "");
-
+                const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
                 pdf.save(`${moduleName}_${timestamp}.pdf`);
 
-                // cleanup
-                container.remove();
-
                 toast.success("Invoice downloaded successfully!");
-
                 onClose();
                 onSubmit();
 
             } catch (err) {
                 console.error(err);
                 toast.error(err.message || "Failed to download invoice.");
+            } finally {
+                // Always clean up the iframe
+                if (iframe && iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                }
             }
         };
 

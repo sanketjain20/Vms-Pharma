@@ -5,6 +5,7 @@ import API_BASE_URL from "../../Config/api.config";
 export default function sales() {
 const columns = [
   { header: "Invoice Number", field: "invoiceNumber", width: "200px" },
+  {header : "Customer Name", field: "retailerName", width: "200px" },
   { header: "Net Amount (₹)", field: "netAmount", width: "205px" },
   { header: "Due Amount (₹)", field: "remainingAmount", width: "205px" },
   { header: "Billing Mode", field: "billingMode", width: "205px" },

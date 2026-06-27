@@ -6,7 +6,7 @@ import apiClient from "../../Config/apiClient";
 const FIELDS = [
   { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Sharma Medical Store" },
   { key: "ownerName",          label: "Owner Name",           type: "text",     required: false, placeholder: "e.g. Vijay Sharma" },
-  { key: "phone",              label: "Phone",                type: "text",     required: false, placeholder: "e.g. 9876543210" },
+  { key: "phone",              label: "Phone",                type: "text",     required: true, placeholder: "e.g. 9876543210" },
   { key: "email",              label: "Email",                type: "email",    required: false, placeholder: "e.g. vijay@sharma.com" },
   { key: "gstNumber",          label: "GST Number",           type: "text",     required: false, placeholder: "e.g. 27AABCC1234A1Z5" },
   { key: "drugLicenseNumber",  label: "Drug License Number",  type: "text",     required: false, placeholder: "e.g. MH-MUM-DL-002" },
@@ -61,6 +61,7 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
   const validate = () => {
     const e = {};
     if (!form.shopName?.trim()) e.shopName = "Shop name is required";
+    if (!form.phone?.trim()) e.phone = "Phone number is required";
     if (form.phone && !/^[0-9+\-\s]{7,15}$/.test(form.phone)) e.phone = "Invalid phone number";
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Invalid email address";
     if (form.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(form.gstNumber.toUpperCase()))

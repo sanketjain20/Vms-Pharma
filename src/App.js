@@ -54,6 +54,8 @@ import PurchaseReturn from "./MyComponents/PurchaseReturnComponent/PurchaseRetur
 import RetailerOutstanding from "./MyComponents/RetailerOutstandingComponent/RetailerOutstanding";
 import SupplierOutstanding from "./MyComponents/SupplierOutstandingComponent/SupplierOutstanding";
 import StockAdjustment from "./MyComponents/StockAdjustmentComponent/StockAdjustment";
+import BulkUploadTransactions from "./MyComponents/BulkUploadComponent/BulkUploadTransactions";
+import BulkUploadMasters from "./MyComponents/BulkUploadComponent/BulkUploadMasters";
 
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
@@ -325,6 +327,24 @@ function App() {
             element={
               <ModuleGuard moduleName={["STOCK_ADJUSTMENT", "STOCKADJUSTMENT", "STOCK ADJUSTMENT"]}>
                 <StockAdjustment />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="bulk-upload"
+            element={
+              <ModuleGuard moduleName={["BULK_UPLOAD_MANAGEMENT", "BULKUPLOADMANAGEMENT", "BULK UPLOAD MANAGEMENT"]}>
+                <BulkUploadTransactions />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="bulk-upload/masters"
+            element={
+              <ModuleGuard moduleName={["BULK_UPLOAD_MANAGEMENT", "BULKUPLOADMANAGEMENT", "BULK UPLOAD MANAGEMENT "]}>
+                <BulkUploadMasters />
               </ModuleGuard>
             }
           />

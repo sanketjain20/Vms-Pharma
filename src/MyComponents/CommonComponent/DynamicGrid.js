@@ -169,6 +169,43 @@ async function downloadExcel(rows, colDefs, filename) {
 }
 /* ─────────────────────────────────────────────────────────────────────────── */
 
+/* ── Animated count-up number (signature touch shared with Home) ── */
+function CountUp({ value, duration = 500 }) {
+  const [display, setDisplay] = useState(value);
+  const fromRef = useRef(value);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const from = fromRef.current;
+    const to = value;
+    if (from === to) { setDisplay(to); return; }
+    const start = performance.now();
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (p < 1) rafRef.current = requestAnimationFrame(tick);
+      else fromRef.current = to;
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [value, duration]);
+
+  return <>{display}</>;
+}
+
+/* ── Mini pulse waveform — same signature motif as the Home page, scaled down ── */
+function MiniPulse({ className = "" }) {
+  return (
+    <svg viewBox="0 0 120 24" className={`dg-mini-pulse ${className}`} preserveAspectRatio="none">
+      <path
+        d="M0,12 L24,12 L29,4 L34,20 L39,12 L58,12 L63,7 L68,17 L73,12 L92,12 L97,3 L102,21 L107,12 L120,12"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
 /* ── VIEW TOGGLE ────────────────────────────────────────────────────────────── */
 function ViewToggle({ view, onChange }) {
   return (
@@ -327,7 +364,7 @@ function GridCard({ row, columns, index, selectedStatus, can, Module, isReadOnly
 }
 
 /* ── MAIN COMPONENT ─────────────────────────────────────────────────────────── */
-export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noPagination = false }) {
+export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, noPagination = false }) {
   const [data, setData] = useState([]);
   const [allData, setAllData] = useState([]);
   const [page, setPage] = useState(0);
@@ -579,6 +616,8 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
     <div className="dg-wrapper">
       <canvas ref={canvasRef} className="dg-canvas" />
       <div className="dg-noise" />
+      <div className="dg-glow-blob dg-glow-blob-a" />
+      <div className="dg-glow-blob dg-glow-blob-b" />
       <div className="dg-top-beam" />
 
       <div className="dg-inner">
@@ -606,7 +645,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
           <div className="dg-topbar-right">
             <div className="dg-record-count">
               <span className="dg-count-dot" />
-              {filteredData.length} records
+              <CountUp value={filteredData.length} /> records
             </div>
 
             
@@ -635,14 +674,14 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
                 ].map(c => (
                   <button key={c.key} className={`dg-chip ${selectedStatus === c.key ? "dg-chip-active" : ""}`} onClick={() => setSelectedStatus(c.key)}>
                     {c.label}
-                    <span className="dg-chip-count">{c.count}</span>
+                    <span className="dg-chip-count"><CountUp value={c.count} duration={350} /></span>
                   </button>
                 ))}
               </>
             ) : hideActiveInactiveTabs ? (
               <button className={`dg-chip ${selectedStatus === "all" ? "dg-chip-active" : ""}`} onClick={() => setSelectedStatus("all")}>
                 All
-                <span className="dg-chip-count">{counts.all}</span>
+                <span className="dg-chip-count"><CountUp value={counts.all} duration={350} /></span>
               </button>
             ) : (
               <>
@@ -653,7 +692,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
                 ].map(c => (
                   <button key={c.key} className={`dg-chip ${selectedStatus === c.key ? "dg-chip-active" : ""} ${c.color ? `dg-chip-${c.color}` : ""}`} onClick={() => setSelectedStatus(c.key)}>
                     {c.label}
-                    <span className="dg-chip-count">{c.count}</span>
+                    <span className="dg-chip-count"><CountUp value={c.count} duration={350} /></span>
                   </button>
                 ))}
               </>
@@ -710,6 +749,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
                   <rect x="7" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
                 </svg>
                 Data Grid
+                <MiniPulse />
               </div>
               <div className="dg-shell-meta">
                 <span className="dg-shell-pulse" />
@@ -742,8 +782,8 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
                       <td colSpan={columns.length} className="dg-empty">
                         <div className="dg-empty-inner">
                           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                            <circle cx="14" cy="14" r="12" stroke="rgba(59,130,246,0.2)" strokeWidth="1.5"/>
-                            <path d="M10 14h8M14 10v8" stroke="rgba(59,130,246,0.3)" strokeWidth="1.5" strokeLinecap="round"/>
+                            <circle cx="14" cy="14" r="12" stroke="rgba(139,92,246,0.25)" strokeWidth="1.5"/>
+                            <path d="M10 14h8M14 10v8" stroke="rgba(34,211,238,0.35)" strokeWidth="1.5" strokeLinecap="round"/>
                           </svg>
                           {emptyMsg}
                         </div>
@@ -846,8 +886,8 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId,noP
             {filteredData.length === 0 ? (
               <div className="dg-card-empty">
                 <svg width="32" height="32" viewBox="0 0 28 28" fill="none">
-                  <circle cx="14" cy="14" r="12" stroke="rgba(59,130,246,0.2)" strokeWidth="1.5"/>
-                  <path d="M10 14h8M14 10v8" stroke="rgba(59,130,246,0.3)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="14" cy="14" r="12" stroke="rgba(139,92,246,0.25)" strokeWidth="1.5"/>
+                  <path d="M10 14h8M14 10v8" stroke="rgba(34,211,238,0.35)" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
                 <p>No records found</p>
               </div>

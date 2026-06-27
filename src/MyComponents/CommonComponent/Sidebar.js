@@ -46,6 +46,9 @@ const iconMap = {
       <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-400Zm0 320q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Z" />
     </svg>
   ),
+  bulkupload: (
+    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M440-280h80v-168l64 64 56-56-160-160-160 160 56 56 64-64v168ZM160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z"/></svg>
+  ),
   default: (
     <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
       <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Z" />
@@ -218,6 +221,7 @@ export default function Sidebar() {
   const hasDashboard = has("dashboard");
   const hasReports = has("reports") || has("report");
   const hasScheduler = has("scheduler");
+  const hasBulkUpload = has("bulkuploadmanagement") || has("bulk upload") || has("bulk_upload");
 
   /* ── Group: Vendor & Roles ── */
   const hasVendor = has("vendor");
@@ -229,6 +233,7 @@ export default function Sidebar() {
     "product", "producttype", "retailer", "supplier", "manufacturer",
     "sales", "purchase", "paymentcollection",
     "inventory", "batch", "batches", "stockadjustment", "stockadjustments", "expiryalerts", "expiryalert", "reorderalerts", "reorderalert", "lowstockalerts", "lowstockalert", "alerts", "dashboard", "reports", "report", "scheduler",
+    "bulkuploadmanagement", "bulk upload", "bulk_upload",
     "vendor", "roles", "supplierpayment", "salesreturn", "purchasereturn", "retaileroutstanding", "supplieroutstanding",
   ];
   const otherModules = modules.filter(m => !knownKeys.includes(normalize(m)));
@@ -425,6 +430,15 @@ export default function Sidebar() {
               label="Scheduler"
               open={open}
               onClick={() => handleNavigation(find("scheduler") || "scheduler")}
+            />
+          )}
+
+          {hasBulkUpload && (
+            <SidebarItem
+              icon={iconMap.bulkupload}
+              label="Bulk Data Upload"
+              open={open}
+              onClick={() => handleNavigation(find("bulkupload") || find("bulk upload management") || find("BULK_UPLOAD_MANAGEMENT") || "BulkUpload")}
             />
           )}
 

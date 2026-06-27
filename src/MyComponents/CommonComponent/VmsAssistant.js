@@ -235,6 +235,10 @@ function buildReply(help) {
 
 function VmsAssistant() {
   const location = useLocation();
+  const shouldHideAssistant =
+    location.pathname === "/" || location.pathname === "/forgotpassword" || location.pathname.includes("/login");
+
+
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([initialMessage]);
@@ -259,6 +263,9 @@ function VmsAssistant() {
     []
   );
 
+    if (shouldHideAssistant) {
+    return null;
+  }
   const sendMessage = (text) => {
     const trimmed = text.trim();
     if (!trimmed) return;

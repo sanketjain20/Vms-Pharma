@@ -6,7 +6,7 @@ import apiClient from "../../Config/apiClient";
 const FIELDS = [
   { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Sharma Medical Store",   half: false },
   { key: "ownerName",          label: "Owner Name",           type: "text",     required: false, placeholder: "e.g. Vijay Sharma",           half: false },
-  { key: "phone",              label: "Phone",                type: "text",     required: false, placeholder: "e.g. 9876543210",             half: false },
+  { key: "phone",              label: "Phone",                type: "text",     required: true, placeholder: "e.g. 9876543210",             half: false },
   { key: "email",              label: "Email",                type: "email",    required: false, placeholder: "e.g. vijay@sharma.com",       half: false },
   { key: "gstNumber",          label: "GST Number",           type: "text",     required: false, placeholder: "e.g. 27AABCC1234A1Z5",        half: false },
   { key: "drugLicenseNumber",  label: "Drug License Number",  type: "text",     required: false, placeholder: "e.g. MH-MUM-DL-002",         half: false },
@@ -30,6 +30,8 @@ export default function RetailerAdd({ onClose, onSubmit }) {
     const e = {};
     if (!form.shopName?.trim())
       e.shopName = "Shop name is required";
+    if(!form.phone?.trim())
+      e.phone = "Phone number is required";
     if (form.phone && !/^[0-9+\-\s]{7,15}$/.test(form.phone))
       e.phone = "Invalid phone number";
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
