@@ -18,7 +18,7 @@ const columns = [
     <div className="i-container">
       <h2 className="i-title">
 🧾
-SALES</h2>
+Sales</h2>
       
       
       <DynamicGrid 

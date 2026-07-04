@@ -23,6 +23,8 @@ export default function VendorView({ uKey, onClose }) {
   }, [uKey]);
 
   const isActive = vendor?.disable !== 1;
+  const formatBool = value => value === true ? "Yes" : value === false ? "No" : "N/A";
+  const isMasterVendor = vendor?.masterVendor === true;
 
   /* ── field config ── */
   const fields = vendor ? [
@@ -33,7 +35,9 @@ export default function VendorView({ uKey, onClose }) {
     { label: "Shop Name",            value: vendor.shopName },
     { label: "Vendor Code",          value: vendor.vendorCode },
     { label: "Account Validity Till", value: vendor.expiryDate || "N/A" },
-    { label: "Vendor Prefix",        value: vendor.vendorPrefix || "N/A" },
+    ...(isMasterVendor ? [{ label: "Vendor Prefix", value: vendor.vendorPrefix || "N/A" }] : []),
+    ...(isMasterVendor ? [{ label: "Master Vendor", value: formatBool(vendor.masterVendor) }] : []),
+    ...(isMasterVendor ? [{ label: "Worker Limit", value: vendor.subVendorLimit ?? 0 }] : []),
   ] : [];
 
   if (loading) return (

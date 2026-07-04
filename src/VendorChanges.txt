@@ -1,0 +1,63 @@
+Vendor Worker Credential Implementation
+
+Requirement covered
+- A master vendor/shop owner can create worker login credentials under the same vendor prefix.
+- A worker credential is stored as a child vendor using parent_vendor_id.
+- Workers cannot create more worker credentials because is_master_vendor is false for child vendors.
+- Admin can mark a vendor as master/non-master and assign the worker credential quota using subVendorLimit.
+- The worker receives only selected permissions that already exist on the master vendor's role.
+- The worker uses the same vendorPrefix as the master vendor, so product, inventory, sales, purchase, report and other prefix-filtered data remain under the same shop.
+
+Functional behavior
+1. Admin creates or updates a main vendor with:
+   - masterVendor = true
+   - subVendorLimit = allowed worker count
+2. The shop owner logs in with the main vendor credential.
+3. The owner calls POST /api/Vendor/AddSubVendor and sends worker name, email, password, phone, address and permissionIds.
+4. The backend validates:
+   - logged-in user exists
+   - logged-in user is a master vendor
+   - logged-in user is not already a child vendor
+   - worker quota is not exceeded
+   - requested permissions are a subset of the owner's permissions
+   - worker email is unique
+5. The backend creates:
+   - a new role for the worker with only the approved permissions
+   - a new vendor row for the worker with the same vendorPrefix and parent_vendor_id pointing to the owner
+   - is_master_vendor = false and sub_vendor_limit = 0 for the worker
+6. Worker login works through the existing login flow, but the login response now also includes masterVendor, parentVendorId and subVendorLimit.
+
+Files changed
+- src/main/java/net/codejava/Entity/Vendors.java
+- src/main/java/net/codejava/DTOs/VendorDto/AddVendorDto.java
+- src/main/java/net/codejava/DTOs/VendorDto/UpdateVendorDto.java
+- src/main/java/net/codejava/DTOs/VendorDto/GetVendorDto.java
+- src/main/java/net/codejava/DTOs/VendorDto/VendorLoginResponse.java
+- src/main/java/net/codejava/DTOs/VendorDto/AddSubVendorDto.java
+- src/main/java/net/codejava/Repositories/Interfaces/VendorRepository.java
+- src/main/java/net/codejava/Services/Interfaces/IVendorService.java
+- src/main/java/net/codejava/Services/VendorService.java
+- src/main/java/net/codejava/Controller/VendorController.java
+- src/main/resources/db/migration/V55__addVendorHierarchy.sql
+
+API additions
+- POST /api/Vendor/AddSubVendor
+  Request body example:
+  {
+    "name": "Worker Name",
+    "email": "worker@example.com",
+    "password": "password",
+    "phone": "9999999999",
+    "address": "Shop counter",
+    "permissionIds": [1, 2, 3]
+  }
+
+Admin vendor fields
+- AddVendor and UpdateVendor now accept:
+  - masterVendor: true/false
+  - subVendorLimit: number of worker credentials this vendor can create
+
+Database changes
+- vendors.parent_vendor_id links a worker credential to the master vendor.
+- vendors.is_master_vendor controls whether the credential can create worker credentials.
+- vendors.sub_vendor_limit stores how many worker credentials the master vendor can create.

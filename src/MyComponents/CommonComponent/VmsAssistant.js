@@ -322,6 +322,7 @@ function VmsAssistant() {
             <div>
               <div className="vmsa-title">Hannah | VMS Assistant</div>
               <div className="vmsa-subtitle">{currentHelp.title} help ready</div>
+              <div className="vmsa-subtitle-key">Press <kbd>F1</kbd> to view keyboard shortcuts help.</div>          
             </div>
             <button className="vmsa-icon-btn" type="button" onClick={resetChat} title="Reset chat">
               <FaRedo />

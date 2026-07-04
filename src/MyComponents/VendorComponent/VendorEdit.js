@@ -3,7 +3,18 @@ import "../../Styles/Vendor/VendorAdd.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
+const getLoggedInVendor = () => {
+    try {
+        return JSON.parse(localStorage.getItem("vmsUser"))?.data || {};
+    } catch {
+        return {};
+    }
+};
+
 export default function VendorEdit({ uKey, onClose, onSubmit }) {
+    const loggedInVendor = getLoggedInVendor();
+    const useLoggedInVendorPrefix = loggedInVendor?.masterVendor === true && !!loggedInVendor?.vendorPrefix;
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -13,13 +24,14 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
     const [address, setAddress] = useState("");
     const [vendorPrefix, setVendorPrefix] = useState("");
     const [expiryDate, setExpiryDate] = useState("");
+    const [masterVendor, setMasterVendor] = useState(true);
+    const [subVendorLimit, setSubVendorLimit] = useState(0);
     const [roles, setRoles] = useState([]);
     const [errors, setErrors] = useState({});
     const [vendorId, setVendorId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [rolesLoaded, setRolesLoaded] = useState(false);
     const [vendorLoaded, setVendorLoaded] = useState(false);
-    const [showPass, setShowPass] = useState(false);
 
     const clearError = (field) => setErrors(p => ({ ...p, [field]: "" }));
 
@@ -47,7 +59,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
             .then(res => {
                 if (res.status === 200 && res.data) {
                     const v = res.data;
-                    setVendorId(v.id || v.uKey);
+                    setVendorId(v.uKey || uKey || v.id);
                     setName(v.name || "");
                     setEmail(v.email || "");
                     setPassword("");
@@ -56,6 +68,8 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                     setAddress(v.address || "");
                     setVendorPrefix(v.vendorPrefix || "");
                     setExpiryDate(v.expiryDate || "");
+                    setMasterVendor(v.masterVendor ?? true);
+                    setSubVendorLimit(v.subVendorLimit ?? 0);
                     if (roles.length > 0 && v.roleName) {
                         const matched = roles.find(r => r.roleName === v.roleName);
                         if (matched) setRoleId(matched.id);
@@ -70,11 +84,14 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
         let temp = {};
         if (!name.trim()) temp.name = "Name is required";
         if (!email.trim()) temp.email = "Email is required";
-        if (!shopName.trim()) temp.shopName = "Shop name is required";
+        if (!useLoggedInVendorPrefix && !shopName.trim()) temp.shopName = "Shop name is required";
         if (!phone.trim()) temp.phone = "Phone number is required";
         if (!roleId) temp.roleId = "Please select a role";
-        if (!address.trim()) temp.address = "Address is required";
+        if (!useLoggedInVendorPrefix && !address.trim()) temp.address = "Address is required";
         if (!expiryDate) temp.expiryDate = "Expiry date is required";
+        if (!useLoggedInVendorPrefix && (subVendorLimit === "" || Number(subVendorLimit) < 0)) {
+            temp.subVendorLimit = "Worker credential limit cannot be negative";
+        }
         setErrors(temp);
         return Object.keys(temp).length === 0;
     };
@@ -84,7 +101,18 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
         if (!validate()) return;
         setLoading(true);
 
-        const payload = { name, email, password, shopName, phone, roleId: Number(roleId), address, expiryDate };
+        const payload = {
+            name,
+            email,
+            password,
+            shopName: useLoggedInVendorPrefix ? loggedInVendor.shopName : shopName,
+            phone,
+            roleId: Number(roleId),
+            address: useLoggedInVendorPrefix ? loggedInVendor.address : address,
+            expiryDate,
+            masterVendor,
+            subVendorLimit: Number(subVendorLimit) || 0,
+        };
 
         try {
             const response = await apiClient(`${API_BASE_URL}/api/Vendor/UpdateVendor/${vendorId}`, {
@@ -141,7 +169,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                         </div>
                         <h2 className="vd-title">
                             <span className="vd-title-acc"></span>
-                            {vendorPrefix ? `Vendor · ${vendorPrefix}` : "Edit Vendor"}
+                            {useLoggedInVendorPrefix ? "Edit Vendor" : vendorPrefix ? `Vendor · ${vendorPrefix}` : "Edit Vendor"}
                         </h2>
                     </div>
                     <button className="vd-close" onClick={onClose} title="Close">
@@ -184,18 +212,6 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                     
                     <div className="vd-row">
                         <div className="vd-group">
-                            <label>Shop Name</label>
-                            <input
-                                type="text"
-                                value={shopName}
-                                onChange={e => { setShopName(e.target.value); clearError("shopName"); }}
-                                placeholder="Shop / business name"
-                                className={errors.shopName ? "vd-input-err" : ""}
-                            />
-                            {errors.shopName && <span className="vd-err">{errors.shopName}</span>}
-                        </div>
-
-                        <div className="vd-group">
                             <label>Phone</label>
                             <input
                                 type="tel"
@@ -210,10 +226,6 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                             {errors.phone && <div className="add-v-error-text">{errors.phone}</div>}
                         </div>
 
-                    </div>
-
-                    
-                    <div className="vd-row">
                         <div className="vd-group">
                             <label>Select Role</label>
                             <select
@@ -228,30 +240,48 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                             </select>
                             {errors.roleId && <span className="vd-err">{errors.roleId}</span>}
                         </div>
-
-                        <div className="vd-group">
-                            <label>Address</label>
-                            <textarea
-                                rows={2}
-                                value={address}
-                                onChange={e => { setAddress(e.target.value); clearError("address"); }}
-                                placeholder="Full business address"
-                                className={errors.address ? "vd-input-err" : ""}
-                            />
-                            {errors.address && <span className="vd-err">{errors.address}</span>}
-                        </div>
                     </div>
 
                     
-                    <div className="vd-row">
-                        <div className="vd-group">
-                            <label>Vendor Prefix</label>
-                            <div className="vd-readonly-wrap">
-                                <input type="text" value={vendorPrefix} readOnly />
-                                <span className="vd-readonly-tag">READ ONLY</span>
+                    {!useLoggedInVendorPrefix && (
+                        <div className="vd-row">
+                            <div className="vd-group">
+                                <label>Shop Name</label>
+                                <input
+                                    type="text"
+                                    value={shopName}
+                                    onChange={e => { setShopName(e.target.value); clearError("shopName"); }}
+                                    placeholder="Shop / business name"
+                                    className={errors.shopName ? "vd-input-err" : ""}
+                                />
+                                {errors.shopName && <span className="vd-err">{errors.shopName}</span>}
+                            </div>
+
+                            <div className="vd-group">
+                                <label>Address</label>
+                                <textarea
+                                    rows={2}
+                                    value={address}
+                                    onChange={e => { setAddress(e.target.value); clearError("address"); }}
+                                    placeholder="Full business address"
+                                    className={errors.address ? "vd-input-err" : ""}
+                                />
+                                {errors.address && <span className="vd-err">{errors.address}</span>}
                             </div>
                         </div>
+                    )}
 
+                    
+                    <div className="vd-row">
+                        {!useLoggedInVendorPrefix && (
+                            <div className="vd-group">
+                                <label>Vendor Prefix</label>
+                                <div className="vd-readonly-wrap">
+                                    <input type="text" value={vendorPrefix} readOnly />
+                                    <span className="vd-readonly-tag">READ ONLY</span>
+                                </div>
+                            </div>
+                        )}
                         <div className="vd-group">
                             <label>Account Validity Till</label>
                             <input
@@ -263,6 +293,38 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                             {errors.expiryDate && <span className="vd-err">{errors.expiryDate}</span>}
                         </div>
                     </div>
+
+                    {!useLoggedInVendorPrefix && (
+                        <div className="vd-row">
+                            <div className="vd-group">
+                                <label>Master Vendor</label>
+                                <label className="vd-switch-row">
+                                    <input
+                                        type="checkbox"
+                                        checked={masterVendor}
+                                        onChange={e => setMasterVendor(e.target.checked)}
+                                    />
+                                    <span className="vd-switch" />
+                                    <span className="vd-switch-text">
+                                        {masterVendor ? "Can create worker credentials" : "Cannot create worker credentials"}
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div className="vd-group">
+                                <label>Worker Credential Limit</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={subVendorLimit}
+                                    onChange={e => { setSubVendorLimit(e.target.value); clearError("subVendorLimit"); }}
+                                    placeholder="0"
+                                    className={errors.subVendorLimit ? "vd-input-err" : ""}
+                                />
+                                {errors.subVendorLimit && <span className="vd-err">{errors.subVendorLimit}</span>}
+                            </div>
+                        </div>
+                    )}
 
                     
                     <div className="vd-footer">

@@ -100,110 +100,45 @@ function ReportCanvas() {
   return <canvas ref={cvRef} className="rpt-canvas" />;
 }
 
-/* ── Accent Colors ────────────────────────────────────────── */
-const ACCENT_COLORS = [
-  "neon-pink", "electric-blue", "lime-green", "sunset-orange",
-  "violet-purple", "cyber-yellow", "aqua-cyan", "hot-red",
-  "deep-orange", "bright-teal", "neon-green", "royal-blue",
-  "magenta-glow", "gold-flash", "ice-blue",
+/* ── Color-coding per report, like packaging lot bands ────── */
+const ACCENTS = [
+  "#ff2ea6", "#00cfff", "#39ff14", "#ff7a00", "#9b5cff", "#ffe600",
+  "#00ffe5", "#ff3131", "#ff5e00", "#00ffb7", "#00ff66", "#3a86ff",
+  "#ff00ff", "#ffd000", "#7de3ff",
 ];
+const getAccent = (i) => ACCENTS[i % ACCENTS.length];
 
-/* ── Grid Card ────────────────────────────────────────────── */
-function ReportCard({ report, index, onOpen }) {
-  const cardRef = useRef(null);
-  const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
-
-  const handleMove = (e) => {
-    const el = cardRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const dx = (e.clientX - r.left - r.width / 2) / (r.width / 2);
-    const dy = (e.clientY - r.top - r.height / 2) / (r.height / 2);
-    el.style.transform = `perspective(1000px) rotateY(${dx * 8}deg) rotateX(${-dy * 6}deg) translateY(-8px) scale(1.02)`;
-  };
-
-  const handleLeave = () => {
-    if (cardRef.current)
-      cardRef.current.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(0px) scale(1)`;
-  };
-
-  const bars = Array.from({ length: 7 }, (_, i) => ((index * 17 + i * 13) % 60) + 30);
-
+/* ── Barcode tick row ─────────────────────────────────────── */
+function Barcode({ seed, count }) {
+  const ticks = Array.from({ length: count }, (_, i) => ((seed * 11 + i * 7) % 3) + 1);
   return (
-    <div
-      ref={cardRef}
-      className={`rpt-card rpt-card-${accent}`}
-      onMouseMove={handleMove}
-      onMouseLeave={handleLeave}
-      style={{ animationDelay: `${index * 0.08}s` }}
-    >
-      <div className="rpt-card-shell">
-        <div className="rpt-glow" />
-        <div className="rpt-c rpt-tl" /><div className="rpt-c rpt-tr" />
-        <div className="rpt-c rpt-bl" /><div className="rpt-c rpt-br" />
-
-        <div className="rpt-mini-chart">
-          {bars.map((h, i) => (
-            <div key={i} className="rpt-bar" style={{ height: `${h}%`, animationDelay: `${i * 0.1}s` }} />
-          ))}
-        </div>
-
-        <div className="rpt-card-body">
-          <div className="rpt-card-index">RPT — {String(index + 1).padStart(2, "0")}</div>
-          <h3 className="rpt-card-title">{report.name}</h3>
-          <p className="rpt-card-desc">{report.description}</p>
-        </div>
-
-        <button className="rpt-open-btn" onClick={() => onOpen(report.name)}>
-          <span>Open Report</span>
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
+    <div className="rpt-barcode">
+      {ticks.map((w, i) => <span key={i} style={{ width: `${w}px` }} />)}
     </div>
   );
 }
 
-/* ── List Row ─────────────────────────────────────────────── */
-function ReportRow({ report, index, onOpen }) {
-  const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
-  const bars = Array.from({ length: 12 }, (_, i) => ((index * 17 + i * 13) % 60) + 30);
-
+/* ── Grid Card — blister cavity ──────────────────────────── */
+function ReportCard({ report, index, onOpen }) {
+  const accent = getAccent(index);
   return (
     <div
-      className={`rpt-row rpt-card-${accent}`}
-      style={{ animationDelay: `${index * 0.055}s` }}
+      className="rpt-card"
+      style={{ "--accent": accent, animationDelay: `${index * 0.05}s` }}
+      onClick={() => onOpen(report.name)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") onOpen(report.name); }}
     >
-      
-      <div className="rpt-row-strip" />
-
-      
-      <div className="rpt-row-index">
-        <span className="rpt-row-num">{String(index + 1).padStart(2, "0")}</span>
-        <span className="rpt-row-rpt">RPT</span>
+      <div className="rpt-card-dome" />
+      <div className="rpt-card-body">
+        <span className="rpt-card-batch">RPT · {String(index + 1).padStart(2, "0")}</span>
+        <h3 className="rpt-card-title">{report.name}</h3>
+        <p className="rpt-card-desc">{report.description}</p>
+        <Barcode seed={index} count={14} />
       </div>
-
-      
-      <div className="rpt-row-info">
-        <h3 className="rpt-row-title">{report.name}</h3>
-        <p className="rpt-row-desc">{report.description}</p>
-      </div>
-
-      
-      <div className="rpt-row-spark">
-        {bars.map((h, i) => (
-          <div key={i} className="rpt-row-bar" style={{ height: `${h}%`, animationDelay: `${i * 0.06}s` }} />
-        ))}
-      </div>
-
-      
-      <div className="rpt-c rpt-tl" /><div className="rpt-c rpt-tr" />
-      <div className="rpt-c rpt-bl" /><div className="rpt-c rpt-br" />
-
-      
-      <button className="rpt-open-btn rpt-row-btn" onClick={() => onOpen(report.name)}>
-        <span>Open</span>
+      <button className="rpt-card-tab" onClick={(e) => { e.stopPropagation(); onOpen(report.name); }}>
+        <span>Open Report</span>
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
           <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -212,39 +147,82 @@ function ReportRow({ report, index, onOpen }) {
   );
 }
 
-/* ── View Toggle Button ───────────────────────────────────── */
+/* ── List Row — manifest / ledger strip ──────────────────── */
+function ReportRow({ report, index, onOpen }) {
+  const accent = getAccent(index);
+  return (
+    <div
+      className="rpt-row"
+      style={{ "--accent": accent, animationDelay: `${index * 0.04}s` }}
+      onClick={() => onOpen(report.name)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") onOpen(report.name); }}
+    >
+      <div className="rpt-row-perf">
+        {Array.from({ length: 4 }).map((_, i) => <span key={i} />)}
+      </div>
+
+      <span className="rpt-row-code">{index + 1}</span>
+
+      <div className="rpt-row-info">
+        <h3 className="rpt-row-title">{report.name}</h3>
+        <p className="rpt-row-desc">{report.description}</p>
+      </div>
+
+      <Barcode seed={index} count={16} />
+
+      <button className="rpt-row-stamp" onClick={(e) => { e.stopPropagation(); onOpen(report.name); }}>
+        OPEN
+      </button>
+    </div>
+  );
+}
+
+/* ── View toggle — Strip / Manifest ──────────────────────── */
 function ViewToggle({ view, onChange }) {
   return (
     <div className="rpt-view-toggle">
-      <button
-        className={`rpt-toggle-btn ${view === "grid" ? "active" : ""}`}
-        onClick={() => onChange("grid")}
-        title="Grid view"
-      >
-        
+      <button className={`rpt-toggle-btn ${view === "grid" ? "active" : ""}`} onClick={() => onChange("grid")} title="Strip view">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-          <rect x="1" y="1" width="6" height="6" rx="1.5" />
-          <rect x="9" y="1" width="6" height="6" rx="1.5" />
-          <rect x="1" y="9" width="6" height="6" rx="1.5" />
-          <rect x="9" y="9" width="6" height="6" rx="1.5" />
+          <rect x="1" y="1" width="6" height="6" rx="3" />
+          <rect x="9" y="1" width="6" height="6" rx="3" />
+          <rect x="1" y="9" width="6" height="6" rx="3" />
+          <rect x="9" y="9" width="6" height="6" rx="3" />
         </svg>
-        <span>Grid</span>
+        <span>Strip</span>
       </button>
-      <button
-        className={`rpt-toggle-btn ${view === "list" ? "active" : ""}`}
-        onClick={() => onChange("list")}
-        title="List view"
-      >
-        
+      <button className={`rpt-toggle-btn ${view === "list" ? "active" : ""}`} onClick={() => onChange("list")} title="Manifest view">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
           <rect x="1" y="2" width="14" height="2.5" rx="1.25" />
           <rect x="1" y="6.75" width="14" height="2.5" rx="1.25" />
           <rect x="1" y="11.5" width="14" height="2.5" rx="1.25" />
         </svg>
-        <span>List</span>
+        <span>Manifest</span>
       </button>
-      
       <div className={`rpt-toggle-pill ${view}`} />
+    </div>
+  );
+}
+
+/* ── Hero — vitals monitor panel ─────────────────────────── */
+function HeroSection({ count }) {
+  return (
+    <div className="rpt-hero">
+      <div className="rpt-hero-bezel">
+        <div className="rpt-hero-led" />
+        <div className="rpt-hero-screen">
+          <div className="rpt-hero-top">
+            <span className="rpt-hero-eyebrow"><span className="rpt-hero-dot" /> Reports Monitor · Live</span>
+            <span className="rpt-hero-readout">{String(count).padStart(2, "0")} <small>ACTIVE</small></span>
+          </div>
+          <h1 className="rpt-hero-title">Business Reports</h1>
+          <p className="rpt-hero-sub">Sales · Purchase · Inventory · Finance</p>
+          <svg className="rpt-hero-ecg" viewBox="0 0 800 60" preserveAspectRatio="none">
+            <path d="M0 30 L120 30 L140 8 L160 52 L180 30 L300 30 L320 14 L340 46 L360 30 L800 30" fill="none" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        </div>
+      </div>
     </div>
   );
 }
@@ -254,20 +232,27 @@ const roleId = localStorage.getItem("roleId");
 /* ── Main ─────────────────────────────────────────────────── */
 export default function ReportsDashboard() {
   const moduleId = 7;
-  const apiUrl   = `${API_BASE_URL}/api/Reports/GetAllReports`;
+  const apiUrl    = `${API_BASE_URL}/api/Reports/GetAllReports`;
   const accessApi = `${API_BASE_URL}/api/Access/GetUserModuleAccess/${moduleId}/${roleId}`;
 
-  const [search, setSearch]                   = useState("");
-  const [reports, setReports]                 = useState([]);
+  const [search, setSearch] = useState("");
+  const [reports, setReports] = useState([]);
   const [allowedReportKeys, setAllowedReportKeys] = useState([]);
-  const [loaded, setLoaded]                   = useState(false);
-  const [view, setView]                       = useState(() => localStorage.getItem("rpt-view") || "grid");
+  const [loaded, setLoaded] = useState(false);
+  const [view, setView] = useState(() => localStorage.getItem("rpt-view") || "grid");
+  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
   const handleViewChange = (v) => {
     setView(v);
     localStorage.setItem("rpt-view", v);
   };
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 200);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     apiClient(accessApi, { method: "GET", headers: { "Content-Type": "application/json" } })
@@ -300,7 +285,7 @@ export default function ReportsDashboard() {
   const filtered = reports.filter(r => {
     const name = r.name.toLowerCase();
     const access = allowedReportKeys.length === 0 || allowedReportKeys.some(k => name.includes(k));
-    const match  = name.includes(search.toLowerCase());
+    const match = name.includes(search.toLowerCase());
     return access && match;
   });
 
@@ -314,27 +299,15 @@ export default function ReportsDashboard() {
 
       <div className="rpt-inner">
 
-        
-        <div className="rpt-header">
-          <div className="rpt-header-left">
-            <div className="rpt-eyebrow">
-              <span className="rpt-eyebrow-dot" />
-              Analytics & Insights
-            </div>
-            <h1 className="rpt-title">
-              <span className="rpt-title-dim">Business</span> Reports
-            </h1>
-            <p className="rpt-subtitle">Explore and generate insights from your data</p>
-          </div>
+        <HeroSection count={filtered.length} />
 
-          <div className="rpt-header-right">
-            <div className="rpt-count-pill">
-              <span className="rpt-count-num">{filtered.length}</span>
-              <span className="rpt-count-label">Reports Available</span>
-            </div>
+        <div className={`rpt-stickybar ${scrolled ? "scrolled" : ""}`}>
+          <div className="rpt-stickybar-inner">
+            <span className="rpt-stickybar-title">Business Reports</span>
+
             <div className="rpt-search-wrap">
               <svg className="rpt-search-icon" width="14" height="14" viewBox="0 -960 960 960" fill="currentColor">
-                <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/>
+                <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z" />
               </svg>
               <input
                 className="rpt-search"
@@ -344,21 +317,21 @@ export default function ReportsDashboard() {
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
+
+            <div className="rpt-count-pill">
+              <span className="rpt-count-num">{filtered.length}</span>
+              <span className="rpt-count-label">Available</span>
+            </div>
+
+            <ViewToggle view={view} onChange={handleViewChange} />
           </div>
         </div>
 
-        
-        <div className="rpt-controls-bar">
-          <div className="rpt-divider" />
-          <ViewToggle view={view} onChange={handleViewChange} />
-        </div>
-
-        
         {filtered.length === 0 ? (
           <div className="rpt-empty">
             <div className="rpt-empty-icon">
               <svg width="32" height="32" viewBox="0 -960 960 960" fill="currentColor">
-                <path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520Z"/>
+                <path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520Z" />
               </svg>
             </div>
             <p>No reports found</p>

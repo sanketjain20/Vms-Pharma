@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./Styles/Toast.css";
@@ -56,7 +56,7 @@ import SupplierOutstanding from "./MyComponents/SupplierOutstandingComponent/Sup
 import StockAdjustment from "./MyComponents/StockAdjustmentComponent/StockAdjustment";
 import BulkUploadTransactions from "./MyComponents/BulkUploadComponent/BulkUploadTransactions";
 import BulkUploadMasters from "./MyComponents/BulkUploadComponent/BulkUploadMasters";
-
+import ShortcutHelp from "./MyComponents/CommonComponent/ShortcutHelp";
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
 import { ImPodcast } from "react-icons/im";
@@ -72,7 +72,95 @@ function App() {
   const toggleTheme = () => {
     setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
   };
+const navigate = useNavigate();
+useEffect(() => {
+  const shortcuts = {
+    // MASTER MODULES
+    p: "/master/product",
+    v: "/master/vendor",
+    t: "/master/product-type",
+    s: "/master/sales",
+    i: "/master/inventory",
+    d: "/master/dashboard",
+    r: "/master/reports",
+    b: "/master/batch",
+    a: "/master/alerts",
+    k: "/master/stock-adjustment",
+    q: "/master/salesshrt",
+    // OTHER
+    l: "/", // login
+    o: "/onboarding",
+    g: "/setting",
+  };
 
+  const handleKeyDown = (event) => {
+    const tag = document.activeElement.tagName;
+
+    // ❌ don't trigger while typing
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+    const key = event.key.toLowerCase();
+
+    // Ctrl + Key shortcuts
+    if (event.ctrlKey && shortcuts[key]) {
+      event.preventDefault();
+      navigate(shortcuts[key]);
+    }
+
+    // ALT shortcuts (faster ERP feel)
+    if (event.altKey) {
+      switch (key) {
+        case "p":
+          navigate("/master/product");
+          break;
+        case "v":
+          navigate("/master/vendor");
+          break;
+        case "s":
+          navigate("/master/sales");
+          break;
+        case "d":
+          navigate("/master/dashboard");
+          break;
+        case "n":
+          navigate("/master/salesshrt");
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Function keys (ERP style)
+    if (event.key === "F1") {
+      event.preventDefault();
+      navigate("/shortcut-help");
+    }
+
+    if (event.key === "F2") {
+      event.preventDefault();
+      navigate("/master/sales");
+    }
+
+    if (event.key === "F3") {
+      event.preventDefault();
+      navigate("/master/product");
+    }
+    if (event.key === "F4") {
+      event.preventDefault();
+      navigate("/master/salesshrt");
+    }
+    if (event.key === "F5") {
+      event.preventDefault();
+      navigate("/master/dashboard");
+    }
+  };
+
+  window.addEventListener("keydown", handleKeyDown);
+
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown);
+  };
+}, [navigate]);
   return (
     <>
       
@@ -124,6 +212,10 @@ function App() {
 
         <Route path="/onboarding" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
           <Route index element={<VendorOnboarding />} />
+        </Route>
+
+        <Route path="/shortcut-help" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
+          <Route index element={<ShortcutHelp />} />
         </Route>
 
         <Route path="/setting" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>

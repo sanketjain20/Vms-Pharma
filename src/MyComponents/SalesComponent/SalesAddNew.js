@@ -153,6 +153,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewUkey, setViewUkey]     = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   /* ══════════ 3-D CANVAS ══════════ */
   useEffect(() => {
@@ -423,6 +424,8 @@ export default function SalesAddNew({ onClose, onSubmit }) {
 
   /* ══════════ SUBMIT ══════════ */
   const submitSales = async () => {
+    if (submitting) return; // guard against double-submit while a request is already in flight
+
     const tempErrors = {};
     if (items.length === 0)  tempErrors.items = "Add at least one item";
     if (creditPaymentType !== "CREDIT" && !billingMode) tempErrors.billingMode = "Select billing mode";
@@ -481,6 +484,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
       }),
     };
 
+    setSubmitting(true);
     try {
       const res  = await apiClient(`${API_BASE_URL}/api/Sales/AddSales`, {
         method: "POST",
@@ -500,6 +504,8 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     } catch (err) {
       console.error(err);
       toast.error(err?.message || "Failed to add sale");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -578,6 +584,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
             dueDate={dueDate} setDueDate={setDueDate}
             onBack={() => setStep("catalog")}
             onSubmit={submitSales}
+            submitting={submitting}
           />
         )}
 
@@ -770,12 +777,12 @@ function CheckoutStep({
   billingMode, setBillingMode,
   creditPaymentType, setCreditPaymentType,
   amountPaid, setAmountPaid, dueDate, setDueDate,
-  onBack, onSubmit,
+  onBack, onSubmit, submitting,
 }) {
   return (
     <>
       {/* ── Back button — prominent pill style ── */}
-      <button className="san-back-link" onClick={onBack}>
+      <button className="san-back-link" onClick={onBack} disabled={submitting}>
         <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
           <path d="M9 5.5H2M5 1.5L1 5.5l4 4" stroke="currentColor" strokeWidth="1.6"
             strokeLinecap="round" strokeLinejoin="round"/>
@@ -783,6 +790,11 @@ function CheckoutStep({
         Back to products
       </button>
 
+      {/* ── Full-panel overlay shown while the sale is being submitted ── */}
+      <fieldset
+        disabled={submitting}
+        className={`san-checkout-fieldset ${submitting ? "san-checkout-submitting" : ""}`}
+      >
       <div className="san-layout">
 
         <div className="san-panel">
@@ -1022,18 +1034,42 @@ function CheckoutStep({
               )}
             </div>
 
-            <button className="san-btn-submit" onClick={onSubmit}>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <path d="M2 6.5l3 3 6-6" stroke="currentColor" strokeWidth="1.6"
-                  strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Submit &amp; View Invoice
+            <button
+              className={`san-btn-submit ${submitting ? "san-btn-submit-loading" : ""}`}
+              onClick={onSubmit}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <span className="san-btn-spinner" />
+                  Submitting…
+                </>
+              ) : (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <path d="M2 6.5l3 3 6-6" stroke="currentColor" strokeWidth="1.6"
+                      strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Submit &amp; View Invoice
+                </>
+              )}
             </button>
 
           </div>
         </div>
 
       </div>
+      </fieldset>
+
+      {/* ── Blocking overlay so the user can't interact with anything else mid-submit ── */}
+      {submitting && (
+        <div className="san-submit-overlay">
+          <div className="san-submit-overlay-card">
+            <div className="san-loader san-loader-sm"><div/><div/><div/><div/></div>
+            <span>Processing sale… please wait</span>
+          </div>
+        </div>
+      )}
     </>
   );
 }

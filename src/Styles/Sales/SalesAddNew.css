@@ -279,6 +279,11 @@
 
 .san-back-link:hover { color: #93c5fd; }
 
+.san-back-link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* =========================
    TWO-PANEL LAYOUT
 ========================= */
@@ -287,6 +292,24 @@
   grid-template-columns: 1fr 1fr;
   gap: 18px;
   align-items: start;
+}
+
+/* =========================
+   CHECKOUT FIELDSET (wraps the layout so it can be disabled as a unit while submitting)
+========================= */
+.san-checkout-fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.san-checkout-submitting {
+  position: relative;
+  pointer-events: none;
+  user-select: none;
+  filter: saturate(0.7) brightness(0.85);
+  transition: filter 0.2s ease;
 }
 
 /* =========================
@@ -1151,6 +1174,70 @@ input:disabled,
 }
 
 .san-btn-submit:active { transform: translateY(0); }
+
+.san-btn-submit:disabled {
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.san-btn-submit-loading {
+  opacity: 0.85;
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  box-shadow: 0 4px 16px rgba(16,185,129,0.12) !important;
+}
+
+/* Small inline spinner used inside the submit button while it's loading */
+.san-btn-spinner {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.25);
+  border-top-color: #000;
+  animation: sanRing 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* =========================
+   SUBMIT BLOCKING OVERLAY
+   Covers the whole checkout step while AddSales request is in flight,
+   so the user can't click anything else (back, qty, edit, retailer, etc.)
+   until a response comes back.
+========================= */
+.san-submit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2,3,8,0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: sanFadeIn 0.15s var(--san-ease-out) both;
+}
+
+.san-submit-overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 34px;
+  background: var(--san-surface);
+  border: 1px solid var(--san-border-hi);
+  border-radius: var(--san-r-lg);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  font-family: var(--san-font-m);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--san-text-2);
+}
+
+.san-loader-sm {
+  width: 30px;
+  height: 30px;
+}
 
 /* =========================
    CUSTOM DROPDOWN

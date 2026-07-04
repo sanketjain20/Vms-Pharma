@@ -3,7 +3,18 @@ import "../../Styles/Vendor/VendorAdd.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
+const getLoggedInVendor = () => {
+  try {
+    return JSON.parse(localStorage.getItem("vmsUser"))?.data || {};
+  } catch {
+    return {};
+  }
+};
+
 export default function VendorAdd({ onClose, onSubmit }) {
+  const loggedInVendor = getLoggedInVendor();
+  const useLoggedInVendorPrefix = loggedInVendor?.masterVendor === true && !!loggedInVendor?.vendorPrefix;
   const [name, setName]               = useState("");
   const [email, setEmail]             = useState("");
   const [password, setPassword]       = useState("");
@@ -13,6 +24,8 @@ export default function VendorAdd({ onClose, onSubmit }) {
   const [address, setAddress]         = useState("");
   const [vendorPrefix, setVendorPrefix] = useState("");
   const [expiryDate, setExpiryDate]   = useState("");
+  const [masterVendor, setMasterVendor] = useState(true);
+  const [subVendorLimit, setSubVendorLimit] = useState(0);
   const [roles, setRoles]             = useState([]);
   const [errors, setErrors]           = useState({});
   const [loading, setLoading]         = useState(false);
@@ -35,12 +48,15 @@ export default function VendorAdd({ onClose, onSubmit }) {
     if (!name.trim())         temp.name         = "Name is required";
     if (!email.trim())        temp.email        = "Email is required";
     if (!password.trim())     temp.password     = "Password is required";
-    if (!shopName.trim())     temp.shopName     = "Shop name is required";
+    if (!useLoggedInVendorPrefix && !shopName.trim()) temp.shopName = "Shop name is required";
     if (!phone.trim())        temp.phone        = "Phone number is required";
     if (!roleId)              temp.roleId       = "Please select a role";
-    if (!address.trim())      temp.address      = "Address is required";
-    if (!vendorPrefix.trim()) temp.vendorPrefix = "Vendor prefix is required";
+    if (!useLoggedInVendorPrefix && !address.trim()) temp.address = "Address is required";
+    if (!useLoggedInVendorPrefix && !vendorPrefix.trim()) temp.vendorPrefix = "Vendor prefix is required";
     if (!expiryDate)          temp.expiryDate   = "Expiry date is required";
+    if (!useLoggedInVendorPrefix && masterVendor && (subVendorLimit === "" || Number(subVendorLimit) < 0)) {
+      temp.subVendorLimit = "Worker credential limit cannot be negative";
+    }
     setErrors(temp);
     return Object.keys(temp).length === 0;
   };
@@ -50,7 +66,19 @@ export default function VendorAdd({ onClose, onSubmit }) {
     if (!validate()) return;
     setLoading(true);
 
-    const payload = { name, email, password, shopName, phone, roleId: Number(roleId), address, vendorPrefix, expiryDate };
+    const payload = {
+      name,
+      email,
+      password,
+      shopName: useLoggedInVendorPrefix ? loggedInVendor.shopName : shopName,
+      phone,
+      roleId: Number(roleId),
+      address: useLoggedInVendorPrefix ? loggedInVendor.address : address,
+      vendorPrefix: useLoggedInVendorPrefix ? loggedInVendor.vendorPrefix : vendorPrefix,
+      expiryDate,
+      masterVendor: useLoggedInVendorPrefix ? false : masterVendor,
+      subVendorLimit: (useLoggedInVendorPrefix || !masterVendor) ? 0 : Number(subVendorLimit) || 0,
+    };
 
     try {
       const response = await apiClient(`${API_BASE_URL}/api/Vendor/AddVendor`, {
@@ -199,17 +227,19 @@ export default function VendorAdd({ onClose, onSubmit }) {
 
           
           <div className="vd-row">
-            <div className="vd-group">
-              <label>Shop Name</label>
-              <input
-                type="text"
-                value={shopName}
-                onChange={e => { setShopName(e.target.value); clearError("shopName"); }}
-                placeholder="Shop / business name"
-                className={errors.shopName ? "vd-input-err" : ""}
-              />
-              {errors.shopName && <span className="vd-err">{errors.shopName}</span>}
-            </div>
+            {!useLoggedInVendorPrefix && (
+              <div className="vd-group">
+                <label>Shop Name</label>
+                <input
+                  type="text"
+                  value={shopName}
+                  onChange={e => { setShopName(e.target.value); clearError("shopName"); }}
+                  placeholder="Shop / business name"
+                  className={errors.shopName ? "vd-input-err" : ""}
+                />
+                {errors.shopName && <span className="vd-err">{errors.shopName}</span>}
+              </div>
+            )}
 
             <div className="vd-group">
               <label>Select Role</label>
@@ -228,34 +258,37 @@ export default function VendorAdd({ onClose, onSubmit }) {
           </div>
 
           
-          <div className="vd-row">
-            <div className="vd-group vd-full">
-              <label>Address</label>
-              <textarea
-                rows={2}
-                value={address}
-                onChange={e => { setAddress(e.target.value); clearError("address"); }}
-                placeholder="Full business address"
-                className={errors.address ? "vd-input-err" : ""}
-              />
-              {errors.address && <span className="vd-err">{errors.address}</span>}
+          {!useLoggedInVendorPrefix && (
+            <div className="vd-row">
+              <div className="vd-group vd-full">
+                <label>Address</label>
+                <textarea
+                  rows={2}
+                  value={address}
+                  onChange={e => { setAddress(e.target.value); clearError("address"); }}
+                  placeholder="Full business address"
+                  className={errors.address ? "vd-input-err" : ""}
+                />
+                {errors.address && <span className="vd-err">{errors.address}</span>}
+              </div>
             </div>
-          </div>
+          )}
 
           
           <div className="vd-row">
-            <div className="vd-group">
-              <label>Vendor Prefix</label>
-              <input
-                type="text"
-                value={vendorPrefix}
-                onChange={e => { setVendorPrefix(e.target.value); clearError("vendorPrefix"); }}
-                placeholder="e.g. VND"
-                className={errors.vendorPrefix ? "vd-input-err" : ""}
-              />
-              {errors.vendorPrefix && <span className="vd-err">{errors.vendorPrefix}</span>}
-            </div>
-
+            {!useLoggedInVendorPrefix && (
+              <div className="vd-group">
+                <label>Vendor Prefix</label>
+                <input
+                  type="text"
+                  value={vendorPrefix}
+                  onChange={e => { setVendorPrefix(e.target.value); clearError("vendorPrefix"); }}
+                  placeholder="e.g. VND"
+                  className={errors.vendorPrefix ? "vd-input-err" : ""}
+                />
+                {errors.vendorPrefix && <span className="vd-err">{errors.vendorPrefix}</span>}
+              </div>
+            )}
             <div className="vd-group">
               <label>Account Validity Till</label>
               <input
@@ -267,6 +300,47 @@ export default function VendorAdd({ onClose, onSubmit }) {
               {errors.expiryDate && <span className="vd-err">{errors.expiryDate}</span>}
             </div>
           </div>
+
+          {!useLoggedInVendorPrefix && (
+            <div className="vd-row">
+              <div className="vd-group">
+                <label>Master Vendor</label>
+                <label className="vd-switch-row">
+                  <input
+                    type="checkbox"
+                    checked={masterVendor}
+                    onChange={e => {
+                      const checked = e.target.checked;
+                      setMasterVendor(checked);
+                      if (!checked) {
+                        setSubVendorLimit(0);
+                        clearError("subVendorLimit");
+                      }
+                    }}
+                  />
+                  <span className="vd-switch" />
+                  <span className="vd-switch-text">
+                    {masterVendor ? "Can create worker credentials" : "Cannot create worker credentials"}
+                  </span>
+                </label>
+              </div>
+
+              {masterVendor && (
+                <div className="vd-group">
+                  <label>Worker Credential Limit</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={subVendorLimit}
+                    onChange={e => { setSubVendorLimit(e.target.value); clearError("subVendorLimit"); }}
+                    placeholder="0"
+                    className={errors.subVendorLimit ? "vd-input-err" : ""}
+                  />
+                  {errors.subVendorLimit && <span className="vd-err">{errors.subVendorLimit}</span>}
+                </div>
+              )}
+            </div>
+          )}
 
           
           <div className="vd-footer">

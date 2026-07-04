@@ -1,0 +1,165 @@
+Vendor API Changes
+
+1. Existing API changed: POST /api/Vendor/AddVendor
+
+Old purpose:
+- Admin creates a new main vendor.
+
+New optional fields added:
+- masterVendor: boolean
+- subVendorLimit: number
+
+Payload example:
+{
+  "name": "Shop Owner",
+  "email": "owner@example.com",
+  "password": "password",
+  "shopName": "Owner Medical Store",
+  "phone": "9999999999",
+  "roleId": 2,
+  "address": "Shop address",
+  "expiryDate": "2026-12-31",
+  "vendorPrefix": "OMS",
+  "masterVendor": true,
+  "subVendorLimit": 5
+}
+
+Notes:
+- masterVendor=true means this vendor can create worker credentials.
+- subVendorLimit decides how many worker credentials this vendor can create.
+- If these fields are not sent, masterVendor defaults to true and subVendorLimit defaults to 0.
+
+
+2. Existing API changed: PUT /api/Vendor/UpdateVendor/{uKey}
+
+Old purpose:
+- Admin updates vendor details.
+
+New optional fields added:
+- masterVendor: boolean
+- subVendorLimit: number
+
+Payload example:
+{
+  "name": "Shop Owner",
+  "email": "owner@example.com",
+  "password": "",
+  "shopName": "Owner Medical Store",
+  "phone": "9999999999",
+  "roleId": 2,
+  "address": "Updated shop address",
+  "expiryDate": "2026-12-31",
+  "masterVendor": true,
+  "subVendorLimit": 10
+}
+
+Notes:
+- Send masterVendor=false if this vendor should not be allowed to create worker credentials.
+- Send subVendorLimit to increase/decrease worker credential quantity.
+- Password can be blank/null if password should not be changed.
+
+
+3. Existing API response changed: POST /api/auth/login
+
+New response fields added inside data:
+- masterVendor
+- parentVendorId
+- subVendorLimit
+
+Response data example:
+{
+  "token": "jwt-token",
+  "vendorId": 1,
+  "name": "Shop Owner",
+  "shopName": "Owner Medical Store",
+  "roleId": 2,
+  "vendorPrefix": "OMS",
+  "profilePhoto": null,
+  "masterVendor": true,
+  "parentVendorId": null,
+  "subVendorLimit": 5
+}
+
+Notes:
+- For worker login, masterVendor will be false.
+- For worker login, parentVendorId will contain the owner vendor id.
+- Worker and owner have the same vendorPrefix.
+
+
+4. Existing API response changed: GET /api/Vendor/GetVendorById/{id}
+
+New response fields added inside data:
+- parentVendorId
+- masterVendor
+- subVendorLimit
+
+
+5. Existing API response changed: GET /api/Vendor/GetVendorByUkey/{Ukey}
+
+New response fields added inside data:
+- parentVendorId
+- masterVendor
+- subVendorLimit
+
+
+6. New API created: POST /api/Vendor/AddSubVendor
+
+Purpose:
+- Master vendor/shop owner creates worker credentials under the same vendor prefix.
+
+Authentication:
+- Required.
+- Logged-in user must be a master vendor.
+
+Payload:
+{
+  "name": "Worker Name",
+  "email": "worker@example.com",
+  "password": "workerPassword",
+  "phone": "9999999999",
+  "address": "Shop counter",
+  "permissionIds": [1, 2, 3]
+}
+
+Validation:
+- Logged-in vendor must exist.
+- Logged-in vendor must have masterVendor=true.
+- Logged-in vendor must not be a child/worker vendor.
+- Worker count must be less than subVendorLimit.
+- Worker email must be unique.
+- permissionIds must not be empty.
+- Every permissionId must already belong to the master vendor's role.
+
+Success response:
+{
+  "status": 200,
+  "message": "Worker credential created successfully"
+}
+
+Common error responses:
+{
+  "status": 401,
+  "message": "Unauthorized: logged-in vendor not found."
+}
+
+{
+  "status": 403,
+  "message": "Only master vendors can create worker credentials."
+}
+
+{
+  "status": 400,
+  "message": "Worker credential limit reached. Allowed: 5"
+}
+
+{
+  "status": 403,
+  "message": "Worker can only receive permissions that the master vendor already has."
+}
+
+Functional result:
+- A new worker vendor row is created.
+- Worker gets the same vendorPrefix as owner.
+- Worker gets a new role with only selected permissions.
+- Worker has masterVendor=false.
+- Worker cannot create more worker credentials.
