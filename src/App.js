@@ -14,6 +14,8 @@ import Home from "./MyComponents/Home";
 import Setting from "./MyComponents/Setting";
 import Footer from "./MyComponents/CommonComponent/Footer";
 import VmsAssistant from "./MyComponents/CommonComponent/VmsAssistant";
+import GlobalBusyOverlay from "./MyComponents/CommonComponent/GlobalBusyOverlay";
+import { installGlobalBusyFetchInterceptor } from "./utils/globalBusy";
 
 // Layouts
 import Layout from "./MyComponents/CommonComponent/Layout";
@@ -68,6 +70,10 @@ function App() {
     document.body.dataset.theme = theme;
     localStorage.setItem("vmsTheme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    installGlobalBusyFetchInterceptor();
+  }, []);
 
   const toggleTheme = () => {
     setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
@@ -512,6 +518,7 @@ useEffect(() => {
         <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>
       <VmsAssistant />
+      <GlobalBusyOverlay />
     </>
   );
 }

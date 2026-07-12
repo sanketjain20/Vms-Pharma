@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { beginGlobalBusy } from "../../utils/globalBusy";
 
 export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmit }) {
 
@@ -11,6 +12,7 @@ export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmi
 
         const downloadInvoice = async () => {
             let iframe = null;
+            const stopBusy = beginGlobalBusy("Downloading invoice...");
 
             try {
                 const response = await apiClient(
@@ -102,6 +104,7 @@ export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmi
                 console.error(err);
                 toast.error(err.message || "Failed to download invoice.");
             } finally {
+                stopBusy();
                 // Always clean up the iframe
                 if (iframe && iframe.parentNode) {
                     iframe.parentNode.removeChild(iframe);

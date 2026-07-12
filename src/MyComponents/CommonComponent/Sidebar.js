@@ -86,6 +86,12 @@ const formatName = (name) =>
 
 /* ── SubMenu panel ────────────────────────────────────────── */
 function SubMenu({ items, sidebarOpen, onNavigate }) {
+  const sortedItems = [...items]
+    .map((item) => item.children
+      ? { ...item, children: [...item.children].sort((a, b) => a.label.localeCompare(b.label)) }
+      : item)
+    .sort((a, b) => a.label.localeCompare(b.label));
+
   const renderItem = ({ label, key, icon, nested }) => (
     <div key={key} className={`sb-submenu-item ${nested ? "nested" : ""}`} onClick={() => onNavigate(key)}>
       <span className="sb-sub-icon">{icon || subIconMap.product}</span>
@@ -96,7 +102,7 @@ function SubMenu({ items, sidebarOpen, onNavigate }) {
   return (
     <div className="sb-submenu" style={{ left: sidebarOpen ? 220 : 64 }}>
       <div className="sb-submenu-glow-line" />
-      {items.map((item) =>
+      {sortedItems.map((item) =>
         item.children ? (
           <div key={item.label} className="sb-sub-group">
             <div className="sb-subgroup-header">
@@ -144,6 +150,7 @@ export default function Sidebar() {
   const [modules, setModules] = useState([]);
   const [error, setError] = useState("");
   const [hoveredMenu, setHoveredMenu] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
@@ -238,6 +245,37 @@ export default function Sidebar() {
   ];
   const otherModules = modules.filter(m => !knownKeys.includes(normalize(m)));
 
+  const searchResults = [
+    { label: "Home", route: "/home" },
+    hasDashboard && { label: "Dashboard", route: "/master/dashboard" },
+    hasManufacturer && { label: "Manufacturer", route: "/master/manufacturer" },
+    hasProduct && { label: "Product", route: "/master/product" },
+    hasProductType && { label: "Product Type", route: "/master/product-type" },
+    hasRetailer && { label: "Retailer", route: "/master/retailer" },
+    hasSupplier && { label: "Supplier", route: "/master/supplier" },
+    hasBatch && { label: "Batches", route: "/master/batch" },
+    hasExpiryAlerts && { label: "Expiry Alerts", route: "/master/alerts" },
+    hasInventory && { label: "Inventory", route: "/master/inventory" },
+    hasReorderAlerts && { label: "Reorder Alerts", route: "/master/reorder-alerts" },
+    hasStockAdjustment && { label: "Stock Adjustment", route: "/master/stock-adjustment" },
+    hasPayment && { label: "Payment Collection", route: "/master/payment-collection" },
+    hasPurchase && { label: "Purchase", route: "/master/purchase" },
+    hasPurchaseReturn && { label: "Purchase Return", route: "/master/purchase-return" },
+    hasRetailerOutstanding && { label: "Retailer Outstanding", route: "/master/retailer-outstanding" },
+    hasSales && { label: "Sales", route: "/master/sales" },
+    hasSalesReturn && { label: "Sales Return", route: "/master/sales-return" },
+    hasSupplierOutstanding && { label: "Supplier Outstanding", route: "/master/supplier-outstanding" },
+    hasSupplierPayment && { label: "Supplier Payment", route: "/master/supplier-payment" },
+    hasBulkUpload && { label: "Bulk Data Upload", route: "/master/bulk-upload" },
+    hasReports && { label: "Reports", route: "/master/reports" },
+    hasScheduler && { label: "Job Scheduler", route: "/master/job-scheduler" },
+    hasRoles && { label: "Roles", route: "/master/roles" },
+    hasVendor && { label: "Vendor", route: "/master/vendor" },
+    ...otherModules.map((module) => ({ label: formatName(module), key: module })),
+  ].filter(Boolean)
+    .filter((item) => item.label.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
   return (
     <>
       <button
@@ -251,7 +289,32 @@ export default function Sidebar() {
       </button>
 
       <aside ref={sidebarRef} className={`sb-sidebar ${open ? "open" : ""}`}>
-        <nav className="sb-nav">
+        <nav className={`sb-nav ${searchQuery ? "searching" : ""}`}>
+          <div className="sb-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.15a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" /></svg>
+            <input
+              value={searchQuery}
+              onFocus={() => setOpen(true)}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search modules"
+              aria-label="Search modules"
+            />
+            {searchQuery && <button onClick={() => setSearchQuery("")} aria-label="Clear module search">×</button>}
+          </div>
+
+          {searchQuery && (
+            <div className="sb-search-results">
+              {searchResults.length ? searchResults.map((item) => (
+                <button key={item.label} onClick={() => {
+                  if (item.route) navigate(item.route);
+                  else handleNavigation(item.key);
+                  setSearchQuery("");
+                }}>
+                  {item.label}
+                </button>
+              )) : <span>No matching module</span>}
+            </div>
+          )}
 
           
           <SidebarItem

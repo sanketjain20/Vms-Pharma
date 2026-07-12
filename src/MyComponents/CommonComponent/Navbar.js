@@ -79,7 +79,7 @@ export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
 
       
       <div className="topbar-right">
-        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+        {/* <ThemeToggle theme={theme} onToggle={onToggleTheme} /> */}
 
         
         <div className="topbar-greeting">

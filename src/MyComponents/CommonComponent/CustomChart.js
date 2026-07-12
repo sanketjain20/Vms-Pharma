@@ -910,8 +910,8 @@ const CustomChart = ({
   lineColors,
   lineLabels,
   pieColors = [
-    "#8811e9", "#10b981", "#f59e0b", "#eb1241",
-    "#f43f5e", "#06b6d4", "#3b82f6", "#84cc16",
+    "#8811e9", "#10b981", "#f59e0b", "#CD7F32",
+    "#84cc16", "#06b6d4", "#3b82f6", "#f43f5e",
     "#fb923c", "#a78bfa", "#34d399", "#f472b6",
     "#facc15", "#38bdf8", "#4ade80", "#e879f9",
     "#818cf8", "#fb7185", "#fbbf24", "#2dd4bf",

@@ -127,7 +127,7 @@
   gap: 36px;
   white-space: nowrap;
   width: max-content;
-  animation: vpScroll 28s linear infinite;
+  animation: vpScroll 50s linear infinite;
 }
 
 @keyframes vpScroll {

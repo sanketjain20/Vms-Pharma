@@ -1,6 +1,7 @@
 // src/config/apiClient.js
 
 import API_BASE_URL from "./api.config";
+import { beginGlobalBusy } from "../utils/globalBusy";
 
 const getToken = () => {
   try {
@@ -16,25 +17,43 @@ const getToken = () => {
 const isAbsoluteUrl = (url) => /^https?:\/\//i.test(url);
 
 const apiClient = async (endpoint, options = {}) => {
+  const {
+    globalLoader = true,
+    busyLabel,
+    ...fetchOptions
+  } = options;
   const token = getToken();
   const url = isAbsoluteUrl(endpoint) ? endpoint : `${API_BASE_URL}${endpoint}`;
-  const headers = new Headers(options.headers || {});
+  const headers = new Headers(fetchOptions.headers || {});
 
   if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
   const isFormData =
-    typeof FormData !== "undefined" && options.body instanceof FormData;
+    typeof FormData !== "undefined" && fetchOptions.body instanceof FormData;
 
-  if (options.body && !isFormData && !headers.has("Content-Type")) {
+  if (fetchOptions.body && !isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const method = String(fetchOptions.method || "GET").toUpperCase();
+  const shouldShowLoader =
+    globalLoader && ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+  const stopBusy = shouldShowLoader
+    ? beginGlobalBusy(busyLabel || (method === "DELETE" ? "Processing..." : "Saving changes..."))
+    : null;
+
+  let response;
+  try {
+    response = await fetch(url, {
+      ...fetchOptions,
+      headers,
+      globalBusyHandled: true,
+    });
+  } finally {
+    stopBusy?.();
+  }
 
   return response;
 };

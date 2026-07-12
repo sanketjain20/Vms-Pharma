@@ -79,7 +79,7 @@ export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
 
       
       <div className="nbm-right">
-        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+        {/* <ThemeToggle theme={theme} onToggle={onToggleTheme} /> */}
 
         <div className="nbm-greeting">
           <span className="nbm-hi">Hello,</span>
