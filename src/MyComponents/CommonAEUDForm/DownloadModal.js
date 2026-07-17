@@ -29,8 +29,15 @@ export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmi
                     throw new Error(result.message || "Failed to generate invoice");
                 }
 
-                // ── Decode Base64 HTML ──────────────────────────────────────
-                const decodedHTML = atob(result.data);
+                // ── Decode Base64 -> UTF-8 HTML ─────────────────────────────
+                // atob() only reverses base64 — it does NOT UTF-8 decode.
+                // It treats every decoded byte as one Latin-1 char, so any
+                // multi-byte UTF-8 character (₹, –, etc.) comes out mangled
+                // ("â□" style garbage). Route the raw bytes through
+                // TextDecoder("utf-8") to get correct characters.
+                const binaryStr = atob(result.data);
+                const bytes = Uint8Array.from(binaryStr, (c) => c.charCodeAt(0));
+                const decodedHTML = new TextDecoder("utf-8").decode(bytes);
 
                 // ── Render full HTML (head + body) into a hidden iframe ─────
                 // Using an iframe preserves the <style> block from <head>,
@@ -78,7 +85,7 @@ export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmi
                     scale           : 2,
                     useCORS         : true,
                     allowTaint      : false,
-                    backgroundColor : "#0f1117",   // matches .inv-paper bg
+                    backgroundColor : "#ffffff",
                     windowWidth     : 600,
                     scrollX         : 0,
                     scrollY         : 0,

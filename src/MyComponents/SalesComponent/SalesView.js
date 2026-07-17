@@ -31,7 +31,15 @@ export default function SalesView({ uKey, onClose }) {
       );
       const result = await response.json();
       if (result.status !== 200 || !result.data) throw new Error(result.message || "Failed to generate invoice");
-      const decodedHTML = atob(result.data);
+
+      // atob() only reverses base64 — it does NOT UTF-8 decode. It treats
+      // every decoded byte as one Latin-1 char, so multi-byte UTF-8 chars
+      // (₹, –, etc.) come out mangled ("â□" style garbage). Route the raw
+      // bytes through TextDecoder("utf-8") to get correct characters.
+      const binaryStr = atob(result.data);
+      const bytes = Uint8Array.from(binaryStr, (c) => c.charCodeAt(0));
+      const decodedHTML = new TextDecoder("utf-8").decode(bytes);
+
       const printWindow = window.open("", "_blank");
       printWindow.document.open();
       printWindow.document.write(decodedHTML);
