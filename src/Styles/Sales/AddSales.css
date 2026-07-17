@@ -743,9 +743,14 @@ input:disabled {
   -webkit-backdrop-filter: blur(20px);
   animation: slOptIn 0.18s var(--sl-ease-out) both;
 }
+.options.drop-up {
+  top: auto;
+  bottom: calc(100% + 5px);
+  animation: slOptInUp 0.18s var(--sl-ease-out) both;
+}
 
-@keyframes slOptIn {
-  from { opacity: 0; transform: translateY(-5px) scale(0.98); }
+@keyframes slOptInUp {
+  from { opacity: 0; transform: translateY(5px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -765,7 +770,10 @@ input:disabled {
 .options li:hover { background: rgba(59,130,246,0.08); color: var(--sl-text-1); }
 
 .scroll-options { max-height: 180px; overflow-y: auto; }
-
+.options.portal-options {
+  position: fixed;
+  z-index: 99999;
+}
 /* =========================
    ERROR
 ========================= */

@@ -4,7 +4,7 @@ import "../../Styles/Sales/AddSales.css";
 import { toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
-
+import { createPortal } from "react-dom";
 /* ─────────────────────────────────────────
    SEARCHABLE DROPDOWN
 ───────────────────────────────────────── */
@@ -13,16 +13,47 @@ const SearchableDropdown = ({
   search, setSearch, open, setOpen,
   placeholder, dropdownRef, error
 }) => {
+  const [coords, setCoords] = useState(null);
   const selectedOption = options.find(o => String(o.id) === String(selectedId));
   const displayValue = open ? search : (selectedOption?.name ?? "");
   const filtered = options.filter(o =>
     o.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const updateCoords = () => {
+    const rect = dropdownRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const listHeight = 200;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const dropUp = spaceBelow < listHeight && rect.top > spaceBelow;
+    setCoords({
+      left: rect.left,
+      width: rect.width,
+      top: dropUp ? undefined : rect.bottom + 5,
+      bottom: dropUp ? window.innerHeight - rect.top + 5 : undefined,
+    });
+  };
+
   const handleOpen = (e) => {
     e.stopPropagation();
     if (!open) setSearch("");
+    updateCoords();
     setOpen(true);
   };
+
+  useEffect(() => {
+    if (!open) return;
+    updateCoords();
+    const handler = () => updateCoords();
+    window.addEventListener("scroll", handler, true);
+    window.addEventListener("resize", handler);
+    return () => {
+      window.removeEventListener("scroll", handler, true);
+      window.removeEventListener("resize", handler);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   return (
     <div className="custom-select" ref={dropdownRef}>
       <label>{label}</label>
@@ -32,8 +63,17 @@ const SearchableDropdown = ({
           onChange={e => setSearch(e.target.value)} onClick={handleOpen}
           className="select-input"
         />
-        {open && (
-          <ul className="options scroll-options">
+        {open && coords && createPortal(
+          <ul
+            className="options scroll-options portal-options"
+            style={{
+              position: "fixed",
+              left: coords.left,
+              width: coords.width,
+              top: coords.top,
+              bottom: coords.bottom,
+            }}
+          >
             {filtered.map(o => (
               <li key={o.id}
                 onMouseDown={e => { e.preventDefault(); onSelect(o.id); setOpen(false); setSearch(""); }}
@@ -43,7 +83,8 @@ const SearchableDropdown = ({
             {filtered.length === 0 && (
               <li style={{ color: "#525667", fontStyle: "italic" }}>No results found</li>
             )}
-          </ul>
+          </ul>,
+          document.body
         )}
       </div>
       {error && <div className="error">{error}</div>}
@@ -68,7 +109,6 @@ export default function SalesAdd({ onClose, onSubmit }) {
   const [discountInput, setDiscountInput]     = useState("");
   const [discountType, setDiscountType]       = useState("PERCENT");
   const [billingMode, setBillingMode]         = useState("CASH");
-  const [manualPrice, setManualPrice]         = useState("");
   const [commonTax, setCommonTax]             = useState("18");
   const [taxMode, setTaxMode]                 = useState("COMMON");
   const [errors, setErrors]                   = useState({});
@@ -169,7 +209,6 @@ export default function SalesAdd({ onClose, onSubmit }) {
     setSelectedProduct("");
     setInventory(null);
     setProducts([]);
-    setManualPrice("");
     setTaxInput("");
     setErrors({});
     setAvailableBatches([]);
@@ -185,7 +224,6 @@ export default function SalesAdd({ onClose, onSubmit }) {
   const handleProductChange = (e) => {
     const id = e.target.value;
     setSelectedProduct(id);
-    setManualPrice("");
     setTaxInput("");
     setErrors({});
     setAvailableBatches([]);
@@ -238,7 +276,6 @@ export default function SalesAdd({ onClose, onSubmit }) {
     setProducts(allProducts);
     setInventory(null);
     setQuantity("");
-    setManualPrice("");
     setTaxInput("");
     setAvailableBatches([]);
     setSelectedBatchId("");
@@ -249,14 +286,32 @@ export default function SalesAdd({ onClose, onSubmit }) {
     setProductSearch("");
   };
 
+  /* ── Stock helpers for the currently-selected product's inventory ── */
+  const outOfStock = !!inventory && inventory.currentQuantity <= 0;
+  const lowStock    = !!inventory && inventory.currentQuantity > 0 && inventory.currentQuantity <= 10;
+  const noPriceConfigured = !!selectedProduct && !batchesLoading && !inventory;
+
   /* ── ADD ITEM ── */
   const addItem = () => {
     let tempErrors = {};
-    if (!selectedType)                                    tempErrors.selectedType   = "Select product type";
-    if (!selectedProduct)                                 tempErrors.selectedProduct = "Select product";
-    if (!quantity || quantity <= 0)                       tempErrors.quantity       = "Enter valid quantity";
-    const price = inventory ? inventory.unitSellingPrice : parseFloat(manualPrice || 0);
-    if (!inventory && (!manualPrice || manualPrice <= 0)) tempErrors.manualPrice    = "Enter valid selling price";
+    if (!selectedType)      tempErrors.selectedType   = "Select product type";
+    if (!selectedProduct)   tempErrors.selectedProduct = "Select product";
+
+    // Selling price always comes from inventory/product configuration —
+    // there is no manual/adhoc price entry.
+    if (selectedProduct && !inventory) {
+      tempErrors.selectedProduct = "Selling price is not configured for this product";
+    } else if (inventory && inventory.currentQuantity <= 0) {
+      tempErrors.selectedProduct = "This product is out of stock";
+    }
+
+    if (!quantity || quantity <= 0) {
+      tempErrors.quantity = "Enter valid quantity";
+    } else if (inventory && parseInt(quantity) > inventory.currentQuantity) {
+      tempErrors.quantity = "Exceeds available stock";
+    }
+
+    const price = inventory ? inventory.unitSellingPrice : 0;
     const taxValue = taxMode === "COMMON" ? parseFloat(commonTax || 0) : parseFloat(taxInput || 0);
     if (taxValue < 0)                                     tempErrors.taxInput       = "Tax cannot be negative";
     setErrors(tempErrors);
@@ -299,7 +354,6 @@ export default function SalesAdd({ onClose, onSubmit }) {
     setEditIndex(index);
     setSelectedProduct(it.productId);
     setQuantity(it.quantity);
-    setManualPrice(it.sellingPrice);
     setTaxInput(it.taxAmount);
     setSelectedBatchId(it.batchId || "");
     setErrors({});
@@ -322,17 +376,21 @@ export default function SalesAdd({ onClose, onSubmit }) {
   const lineTotal    = lineItems.reduce((s, i) => s + i.sellingPrice * i.quantity, 0);
   const lineTaxTotal = lineItems.reduce((s, i) => s + i.taxAmount, 0);
   const totalAmount  = lineTotal + lineTaxTotal;
-  const discountedTotal = discountInput > 0
-    ? discountType === "PERCENT"
-      ? lineTotal - (lineTotal * discountInput) / 100
-      : lineTotal - discountInput
-    : lineTotal;
+
+  const discAmt = discountInput > 0
+    ? (discountType === "PERCENT"
+      ? (lineTotal * parseFloat(discountInput)) / 100
+      : parseFloat(discountInput))
+    : 0;
+  const discountedTotal = lineTotal - discAmt;   // Taxable Value
+
   let commonTaxAmount = 0;
   if (taxMode === "COMMON" && commonTax > 0)
     commonTaxAmount = taxType === "PERCENT"
       ? (discountedTotal * commonTax) / 100
       : parseFloat(commonTax);
-  const netAmount = discountedTotal + (taxMode === "PRODUCT" ? lineTaxTotal : commonTaxAmount);
+  const gstAmount = taxMode === "PRODUCT" ? lineTaxTotal : commonTaxAmount;
+  const netAmount = discountedTotal + gstAmount;
 
   useEffect(() => {
     if (paymentType === "FULL") setAmountPaid(netAmount.toFixed(2));
@@ -482,21 +540,27 @@ export default function SalesAdd({ onClose, onSubmit }) {
               />
             </div>
 
-            {/* Inventory info / manual price */}
+            {/* Inventory info — price & stock are always read from product configuration,
+                there is no manual/adhoc price entry here. */}
             {inventory ? (
               <div className="inv-box">
                 <div>Selling Price: <b>₹{inventory.unitSellingPrice}</b></div>
-                <div>Current Stock: <b>{inventory.currentQuantity}</b></div>
+                <div>
+                  Current Stock:{" "}
+                  <b style={{ color: outOfStock ? "#fca5a5" : lowStock ? "#fcd34d" : "#6ee7b7" }}>
+                    {inventory.currentQuantity}
+                    {outOfStock ? " · Out of stock" : lowStock ? " · Low stock" : ""}
+                  </b>
+                </div>
+                {outOfStock && (
+                  <div style={{ color: "#fca5a5", fontSize: 12, width: "100%" }}>
+                    ⚠ This product is out of stock and cannot be added. Add stock via Purchase first.
+                  </div>
+                )}
               </div>
-            ) : selectedProduct && !batchesLoading ? (
-              <div className="inv-box">
-                <label>Set Selling Price</label>
-                <input
-                  type="number" value={manualPrice}
-                  onChange={e => setManualPrice(e.target.value)}
-                  placeholder="Enter selling price" min="0"
-                />
-                {errors.manualPrice && <div className="error">{errors.manualPrice}</div>}
+            ) : noPriceConfigured ? (
+              <div className="inv-box" style={{ color: "#fca5a5" }}>
+                ⚠ Selling price is not configured for this product. Please set it up in Products first.
               </div>
             ) : null}
 
@@ -571,6 +635,7 @@ export default function SalesAdd({ onClose, onSubmit }) {
                   type="number" value={quantity}
                   onChange={e => setQuantity(e.target.value)}
                   min="1" placeholder="Enter qty"
+                  disabled={outOfStock}
                 />
                 {errors.quantity && <div className="error">{errors.quantity}</div>}
               </div>
@@ -605,7 +670,12 @@ export default function SalesAdd({ onClose, onSubmit }) {
               <button className="clear-all-btn" onClick={clearProductForm}>
                 ✕ Clear All
               </button>
-              <button className="add-btn" style={{ marginTop: 0 }} onClick={addItem}>
+              <button
+                className="add-btn"
+                style={{ marginTop: 0 }}
+                onClick={addItem}
+                disabled={outOfStock || noPriceConfigured}
+              >
                 {editIndex !== null ? "✓ Update Item" : "+ Add Item"}
               </button>
             </div>
@@ -706,7 +776,48 @@ export default function SalesAdd({ onClose, onSubmit }) {
               </>
             )}
 
-            <div className="total-amount">Net Amount: ₹{netAmount.toFixed(2)}</div>
+            {/* ── Totals breakdown: Subtotal → Discount → Taxable Value → GST → Net Amount ── */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                background: "rgba(0,0,0,0.28)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 12,
+                padding: "13px 15px",
+                margin: "4px 0",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--sl-text-2, #8891a8)" }}>
+                <span>Subtotal</span>
+                <span style={{ color: "var(--sl-text-1, #e8eaf2)", fontWeight: 500 }}>₹{lineTotal.toFixed(2)}</span>
+              </div>
+
+              {discAmt > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--sl-text-2, #8891a8)" }}>
+                  <span>Discount</span>
+                  <span style={{ color: "#fca5a5", fontWeight: 500 }}>-₹{discAmt.toFixed(2)}</span>
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--sl-text-2, #8891a8)" }}>
+                <span>Taxable Value</span>
+                <span style={{ color: "var(--sl-text-1, #e8eaf2)", fontWeight: 500 }}>₹{discountedTotal.toFixed(2)}</span>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--sl-text-2, #8891a8)" }}>
+                <span>GST</span>
+                <span style={{ color: "var(--sl-text-1, #e8eaf2)", fontWeight: 500 }}>₹{gstAmount.toFixed(2)}</span>
+              </div>
+
+              <div style={{ height: 1, background: "rgba(255,255,255,0.1)", margin: "2px 0" }} />
+
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 700, fontFamily: "var(--sl-font-d, inherit)" }}>
+                <span style={{ color: "var(--sl-text-1, #e8eaf2)" }}>Net Amount</span>
+                <span style={{ color: "#6ee7b7" }}>₹{netAmount.toFixed(2)}</span>
+              </div>
+            </div>
 
             <label>Payment Type</label>
             <div className="radio-group">

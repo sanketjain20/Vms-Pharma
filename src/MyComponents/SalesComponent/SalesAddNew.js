@@ -121,14 +121,11 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   const [productTypes, setProductTypes] = useState([]);
   const [allProducts, setAllProducts]   = useState([]);
   const [retailers, setRetailers]       = useState([]);
-  // manualPrices only needed for products where sellingPrice is null/0 from API
-  const [manualPrices, setManualPrices] = useState({});
   const [batchesMap, setBatchesMap]     = useState({});   // productId -> [batches] (lazy-loaded)
 
   /* ── Catalog filters ── */
   const [search, setSearch]             = useState("");
   const [typeFilter, setTypeFilter]     = useState("");
-  const [priceDraft, setPriceDraft]     = useState({});   // productId -> string being typed for manual price
 
   /* ── GST ── */
   const [taxMode, setTaxMode]     = useState("COMMON");   // COMMON | PRODUCT
@@ -223,7 +220,8 @@ export default function SalesAddNew({ onClose, onSubmit }) {
 
   /* ══════════ FETCH: retailers, product types, all products ══════════
      Stock and sellingPrice now come directly from the GetAllProduct API.
-     No separate inventory API call needed.
+     No separate inventory API call needed. Selling price is fully managed
+     via product configuration — there is no manual/adhoc price entry here.
   ══════════════════════════════════════════════════════════════════════ */
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Retailer/Dropdown`)
@@ -278,13 +276,12 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   const cartQtyFor = (productId) => items.find(i => i.productId === productId)?.quantity ?? 0;
 
   /**
-   * Price priority:
-   *  1. manualPrices (user override for products with no sellingPrice)
-   *  2. sellingPrice from product API
-   *  Falls back to null if neither available.
+   * Selling price always comes from the product's own configuration
+   * (sellingPrice field from the product API). There is no manual /
+   * adhoc price override — if a product has no configured price it
+   * simply cannot be added to a sale until it's set up in Products.
    */
   const priceFor = (productId) => {
-    if (manualPrices[productId]) return manualPrices[productId];
     const product = allProducts.find(p => p.id === productId);
     return (product?.sellingPrice > 0) ? product.sellingPrice : null;
   };
@@ -299,12 +296,17 @@ export default function SalesAddNew({ onClose, onSubmit }) {
 
   /* ══════════ ADD / ADJUST CART FROM CATALOG ══════════ */
   const adjustCart = (product, delta) => {
-    const price = priceFor(product.id);
-    if (!price || price <= 0) {
-      toast.error("Set a selling price for this product first");
+    const stock = stockFor(product.id);
+    if (stock !== null && stock <= 0) {
+      toast.error("This product is out of stock");
       return;
     }
-    const stock = stockFor(product.id);
+
+    const price = priceFor(product.id);
+    if (!price || price <= 0) {
+      toast.error("Selling price is not configured for this product");
+      return;
+    }
 
     setItems(prev => {
       const idx = prev.findIndex(i => i.productId === product.id);
@@ -341,15 +343,6 @@ export default function SalesAddNew({ onClose, onSubmit }) {
       updated[idx] = { ...updated[idx], quantity: newQty };
       return updated;
     });
-  };
-
-  const confirmManualPrice = (productId) => {
-    const val = parseFloat(priceDraft[productId]);
-    if (!val || val <= 0) {
-      toast.error("Enter a valid price");
-      return;
-    }
-    setManualPrices(prev => ({ ...prev, [productId]: val }));
   };
 
   /* ══════════ CART ROW HELPERS (checkout step) ══════════ */
@@ -389,13 +382,14 @@ export default function SalesAddNew({ onClose, onSubmit }) {
       ? (subTotal * parseFloat(discountInput)) / 100
       : parseFloat(discountInput))
     : 0;
-  const discountedSub   = subTotal - discAmt;
+  const discountedSub   = subTotal - discAmt;   // Taxable Value
   const commonTaxAmount = taxMode === "COMMON" && parseFloat(commonTax) > 0
     ? (taxType === "PERCENT"
       ? (discountedSub * parseFloat(commonTax)) / 100
       : parseFloat(commonTax))
     : 0;
-  const netAmount = discountedSub + (taxMode === "PRODUCT" ? lineTaxTotal : commonTaxAmount);
+  const gstAmount = taxMode === "PRODUCT" ? lineTaxTotal : commonTaxAmount;
+  const netAmount = discountedSub + gstAmount;
 
   /* ── Auto-sync payment amount for FULL / CREDIT modes whenever net changes ── */
   useEffect(() => {
@@ -405,7 +399,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   }, [netAmount, creditPaymentType]);
 
   const resetAll = () => {
-    setItems([]); setManualPrices({}); setPriceDraft({});
+    setItems([]);
     setCommonTax("18"); setTaxMode("COMMON"); setTaxType("PERCENT");
     setDiscountInput(""); setDiscountType("PERCENT");
     setSelectedRetailer(""); setBillingMode("CASH");
@@ -548,9 +542,6 @@ export default function SalesAddNew({ onClose, onSubmit }) {
             search={search} setSearch={setSearch}
             typeFilter={typeFilter} setTypeFilter={setTypeFilter}
             allProducts={allProducts}
-            manualPrices={manualPrices}
-            priceDraft={priceDraft} setPriceDraft={setPriceDraft}
-            confirmManualPrice={confirmManualPrice}
             cartQtyFor={cartQtyFor}
             priceFor={priceFor}
             stockFor={stockFor}
@@ -572,8 +563,9 @@ export default function SalesAddNew({ onClose, onSubmit }) {
             discountInput={discountInput} setDiscountInput={setDiscountInput}
             discountType={discountType} setDiscountType={setDiscountType}
             subTotal={subTotal}
-            lineTaxTotal={lineTaxTotal}
-            commonTaxAmount={commonTaxAmount}
+            discAmt={discAmt}
+            taxableValue={discountedSub}
+            gstAmount={gstAmount}
             netAmount={netAmount}
             errors={errors}
             retailers={retailers}
@@ -654,8 +646,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
 ───────────────────────────────────────── */
 function CatalogStep({
   productTypes, filteredProducts, search, setSearch, typeFilter, setTypeFilter,
-  allProducts, manualPrices, priceDraft, setPriceDraft, confirmManualPrice,
-  cartQtyFor, priceFor, stockFor, adjustCart,
+  allProducts, cartQtyFor, priceFor, stockFor, adjustCart,
 }) {
   return (
     <div className="san-catalog">
@@ -708,9 +699,14 @@ function CatalogStep({
             const inCart     = cartQtyFor(p.id);
             const outOfStock = stock !== null && stock <= 0;
             const lowStock   = stock !== null && stock > 0 && stock <= 10;
+            const noPrice    = !outOfStock && (!price || price <= 0);
+            const isBlocked  = outOfStock || noPrice;
 
             return (
-              <div key={p.id} className={`san-pcard ${inCart > 0 ? "san-pcard-in-cart" : ""}`}>
+              <div
+                key={p.id}
+                className={`san-pcard ${inCart > 0 ? "san-pcard-in-cart" : ""} ${outOfStock ? "san-pcard-out-of-stock" : ""}`}
+              >
                 <div className="san-pcard-top">
                   <span className="san-pcard-name">{p.name}</span>
                   {stock !== null && (
@@ -723,20 +719,14 @@ function CatalogStep({
                 {price ? (
                   <span className="san-pcard-price">₹{price}</span>
                 ) : (
-                  <div className="san-pcard-setprice">
-                    <input
-                      type="number"
-                      placeholder="Set price ₹"
-                      value={priceDraft[p.id] ?? ""}
-                      onChange={e => setPriceDraft(prev => ({ ...prev, [p.id]: e.target.value }))}
-                    />
-                    <button onClick={() => confirmManualPrice(p.id)}>Set</button>
-                  </div>
+                  <span className="san-pcard-noprice">Price not configured</span>
                 )}
 
                 <div className="san-pcard-action">
                   {outOfStock ? (
                     <span className="san-pcard-disabled-note">Add stock via Purchase</span>
+                  ) : noPrice ? (
+                    <span className="san-pcard-disabled-note">Set price in Products</span>
                   ) : inCart > 0 ? (
                     <div className="san-qty-ctrl san-qty-ctrl-card">
                       <button onClick={() => adjustCart(p, -1)}>−</button>
@@ -746,7 +736,7 @@ function CatalogStep({
                   ) : (
                     <button
                       className="san-pcard-add"
-                      disabled={!price}
+                      disabled={isBlocked}
                       onClick={() => adjustCart(p, 1)}
                     >
                       <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -772,7 +762,7 @@ function CheckoutStep({
   items, increaseQty, decreaseQty, deleteItem, openEdit,
   taxMode, setTaxMode, commonTax, setCommonTax, taxType, setTaxType,
   discountInput, setDiscountInput, discountType, setDiscountType,
-  subTotal, lineTaxTotal, commonTaxAmount, netAmount, errors,
+  subTotal, discAmt, taxableValue, gstAmount, netAmount, errors,
   retailers, selectedRetailer, setSelectedRetailer,
   billingMode, setBillingMode,
   creditPaymentType, setCreditPaymentType,
@@ -900,16 +890,13 @@ function CheckoutStep({
               </div>
             )}
 
+            {/* ── Totals: Subtotal → Discount → Taxable Value → GST → Net Amount ── */}
             <div className="san-totals">
-              <div className="san-total-row"><span>Subtotal</span><span>₹{subTotal.toFixed(2)}</span></div>
               <div className="san-total-row">
-                <span>
-                  GST ({taxMode === "COMMON"
-                    ? `${commonTax}${taxType === "PERCENT" ? "%" : "₹"} common`
-                    : "product-wise"})
-                </span>
-                <span>₹{(taxMode === "COMMON" ? commonTaxAmount : lineTaxTotal).toFixed(2)}</span>
+                <span>Subtotal</span>
+                <span>₹{subTotal.toFixed(2)}</span>
               </div>
+
               <div className="san-total-row">
                 <span>Discount</span>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -932,9 +919,30 @@ function CheckoutStep({
                 </div>
               </div>
               {errors.discountInput && <span className="san-err">{errors.discountInput}</span>}
+              {discAmt > 0 && (
+                <div className="san-total-row san-total-row-sub">
+                  <span>&nbsp;</span>
+                  <span className="san-total-negative">-₹{discAmt.toFixed(2)}</span>
+                </div>
+              )}
+
+              <div className="san-total-row">
+                <span>Taxable Value</span>
+                <span>₹{taxableValue.toFixed(2)}</span>
+              </div>
+
+              <div className="san-total-row">
+                <span>
+                  GST ({taxMode === "COMMON"
+                    ? `${commonTax}${taxType === "PERCENT" ? "%" : "₹"} common`
+                    : "product-wise"})
+                </span>
+                <span>₹{gstAmount.toFixed(2)}</span>
+              </div>
+
               <div className="san-total-divider" />
               <div className="san-total-row san-total-net">
-                <span>Net Total</span>
+                <span>Net Amount</span>
                 <span>₹{netAmount.toFixed(2)}</span>
               </div>
             </div>
