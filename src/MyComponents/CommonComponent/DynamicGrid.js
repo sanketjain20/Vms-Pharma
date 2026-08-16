@@ -365,11 +365,11 @@ function GridCard({ row, columns, index, selectedStatus, can, Module, isReadOnly
 
 /* ── MAIN COMPONENT ─────────────────────────────────────────────────────────── */
 export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, noPagination = false }) {
-  const [data, setData] = useState([]);
   const [allData, setAllData] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [emptyMsg, setEmptyMsg] = useState("");
@@ -399,6 +399,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   const [xlDropOpen, setXlDropOpen] = useState(false);
   const [xlLoading, setXlLoading] = useState(false);
   const xlDropRef = useRef(null);
+  const gridRequestRef = useRef(0);
 
   const canvasRef = useRef(null);
   const animFrameRef = useRef(null);
@@ -406,6 +407,8 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   const can = (perm) => accessList.includes(perm);
   const moduleKey = String(Module || "").toLowerCase().replace(/\s+/g, "");
   const isReadOnlyModule = ["batch"].includes(moduleKey);
+  // Transaction submenus are not status-management screens. Keep their list
+  // focused on the records themselves; Sales has its own payment-status tabs.
   const hideActiveInactiveTabs = [
     "purchase",
     "paymentcollection",
@@ -418,7 +421,6 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
     "supplieroutstanding",
     "batch",
   ].includes(moduleKey);
-
   useEffect(() => {
     if (!xlDropOpen) return;
     const handler = (e) => {
@@ -483,39 +485,60 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   }, [Module]);
 
   const refreshGrid = React.useCallback(() => {
-    apiClient(noPagination ? apiUrl : `${apiUrl}/0/100000`, { method: "GET" })
+    // Grid endpoints use page and size as path parameters; search and tab are query parameters.
+    // Non-paginated endpoints also receive the tab filter; they retain their
+    // endpoint shape while the backend applies the selected tab.
+    const query = new URLSearchParams({
+      ...(searchText.trim() && { search: searchText.trim() }),
+      tab: selectedStatus,
+    });
+    const requestUrl = noPagination
+      ? `${apiUrl}${apiUrl.includes("?") ? "&" : "?"}${query}`
+      : `${apiUrl}/${page}/${size}?${query}`;
+
+    const requestId = ++gridRequestRef.current;
+
+    apiClient(requestUrl, { method: "GET" })
       .then(r => r.json())
       .then(res => {
-        if (res.status === 200) {
-          const dataObj = res.data;
-          const list = Array.isArray(dataObj) ? dataObj : Object.values(dataObj ?? {}).find(v => Array.isArray(v)) || [];
-          setAllData(list);
-        }
+        if (requestId !== gridRequestRef.current) return;
+        if (res.status !== undefined && res.status !== 200) return;
+
+        const payload = res.data ?? res;
+        const list = Array.isArray(payload)
+          ? payload
+          : payload.content ?? payload.items ?? payload.records ?? payload.results ??
+            Object.values(payload ?? {}).find(value => Array.isArray(value)) ?? [];
+        const pageCount = Number(payload.totalPages ?? res.totalPages);
+        const itemCount = Number(payload.totalElements ?? payload.totalItems ?? payload.totalCount ?? res.totalElements ?? res.totalItems ?? res.totalCount);
+
+        setAllData(list);
+        setTotalItems(Number.isFinite(itemCount) ? itemCount : list.length);
+        setTotalPages(noPagination ? (Math.ceil(list.length / size) || 1) : (Number.isFinite(pageCount) ? Math.max(pageCount, 1) : (Math.ceil((itemCount || list.length) / size) || 1)));
+      })
+      .catch(() => {
+        if (requestId !== gridRequestRef.current) return;
+        setAllData([]);
+        setTotalItems(0);
+        setTotalPages(1);
       });
-  }, [apiUrl, page, size]);
+  }, [apiUrl, noPagination, page, size, searchText, selectedStatus]);
 
   useEffect(() => { refreshGrid(); }, [refreshGrid]);
 
-  useEffect(() => {
-    apiClient(noPagination ? apiUrl : `${apiUrl}/0/100000`, { method: "GET" })
-      .then(r => r.json())
-      .then(res => {
-        const dataObj = res.data;
-        const list = Array.isArray(dataObj) ? dataObj : Object.values(dataObj ?? {}).find(v => Array.isArray(v)) || [];
-        setAllData(list);
-      });
-  }, [apiUrl]);
-
   const counts = React.useMemo(() => {
+    // Tab badges represent the records currently loaded in the grid, so All
+    // matches the page-sized Active/Inactive counts instead of the API total.
     const all = allData.length;
     if (Module === "Sales") {
       return { all, payment_done: allData.filter(r => r.statusId === Status.PaymentDone).length, payment_pending: allData.filter(r => r.statusId === Status.PaymentPending).length };
     }
     return { all, active: allData.filter(r => r.disable === 0).length, inactive: allData.filter(r => r.disable === 1).length };
-  }, [allData, Module]);
+  }, [allData, Module, totalItems]);
 
   const filteredData = allData
     .filter(row => {
+      if (!noPagination) return true;
       if (Module === "Sales") {
         if (selectedStatus === "all") return true;
         if (selectedStatus === "payment_done") return row.statusId === Status.PaymentDone;
@@ -526,23 +549,27 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
       }
       return true;
     })
-    .filter(row => searchText ? Object.values(row).join(" ").toLowerCase().includes(searchText.toLowerCase()) : true);
+    // Search is performed by the API for paginated screens. Non-paginated screens
+    // retain their local search behavior.
+    .filter(row => noPagination && searchText ? Object.values(row).join(" ").toLowerCase().includes(searchText.toLowerCase()) : true);
 
   const pagedData = React.useMemo(() => {
+    if (!noPagination) return filteredData;
     const start = page * size;
     return filteredData.slice(start, start + size);
-  }, [filteredData, page, size]);
+  }, [filteredData, noPagination, page, size]);
 
   useEffect(() => {
+    if (!noPagination) return;
     const pages = Math.ceil(filteredData.length / size) || 1;
     setTotalPages(pages);
     if (page >= pages) setPage(0);
-  }, [filteredData.length, size]);
+  }, [filteredData.length, noPagination, page, size]);
 
   useEffect(() => { setPage(0); }, [selectedStatus]);
 
   useEffect(() => {
-    if (hideActiveInactiveTabs && (selectedStatus === "active" || selectedStatus === "inactive")) {
+    if (hideActiveInactiveTabs && selectedStatus !== "all") {
       setSelectedStatus("all");
     }
   }, [hideActiveInactiveTabs, selectedStatus]);
@@ -631,10 +658,10 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
               className="dg-search"
               placeholder={`      Search ${Module || "records"}…`}
               value={searchText}
-              onChange={e => setSearchText(e.target.value)}
+              onChange={e => { setSearchText(e.target.value); setPage(0); }}
             />
             {searchText && (
-              <button className="dg-search-clear" onClick={() => setSearchText("")}>
+              <button className="dg-search-clear" onClick={() => { setSearchText(""); setPage(0); }}>
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                   <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
@@ -645,7 +672,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
           <div className="dg-topbar-right">
             <div className="dg-record-count">
               <span className="dg-count-dot" />
-              <CountUp value={filteredData.length} /> records
+              <CountUp value={noPagination ? filteredData.length : totalItems} /> records
             </div>
 
             
@@ -674,12 +701,12 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
                 ].map(c => (
                   <button key={c.key} className={`dg-chip ${selectedStatus === c.key ? "dg-chip-active" : ""}`} onClick={() => setSelectedStatus(c.key)}>
                     {c.label}
-                    <span className="dg-chip-count"><CountUp value={c.count} duration={350} /></span>
+                    {selectedStatus === c.key && <span className="dg-chip-count"><CountUp value={c.count} duration={350} /></span>}
                   </button>
                 ))}
               </>
             ) : hideActiveInactiveTabs ? (
-              <button className={`dg-chip ${selectedStatus === "all" ? "dg-chip-active" : ""}`} onClick={() => setSelectedStatus("all")}>
+              <button className="dg-chip dg-chip-active" onClick={() => setSelectedStatus("all")}>
                 All
                 <span className="dg-chip-count"><CountUp value={counts.all} duration={350} /></span>
               </button>
@@ -692,7 +719,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
                 ].map(c => (
                   <button key={c.key} className={`dg-chip ${selectedStatus === c.key ? "dg-chip-active" : ""} ${c.color ? `dg-chip-${c.color}` : ""}`} onClick={() => setSelectedStatus(c.key)}>
                     {c.label}
-                    <span className="dg-chip-count"><CountUp value={c.count} duration={350} /></span>
+                    {selectedStatus === c.key && <span className="dg-chip-count"><CountUp value={c.count} duration={350} /></span>}
                   </button>
                 ))}
               </>
@@ -753,7 +780,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
               </div>
               <div className="dg-shell-meta">
                 <span className="dg-shell-pulse" />
-                {pagedData.length} of {filteredData.length} shown
+                {pagedData.length} of {noPagination ? filteredData.length : totalItems} shown
               </div>
             </div>
 
