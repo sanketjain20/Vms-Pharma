@@ -7,17 +7,13 @@ function Footer() {
   return (
     <footer className="vms-footer">
 
-      
       <div className="footer-glow-line" />
-
-      
-      <div className="footer-scan" />
 
       <div className="footer-inner">
 
         
         <div className="footer-brand">
-          <span className="footer-logo-text">UDOYRA</span>
+          <span className="footer-logo-text">UDYORA</span>
           <span className="footer-tagline">Vendor Management System</span>
         </div>
 

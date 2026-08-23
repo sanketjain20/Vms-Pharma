@@ -1,0 +1,1153 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* =========================
+   SHARED "ADD" FORM SHELL — one design system for every module's Add
+   screen (backdrop, panel, header, fields, footer). Self-contained tokens,
+   dark default + light override, responsive down to phone width.
+   Scoped to .afx-backdrop so it never leaks onto the rest of the app —
+   each module's Edit/View screens keep their own existing CSS untouched.
+========================= */
+/* Tokens live on <body>, not .afx-backdrop — the searchable-dropdown panel
+   (see .afx-searchdrop-panel below) portals straight to document.body so it
+   can float above the modal's own scroll container. That makes it a SIBLING
+   of .afx-backdrop rather than a descendant, so var(--afx-*) would resolve
+   to nothing (transparent background, unset text colour — whatever sits
+   behind it shows through) if the tokens were scoped to .afx-backdrop only.
+   Declaring them on body keeps every .afx-* element themed correctly
+   regardless of where in the DOM it actually renders. */
+body {
+  --afx-surface:      #101014;
+  --afx-panel:        #17171d;
+  --afx-sunken:       #0a0a0d;
+  --afx-border:       rgba(255, 255, 255, 0.1);
+  --afx-border-soft:  rgba(255, 255, 255, 0.06);
+  --afx-text-1:       #f2f3f7;
+  --afx-text-2:       #9a9db0;
+  --afx-text-3:       #63667a;
+  --afx-accent:       #3b82f6;
+  --afx-accent-soft:  rgba(59, 130, 246, 0.12);
+  --afx-success:      #10b981;
+  --afx-success-soft: rgba(16, 185, 129, 0.12);
+  --afx-danger:       #ef4444;
+  --afx-danger-soft:  rgba(239, 68, 68, 0.12);
+  --afx-warning:      #f59e0b;
+  --afx-warning-soft: rgba(245, 158, 11, 0.12);
+  --afx-shadow:       rgba(0, 0, 0, 0.55);
+  --afx-radius:       14px;
+  --afx-font:         'Inter', system-ui, sans-serif;
+  --afx-font-mono:    'JetBrains Mono', monospace;
+}
+
+.afx-backdrop {
+  position: fixed;
+  inset: 0;
+  /* Must outrank every other fixed/sticky layer in the app — the sidebar
+     and topbar are forced to z-index:10000 in light mode (see
+     LightThemeOverrides.css) — so every Add/Edit/View screen sits above
+     the navbar, sidebar and footer instead of being clipped behind them.
+     Stays below system-level layers that must always win: VmsAssistant
+     (120000), GlobalBusyOverlay (2147483000) and Toast (2147483647). */
+  z-index: 110000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(6, 7, 10, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: afxFadeIn 0.18s ease both;
+  font-family: var(--afx-font);
+}
+
+body[data-theme="light"] {
+  --afx-surface:      #ffffff;
+  --afx-panel:        #ffffff;
+  --afx-sunken:       #f8fafc;
+  --afx-border:       rgba(15, 23, 42, 0.1);
+  --afx-border-soft:  rgba(15, 23, 42, 0.06);
+  --afx-text-1:       #0f172a;
+  --afx-text-2:       #55627a;
+  --afx-text-3:       #94a3b8;
+  --afx-accent:       #2563eb;
+  --afx-accent-soft:  rgba(37, 99, 235, 0.08);
+  --afx-success:      #059669;
+  --afx-success-soft: rgba(5, 150, 105, 0.1);
+  --afx-danger:       #dc2626;
+  --afx-danger-soft:  rgba(220, 38, 38, 0.08);
+  --afx-warning:      #b45309;
+  --afx-warning-soft: rgba(180, 83, 9, 0.1);
+  --afx-shadow:       rgba(15, 23, 42, 0.16);
+}
+
+body[data-theme="light"] .afx-backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.afx-backdrop * { box-sizing: border-box; }
+
+@keyframes afxFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Theme.css has a legacy fallback giving any "-overlay"/"-backdrop" class a
+   light haze in light mode (!important) — see GlobalBusyOverlay.css for the
+   full note. Outrank it so the scrim stays a proper dimming layer. */
+body[data-theme="light"] .afx-backdrop.afx-backdrop {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+/* =========================
+   PANEL
+========================= */
+.afx-modal {
+  position: relative;
+  /* Add/Edit/View screens read as 75% of the viewport — never full-bleed,
+     never a cramped fixed box — while each size tier still caps how wide
+     a given form is allowed to stretch on large monitors. */
+  width: 75vw;
+  height: 75vh;
+  max-height: 75vh;
+  min-height: min(75vh, 420px);
+  display: flex;
+  flex-direction: column;
+  background: var(--afx-panel);
+  border: 1px solid var(--afx-border);
+  border-radius: var(--afx-radius);
+  box-shadow: 0 30px 80px var(--afx-shadow);
+  overflow: hidden;
+  color: var(--afx-text-1);
+  animation: afxPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes afxPopIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.afx-modal--sm { max-width: 460px; min-width: min(400px, 90vw); }
+.afx-modal--md { max-width: 620px; min-width: min(460px, 90vw); }
+.afx-modal--lg { max-width: 820px; min-width: min(520px, 90vw); }
+.afx-modal--xl { max-width: 1040px; min-width: min(600px, 90vw); }
+
+/* Most modules wrap .afx-body/.afx-footer in a plain <form>, which is a
+   block box by default — so .afx-body's flex:1 had no flex container to
+   grow inside, and short forms left dead space below the footer instead of
+   pinning it to the modal's bottom edge (looked like the buttons floated
+   in the middle of a tall, mostly-empty modal). Making the form itself a
+   flex column that fills the modal restores the intended header/body/
+   footer split for every module, regardless of how few fields a form has. */
+.afx-modal > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* =========================
+   HEADER
+========================= */
+.afx-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--afx-border-soft);
+  flex-shrink: 0;
+}
+
+.afx-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--afx-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--afx-accent);
+  margin-bottom: 6px;
+}
+
+.afx-eyebrow-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--afx-accent);
+}
+
+.afx-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--afx-text-1);
+}
+
+.afx-subtitle {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--afx-text-2);
+}
+
+.afx-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--afx-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--afx-text-3);
+  font-family: var(--afx-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.afx-close:hover { background: var(--afx-border-soft); color: var(--afx-text-1); border-color: var(--afx-text-3); }
+
+/* =========================
+   BODY
+========================= */
+.afx-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.afx-body::-webkit-scrollbar { width: 6px; }
+.afx-body::-webkit-scrollbar-thumb { background: var(--afx-border); border-radius: 4px; }
+/* .afx-body's direct sections (meta cards, line-item table, totals, etc.)
+   are flex items in a column layout, so their default flex-shrink:1 lets
+   flexbox squash them down to fit whenever the modal's fixed 75vh height
+   runs short (worse at 100% browser zoom, where less CSS-pixel room is
+   available) — instead of keeping natural size and letting .afx-body's own
+   overflow-y:auto scroll. That squashing is what makes tables collapse to
+   near-nothing at 100% zoom while looking fine once zoomed out. Locking
+   each section to its natural height fixes that at every zoom level. */
+.afx-body > * { flex-shrink: 0; }
+
+.afx-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 13px;
+  border-radius: 9px;
+  background: var(--afx-danger-soft);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: var(--afx-danger);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.afx-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: var(--afx-accent-soft);
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  color: var(--afx-text-2);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.afx-info svg { flex-shrink: 0; color: var(--afx-accent); }
+.afx-info strong { color: var(--afx-text-1); }
+
+.afx-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--afx-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--afx-text-3);
+  padding-top: 4px;
+}
+.afx-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--afx-border-soft);
+}
+
+/* =========================
+   FIELD GRID
+========================= */
+.afx-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 16px;
+}
+
+.afx-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.afx-field--full { grid-column: 1 / -1; }
+
+/* Read-only "View" screens reuse .afx-grid/.afx-field/.afx-label as-is (same
+   spacing, same responsive collapse at 900px/640px) — swap the input for a
+   plain value line so a View screen sits in the exact same rhythm as its
+   Add/Edit sibling instead of inventing a separate layout system. */
+.afx-view-value {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--afx-text-1);
+  word-break: break-word;
+  line-height: 1.5;
+}
+.afx-view-value--muted { color: var(--afx-text-3); font-weight: 400; }
+.afx-view-value--mono  { font-family: var(--afx-font-mono); font-size: 12.5px; }
+.afx-view-value--empty { color: var(--afx-text-3); font-style: italic; }
+
+.afx-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--afx-text-2);
+}
+.afx-req { color: var(--afx-danger); margin-left: 2px; }
+
+.afx-input,
+.afx-textarea,
+.afx-select {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--afx-sunken);
+  border: 1px solid var(--afx-border);
+  border-radius: 8px;
+  color: var(--afx-text-1);
+  font-family: var(--afx-font);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.afx-textarea { resize: vertical; min-height: 64px; }
+.afx-input::placeholder, .afx-textarea::placeholder { color: var(--afx-text-3); }
+
+.afx-input:focus, .afx-textarea:focus, .afx-select:focus {
+  border-color: var(--afx-accent);
+  box-shadow: 0 0 0 3px var(--afx-accent-soft);
+}
+
+.afx-input--err, .afx-textarea--err, .afx-select--err {
+  border-color: var(--afx-danger) !important;
+}
+.afx-input--err:focus, .afx-textarea--err:focus {
+  box-shadow: 0 0 0 3px var(--afx-danger-soft);
+}
+
+.afx-error {
+  font-size: 11px;
+  color: var(--afx-danger);
+}
+
+.afx-input-wrap { position: relative; display: flex; align-items: center; }
+.afx-input-wrap .afx-input { padding-right: 36px; }
+.afx-eye-btn {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+  background: transparent;
+  border: none;
+  color: var(--afx-text-3);
+  cursor: pointer;
+}
+.afx-eye-btn:hover { color: var(--afx-text-1); }
+
+/* select chevron */
+.afx-select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+.afx-select-wrap { position: relative; }
+.afx-select-wrap svg {
+  position: absolute;
+  right: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--afx-text-3);
+  pointer-events: none;
+}
+
+/* checkbox / switch */
+.afx-switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  user-select: none;
+}
+.afx-switch-row input { position: absolute; opacity: 0; width: 0; height: 0; }
+.afx-switch {
+  position: relative;
+  width: 36px; height: 20px;
+  border-radius: 999px;
+  background: var(--afx-sunken);
+  border: 1px solid var(--afx-border);
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.afx-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--afx-text-3);
+  transition: left 0.18s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s ease;
+}
+.afx-switch-row input:checked + .afx-switch {
+  background: var(--afx-accent-soft);
+  border-color: var(--afx-accent);
+}
+.afx-switch-row input:checked + .afx-switch::after {
+  left: 18px;
+  background: var(--afx-accent);
+}
+.afx-switch-text { font-size: 12.5px; color: var(--afx-text-2); }
+
+/* =========================
+   TABS (for multi-section forms)
+========================= */
+.afx-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--afx-sunken);
+  border: 1px solid var(--afx-border);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.afx-tab {
+  flex: 1;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  color: var(--afx-text-2);
+  font-family: var(--afx-font);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+.afx-tab.is-active { background: var(--afx-accent-soft); color: var(--afx-accent); }
+.afx-tab:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* =========================
+   SEARCHABLE DROPDOWN
+========================= */
+.afx-searchdrop { position: relative; }
+.afx-searchdrop-face {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--afx-sunken);
+  border: 1px solid var(--afx-border);
+  border-radius: 8px;
+  color: var(--afx-text-3);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.afx-searchdrop-face.is-filled { color: var(--afx-text-1); }
+.afx-searchdrop-face.is-open { border-color: var(--afx-accent); box-shadow: 0 0 0 3px var(--afx-accent-soft); }
+.afx-searchdrop-face svg { flex-shrink: 0; transition: transform 0.2s ease; color: var(--afx-text-3); }
+.afx-searchdrop-face.is-open svg { transform: rotate(180deg); }
+
+.afx-searchdrop-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  /* Some dropdowns (e.g. Sales) portal this panel straight to <body> so it
+     escapes the modal's own scroll container — that makes it a sibling of
+     .afx-backdrop rather than a descendant, so it must outrank the
+     backdrop's z-index (110000) on its own merits to stay visible above
+     the modal instead of silently rendering behind it. The dropdown has
+     top priority over the rest of the UI once open. */
+  z-index: 110100;
+  display: flex;
+  flex-direction: column;
+  background: var(--afx-panel);
+  border: 1px solid var(--afx-border);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px var(--afx-shadow);
+  overflow: hidden;
+  animation: afxDropIn 0.16s ease both;
+  box-sizing: border-box;
+}
+.afx-searchdrop-panel * { box-sizing: border-box; }
+@keyframes afxDropIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.afx-searchdrop-input {
+  border: none;
+  border-bottom: 1px solid var(--afx-border-soft);
+  padding: 9px 12px;
+  background: transparent;
+  color: var(--afx-text-1);
+  font-family: var(--afx-font);
+  font-size: 12.5px;
+  outline: none;
+  flex-shrink: 0;
+}
+
+/* Show exactly 4 rows before it needs to scroll — the panel stays compact
+   for short lists and only grows a scrollbar once there's more to show. */
+.afx-searchdrop-list { max-height: calc(4 * 36px); overflow-y: auto; }
+.afx-searchdrop-item {
+  min-height: 36px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  color: var(--afx-text-2);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  box-sizing: border-box;
+}
+.afx-searchdrop-item:hover, .afx-searchdrop-item.is-hi { background: var(--afx-accent-soft); color: var(--afx-text-1); }
+.afx-searchdrop-item.is-selected { color: var(--afx-accent); font-weight: 600; }
+.afx-searchdrop-empty { padding: 14px; text-align: center; font-size: 12px; color: var(--afx-text-3); }
+
+/* =========================
+   LINE-ITEM TABLE (Sales / Purchase style forms)
+========================= */
+/* overflow-x:auto so a wide table (many-column ledgers) scrolls inside its
+   own box instead of blowing out the modal's width. */
+.afx-line-table { border: 1px solid var(--afx-border); border-radius: 10px; overflow-x: auto; }
+.afx-line-table table { width: 100%; border-collapse: collapse; }
+.afx-line-table th {
+  padding: 9px 10px;
+  background: var(--afx-sunken);
+  color: var(--afx-text-3);
+  font-family: var(--afx-font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  border-bottom: 1px solid var(--afx-border);
+  white-space: nowrap;
+}
+.afx-line-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--afx-border-soft);
+  font-size: 12.5px;
+  color: var(--afx-text-2);
+}
+.afx-line-table tr:last-child td { border-bottom: none; }
+.afx-line-table input, .afx-line-table select {
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--afx-panel);
+  border: 1px solid var(--afx-border);
+  border-radius: 6px;
+  color: var(--afx-text-1);
+  font-size: 12px;
+}
+.afx-line-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: var(--afx-danger-soft);
+  color: var(--afx-danger);
+  cursor: pointer;
+}
+.afx-line-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--afx-border);
+  background: transparent;
+  color: var(--afx-text-2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.afx-line-add:hover { border-color: var(--afx-accent); color: var(--afx-accent); }
+
+/* =========================
+   PERMISSIONS ACCORDION (Role form)
+========================= */
+.afx-perms-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.afx-perms-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--afx-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--afx-text-2);
+}
+.afx-perms-count {
+  font-family: var(--afx-font-mono);
+  font-size: 10.5px;
+  color: var(--afx-text-3);
+  padding: 2px 9px;
+  border-radius: 100px;
+  background: var(--afx-sunken);
+  border: 1px solid var(--afx-border);
+}
+.afx-perms-count.is-active { color: var(--afx-accent); border-color: var(--afx-accent); background: var(--afx-accent-soft); }
+
+.afx-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.afx-module {
+  border: 1px solid var(--afx-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--afx-sunken);
+}
+
+.afx-module-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.afx-module-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.afx-module-name { font-size: 12.5px; font-weight: 600; color: var(--afx-text-1); }
+.afx-module-badge {
+  font-family: var(--afx-font-mono);
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 100px;
+  background: var(--afx-accent-soft);
+  color: var(--afx-accent);
+}
+.afx-module-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.afx-module-count { font-size: 10.5px; color: var(--afx-text-3); }
+.afx-chevron { transition: transform 0.18s ease; color: var(--afx-text-3); }
+.afx-chevron.is-open { transform: rotate(180deg); }
+
+.afx-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px; height: 16px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 1px solid var(--afx-border);
+  background: var(--afx-panel);
+  color: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.afx-check.is-full { background: var(--afx-accent); border-color: var(--afx-accent); color: #fff; }
+.afx-check.is-partial { background: var(--afx-accent-soft); border-color: var(--afx-accent); color: var(--afx-accent); }
+
+.afx-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+  padding: 4px 12px 12px;
+}
+
+.afx-action {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--afx-border);
+  background: var(--afx-panel);
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.afx-action:hover { border-color: var(--afx-text-3); }
+.afx-action.is-checked { background: var(--afx-accent-soft); border-color: var(--afx-accent); }
+.afx-action-label { font-size: 11.5px; color: var(--afx-text-2); }
+.afx-action.is-checked .afx-action-label { color: var(--afx-text-1); }
+
+/* =========================
+   LINE ITEMS — grid-row style (Purchase/Sales/Returns entry forms)
+========================= */
+.afx-items-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 20px;
+  color: var(--afx-text-3);
+  text-align: center;
+}
+
+.afx-items-head,
+.afx-item-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 0.7fr 0.9fr 0.9fr 0.7fr 0.9fr auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.afx-items-head {
+  padding: 0 4px 6px;
+  font-family: var(--afx-font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--afx-text-3);
+}
+
+.afx-item-row {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--afx-border-soft);
+}
+.afx-item-row:last-of-type { border-bottom: none; }
+
+.afx-cell-input {
+  width: 100%;
+  padding: 7px 8px;
+  background: var(--afx-sunken);
+  border: 1px solid var(--afx-border);
+  border-radius: 6px;
+  color: var(--afx-text-1);
+  font-family: var(--afx-font);
+  font-size: 12px;
+  outline: none;
+}
+.afx-cell-input:focus { border-color: var(--afx-accent); }
+
+.afx-line-total {
+  padding: 7px 4px;
+  font-family: var(--afx-font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--afx-text-1);
+  white-space: nowrap;
+}
+
+.afx-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: var(--afx-accent-soft);
+  color: var(--afx-accent);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.afx-icon-btn:hover { border-color: var(--afx-accent); }
+
+.afx-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: var(--afx-danger-soft);
+  color: var(--afx-danger);
+  cursor: pointer;
+  margin-top: 2px;
+}
+.afx-remove-btn:hover { border-color: var(--afx-danger); }
+
+.afx-totals {
+  margin-top: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--afx-border);
+  border-radius: 10px;
+  background: var(--afx-sunken);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.afx-totals-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--afx-text-2);
+}
+.afx-totals-divider { height: 1px; background: var(--afx-border-soft); margin: 2px 0; }
+.afx-totals-grand { font-size: 14.5px; font-weight: 700; color: var(--afx-text-1); }
+.afx-totals-grand span:last-child { color: var(--afx-accent); }
+
+/* =========================
+   OUTSTANDING / SUMMARY CARDS (Payment collection forms)
+========================= */
+.afx-card {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--afx-sunken);
+  border: 1px solid var(--afx-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.afx-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--afx-text-2);
+}
+.afx-card-row strong { color: var(--afx-text-1); }
+.afx-text-danger  { color: var(--afx-danger) !important; }
+.afx-text-success { color: var(--afx-success) !important; }
+
+.afx-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--afx-accent-soft);
+  color: var(--afx-text-2);
+  font-size: 12px;
+}
+
+.afx-option-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--afx-border);
+  background: var(--afx-sunken);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.afx-option-row.is-selected { border-color: var(--afx-accent); background: var(--afx-accent-soft); }
+.afx-option-row label { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--afx-text-1); cursor: pointer; }
+.afx-option-row input[type="radio"] { accent-color: var(--afx-accent); width: 14px; height: 14px; }
+.afx-option-row-fields { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+.afx-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--afx-accent-soft);
+  color: var(--afx-accent);
+  font-family: var(--afx-font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+}
+/* Status-colored variants — View screens (Sales/Purchase/Returns/Payments/
+   Ledgers) all needed a success/danger/warning pill and previously reached
+   for one-off inline styles pointed at the same tokens; naming them here
+   keeps every module's status badge visually identical. */
+.afx-badge--success { background: var(--afx-success-soft); color: var(--afx-success); }
+.afx-badge--danger   { background: var(--afx-danger-soft);  color: var(--afx-danger); }
+.afx-badge--warning  { background: var(--afx-warning-soft); color: var(--afx-warning); }
+.afx-badge--neutral  { background: var(--afx-sunken); color: var(--afx-text-3); border: 1px solid var(--afx-border); }
+
+/* segmented mode picker (payment mode etc.) */
+.afx-seg-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.afx-seg-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--afx-border);
+  background: var(--afx-sunken);
+  color: var(--afx-text-2);
+  font-family: var(--afx-font);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.afx-seg-btn:hover { border-color: var(--afx-text-3); }
+.afx-seg-btn.is-active {
+  background: var(--afx-accent-soft);
+  border-color: var(--afx-accent);
+  color: var(--afx-accent);
+}
+
+/* =========================
+   STEP PROGRESS (multi-step forms: Sales/Purchase Return)
+========================= */
+.afx-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 22px 14px;
+  flex-shrink: 0;
+}
+.afx-progress-step {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--afx-text-3);
+}
+.afx-progress-step.is-active { color: var(--afx-accent); }
+.afx-progress-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  font-family: var(--afx-font-mono);
+  font-size: 9.5px;
+  background: var(--afx-sunken);
+  border: 1px solid var(--afx-border);
+}
+.afx-progress-step.is-active .afx-progress-num {
+  background: var(--afx-accent-soft);
+  border-color: var(--afx-accent);
+  color: var(--afx-accent);
+}
+.afx-progress-line { flex: 1; height: 1px; background: var(--afx-border); }
+
+/* =========================
+   RADIO GROUP
+========================= */
+.afx-radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.afx-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--afx-border);
+  background: var(--afx-sunken);
+  color: var(--afx-text-2);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.afx-radio input { display: none; }
+.afx-radio.is-checked { border-color: var(--afx-accent); background: var(--afx-accent-soft); color: var(--afx-text-1); }
+
+/* =========================
+   QTY STEPPER
+========================= */
+.afx-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.afx-qty-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--afx-border);
+  background: var(--afx-panel);
+  color: var(--afx-text-2);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.afx-qty-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.afx-qty-input {
+  width: 44px;
+  padding: 4px;
+  text-align: center;
+  background: var(--afx-sunken);
+  border: 1px solid var(--afx-border);
+  border-radius: 6px;
+  color: var(--afx-text-1);
+  font-size: 12px;
+}
+
+.afx-meta-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.afx-meta-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--afx-sunken);
+  border: 1px solid var(--afx-border);
+}
+.afx-meta-card-label { font-family: var(--afx-font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--afx-text-3); }
+.afx-meta-card-val { font-size: 13px; font-weight: 600; color: var(--afx-text-1); }
+
+@media (max-width: 640px) {
+  .afx-meta-cards { grid-template-columns: 1fr 1fr; }
+}
+
+/* =========================
+   FOOTER
+========================= */
+.afx-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--afx-border-soft);
+  background: var(--afx-sunken);
+  flex-shrink: 0;
+}
+
+.afx-footer-note {
+  margin-right: auto;
+  font-size: 11.5px;
+  color: var(--afx-text-3);
+}
+
+.afx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--afx-border);
+  background: transparent;
+  color: var(--afx-text-2);
+  font-family: var(--afx-font);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+.afx-btn:hover:not(:disabled) { color: var(--afx-text-1); border-color: var(--afx-text-3); }
+.afx-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.afx-btn--primary {
+  border-color: var(--afx-accent);
+  background: var(--afx-accent);
+  color: #ffffff;
+}
+.afx-btn--primary:hover:not(:disabled) { filter: brightness(1.08); color: #fff; }
+
+/* Outline danger action (reverse/delete/void) — several View screens needed
+   this and fell back to inline styles; naming it here keeps every module's
+   destructive action button visually identical. The legacy Theme.css
+   fallback already exempts any class containing "danger" via
+   :not([class*="danger"]), so this doesn't need the !important outrank
+   the primary CTA below required. */
+.afx-btn--danger {
+  border-color: var(--afx-danger);
+  color: var(--afx-danger);
+}
+.afx-btn--danger:hover:not(:disabled) {
+  background: var(--afx-danger-soft);
+  border-color: var(--afx-danger);
+  color: var(--afx-danger);
+}
+
+/* Same legacy Theme.css fallback noted in DynamicGrid.css/ModalShell.css —
+   forces dark-slate text onto any <button> not flagged primary/submit/
+   danger/action-btn/card-btn. Outrank it for the solid-fill primary CTA. */
+body[data-theme="light"] .afx-backdrop .afx-btn--primary.afx-btn--primary.afx-btn--primary.afx-btn--primary.afx-btn--primary {
+  color: #ffffff !important;
+}
+
+.afx-spinner {
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: afxSpin 0.7s linear infinite;
+}
+.afx-btn:not(.afx-btn--primary) .afx-spinner {
+  border-color: var(--afx-border);
+  border-top-color: var(--afx-text-1);
+}
+@keyframes afxSpin { to { transform: rotate(360deg); } }
+
+/* =========================
+   LOADING OVERLAY (initial fetch, e.g. Vendor/Edit forms preloading data)
+========================= */
+.afx-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+.afx-loader-ring { position: relative; width: 30px; height: 30px; }
+.afx-loader-ring div {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--afx-accent);
+  animation: afxRingSpin 1s cubic-bezier(0.5,0,0.5,1) infinite;
+}
+.afx-loader-ring div:nth-child(2) { inset: 5px; border-top-color: rgba(59,130,246,0.5); animation-delay: -0.2s; }
+.afx-loader-ring div:nth-child(3) { inset: 10px; border-top-color: rgba(59,130,246,0.25); animation-delay: -0.4s; }
+@keyframes afxRingSpin { to { transform: rotate(360deg); } }
+
+/* =========================
+   RESPONSIVE — tablet
+========================= */
+@media (max-width: 900px) {
+  .afx-modal { width: 88vw; height: 82vh; max-height: 82vh; min-width: 0; min-height: 0; }
+  .afx-grid { grid-template-columns: 1fr 1fr; }
+  .afx-items-head { display: none; }
+  .afx-item-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
+    padding: 10px 10px;
+    border: 1px solid var(--afx-border-soft);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .afx-item-row > div:first-child { grid-column: 1 / -1; }
+  .afx-line-total { grid-column: 1 / -1; text-align: right; }
+  .afx-remove-btn { justify-self: end; margin-top: -30px; }
+}
+
+/* =========================
+   RESPONSIVE — phone
+========================= */
+@media (max-width: 640px) {
+  .afx-backdrop { padding: 0; align-items: flex-end; }
+  .afx-modal {
+    width: 100%;
+    height: 92vh;
+    max-width: 100% !important;
+    max-height: 92vh;
+    min-width: 0;
+    min-height: 0;
+    border-radius: 16px 16px 0 0;
+    animation: afxSheetIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .afx-grid { grid-template-columns: 1fr; }
+  .afx-header { padding: 16px 16px 12px; }
+  .afx-body { padding: 16px; }
+  .afx-footer { padding: 12px 16px; flex-wrap: wrap; }
+  .afx-footer > .afx-btn { flex: 1 1 auto; }
+  .afx-tabs { overflow-x: auto; }
+}
+
+@keyframes afxSheetIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .afx-backdrop, .afx-modal { animation: none; }
+}

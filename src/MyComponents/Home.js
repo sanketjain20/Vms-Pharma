@@ -3,6 +3,379 @@ import { useNavigate } from "react-router-dom";
 import "../Styles/Home.css";
 import API_BASE_URL from "../Config/api.config";
 import apiClient from "../Config/apiClient";
+import AuroraBackground from "./CommonComponent/AuroraBackground";
+
+/* ── Ray band — Stripe-style radiating fan, contained in one panel ──────
+   A single <canvas> sized to its own section, not the viewport. Sky
+   gradient, ray tint and bloom tint are CSS custom properties on the
+   wrapper (.hc-rayband in Home.css), so switching palette is a class
+   swap — JS re-reads the values and crossfades the rays to match.
+   Nothing here touches the page background.
+
+   Idle   : rays breathe, beads drift outward slowly.
+   Hover  : the fan leans toward the pointer, rays near it stretch and
+            brighten, beads accelerate. Eases back out on leave.
+   Off-screen or hidden tab: the loop stops entirely.
+--------------------------------------------------------------------- */
+
+/* Add or remove entries here to change what the picker offers. Each key
+   must have a matching .hc-rayband--<key> class in Home.css.
+   Also available there, unused by default: `ice` (pale) and `rose`. */
+const RAY_PRESETS = [
+  { key: "indigo", label: "Indigo", swatch: "#6d5ff0" },
+  { key: "teal",   label: "Teal",   swatch: "#22d3ee" },
+  { key: "violet", label: "Violet", swatch: "#a86ae0" },
+  { key: "amber",  label: "Amber",  swatch: "#ffb877" },
+];
+const DEFAULT_PRESET = RAY_PRESETS[0].key;
+const PRESET_STORAGE_KEY = "vmsRayPreset";
+
+const RAY_START = -Math.PI - 0.22;   // just past horizontal-left
+const RAY_SPREAD = Math.PI + 0.44;   // a touch wider than a semicircle
+const PALETTE_FADE = 0.7;            // seconds, matches the CSS sky transition
+
+const wrapAngle = (d) => {
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return d;
+};
+
+const parseRGB = (raw, fallback) => {
+  const parts = String(raw).split(",").map((n) => parseFloat(n));
+  return parts.length === 3 && parts.every(Number.isFinite) ? parts : fallback.slice();
+};
+
+const mixRGB = (a, b, t) => [
+  a[0] + (b[0] - a[0]) * t,
+  a[1] + (b[1] - a[1]) * t,
+  a[2] + (b[2] - a[2]) * t,
+];
+
+const css = (rgb, alpha) =>
+  alpha == null
+    ? `rgb(${rgb[0] | 0},${rgb[1] | 0},${rgb[2] | 0})`
+    : `rgba(${rgb[0] | 0},${rgb[1] | 0},${rgb[2] | 0},${alpha})`;
+
+function buildRays(count) {
+  const rays = new Array(count);
+  for (let i = 0; i < count; i++) {
+    // jittered stride: an even stride reads as a combed fan, pure random clumps
+    const j = (i + Math.random() * 0.85) / count;
+    rays[i] = {
+      a: RAY_START + j * RAY_SPREAD,
+      len: 0.42 + Math.random() * 0.7,       // fraction of the field radius
+      w: 0.5 + Math.random() * 1.05,         // px
+      al: 0.1 + Math.random() * 0.55,        // base alpha
+      wob: 0.004 + Math.random() * 0.02,     // idle sway, radians
+      wsp: 0.15 + Math.random() * 0.5,       // sway speed
+      ph: Math.random() * Math.PI * 2,
+      bead: Math.random() < 0.55
+        ? { p: Math.random(), sp: 0.03 + Math.random() * 0.09 }
+        : null,
+    };
+  }
+  return rays;
+}
+
+function RayField({
+  preset = DEFAULT_PRESET,
+  presets = null,          // pass RAY_PRESETS to show the picker
+  onPresetChange = null,
+  density = 1,
+  children,
+}) {
+  const wrapRef = useRef(null);
+  const cvsRef = useRef(null);
+  const raysRef = useRef([]);
+  const rafRef = useRef(null);
+  const apiRef = useRef(null);
+  const rectRef = useRef({ left: 0, top: 0 });
+  const geoRef = useRef({ w: 0, h: 0, ox: 0, oy: 0, R: 1, fade: null, core: null });
+  const colRef = useRef({
+    from: [255, 255, 255], to: [255, 255, 255], cur: [255, 255, 255],
+    coreFrom: [255, 255, 255], coreTo: [255, 255, 255], coreCur: [255, 255, 255],
+    mix: 1,
+  });
+  const ptrRef = useRef({ ang: -Math.PI / 2, hover: 0, want: 0, idle: 99 });
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const cvs = cvsRef.current;
+    if (!wrap || !cvs) return undefined;
+
+    const ctx = cvs.getContext("2d", { alpha: true });
+    if (!ctx) return undefined;
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let visible = true;
+    let last = performance.now();
+
+    /* Cached so pointermove never forces a layout read. */
+    const syncRect = () => {
+      const r = wrap.getBoundingClientRect();
+      rectRef.current.left = r.left;
+      rectRef.current.top = r.top;
+    };
+
+    /* Bloom gradient depends on the tweening colour, so it's rebuilt
+       while a palette change is in flight, then left cached. */
+    const makeCore = () => {
+      const g = geoRef.current;
+      const grad = ctx.createRadialGradient(g.ox, g.oy, 0, g.ox, g.oy, g.R * 0.36);
+      grad.addColorStop(0, css(colRef.current.coreCur, 0.8));
+      grad.addColorStop(0.45, css(colRef.current.coreCur, 0.2));
+      grad.addColorStop(1, css(colRef.current.coreCur, 0));
+      g.core = grad;
+    };
+
+    /* Read --ray-rgb / --ray-core-rgb off the wrapper and start a crossfade
+       (or snap, when motion is reduced). */
+    const applyPalette = (instant) => {
+      const cs = getComputedStyle(wrap);
+      const ray = parseRGB(cs.getPropertyValue("--ray-rgb").trim(), [255, 255, 255]);
+      const core = parseRGB(cs.getPropertyValue("--ray-core-rgb").trim(), ray);
+      const c = colRef.current;
+
+      if (instant) {
+        c.from = ray.slice(); c.to = ray.slice(); c.cur = ray.slice();
+        c.coreFrom = core.slice(); c.coreTo = core.slice(); c.coreCur = core.slice();
+        c.mix = 1;
+      } else {
+        c.from = c.cur.slice(); c.to = ray;
+        c.coreFrom = c.coreCur.slice(); c.coreTo = core;
+        c.mix = 0;
+      }
+      makeCore();
+    };
+
+    /* Recompute size, origin, cached gradients and ray count. */
+    const rebuild = () => {
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      if (!w || !h) return;
+
+      // 1.5 on phones keeps the fill rate sane without visible aliasing
+      const dpr = Math.min(window.devicePixelRatio || 1, w < 720 ? 1.5 : 2);
+      cvs.width = Math.round(w * dpr);
+      cvs.height = Math.round(h * dpr);
+      cvs.style.width = `${w}px`;
+      cvs.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // origin sits a hair below the panel, so the blown-out core stays off
+      // the edge and only the fan is inside the frame
+      const ox = w * 0.5;
+      const oy = h * 1.02;
+      const R = Math.hypot(w * 0.6, oy) * 1.06;
+
+      // punched out with destination-out: clear at the core, solid at the rim
+      const fade = ctx.createRadialGradient(ox, oy, 0, ox, oy, R);
+      fade.addColorStop(0, "rgba(0,0,0,0)");
+      fade.addColorStop(0.42, "rgba(0,0,0,0.08)");
+      fade.addColorStop(0.76, "rgba(0,0,0,0.5)");
+      fade.addColorStop(1, "rgba(0,0,0,1)");
+
+      geoRef.current = { w, h, ox, oy, R, fade, core: null };
+      makeCore();
+      syncRect();
+
+      const want = Math.round(Math.min(220, Math.max(60, w / 4)) * density);
+      if (raysRef.current.length !== want) raysRef.current = buildRays(want);
+    };
+
+    const frame = (now, still) => {
+      const g = geoRef.current;
+      const p = ptrRef.current;
+      const c = colRef.current;
+      const rays = raysRef.current;
+      const dt = Math.min(50, now - last) / 1000;
+      last = now;
+
+      // palette crossfade
+      if (c.mix < 1) {
+        c.mix = Math.min(1, c.mix + dt / PALETTE_FADE);
+        const e = c.mix * c.mix * (3 - 2 * c.mix); // smoothstep
+        c.cur = mixRGB(c.from, c.to, e);
+        c.coreCur = mixRGB(c.coreFrom, c.coreTo, e);
+        makeCore();
+      }
+
+      // hover decays on its own if the pointer stops inside the panel
+      p.idle += dt;
+      if (p.idle > 1.2) p.want = 0;
+      p.hover += (p.want - p.hover) * Math.min(1, dt * 3.2);
+
+      const t = now / 1000;
+      const stroke = css(c.cur);
+      ctx.clearRect(0, 0, g.w, g.h);
+      ctx.lineCap = "round";
+      ctx.strokeStyle = stroke;
+      ctx.fillStyle = stroke;
+
+      for (let i = 0; i < rays.length; i++) {
+        const r = rays[i];
+        const d = wrapAngle(p.ang - r.a);
+        const f = p.hover > 0.002 ? Math.exp(-(d * d) / 0.2) : 0; // spotlight falloff
+        const a = r.a + Math.sin(t * r.wsp + r.ph) * r.wob + p.hover * 0.09 * d * f;
+        const len = g.R * r.len * (1 + 0.32 * p.hover * f);
+        const al = Math.min(
+          1,
+          r.al * (0.78 + 0.22 * Math.sin(t * 0.6 + r.ph)) * (1 + 1.7 * p.hover * f)
+        );
+        const ca = Math.cos(a);
+        const sa = Math.sin(a);
+
+        ctx.globalAlpha = al;
+        ctx.lineWidth = r.w * (1 + 0.5 * p.hover * f);
+        ctx.beginPath();
+        ctx.moveTo(g.ox + ca * 14, g.oy + sa * 14);
+        ctx.lineTo(g.ox + ca * len, g.oy + sa * len);
+        ctx.stroke();
+
+        if (r.bead) {
+          r.bead.p += r.bead.sp * dt * (0.55 + 2.4 * p.hover);
+          if (r.bead.p > 1) r.bead.p -= 1;
+          const bd = 14 + r.bead.p * (len - 14);
+          const s = r.w * 1.7 + 0.6;
+          ctx.globalAlpha = Math.min(1, al * 1.9 * (1 - r.bead.p * 0.55));
+          ctx.fillRect(g.ox + ca * bd - s / 2, g.oy + sa * bd - s / 2, s, s);
+        }
+      }
+
+      // fade the tips into the sky
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = g.fade;
+      ctx.fillRect(0, 0, g.w, g.h);
+
+      // bloom at the origin, brighter while the pointer is live
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = 0.5 + 0.35 * p.hover;
+      ctx.fillStyle = g.core;
+      ctx.fillRect(0, 0, g.w, g.h);
+
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = 1;
+
+      if (!still) rafRef.current = requestAnimationFrame(frame);
+    };
+
+    const stop = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    };
+    const start = () => {
+      if (rafRef.current || reduce.matches || !visible || document.hidden) return;
+      last = performance.now();
+      rafRef.current = requestAnimationFrame(frame);
+    };
+    const paintStill = () => frame(performance.now(), true);
+
+    const onMove = (e) => {
+      const g = geoRef.current;
+      const p = ptrRef.current;
+      p.ang = Math.atan2(
+        e.clientY - rectRef.current.top - g.oy,
+        e.clientX - rectRef.current.left - g.ox
+      );
+      p.want = 1;
+      p.idle = 0;
+    };
+    const onLeave = () => { ptrRef.current.want = 0; };
+    const onScroll = () => syncRect();
+    const onResize = () => { rebuild(); if (!rafRef.current) paintStill(); };
+    const onVisibility = () => (document.hidden ? stop() : start());
+    const onMotionChange = () => { stop(); applyPalette(true); paintStill(); start(); };
+
+    applyPalette(true);
+    rebuild();
+    paintStill();
+    start();
+
+    // the picker only swaps a class; this is how the canvas hears about it
+    apiRef.current = {
+      refreshPalette: () => {
+        applyPalette(reduce.matches);
+        if (!rafRef.current) paintStill();
+        else start();
+      },
+    };
+
+    // only burn frames while the panel is actually on screen
+    const io = typeof IntersectionObserver !== "undefined"
+      ? new IntersectionObserver(
+          ([entry]) => { visible = entry.isIntersecting; visible ? start() : stop(); },
+          { rootMargin: "150px" }
+        )
+      : null;
+    if (io) io.observe(wrap);
+
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(onResize) : null;
+    if (ro) ro.observe(wrap);
+
+    const themeObserver = new MutationObserver(() => apiRef.current?.refreshPalette());
+    themeObserver.observe(document.body, { attributes: true, attributeFilter: ["data-theme", "class"] });
+
+    wrap.addEventListener("pointermove", onMove, { passive: true });
+    wrap.addEventListener("pointerdown", onMove, { passive: true });
+    wrap.addEventListener("pointerleave", onLeave);
+    wrap.addEventListener("pointercancel", onLeave);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    document.addEventListener("visibilitychange", onVisibility);
+    if (reduce.addEventListener) reduce.addEventListener("change", onMotionChange);
+
+    return () => {
+      stop();
+      apiRef.current = null;
+      if (io) io.disconnect();
+      if (ro) ro.disconnect();
+      themeObserver.disconnect();
+      wrap.removeEventListener("pointermove", onMove);
+      wrap.removeEventListener("pointerdown", onMove);
+      wrap.removeEventListener("pointerleave", onLeave);
+      wrap.removeEventListener("pointercancel", onLeave);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (reduce.removeEventListener) reduce.removeEventListener("change", onMotionChange);
+    };
+  }, [density]);
+
+  /* Palette change: re-read the vars and crossfade. No teardown, so the
+     fan keeps its shape and only the colour moves. */
+  useEffect(() => {
+    apiRef.current?.refreshPalette();
+  }, [preset]);
+
+  return (
+    <div ref={wrapRef} className={`hc-rayband hc-rayband--${preset}`}>
+      <canvas ref={cvsRef} className="hc-rayband-canvas" aria-hidden="true" />
+
+      {children ? <div className="hc-rayband-copy">{children}</div> : null}
+
+      {presets && onPresetChange ? (
+        <div className="hc-rayband-picker" aria-label="Ray colour">
+          {presets.map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              className={`hc-rayband-swatch${p.key === preset ? " is-active" : ""}`}
+              style={{ "--swatch": p.swatch }}
+              aria-pressed={p.key === preset}
+              onClick={() => onPresetChange(p.key)}
+            >
+              <span className="hc-rayband-dot" aria-hidden="true" />
+              <span className="hc-rayband-swatch-label">{p.label}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 /* ── Animated count-up number ── */
 function CountUp({ target, prefix = "", suffix = "", duration = 1100 }) {
@@ -70,14 +443,14 @@ function AnalogWatch() {
   }, []);
 
   return (
-    <div className="vp-watch">
-      <svg viewBox="0 0 120 120" className="vp-watch-svg">
+    <div className="hc-watch">
+      <svg viewBox="0 0 120 120" className="hc-watch-svg">
         {/* Four cardinal markers at 12 / 3 / 6 / 9 only — kept minimal to
             match the bare-needle look, no full tick ring or dial. */}
-        <circle cx="60" cy="8"   r="2.4" className="vp-watch-marker" />
-        <circle cx="112" cy="60" r="2.4" className="vp-watch-marker" />
-        <circle cx="60" cy="112" r="2.4" className="vp-watch-marker" />
-        <circle cx="8" cy="60"   r="2.4" className="vp-watch-marker" />
+        <circle cx="60" cy="8"   r="2.4" className="hc-watch-marker" />
+        <circle cx="112" cy="60" r="2.4" className="hc-watch-marker" />
+        <circle cx="60" cy="112" r="2.4" className="hc-watch-marker" />
+        <circle cx="8" cy="60"   r="2.4" className="hc-watch-marker" />
 
         {/* Hour & minute hands: tapered needles — wide where they meet the
             hub, narrowing to a sharp point at the tip that indicates the
@@ -86,20 +459,20 @@ function AnalogWatch() {
             symmetric double-ended spoke. */}
         <polygon
           ref={hourRef}
-          className="vp-watch-hand-hour"
+          className="hc-watch-hand-hour"
           points="60,64 64,60 60,22 56,60"
         />
         <polygon
           ref={minRef}
-          className="vp-watch-hand-min"
+          className="hc-watch-hand-min"
           points="60,68 63,60 60,10 57,60"
         />
         <polygon
           ref={secRef}
-          className="vp-watch-hand-sec"
+          className="hc-watch-hand-sec"
           points="60,74 61.4,60 60,14 58.6,60"
         />
-        <circle cx="60" cy="60" r="4.5" className="vp-watch-hub" />
+        <circle cx="60" cy="60" r="4.5" className="hc-watch-hub" />
       </svg>
     </div>
   );
@@ -114,7 +487,7 @@ function LiveClock() {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
-  return <span className="vp-watch-time">{time}</span>;
+  return <span className="hc-watch-time">{time}</span>;
 }
 
 const ICONS = {
@@ -134,6 +507,37 @@ const MODULES = [
   { key: "payment",   label: "Payments",  hint: "Collect · due tracking",     from: "#facc15", to: "#f97316", path: "/master/payment-collection" },
   { key: "reports",   label: "Reports",   hint: "GSTR-1 · recall trace",      from: "#818cf8", to: "#c084fc", path: "/master/reports" },
 ];
+
+/* Moved out of the component body: these JSX icons were being rebuilt on
+   every render (and every 45s ticker poll) for no reason. */
+const QUICK_ACTIONS = [
+  {
+    key: "billing",
+    label: "Start billing",
+    sub: "FIFO · invoice now",
+    path: "/master/salesshrt",
+    color: "#22d3ee",
+    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 3h12l-1.5 9H4.5z"/><circle cx="7" cy="16" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>,
+  },
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    sub: "Live metrics · trends",
+    path: "/master/dashboard",
+    color: "#a3e635",
+    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 14l4-5 4 3 4-7"/><circle cx="14" cy="5" r="1" fill="currentColor"/></svg>,
+  },
+  {
+    key: "onboarding",
+    label: "How it works",
+    sub: "Flow guide · setup",
+    path: "/onboarding",
+    color: "#fb923c",
+    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="5" r="2.5"/><path d="M4 15a5 5 0 0110 0"/><path d="M9 10v3M7.5 12h3"/></svg>,
+  },
+];
+
+const [PRIMARY_ACTION, ...SECONDARY_ACTIONS] = QUICK_ACTIONS;
 
 const FALLBACK_STATS = [
   { key: "collectedToday", label: "Collected today", value: "0", prefix: "₹", color: "#22d3ee" },
@@ -168,6 +572,20 @@ export default function Home() {
   const [checklist, setChecklist] = useState(FALLBACK_CHECKLIST);
   const [loadingStats, setLoadingStats] = useState(true);
 
+  /* Ray palette, remembered per browser. */
+  const [rayPreset, setRayPreset] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PRESET_STORAGE_KEY);
+      return RAY_PRESETS.some(p => p.key === saved) ? saved : DEFAULT_PRESET;
+    } catch {
+      return DEFAULT_PRESET;
+    }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(PRESET_STORAGE_KEY, rayPreset); } catch { /* private mode */ }
+  }, [rayPreset]);
+
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Vendor/GetUserRoleId`, {
       method: "GET",
@@ -189,6 +607,7 @@ export default function Home() {
         if (d?.status === 200 && d.data) {
           const next = FALLBACK_STATS.map(s => ({
             ...s,
+            color: STAT_COLOR_BY_KEY[s.key] || s.color,
             value: d.data[s.key] != null ? String(d.data[s.key]) : s.value,
           }));
           setStats(next);
@@ -233,165 +652,127 @@ export default function Home() {
   const tickerItems = ticker.length ? ticker : [
     "Live activity will appear here once today's first action is logged",
   ];
-// Add this constant near the top with MODULES
-const QUICK_ACTIONS = [
-  {
-    key: "billing",
-    label: "Start billing",
-    sub: "FIFO · invoice now",
-    path: "/master/salesshrt",
-    color: "#22d3ee",
-    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 3h12l-1.5 9H4.5z"/><circle cx="7" cy="16" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>,
-  },
-  {
-    key: "dashboard",
-    label: "Dashboard",
-    sub: "Live metrics · trends",
-    path: "/master/dashboard",
-    color: "#a3e635",
-    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 14l4-5 4 3 4-7"/><circle cx="14" cy="5" r="1" fill="currentColor"/></svg>,
-  },
-  {
-    key: "onboarding",
-    label: "How it works",
-    sub: "Flow guide · setup",
-    path: "/onboarding",
-    color: "#fb923c",
-    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="5" r="2.5"/><path d="M4 15a5 5 0 0110 0"/><path d="M9 10v3M7.5 12h3"/></svg>,
-  },
-];
+
   return (
-    <div className="vp-page">
-      <section className="vp-hero">
-        <div className="vp-hero-top">
-          <div className="vp-eyebrow">
-            <span className="vp-eyebrow-dot" /> LIVE
-          </div>
-          <div className="vp-watch-block">
-            <AnalogWatch />
-            <LiveClock />
-          </div>
-        </div>
+    <>
+      <AuroraBackground />
+      <div className="hc-page">
 
-        <h1 className="vp-greeting">
-          Namaste, {name}.<br />Here's your pulse today.
-        </h1>
-
-        <div className="vp-pulse-wrap">
-          <svg className="vp-pulse-svg" viewBox="0 0 1000 90" preserveAspectRatio="none">
-            <path
-              className="vp-pulse-path"
-              d="M0,45 L120,45 L145,12 L165,78 L185,45 L260,45 L285,28 L305,62 L325,45 L420,45 L445,8 L468,82 L490,45 L600,45 L625,20 L648,70 L670,45 L780,45 L805,15 L828,75 L850,45 L1000,45"
-              fill="none"
-            />
-          </svg>
-        </div>
-
-{/* ── Combined stat + quick-action panel ── */}
-<div className="vp-stataction-panel">
-  <div className="vp-stataction-stats">
-    {stats.map((s) => (
-      <div key={s.key} className="vp-sa-stat" style={{ "--stat-color": s.color }}>
-        <span className="vp-sa-dot" />
-        <div className="vp-sa-body">
-          <div className="vp-sa-val">
-            {loadingStats ? "—" : <CountUp target={s.value} prefix={s.prefix} />}
-          </div>
-          <div className="vp-sa-lbl">{s.label}</div>
-        </div>
-      </div>
-    ))}
-  </div>
-
-  <div className="vp-stataction-actions">
-    <div className="vp-sa-actions-label">Quick actions</div>
-    {QUICK_ACTIONS.map(a => (
-      <div
-        key={a.key}
-        className="vp-sa-qa"
-        style={{ "--qa-color": a.color }}
-        onClick={() => navigate(a.path)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={e => e.key === "Enter" && navigate(a.path)}
-      >
-        <div className="vp-sa-qa-icon">{a.icon}</div>
-        <div className="vp-sa-qa-text">
-          <div className="vp-sa-qa-title">{a.label}</div>
-          <div className="vp-sa-qa-sub">{a.sub}</div>
-        </div>
-        <div className="vp-sa-qa-arr">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
-
-      </section>
-
-      <div className="vp-ticker">
-        <div className="vp-ticker-track">
-          {[...tickerItems, ...tickerItems].map((t, i) => (
-            <span key={i} className="vp-ticker-item">
-              <span className="vp-ticker-dot" /> {t}
+        <header className="hc-nav">
+          <span className="hc-nav-mark">VMS</span>
+          <div className="hc-nav-right">
+            <span className="hc-live"><span className="hc-live-dot" />Live</span>
+            <span className="hc-clock">
+              <AnalogWatch />
+              <LiveClock />
             </span>
-          ))}
-        </div>
-      </div>
+          </div>
+        </header>
 
-      <section className="vp-section">
-        <div className="vp-section-head">
-          <h2>Open a module</h2>
+        <section className="hc-hero">
+          <h1 className="hc-hero-title">
+            Namaste, {name}.
+          </h1>
+          <p className="hc-hero-sub">Here's your pulse today.</p>
+
+          <div className="hc-hero-actions">
+            <button className="hc-btn-primary" onClick={() => navigate(PRIMARY_ACTION.path)}>
+              {PRIMARY_ACTION.label}
+            </button>
+            {SECONDARY_ACTIONS.map(a => (
+              <button key={a.key} className="hc-btn-link" onClick={() => navigate(a.path)}>
+                {a.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="hc-stats" aria-label="Today's summary">
+          {stats.map((s) => (
+            <div key={s.key} className="hc-stat" style={{ "--stat-color": s.color }}>
+              <span className="hc-stat-val">
+                {loadingStats ? "—" : <CountUp target={s.value} prefix={s.prefix} />}
+              </span>
+              <span className="hc-stat-lbl">{s.label}</span>
+            </div>
+          ))}
+        </section>
+
+        <div className="hc-ticker">
+          <div className="hc-ticker-track">
+            {[...tickerItems, ...tickerItems].map((t, i) => (
+              <span key={i} className="hc-ticker-item">{t}</span>
+            ))}
+          </div>
         </div>
-        <div className="vp-tile-grid">
-          {MODULES.map(m => (
-            <div
-              key={m.key}
-              className="vp-tile"
-              style={{ "--from": m.from, "--to": m.to }}
-              onClick={() => navigate(m.path)}
-            >
-              <div className="vp-tile-glow" />
-              <div className="vp-tile-icon">{ICONS[m.key]}</div>
-              <div className="vp-tile-label">{m.label}</div>
-              <div className="vp-tile-hint">{m.hint}</div>
-              <div className="vp-tile-arrow">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+
+        <section className="hc-section">
+          <h2 className="hc-section-title">Open a module</h2>
+          <div className="hc-module-grid">
+            {MODULES.map(m => (
+              <div
+                key={m.key}
+                className="hc-module-tile"
+                style={{ "--tint": m.to }}
+                onClick={() => navigate(m.path)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => e.key === "Enter" && navigate(m.path)}
+              >
+                <span className="hc-module-icon">{ICONS[m.key]}</span>
+                <span className="hc-module-label">{m.label}</span>
+                <span className="hc-module-hint">{m.hint}</span>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
 
-      <section className="vp-section">
-        <div className="vp-section-head">
-          <h2>Why it runs itself</h2>
-        </div>
-        <div className="vp-check-grid">
-          {checklist.map((f, i) => (
-            <div key={i} className="vp-check-card" style={{ "--check-color": f.color }}>
-              <span className="vp-check-glowdot" />
-              <div className="vp-check-label">{f.label}</div>
-              <div className="vp-check-sub">{f.sub}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+        {/* ── Ray band ──
+            Colour is picked in-panel and remembered in localStorage.
+            density: 0.6 on low-end phones, 1.4 for a denser fan.
+            Move this <section> anywhere in the page; it owns its own box. */}
+        <section className="hc-section">
+          <h2 className="hc-section-title">One entry, every trail</h2>
+          <RayField
+            preset={rayPreset}
+            presets={RAY_PRESETS}
+            onPresetChange={setRayPreset}
+            density={1}
+          >
+            <span className="hc-rayband-eyebrow">Move your cursor across it</span>
+            <p className="hc-rayband-line">
+              A single bill fans out — batch, retailer ledger, outstanding, GSTR-1 —
+              in one pass, with nothing to re-enter.
+            </p>
+          </RayField>
+        </section>
 
-      <section className="vp-cta">
-        <div className="vp-cta-orb" />
-        <div className="vp-cta-text">
+        <section className="hc-section">
+          <h2 className="hc-section-title">Why it runs itself</h2>
+          <div className="hc-feature-list">
+            {checklist.map((f, i) => (
+              <div key={i} className="hc-feature-row">
+                <span className="hc-feature-check" style={{ "--check-color": f.color }}>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.2l2.6 2.6L10 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </span>
+                <div>
+                  <span className="hc-feature-label">{f.label}</span>
+                  <span className="hc-feature-sub">{f.sub}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="hc-closing">
           <h2>Ready to close today's register?</h2>
           <p>First bill in under 30 minutes. One owner, zero complexity.</p>
-        </div>
-       <div className="vp-cta-btns">
-  <button className="vp-btn-primary" onClick={() => navigate("/master/salesshrt")}>Start billing</button>
-  <button className="vp-btn-ghost" onClick={() => navigate("/master/dashboard")}>Dashboard</button>
-  <button className="vp-btn-ghost" onClick={() => navigate("/onboarding")}>How it works</button>
-</div>
-      </section>
+          <button className="hc-btn-primary hc-btn-large" onClick={() => navigate(PRIMARY_ACTION.path)}>
+            Start billing
+          </button>
+        </section>
 
-    </div>
+      </div>
+    </>
   );
 }

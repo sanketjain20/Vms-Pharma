@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../../Styles/SupplierPayment/SupplierPayment.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
@@ -22,30 +22,33 @@ const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setO
   const filtered = options.filter(o => (o[displayKey] || "").toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="spx-drop-wrap" ref={dropRef}>
-      <div className={`spx-drop-box ${open ? "spx-drop-open" : ""}`}
+    <div className="afx-searchdrop" ref={dropRef}>
+      <div className={`afx-searchdrop-face ${open ? "is-open" : ""} ${selected ? "is-filled" : ""}`}
         onClick={() => { if (!open) setSearch(""); setOpen(!open); }}>
-        <input className="spx-drop-input"
-          value={open ? search : (selected?.[displayKey] || "")}
-          placeholder={placeholder}
-          onChange={e => setSearch(e.target.value)}
-          onClick={e => { e.stopPropagation(); if (!open) setSearch(""); setOpen(true); }}
-        />
-        <span className="spx-drop-arrow">{open ? "▲" : "▼"}</span>
+        <span>{selected?.[displayKey] || placeholder}</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </div>
       {open && (
-        <ul className="spx-drop-list">
-          {filtered.map(o => (
-            <li key={o.id}
-              className={String(o.id) === String(value) ? "spx-drop-selected" : ""}
-              onMouseDown={e => { e.preventDefault(); onChange(o); setOpen(false); setSearch(""); }}
-            >
-              <span style={{ flex: 1 }}>{o[displayKey]}</span>
-              {o.sub && <span className="spx-drop-sub">{o.sub}</span>}
-            </li>
-          ))}
-          {filtered.length === 0 && <li className="spx-drop-empty">No results</li>}
-        </ul>
+        <div className="afx-searchdrop-panel">
+          <input className="afx-searchdrop-input" autoFocus
+            value={search}
+            placeholder="Search…"
+            onChange={e => setSearch(e.target.value)}
+          />
+          <div className="afx-searchdrop-list">
+            {filtered.length === 0 ? (
+              <div className="afx-searchdrop-empty">No results</div>
+            ) : filtered.map(o => (
+              <div key={o.id}
+                className={`afx-searchdrop-item ${String(o.id) === String(value) ? "is-selected" : ""}`}
+                onMouseDown={e => { e.preventDefault(); onChange(o); setOpen(false); setSearch(""); }}
+              >
+                <div>{o[displayKey]}</div>
+                {o.sub && <div style={{ fontSize: 11, color: "var(--afx-text-3)" }}>{o.sub}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -178,66 +181,53 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
   const maxAmount   = selectedPurchase ? parseFloat(selectedPurchase.remainingAmount || 0) : outstanding;
 
   return (
-    <div className="spx-backdrop">
-      <div className="spx-modal">
-        <div className="spx-top-beam" />
-        <div className="spx-corner spx-tl" /><div className="spx-corner spx-tr" />
-        <div className="spx-corner spx-bl" /><div className="spx-corner spx-br" />
-
-        
-        <div className="spx-header">
-          <div className="spx-header-left">
-            <div className="spx-eyebrow"><span className="spx-eyebrow-dot" />PAY SUPPLIER</div>
-            <h3 className="spx-title"><span className="spx-title-acc"></span> Settle Supplier Payment</h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Pay Supplier</div>
+            <h3 className="afx-title">Settle Supplier Payment</h3>
           </div>
-          <button className="spx-close" type="button" onClick={onClose}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+          <button className="afx-close" type="button" onClick={onClose}>
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
             ESC
           </button>
         </div>
 
-        <div className="spx-divider" />
+        <div className="afx-body">
+          {errors.general && <div className="afx-alert">{errors.general}</div>}
 
-        
-        <div className="spx-body">
-          {errors.general && <div className="spx-alert">{errors.general}</div>}
-
-          
-          <div className="spx-field spx-field-full">
-            <label className="spx-label">Supplier <span className="spx-req">*</span></label>
+          <div className="afx-field">
+            <label className="afx-label">Supplier<span className="afx-req">*</span></label>
             <SearchDrop
               options={suppliers} value={selectedSupplier?.id}
               onChange={handleSupplierSelect}
               placeholder="Search supplier with outstanding dues…"
               dropRef={supplierRef} open={supplierOpen} setOpen={setSupplierOpen}
             />
-            {errors.supplier && <span className="spx-error">{errors.supplier}</span>}
+            {errors.supplier && <span className="afx-error">{errors.supplier}</span>}
           </div>
 
-          
           {selectedSupplier && (
-            <div className="spx-outstanding-card">
-              <div className="spx-outstanding-row">
-                <span className="spx-outstanding-label">You owe this supplier</span>
-                <span className="spx-outstanding-amount spx-danger">₹{fmt(outstanding)}</span>
+            <div className="afx-card">
+              <div className="afx-card-row">
+                <span>You owe this supplier</span>
+                <strong className="afx-text-danger">₹{fmt(outstanding)}</strong>
               </div>
               {selectedSupplier.phone && (
-                <div className="spx-outstanding-row">
-                  <span className="spx-outstanding-label">Phone</span>
-                  <span className="spx-outstanding-sub">{selectedSupplier.phone}</span>
+                <div className="afx-card-row">
+                  <span>Phone</span>
+                  <span>{selectedSupplier.phone}</span>
                 </div>
               )}
             </div>
           )}
 
-          
           {selectedSupplier && (
-            <div className="spx-field spx-field-full">
-              <label className="spx-label">
+            <div className="afx-field">
+              <label className="afx-label">
                 Link to specific purchase invoice
-                <span className="spx-opt"> (optional — leave blank for general payment)</span>
+                <span style={{ color: "var(--afx-text-3)", fontWeight: 400 }}> (optional — leave blank for general payment)</span>
               </label>
               <SearchDrop
                 options={unpaidPurchases} value={selectedPurchase?.id}
@@ -249,64 +239,60 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
                 dropRef={purchaseRef} open={purchaseOpen} setOpen={setPurchaseOpen}
               />
               {selectedPurchase && (
-                <div className="spx-invoice-tag">
-                  <strong>{selectedPurchase.purchaseNumber}</strong>
-                  — remaining <strong className="spx-danger"> ₹{fmt(selectedPurchase.remainingAmount)}</strong>
-                  {selectedPurchase.purchaseDate && <span> · {selectedPurchase.purchaseDate}</span>}
+                <div className="afx-tag" style={{ marginTop: 6 }}>
+                  <strong style={{ color: "var(--afx-text-1)" }}>{selectedPurchase.purchaseNumber}</strong>
+                  &nbsp;— remaining <strong className="afx-text-danger">&nbsp;₹{fmt(selectedPurchase.remainingAmount)}</strong>
+                  {selectedPurchase.purchaseDate && <span>&nbsp;· {selectedPurchase.purchaseDate}</span>}
                 </div>
               )}
             </div>
           )}
 
-          <div className="spx-grid">
-            
-            <div className="spx-field">
-              <label className="spx-label">
-                Amount (₹) <span className="spx-req">*</span>
-                {maxAmount > 0 && <span className="spx-max"> max ₹{fmt(maxAmount)}</span>}
+          <div className="afx-grid">
+            <div className="afx-field">
+              <label className="afx-label">
+                Amount (₹)<span className="afx-req">*</span>
+                {maxAmount > 0 && <span style={{ color: "var(--afx-text-3)", fontWeight: 400 }}> max ₹{fmt(maxAmount)}</span>}
               </label>
-              <input className={`spx-input ${errors.amount ? "spx-input-err" : ""}`}
+              <input className={`afx-input ${errors.amount ? "afx-input--err" : ""}`}
                 type="number" min="0.01" step="0.01"
                 value={form.amount}
                 onChange={e => set("amount", e.target.value)}
                 placeholder="0.00"
               />
-              {errors.amount && <span className="spx-error">{errors.amount}</span>}
+              {errors.amount && <span className="afx-error">{errors.amount}</span>}
             </div>
 
-            
-            <div className="spx-field">
-              <label className="spx-label">Payment Date <span className="spx-req">*</span></label>
-              <input className={`spx-input ${errors.paymentDate ? "spx-input-err" : ""}`}
+            <div className="afx-field">
+              <label className="afx-label">Payment Date<span className="afx-req">*</span></label>
+              <input className={`afx-input ${errors.paymentDate ? "afx-input--err" : ""}`}
                 type="date" value={form.paymentDate}
                 onChange={e => set("paymentDate", e.target.value)}
               />
-              {errors.paymentDate && <span className="spx-error">{errors.paymentDate}</span>}
+              {errors.paymentDate && <span className="afx-error">{errors.paymentDate}</span>}
             </div>
 
-            
-            <div className="spx-field spx-field-full">
-              <label className="spx-label">Payment Mode <span className="spx-req">*</span></label>
-              <div className="spx-mode-row">
+            <div className="afx-field afx-field--full">
+              <label className="afx-label">Payment Mode<span className="afx-req">*</span></label>
+              <div className="afx-seg-row">
                 {PAYMENT_MODES.map(m => (
                   <button key={m.id} type="button"
-                    className={`spx-mode-btn ${form.paymentMode === m.id ? "spx-mode-active" : ""}`}
+                    className={`afx-seg-btn ${form.paymentMode === m.id ? "is-active" : ""}`}
                     onClick={() => set("paymentMode", m.id)}
                   >{m.label}</button>
                 ))}
               </div>
             </div>
 
-            
             {needsRef && (
-              <div className="spx-field spx-field-full">
-                <label className="spx-label">
+              <div className="afx-field afx-field--full">
+                <label className="afx-label">
                   {form.paymentMode === "CHEQUE" ? "Cheque Number"
                     : form.paymentMode === "UPI" ? "UPI Transaction ID"
                     : "UTR / Reference Number"}
-                  <span className="spx-req"> *</span>
+                  <span className="afx-req">*</span>
                 </label>
-                <input className={`spx-input ${errors.referenceNumber ? "spx-input-err" : ""}`}
+                <input className={`afx-input ${errors.referenceNumber ? "afx-input--err" : ""}`}
                   value={form.referenceNumber}
                   onChange={e => set("referenceNumber", e.target.value)}
                   placeholder={
@@ -315,33 +301,31 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
                     : "e.g. HDFC0012345678"
                   }
                 />
-                {errors.referenceNumber && <span className="spx-error">{errors.referenceNumber}</span>}
+                {errors.referenceNumber && <span className="afx-error">{errors.referenceNumber}</span>}
               </div>
             )}
 
-            
-            <div className="spx-field spx-field-full">
-              <label className="spx-label">Notes <span className="spx-opt">(optional)</span></label>
-              <textarea className="spx-input spx-textarea" rows={2}
+            <div className="afx-field afx-field--full">
+              <label className="afx-label">Notes <span style={{ color: "var(--afx-text-3)", fontWeight: 400 }}>(optional)</span></label>
+              <textarea className="afx-textarea" rows={2}
                 value={form.notes} onChange={e => set("notes", e.target.value)}
                 placeholder="e.g. Against invoice #PUR000045, partial payment for March stock"
               />
             </div>
           </div>
 
-          
           {selectedSupplier && form.amount && parseFloat(form.amount) > 0 && (
-            <div className="spx-summary">
-              <div className="spx-summary-row">
+            <div className="afx-totals">
+              <div className="afx-totals-row">
                 <span>You currently owe</span>
-                <span className="spx-danger">₹{fmt(outstanding)}</span>
+                <span className="afx-text-danger">₹{fmt(outstanding)}</span>
               </div>
-              <div className="spx-summary-row">
+              <div className="afx-totals-row">
                 <span>Paying now</span>
-                <span className="spx-success">−₹{fmt(form.amount)}</span>
+                <span className="afx-text-success">−₹{fmt(form.amount)}</span>
               </div>
-              <div className="spx-summary-divider" />
-              <div className="spx-summary-row spx-summary-net">
+              <div className="afx-totals-divider" />
+              <div className="afx-totals-row afx-totals-grand">
                 <span>Remaining after payment</span>
                 <span>₹{fmt(Math.max(0, outstanding - parseFloat(form.amount || 0)))}</span>
               </div>
@@ -349,14 +333,10 @@ export default function SupplierPaymentAdd({ onClose, onSubmit }) {
           )}
         </div>
 
-        
-        <div className="spx-footer">
-          <button type="button" className="spx-btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="button" className="spx-btn-primary" onClick={submit} disabled={loading}>
-            {loading
-              ? <><span className="spx-spinner" /> Recording…</>
-              : <><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> Pay Supplier</>
-            }
+        <div className="afx-footer">
+          <button type="button" className="afx-btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="afx-btn afx-btn--primary" onClick={submit} disabled={loading}>
+            {loading ? <><span className="afx-spinner" /> Recording…</> : "Pay Supplier"}
           </button>
         </div>
       </div>

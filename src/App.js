@@ -8,8 +8,6 @@ import "./Styles/Toast.css";
 import "./App.css";
 
 // Pages & Components
-import LoginSection from "./MyComponents/LoginComponent/LoginSection";
-import VMSSection from "./MyComponents/LoginComponent/VMSSection";
 import Home from "./MyComponents/Home";
 import Setting from "./MyComponents/Setting";
 import Footer from "./MyComponents/CommonComponent/Footer";

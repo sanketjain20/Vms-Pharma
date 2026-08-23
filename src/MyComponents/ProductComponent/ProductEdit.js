@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../../Styles/Product/ProductForm.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
 /* ── Reusable searchable dropdown — same as Add ── */
 const SearchDrop = ({ label, options, value, onChange, placeholder, error }) => {
   const [search, setSearch] = useState("");
@@ -19,30 +20,42 @@ const SearchDrop = ({ label, options, value, onChange, placeholder, error }) => 
   const filtered = options.filter(o => (o.name || "").toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div>
-      {label && <label>{label}</label>}
-      <div className="custom-select" ref={ref}>
-        <div className={`select-box ${open ? "active" : ""}`} onClick={() => { if (!open) setSearch(""); setOpen(!open); }}>
-          <input type="text" className="select-input"
-            value={open ? search : (selected?.name || "")}
-            placeholder={placeholder || "Select…"}
-            onChange={e => setSearch(e.target.value)}
-            onClick={e => { e.stopPropagation(); if (!open) setSearch(""); setOpen(true); }}
-          />
-          {open && (
-            <ul className="options">
-              {filtered.map(o => (
-                <li key={o.id} onMouseDown={e => { e.preventDefault(); onChange(o.id); setOpen(false); setSearch(""); }}
-                  style={String(o.id) === String(value) ? { color: "#93c5fd", background: "rgba(59,130,246,0.1)" } : {}}>
-                  {o.name}
-                </li>
-              ))}
-              {filtered.length === 0 && <li style={{ color: "#777", fontStyle: "italic" }}>No results</li>}
-            </ul>
-          )}
+    <div className="afx-field">
+      {label && <label className="afx-label">{label}</label>}
+      <div className="afx-searchdrop" ref={ref}>
+        <div
+          className={`afx-searchdrop-face ${open ? "is-open" : ""} ${selected ? "is-filled" : ""}`}
+          onClick={() => { if (!open) setSearch(""); setOpen(!open); }}
+        >
+          <span>{selected?.name || placeholder || "Select…"}</span>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
+        {open && (
+          <div className="afx-searchdrop-panel">
+            <input
+              className="afx-searchdrop-input"
+              autoFocus
+              value={search}
+              placeholder="Search…"
+              onChange={e => setSearch(e.target.value)}
+            />
+            <div className="afx-searchdrop-list">
+              {filtered.length === 0 ? (
+                <div className="afx-searchdrop-empty">No results</div>
+              ) : filtered.map(o => (
+                <div
+                  key={o.id}
+                  className={`afx-searchdrop-item ${String(o.id) === String(value) ? "is-selected" : ""}`}
+                  onMouseDown={e => { e.preventDefault(); onChange(o.id); setOpen(false); setSearch(""); }}
+                >
+                  {o.name}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-      {error && <div className="error-msg">{error}</div>}
+      {error && <div className="afx-error">{error}</div>}
     </div>
   );
 };
@@ -246,141 +259,141 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
   ];
 
   return (
-    <div className="modal-backdrop show">
-      <div className="modal">
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
         {initialLoading ? (
-          <div className="modal-body mf-modal-loading">
-            <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+          <div className="afx-loading">
+            <div className="afx-loader-ring"><div/><div/><div/></div>
           </div>
         ) : (
-        <>
-        <div className="modal-header">
-          <div className="modal-title">
-            <h3>Edit Product | {formData.productCode}</h3>
-            <div className="small-muted">Modify product details</div>
-          </div>
-          <div className="modal-controls">
-            <div className="tab-row">
-              {TABS.map(t => (
-                <div key={t.id} className={`tab ${activeTab === t.id ? "active" : ""}`}
-                  onClick={() => setActiveTab(t.id)}>{t.label}</div>
-              ))}
+          <>
+            <div className="afx-header">
+              <div>
+                <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />{formData.productCode}</div>
+                <h3 className="afx-title">Edit Product</h3>
+              </div>
+              <button className="afx-close" onClick={onClose} title="Close">
+                <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                ESC
+              </button>
             </div>
-            <button className="btn-ghost" onClick={onClose}>✖</button>
-          </div>
-        </div>
 
-        <form className="modal-body" onSubmit={handleSubmit}>
-          <div className="form-col scrollable">
-
-            
-            {activeTab === "details" && (
-              <div className="form-grid">
-                <div>
-                  <label>Product Name <span className="pf-req">*</span></label>
-                  <input type="text" name="name" value={formData.name || ""} onChange={handleChange} />
-                  {errors.name && <div className="error-msg">{errors.name}</div>}
+            <form onSubmit={handleSubmit}>
+              <div className="afx-body">
+                <div className="afx-tabs">
+                  {TABS.map(t => (
+                    <button type="button" key={t.id} className={`afx-tab ${activeTab === t.id ? "is-active" : ""}`}
+                      onClick={() => setActiveTab(t.id)}>{t.label}</button>
+                  ))}
                 </div>
 
-                <SearchDrop label={<>Product Type <span className="pf-req">*</span></>}
-                  options={productTypes} value={formData.product_type_id}
-                  onChange={v => set("product_type_id", v)}
-                  placeholder="Select product type"
-                  error={errors.product_type_id}
-                />
+                {activeTab === "details" && (
+                  <div className="afx-grid">
+                    <div className="afx-field">
+                      <label className="afx-label">Product Name<span className="afx-req">*</span></label>
+                      <input className={`afx-input ${errors.name ? "afx-input--err" : ""}`} type="text" name="name" value={formData.name || ""} onChange={handleChange} placeholder="e.g. Paracetamol 500mg" />
+                      {errors.name && <div className="afx-error">{errors.name}</div>}
+                    </div>
 
-                <div>
-                  <label>Description</label>
-                  <textarea name="description" rows={4} value={formData.description || ""} onChange={handleChange} />
-                </div>
-              </div>
-            )}
+                    <SearchDrop label={<>Product Type <span className="afx-req">*</span></>}
+                      options={productTypes} value={formData.product_type_id}
+                      onChange={v => set("product_type_id", v)}
+                      placeholder="Select product type"
+                      error={errors.product_type_id}
+                    />
 
-            
-            {activeTab === "pharma" && (
-              <div className="form-grid">
+                    <div className="afx-field afx-field--full">
+                      <label className="afx-label">Description</label>
+                      <textarea className="afx-textarea" name="description" value={formData.description || ""} onChange={handleChange} rows={4} placeholder="Enter description" />
+                    </div>
+                  </div>
+                )}
 
-                <SearchDrop label="Manufacturer"
-                  options={manufacturers} value={formData.manufacturer_id}
-                  onChange={v => set("manufacturer_id", v)}
-                  placeholder="Select manufacturer (optional)"
-                />
+                {activeTab === "pharma" && (
+                  <div className="afx-grid">
+                    <SearchDrop label="Manufacturer"
+                      options={manufacturers} value={formData.manufacturer_id}
+                      onChange={v => set("manufacturer_id", v)}
+                      placeholder="Select manufacturer (optional)"
+                    />
 
-                <div>
-                  <label>Generic / Salt Name</label>
-                  <input type="text" name="genericName" value={formData.genericName || ""} onChange={handleChange} placeholder="e.g. Paracetamol" />
-                </div>
+                    <div className="afx-field">
+                      <label className="afx-label">Generic / Salt Name</label>
+                      <input className="afx-input" type="text" name="genericName" value={formData.genericName || ""} onChange={handleChange} placeholder="e.g. Paracetamol" />
+                    </div>
 
-                <div>
-                  <label>HSN Code</label>
-                  <input type="text" name="hsnCode" value={formData.hsnCode || ""} onChange={handleChange} placeholder="e.g. 3004" />
-                </div>
+                    <div className="afx-field">
+                      <label className="afx-label">HSN Code</label>
+                      <input className="afx-input" type="text" name="hsnCode" value={formData.hsnCode || ""} onChange={handleChange} placeholder="e.g. 3004" />
+                    </div>
 
-                <div>
-                  <label>Schedule Type</label>
-                  <select name="scheduleType" value={formData.scheduleType || "OTC"} onChange={handleChange}>
-                    {SCHEDULE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
+                    <div className="afx-field">
+                      <label className="afx-label">Schedule Type</label>
+                      <div className="afx-select-wrap">
+                        <select className="afx-select" name="scheduleType" value={formData.scheduleType || "OTC"} onChange={handleChange}>
+                          {SCHEDULE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                    </div>
 
-                <div className="pf-info-banner full">
-                  <strong>OTC</strong> — No prescription&nbsp;&nbsp;
-                  <strong>H</strong> — Prescription required&nbsp;&nbsp;
-                  <strong>H1</strong> — Strict prescription&nbsp;&nbsp;
-                  <strong>NARCOTIC</strong> — Controlled substance
-                </div>
-              </div>
-            )}
+                    <div className="afx-info afx-field--full">
+                      <strong>OTC</strong>&nbsp;— no prescription&emsp;
+                      <strong>H</strong>&nbsp;— prescription required&emsp;
+                      <strong>H1</strong>&nbsp;— strict prescription&emsp;
+                      <strong>NARCOTIC</strong>&nbsp;— controlled substance
+                    </div>
+                  </div>
+                )}
 
-            
-            {activeTab === "pricing" && (
-              <div className="form-grid">
-                <div>
-                  <label>Cost Price (₹) <span className="pf-req">*</span></label>
-                  <input type="number" name="price" value={formData.price || ""} onChange={handleChange} placeholder="0.00" min="0" step="0.01" />
-                  {errors.price && <div className="error-msg">{errors.price}</div>}
-                </div>
+                {activeTab === "pricing" && (
+                  <div className="afx-grid">
+                    <div className="afx-field">
+                      <label className="afx-label">Cost Price (₹)<span className="afx-req">*</span></label>
+                      <input className={`afx-input ${errors.price ? "afx-input--err" : ""}`} type="number" name="price" value={formData.price || ""} onChange={handleChange} placeholder="0.00" min="0" step="0.01" />
+                      {errors.price && <div className="afx-error">{errors.price}</div>}
+                    </div>
 
-                <div>
-                  <label>Unit <span className="pf-req">*</span></label>
-                  <input type="text" name="unit" value={formData.unit || ""} onChange={handleChange} placeholder="e.g. Strip, Bottle" />
-                  {errors.unit && <div className="error-msg">{errors.unit}</div>}
-                </div>
+                    <div className="afx-field">
+                      <label className="afx-label">Unit<span className="afx-req">*</span></label>
+                      <input className={`afx-input ${errors.unit ? "afx-input--err" : ""}`} type="text" name="unit" value={formData.unit || ""} onChange={handleChange} placeholder="e.g. Strip, Bottle, Vial" />
+                      {errors.unit && <div className="afx-error">{errors.unit}</div>}
+                    </div>
 
-                <div>
-                  <label>Pack Size <span className="pf-hint">(qty per unit)</span></label>
-                  <input type="number" name="packSize" value={formData.packSize || ""} onChange={handleChange} placeholder="e.g. 10" min="1" />
-                  {errors.packSize && <div className="error-msg">{errors.packSize}</div>}
-                </div>
+                    <div className="afx-field">
+                      <label className="afx-label">Pack Size <span style={{ color: "var(--afx-text-3)", fontWeight: 400 }}>(qty per unit)</span></label>
+                      <input className={`afx-input ${errors.packSize ? "afx-input--err" : ""}`} type="number" name="packSize" value={formData.packSize || ""} onChange={handleChange} placeholder="e.g. 10 tablets per strip" min="1" />
+                      {errors.packSize && <div className="afx-error">{errors.packSize}</div>}
+                    </div>
 
-                <div>
-                  <label>Pack Unit</label>
-                  <select name="packUnit" value={formData.packUnit || "STRIP"} onChange={handleChange}>
-                    <option value="">— Select —</option>
-                    {PACK_UNITS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </div>
+                    <div className="afx-field">
+                      <label className="afx-label">Pack Unit</label>
+                      <div className="afx-select-wrap">
+                        <select className="afx-select" name="packUnit" value={formData.packUnit || "STRIP"} onChange={handleChange}>
+                          <option value="">— Select —</option>
+                          {PACK_UNITS.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                    </div>
 
-                {formData.packSize && formData.packUnit && (
-                  <div className="pf-info-banner full">
-                    Each <strong>{formData.unit || "unit"}</strong> contains <strong>{formData.packSize}</strong> × <strong>{formData.packUnit}</strong>
+                    {formData.packSize && formData.packUnit && (
+                      <div className="afx-info afx-field--full">
+                        Each <strong>{formData.unit || "unit"}</strong> contains <strong>{formData.packSize}</strong> × <strong>{formData.packUnit}</strong>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
 
-          <div className="modal-footer-fixed">
-            <div className="modal-actions">
-              <button className="btn-ghost" type="button" onClick={onClose}>Cancel</button>
-              
-              {isChanged() && (
-                <button type="submit" className="submit-button">Update Product</button>
-              )}
-            </div>
-          </div>
-        </form>
-        </>
+              <div className="afx-footer">
+                <button className="afx-btn" type="button" onClick={onClose}>Cancel</button>
+                {isChanged() && (
+                  <button type="submit" className="afx-btn afx-btn--primary">Update Product</button>
+                )}
+              </div>
+            </form>
+          </>
         )}
       </div>
     </div>

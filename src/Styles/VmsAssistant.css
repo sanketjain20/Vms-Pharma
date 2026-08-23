@@ -1,128 +1,122 @@
-.vms-assistant {
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
+
+.vmsa-root {
+  --vmsa-panel: #0c0c0e;
+  --vmsa-panel-soft: #131316;
+  --vmsa-line: rgba(255, 255, 255, .1);
+  --vmsa-line-hi: rgba(255, 255, 255, .16);
+  --vmsa-text: #f5f5f7;
+  --vmsa-muted: rgba(245, 245, 247, .6);
+  --vmsa-faint: rgba(245, 245, 247, .38);
+  --vmsa-blue: #60a5fa;
+  --vmsa-blue-deep: #3b82f6;
+
   position: fixed;
-  right: 40px;
-  bottom: 60px;
+  right: 28px;
+  bottom: 28px;
   z-index: 120000;
-  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-family: "DM Sans", sans-serif;
 }
 
+body[data-theme="light"] .vmsa-root {
+  --vmsa-panel: #ffffff;
+  --vmsa-panel-soft: #f4f7fb;
+  --vmsa-line: rgba(15, 23, 42, .1);
+  --vmsa-line-hi: rgba(15, 23, 42, .16);
+  --vmsa-text: #0f172a;
+  --vmsa-muted: #55627a;
+  --vmsa-faint: #78859c;
+  --vmsa-blue: #2563eb;
+  --vmsa-blue-deep: #1d4ed8;
+}
+
+.vmsa-root * { box-sizing: border-box; }
+
+/* ── Launcher ───────────────────────────────────────────── */
 .vmsa-launcher {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 55px;
-  height: 50px;
-  border: 1px solid rgba(59, 130, 246, 0.42);
-  border-radius: 45%;
-  background: #d7d7f7;
-  color: #080808;
-  font-size: 13px;
-  font-weight: 800;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--vmsa-blue), var(--vmsa-blue-deep));
+  color: #ffffff;
   cursor: pointer;
-  box-shadow:
-    0 18px 42px rgba(0, 0, 0, 0.34),
-    0 0 26px rgba(59, 130, 246, 0.24);
+  box-shadow: 0 16px 34px rgba(59,130,246,.36);
+  animation: vmsaPop .35s cubic-bezier(.34,1.56,.64,1) both;
+  transition: transform .18s ease, box-shadow .18s ease;
 }
-.vmsa-launcher svg {
-  font-size: 18px;
-}
+.vmsa-launcher:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 20px 42px rgba(59,130,246,.44); }
+.vmsa-launcher:active { transform: translateY(0) scale(.98); }
+@keyframes vmsaPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
 
-.vmsa-panel {
-  width: min(390px, calc(90vw - 28px));
-  height: min(680px, calc(90vh - 44px));
+/* ── Panel ──────────────────────────────────────────────── */
+.vmsa-frame {
   display: flex;
   flex-direction: column;
+  width: min(392px, calc(100vw - 40px));
+  height: min(640px, calc(100vh - 80px));
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 18px;
-  background: rgba(6, 8, 16, 0.96);
-  color: #e4e6f0;
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.72), 0 0 40px rgba(59, 130, 246, 0.12);
-  backdrop-filter: blur(24px) saturate(1.1);
-  -webkit-backdrop-filter: blur(24px) saturate(1.1);
+  border: 1px solid var(--vmsa-line-hi);
+  border-radius: 20px;
+  background: var(--vmsa-panel);
+  color: var(--vmsa-text);
+  box-shadow: 0 32px 80px rgba(0,0,0,.45);
+  animation: vmsaOpen .28s cubic-bezier(.16,1,.3,1) both;
 }
+@keyframes vmsaOpen { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: none; } }
 
-.vmsa-header {
+.vmsa-head {
   display: grid;
-  grid-template-columns: 38px 1fr 34px 34px;
+  grid-template-columns: 38px 1fr 32px 32px;
   align-items: center;
   gap: 10px;
   padding: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.28);
+  border-bottom: 1px solid var(--vmsa-line);
 }
-
 .vmsa-avatar {
-  width: 38px;
-  height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: grid; place-items: center;
+  width: 38px; height: 38px;
   border-radius: 12px;
-  background: rgba(59, 130, 246, 0.18);
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  color: #60a5fa;
-  font-size: 16px;
+  background: rgba(96,165,250,.16);
+  border: 1px solid rgba(96,165,250,.3);
+  color: var(--vmsa-blue);
 }
-
-.vmsa-title {
-  font-size: 15px;
+.vmsa-head-text { min-width: 0; }
+.vmsa-name {
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-weight: 800;
-  color: #ffffff;
+  font-size: 14.5px;
+  letter-spacing: -.01em;
 }
-
-.vmsa-subtitle {
-  margin-top: 2px;
-  font-size: 11px;
-  color: #9ca3af;
+.vmsa-status {
+  display: flex; align-items: center; gap: 3px;
+  max-width: 100%;
+  margin-top: 2px; padding: 0;
+  border: 0; background: none; cursor: pointer;
+  font: inherit; font-size: 11.5px; color: var(--vmsa-muted);
+  transition: color .15s ease;
 }
+.vmsa-status-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vmsa-status strong { color: var(--vmsa-text); font-weight: 700; }
+.vmsa-status svg { flex-shrink: 0; opacity: .6; }
+.vmsa-status:hover { color: var(--vmsa-blue); }
+.vmsa-status:hover strong { color: var(--vmsa-blue); }
 
 .vmsa-icon-btn {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid; place-items: center;
+  width: 32px; height: 32px;
+  border: 1px solid var(--vmsa-line-hi);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #cbd5e1;
+  background: var(--vmsa-panel-soft);
+  color: var(--vmsa-muted);
   cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
+.vmsa-icon-btn:hover { background: rgba(96,165,250,.12); color: var(--vmsa-blue); border-color: rgba(96,165,250,.3); }
 
-.vmsa-icon-btn:hover {
-  background: rgba(59, 130, 246, 0.12);
-  color: #ffffff;
-}
-
-.vmsa-context {
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.vmsa-context-label {
-  margin-bottom: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #8b93a7;
-}
-
-.vmsa-context button {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  border: 1px solid rgba(59, 130, 246, 0.24);
-  border-radius: 12px;
-  background: rgba(59, 130, 246, 0.08);
-  color: #bfdbfe;
-  cursor: pointer;
-  font-weight: 700;
-}
-
+/* ── Messages ───────────────────────────────────────────── */
 .vmsa-messages {
   flex: 1;
   overflow-y: auto;
@@ -131,227 +125,145 @@
   flex-direction: column;
   gap: 10px;
 }
-
-.vmsa-message {
-  max-width: 88%;
-  padding: 10px 12px;
-  border-radius: 12px;
+.vmsa-msg {
+  max-width: 86%;
+  padding: 10px 13px;
+  border-radius: 14px;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.5;
   white-space: pre-wrap;
+  animation: vmsaMsgIn .25s cubic-bezier(.16,1,.3,1) both;
 }
+@keyframes vmsaMsgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-.vmsa-bot {
+.vmsa-msg-bot {
   align-self: flex-start;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #e5e7eb;
+  border-bottom-left-radius: 4px;
+  background: var(--vmsa-panel-soft);
+  border: 1px solid var(--vmsa-line);
+  color: var(--vmsa-text);
 }
-
-.vmsa-user {
+.vmsa-msg-user {
   align-self: flex-end;
-  background: #2563eb;
-  border: 1px solid rgba(147, 197, 253, 0.38);
+  border-bottom-right-radius: 4px;
+  background: linear-gradient(135deg, var(--vmsa-blue), var(--vmsa-blue-deep));
   color: #ffffff;
 }
 
-.vmsa-quick,
-.vmsa-modules {
-  display: flex;
-  gap: 7px;
-  overflow-x: auto;
-  padding: 0 14px 10px;
+.vmsa-typing { display: flex; align-items: center; gap: 4px; padding: 13px; }
+.vmsa-typing span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--vmsa-faint);
+  animation: vmsaBounce 1.1s ease-in-out infinite;
 }
+.vmsa-typing span:nth-child(2) { animation-delay: .15s; }
+.vmsa-typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes vmsaBounce { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-4px); opacity: 1; } }
 
-.vmsa-modules {
-  padding-bottom: 12px;
+/* ── Empty-state suggestions — shown only until the first real
+   reply, so they don't compete with an active conversation ── */
+.vmsa-suggestions {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--vmsa-line);
+  display: grid;
+  gap: 8px;
+  animation: vmsaMsgIn .3s cubic-bezier(.16,1,.3,1) both;
 }
-
-.vmsa-quick button,
-.vmsa-modules button {
-  flex: 0 0 auto;
-  padding: 7px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #cbd5e1;
-  font-size: 11px;
+.vmsa-suggestions-label {
+  font-size: 10px;
   font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--vmsa-faint);
+}
+.vmsa-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.vmsa-chip {
+  padding: 7px 12px;
+  border: 1px solid var(--vmsa-line-hi);
+  border-radius: 999px;
+  background: var(--vmsa-panel-soft);
+  color: var(--vmsa-text);
+  font-size: 11.5px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.vmsa-chip-ghost { color: var(--vmsa-muted); font-weight: 700; }
+.vmsa-chip:hover {
+  background: rgba(96,165,250,.12);
+  color: var(--vmsa-blue);
+  border-color: rgba(96,165,250,.3);
 }
 
-.vmsa-quick button:hover,
-.vmsa-modules button:hover {
-  background: rgba(59, 130, 246, 0.12);
-  color: #ffffff;
-  border-color: rgba(59, 130, 246, 0.3);
+.vmsa-fyi {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--vmsa-faint);
+}
+.vmsa-fyi kbd {
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--vmsa-line-hi);
+  background: var(--vmsa-panel-soft);
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--vmsa-text);
+}
+.vmsa-fyi button {
+  border: 0; background: none; padding: 0; cursor: pointer;
+  font: inherit; font-size: 11px; font-weight: 700;
+  color: var(--vmsa-blue);
+  text-decoration: underline;
 }
 
+/* ── Compose ────────────────────────────────────────────── */
 .vmsa-compose {
   display: grid;
-  grid-template-columns: 1fr 42px;
+  grid-template-columns: 1fr 40px;
   gap: 8px;
-  padding: 12px 14px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.18);
+  padding: 12px 14px;
+  border-top: 1px solid var(--vmsa-line);
 }
-
 .vmsa-compose input {
   width: 100%;
   min-width: 0;
-  padding: 11px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 11px 13px;
+  border: 1px solid var(--vmsa-line-hi);
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.34);
-  color: #ffffff;
+  background: var(--vmsa-panel-soft);
+  color: var(--vmsa-text);
   outline: none;
+  font: inherit;
   font-size: 13px;
+  transition: border-color .18s ease, box-shadow .18s ease;
 }
+.vmsa-compose input::placeholder { color: var(--vmsa-faint); }
+.vmsa-compose input:focus { border-color: rgba(96,165,250,.55); box-shadow: 0 0 0 3px rgba(96,165,250,.14); }
 
-.vmsa-compose input::placeholder {
-  color: #8b93a7;
-}
-
-.vmsa-compose input:focus {
-  border-color: rgba(59, 130, 246, 0.55);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
-}
-
+/* Named with "primary" so this app's global light-theme rule (which
+   force-mutes any plain <button> text color) leaves it alone. */
 .vmsa-compose button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(59, 130, 246, 0.45);
+  display: grid; place-items: center;
+  border: 0;
   border-radius: 12px;
-  background: #2563eb;
-  color: #ffffff;
-  cursor: pointer;
-}
-
-body[data-theme="light"] .vmsa-launcher {
-  background: #1f1e1e !important;
-  border: 1px solid rgba(59, 130, 246, 0.5) !important;
+  background: linear-gradient(135deg, var(--vmsa-blue), var(--vmsa-blue-deep));
   color: #ffffff !important;
-  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.18) !important;
+  cursor: pointer;
+  transition: transform .15s ease, opacity .15s ease;
 }
+.vmsa-compose button:hover:not(:disabled) { transform: translateY(-1px); }
+.vmsa-compose button:disabled { opacity: .4; cursor: not-allowed; }
 
-body[data-theme="light"] .vmsa-panel {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(15, 23, 42, 0.14);
-  color: #0f172a;
-  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.22);
-}
-
-body[data-theme="light"] .vmsa-header,
-body[data-theme="light"] .vmsa-compose {
-  background: #f8fafc;
-  border-color: rgba(15, 23, 42, 0.1);
-}
-
-body[data-theme="light"] .vmsa-title {
-  color: #0f172a;
-}
-
-body[data-theme="light"] .vmsa-subtitle,
-body[data-theme="light"] .vmsa-context-label {
-  color: #64748b;
-}
-
-body[data-theme="light"] .vmsa-avatar {
-  background: #eff6ff;
-  border-color: rgba(37, 99, 235, 0.24);
-  color: #1d4ed8;
-}
-
-body[data-theme="light"] .vmsa-icon-btn,
-body[data-theme="light"] .vmsa-quick button,
-body[data-theme="light"] .vmsa-modules button {
-  background: #ffffff;
-  border-color: rgba(15, 23, 42, 0.12);
-  color: #334155;
-}
-
-body[data-theme="light"] .vmsa-icon-btn:hover,
-body[data-theme="light"] .vmsa-quick button:hover,
-body[data-theme="light"] .vmsa-modules button:hover {
-  background: #eff6ff;
-  border-color: rgba(37, 99, 235, 0.25);
-  color: #1d4ed8;
-}
-
-body[data-theme="light"] .vmsa-context {
-  border-color: rgba(15, 23, 42, 0.1);
-}
-
-body[data-theme="light"] .vmsa-context button {
-  background: #eff6ff;
-  border-color: rgba(37, 99, 235, 0.24);
-  color: #1d4ed8;
-}
-
-body[data-theme="light"] .vmsa-bot {
-  background: #f8fafc;
-  border-color: rgba(15, 23, 42, 0.12);
-  color: #0f172a;
-}
-
-body[data-theme="light"] .vmsa-user {
-  background: #2563eb;
-  color: #ffffff;
-}
-
-body[data-theme="light"] .vmsa-compose input {
-  background: #ffffff !important;
-  border-color: rgba(15, 23, 42, 0.14) !important;
-  color: #0f172a !important;
-  -webkit-text-fill-color: #0f172a !important;
-}
-
-body[data-theme="light"] .vmsa-compose input::placeholder {
-  color: #94a3b8 !important;
-}
-.vmsa-subtitle-key {
-  margin-top: 8px;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.65);
-  letter-spacing: 0.2px;
-  font-family: "Inter", sans-serif;
-
-  padding: 6px 10px;
-  display: inline-block;
-
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-
-  transition: all 0.2s ease-in-out;
-}
-
-.vmsa-subtitle-key:hover {
-  color: rgba(255, 255, 255, 0.85);
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-}
-.vmsa-subtitle-key kbd {
-  background: rgba(255, 140, 0, 0.15);
-  color: #ff9f1c;
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 159, 28, 0.4);
-  font-weight: 600;
-}
+/* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 520px) {
-  .vms-assistant {
-    right: 14px;
-    bottom: 14px;
-  }
+  .vmsa-root { right: 14px; bottom: 14px; }
+  .vmsa-frame { width: calc(100vw - 28px); height: min(600px, calc(100vh - 28px)); border-radius: 18px; }
+}
 
-  .vmsa-panel {
-    width: calc(100vw - 28px);
-    height: min(620px, calc(100vh - 28px));
-    border-radius: 16px;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .vmsa-launcher, .vmsa-frame, .vmsa-msg { animation: none !important; }
+  .vmsa-typing span { animation: none !important; opacity: .6; }
 }

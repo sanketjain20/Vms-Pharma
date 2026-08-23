@@ -1,89 +1,95 @@
-/* ===== TOAST BASE ===== */
-.Toastify__toast {
-  border-radius: 14px;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 14px 18px;
-  border-left: 4px solid transparent;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.06);
-  border: 0.5px solid rgba(0, 0, 0, 0.08);
-  border-left-width: 4px;
-}
-
-/* ===== SUCCESS TOAST ===== */
-.Toastify__toast--success {
-  border-left-color: #22c55e;
-  color: #15803d;
-  background: rgba(240, 253, 244, 0.88);
-  font-size: 15px;
-}
-
-/* ===== ERROR TOAST ===== */
-.Toastify__toast--error {
-  border-left-color: #ef4444;
-  color: #b91c92;
-  background: rgba(254, 242, 242, 0.88);
-  font-size: 15px;
-}
-
-/* ===== WARNING TOAST ===== */
-.Toastify__toast--warning {
-  border-left-color: #f59e0b;
-  color: #b45309;
-  background: rgba(255, 251, 235, 0.88);
-  font-size: 15px;
-}
-
-/* ===== INFO TOAST ===== */
-.Toastify__toast--info {
-  border-left-color: #3b82f6;
-  color: #1d4ed8;
-  background: rgba(239, 246, 255, 0.88);
-  font-size: 15px;
-}
-
-/* ===== PROGRESS BAR ===== */
-.Toastify__progress-bar--success {
-  background: linear-gradient(90deg, #22c55e, #4ade80);
-}
-.Toastify__progress-bar--error {
-  background: linear-gradient(90deg, #ef4444, #f87171);
-}
-.Toastify__progress-bar--warning {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
-}
-.Toastify__progress-bar--info {
-  background: linear-gradient(90deg, #3b82f6, #60a5fa);
-}
-
-/* ===== CLOSE BUTTON ===== */
-.Toastify__close-button {
-  color: currentColor;
-  opacity: 0.4;
-}
-.Toastify__close-button:hover {
-  opacity: 0.8;
-}
-
-/* ===== MOBILE ===== */
-@media (max-width: 600px) {
-  .Toastify__toast {
-    margin: 8px;
-    font-size: 13px;
-    border-radius: 12px;
-  }
-}
-
-/* ===== Z-INDEX ===== */
+/* =========================
+   TOAST — dark default, light override, self-contained tokens.
+   Previously this file only ever rendered light-styled cards, even in
+   dark mode; now it follows body[data-theme] like the rest of the app.
+========================= */
 .Toastify__toast-container {
+  --tc-bg:      #131318;
+  --tc-border:  rgba(255, 255, 255, 0.1);
+  --tc-text:    #f2f3f7;
+  --tc-muted:   #9a9db0;
+  --tc-success: #10b981;
+  --tc-error:   #ef4444;
+  --tc-warning: #f59e0b;
+  --tc-info:    #3b82f6;
+  --tc-shadow:  rgba(0, 0, 0, 0.45);
+
   position: fixed !important;
   z-index: 2147483647 !important;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-.Toastify__toast-container.vms-toast-container {
-  position: fixed !important;
-  z-index: 2147483647 !important;
+body[data-theme="light"] .Toastify__toast-container {
+  --tc-bg:      #ffffff;
+  --tc-border:  rgba(15, 23, 42, 0.1);
+  --tc-text:    #0f172a;
+  --tc-muted:   #64748b;
+  --tc-success: #059669;
+  --tc-error:   #dc2626;
+  --tc-warning: #b45309;
+  --tc-info:    #2563eb;
+  --tc-shadow:  rgba(15, 23, 42, 0.16);
+}
+
+.Toastify__toast {
+  align-items: center;
+  gap: 4px;
+  min-height: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--tc-border);
+  border-left: 3px solid var(--tc-info);
+  background: var(--tc-bg);
+  color: var(--tc-text);
+  box-shadow: 0 12px 32px var(--tc-shadow);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.Toastify__toast-body { padding: 0; color: inherit; }
+.Toastify__toast-icon { width: 18px; }
+
+.Toastify__toast--success { border-left-color: var(--tc-success); }
+.Toastify__toast--success .Toastify__toast-icon svg { fill: var(--tc-success); }
+
+.Toastify__toast--error { border-left-color: var(--tc-error); }
+.Toastify__toast--error .Toastify__toast-icon svg { fill: var(--tc-error); }
+
+.Toastify__toast--warning { border-left-color: var(--tc-warning); }
+.Toastify__toast--warning .Toastify__toast-icon svg { fill: var(--tc-warning); }
+
+.Toastify__toast--info { border-left-color: var(--tc-info); }
+.Toastify__toast--info .Toastify__toast-icon svg { fill: var(--tc-info); }
+
+/* Progress bar */
+.Toastify__progress-bar { height: 2px; opacity: 0.7; }
+.Toastify__progress-bar--success { background: var(--tc-success); }
+.Toastify__progress-bar--error   { background: var(--tc-error); }
+.Toastify__progress-bar--warning { background: var(--tc-warning); }
+.Toastify__progress-bar--info    { background: var(--tc-info); }
+
+/* Close button */
+.Toastify__close-button {
+  color: var(--tc-muted);
+  opacity: 0.7;
+  align-self: center;
+}
+.Toastify__close-button:hover { opacity: 1; color: var(--tc-text); }
+
+/* =========================
+   RESPONSIVE — phone / tablet
+========================= */
+@media (max-width: 768px) {
+  .Toastify__toast-container { padding: 4px; }
+  .Toastify__toast { font-size: 13px; border-radius: 10px; padding: 11px 12px; }
+}
+
+@media (max-width: 480px) {
+  .Toastify__toast-container.Toastify__toast-container--top-right,
+  .Toastify__toast-container.Toastify__toast-container--top-left,
+  .Toastify__toast-container.Toastify__toast-container--top-center {
+    top: 8px;
+  }
+  .Toastify__toast { margin-bottom: 6px; }
 }

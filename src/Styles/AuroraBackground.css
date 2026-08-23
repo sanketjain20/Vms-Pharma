@@ -1,0 +1,66 @@
+/* Minimal ambient backdrop — Home page only. Two soft, slow-drifting glows
+   on an otherwise flat black/white canvas. Pure CSS, no canvas/JS loop.
+   Deliberately restrained: a whisper of color, not a gradient wash. */
+
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #000;
+
+  --aurora-op: 0.16;
+  --aurora-c1: #4f46e5;
+  --aurora-c2: #06b6d4;
+}
+
+body[data-theme="light"] .aurora-bg {
+  background: #ffffff;
+  --aurora-op: 0.09;
+  --aurora-c1: #6366f1;
+  --aurora-c2: #22d3ee;
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: var(--aurora-op);
+  will-change: transform;
+}
+
+.aurora-blob-1 {
+  width: 50vw;
+  height: 50vw;
+  top: -18%;
+  left: -12%;
+  background: radial-gradient(circle, var(--aurora-c1), transparent 70%);
+  animation: auroraDrift1 34s ease-in-out infinite alternate;
+}
+
+.aurora-blob-2 {
+  width: 44vw;
+  height: 44vw;
+  bottom: -20%;
+  right: -10%;
+  background: radial-gradient(circle, var(--aurora-c2), transparent 70%);
+  animation: auroraDrift2 40s ease-in-out infinite alternate;
+}
+
+@keyframes auroraDrift1 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(3vw, 4vw, 0) scale(1.1); }
+}
+@keyframes auroraDrift2 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-3vw, -3vw, 0) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blob { animation: none !important; }
+}
+
+@media (max-width: 700px) {
+  .aurora-blob { filter: blur(90px); }
+}

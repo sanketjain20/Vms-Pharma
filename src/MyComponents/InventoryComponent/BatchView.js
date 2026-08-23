@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "../../Styles/Purchase/Purchase.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 
@@ -33,19 +33,22 @@ const daysUntil = (value) => {
 
 const expiryMeta = (date) => {
   const days = daysUntil(date);
-  if (days == null) return { label: "Unknown", className: "pfx-badge-blue", daysText: "-" };
-  if (days < 0) return { label: "Expired", className: "pfx-badge-red", daysText: `${Math.abs(days)} days ago` };
-  if (days <= 30) return { label: "Critical", className: "pfx-badge-red", daysText: `${days} days left` };
-  if (days <= 90) return { label: "Expiring Soon", className: "pfx-badge-amber", daysText: `${days} days left` };
-  return { label: "Healthy", className: "pfx-badge-green", daysText: `${days} days left` };
+  if (days == null) return { label: "Unknown", fg: "var(--afx-accent)", bg: "var(--afx-accent-soft)", daysText: "-" };
+  if (days < 0) return { label: "Expired", fg: "var(--afx-danger)", bg: "var(--afx-danger-soft)", daysText: `${Math.abs(days)} days ago` };
+  if (days <= 30) return { label: "Critical", fg: "var(--afx-danger)", bg: "var(--afx-danger-soft)", daysText: `${days} days left` };
+  if (days <= 90) return { label: "Expiring Soon", fg: "var(--afx-warning)", bg: "var(--afx-warning-soft)", daysText: `${days} days left` };
+  return { label: "Healthy", fg: "var(--afx-success)", bg: "var(--afx-success-soft)", daysText: `${days} days left` };
 };
 
 const FieldCard = ({ label, value, accent, mono }) => (
-  <div className="pfx-view-card">
-    <span className="pfx-view-label">{label}</span>
-    <span className={`pfx-view-value ${accent ? "pfx-accent" : ""} ${mono ? "pfx-mono" : ""}`}>
-      {value ?? "-"}
-    </span>
+  <div className="afx-field">
+    <label className="afx-label">{label}</label>
+    <div
+      className={`afx-view-value ${mono ? "afx-view-value--mono" : ""}`}
+      style={accent ? { color: "var(--afx-accent)", fontWeight: 700 } : undefined}
+    >
+      {value ?? <span className="afx-view-value--empty">—</span>}
+    </div>
   </div>
 );
 
@@ -94,46 +97,37 @@ export default function BatchView({ uKey, onClose }) {
   if (!uKey) return null;
 
   return (
-    <div className="pfx-backdrop">
-      <div className="pfx-modal pfx-modal-view">
-        <div className="pfx-top-beam" />
-
-        <div className="pfx-header">
-          <div className="pfx-header-left">
-            <div className="pfx-eyebrow"><span className="pfx-eyebrow-dot" />BATCH RECORD</div>
-            <h2 className="pfx-title">
-              <span className="pfx-title-acc"></span>
-              {batch?.batchNumber || "Loading..."}
-            </h2>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Batch Record</div>
+            <h3 className="afx-title">{batch?.batchNumber || "Loading…"}</h3>
           </div>
-          <button className="pfx-close-btn" type="button" onClick={onClose}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
+          <button className="afx-close" onClick={onClose} title="Close">
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+            ESC
           </button>
         </div>
 
-        <div className="pfx-divider" />
-
-        <div className="pfx-body">
-          {error && <div className="pfx-alert pfx-alert-error">{error}</div>}
+        <div className="afx-body">
+          {error && <div className="afx-alert">{error}</div>}
 
           {!batch && !error && (
-            <div className="pfx-loading">
-              <div className="pfx-loader"><div /><div /><div /><div /></div>
-              Loading batch data...
+            <div className="afx-loading">
+              <div className="afx-loader-ring"><div/><div/><div/></div>
             </div>
           )}
 
           {batch && (
             <>
-              <div className="pfx-view-status-row">
-                <span className="pfx-code-tag">{batch.batchNumber || "-"}</span>
-                <span className={`pfx-badge ${meta.className}`}>{meta.label}</span>
-                <span className="pfx-due-tag">Expiry: {fmtDate(batch.expiryDate)}</span>
+              <div className="afx-option-row" style={{ justifyContent: "flex-start" }}>
+                <span className="afx-tag afx-view-value--mono">{batch.batchNumber || "-"}</span>
+                <span className="afx-badge" style={{ background: meta.bg, color: meta.fg }}>{meta.label}</span>
+                <span style={{ color: "var(--afx-text-3)", fontSize: 11.5 }}>Expiry: {fmtDate(batch.expiryDate)}</span>
               </div>
 
-              <div className="pfx-view-meta">
+              <div className="afx-grid">
                 <FieldCard label="Product" value={batch.productName || batch.product || "-"} />
                 <FieldCard label="Product Code" value={batch.productCode || batch.inventoryCode || "-"} mono />
                 <FieldCard label="Supplier" value={batch.supplierName || batch.supplier || "-"} />
@@ -153,22 +147,20 @@ export default function BatchView({ uKey, onClose }) {
               </div>
 
               {(batch.remarks || batch.notes) && (
-                <div className="pfx-view-table-section">
-                  <div className="pfx-view-table-header">
-                    <div className="pfx-view-table-title">Notes</div>
+                <>
+                  <div className="afx-section-title">Notes</div>
+                  <div className="afx-card">
+                    <div className="afx-view-value">{batch.remarks || batch.notes}</div>
                   </div>
-                  <div className="pfx-view-card pfx-view-card-full" style={{ margin: 12 }}>
-                    <span className="pfx-view-value">{batch.remarks || batch.notes}</span>
-                  </div>
-                </div>
+                </>
               )}
             </>
           )}
         </div>
 
         {batch && (
-          <div className="pfx-footer">
-            <button type="button" className="pfx-btn-ghost" onClick={onClose}>Close</button>
+          <div className="afx-footer">
+            <button type="button" className="afx-btn" onClick={onClose}>Close</button>
           </div>
         )}
       </div>

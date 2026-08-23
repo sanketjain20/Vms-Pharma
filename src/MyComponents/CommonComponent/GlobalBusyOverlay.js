@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { GLOBAL_BUSY_EVENT } from "../../utils/globalBusy";
+import "../../Styles/CommonComponent/GlobalBusyOverlay.css";
 
 export default function GlobalBusyOverlay() {
   const [pendingCount, setPendingCount] = useState(0);
-  const [label, setLabel] = useState("Processing...");
+  const [label, setLabel] = useState("");
 
   useEffect(() => {
     const handleBusyChange = (event) => {
       const { active, label: nextLabel } = event.detail || {};
 
       if (active) {
-        setLabel(nextLabel || "Processing...");
+        setLabel(nextLabel || "");
         setPendingCount((count) => count + 1);
       } else {
         setPendingCount((count) => Math.max(0, count - 1));
@@ -24,25 +25,13 @@ export default function GlobalBusyOverlay() {
 
   if (!pendingCount) return null;
 
-  const isDownloading = /download|invoice/i.test(label);
-  const title = isDownloading ? "Preparing your download" : "Syncing your workspace";
-  const detail = isDownloading
-    ? "Your document is being prepared securely"
-    : "Your changes are being applied";
+  const shortLabel = /download|invoice/i.test(label) ? "Downloading" : "Loading";
 
   return createPortal(
-    <div className="global-busy-overlay" role="status" aria-live="assertive" aria-label={label}>
-      <div className="global-busy-dialog">
-        <div className="global-busy-orbit" aria-hidden="true">
-          <div /><div /><div /><div />
-          <span className="global-busy-core" />
-        </div>
-        <div className="global-busy-copy">
-          <span className="global-busy-kicker">VMS · PLEASE WAIT</span>
-          <strong>{title}</strong>
-          <span>{detail}</span>
-        </div>
-        <div className="global-busy-progress" aria-hidden="true"><span /></div>
+    <div className="gb-overlay" role="status" aria-live="polite" aria-label={shortLabel}>
+      <div className="gb-pill">
+        <span className="gb-spinner" />
+        {shortLabel}
       </div>
     </div>,
     document.body

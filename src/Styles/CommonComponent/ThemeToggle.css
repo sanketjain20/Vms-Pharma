@@ -1,0 +1,77 @@
+/* =========================
+   THEME TOGGLE — compact switch, self-contained tokens
+========================= */
+.tt-switch {
+  --tt-track-bg:   rgba(255, 255, 255, 0.08);
+  --tt-track-bd:   rgba(255, 255, 255, 0.14);
+  --tt-thumb-bg:   #f2f3f7;
+  --tt-thumb-fg:   #0f172a;
+  --tt-label:      rgba(235, 240, 250, 0.85);
+  --tt-ring:       rgba(59, 130, 246, 0.28);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+body[data-theme="light"] .tt-switch {
+  --tt-track-bg:   #e2e8f0;
+  --tt-track-bd:   rgba(15, 23, 42, 0.1);
+  --tt-thumb-bg:   #ffffff;
+  --tt-thumb-fg:   #2563eb;
+  --tt-label:      #334155;
+  --tt-ring:       rgba(37, 99, 235, 0.22);
+}
+
+.tt-track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--tt-track-bg);
+  border: 1px solid var(--tt-track-bd);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.tt-switch:hover .tt-track { box-shadow: 0 0 0 4px var(--tt-ring); }
+.tt-switch:focus-visible .tt-track { box-shadow: 0 0 0 3px var(--tt-ring); }
+
+.tt-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--tt-thumb-bg);
+  color: var(--tt-thumb-fg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, color 0.2s ease;
+}
+
+.tt-switch.is-light .tt-thumb { left: 20px; }
+
+.tt-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--tt-label);
+  white-space: nowrap;
+}
+
+/* =========================
+   RESPONSIVE — phone / tablet: icon only, no label
+========================= */
+@media (max-width: 640px) {
+  .tt-label { display: none; }
+  .tt-switch { gap: 0; padding: 6px; }
+}

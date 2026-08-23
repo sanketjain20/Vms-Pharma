@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
-import "../../Styles/Sales/AddSales.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import { createPortal } from "react-dom";
 /* ─────────────────────────────────────────
-   SEARCHABLE DROPDOWN
+   SEARCHABLE DROPDOWN — portal-positioned so it floats above the modal's
+   own scroll container instead of being clipped by it.
 ───────────────────────────────────────── */
 const SearchableDropdown = ({
   label, options, selectedId, onSelect,
@@ -55,39 +56,37 @@ const SearchableDropdown = ({
   }, [open]);
 
   return (
-    <div className="custom-select" ref={dropdownRef}>
-      <label>{label}</label>
-      <div className={`select-box ${open ? "active" : ""}`} onClick={handleOpen}>
-        <input
-          type="text" value={displayValue} placeholder={placeholder}
-          onChange={e => setSearch(e.target.value)} onClick={handleOpen}
-          className="select-input"
-        />
+    <div className="afx-field" ref={dropdownRef}>
+      <label className="afx-label">{label}</label>
+      <div className="afx-searchdrop">
+        <div className={`afx-searchdrop-face ${open ? "is-open" : ""} ${selectedOption ? "is-filled" : ""}`} onClick={handleOpen}>
+          <input
+            type="text" value={displayValue} placeholder={placeholder}
+            onChange={e => setSearch(e.target.value)} onClick={handleOpen}
+            style={{ background: "transparent", border: "none", outline: "none", color: "inherit", font: "inherit", width: "100%" }}
+          />
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
         {open && coords && createPortal(
-          <ul
-            className="options scroll-options portal-options"
-            style={{
-              position: "fixed",
-              left: coords.left,
-              width: coords.width,
-              top: coords.top,
-              bottom: coords.bottom,
-            }}
+          <div
+            className="afx-searchdrop-panel"
+            style={{ position: "fixed", left: coords.left, width: coords.width, top: coords.top, bottom: coords.bottom }}
           >
-            {filtered.map(o => (
-              <li key={o.id}
-                onMouseDown={e => { e.preventDefault(); onSelect(o.id); setOpen(false); setSearch(""); }}
-                style={String(o.id) === String(selectedId) ? { color: "#93c5fd", background: "rgba(59,130,246,0.1)" } : {}}
-              >{o.name}</li>
-            ))}
-            {filtered.length === 0 && (
-              <li style={{ color: "#525667", fontStyle: "italic" }}>No results found</li>
-            )}
-          </ul>,
+            <div className="afx-searchdrop-list">
+              {filtered.length === 0 ? (
+                <div className="afx-searchdrop-empty">No results found</div>
+              ) : filtered.map(o => (
+                <div key={o.id}
+                  className={`afx-searchdrop-item ${String(o.id) === String(selectedId) ? "is-selected" : ""}`}
+                  onMouseDown={e => { e.preventDefault(); onSelect(o.id); setOpen(false); setSearch(""); }}
+                >{o.name}</div>
+              ))}
+            </div>
+          </div>,
           document.body
         )}
       </div>
-      {error && <div className="error">{error}</div>}
+      {error && <div className="afx-error">{error}</div>}
     </div>
   );
 };
@@ -113,7 +112,6 @@ export default function SalesAdd({ onClose, onSubmit }) {
   const [taxMode, setTaxMode]                 = useState("COMMON");
   const [errors, setErrors]                   = useState({});
   const [activeTab, setActiveTab]             = useState("Tax");
-  const [paymentType, setPaymentType]         = useState("FULL");
   const [amountPaid, setAmountPaid]           = useState("");
   const [allProducts, setAllProducts]         = useState([]);
   const lastLoadedType                        = useRef(null);
@@ -393,8 +391,9 @@ export default function SalesAdd({ onClose, onSubmit }) {
   const netAmount = discountedTotal + gstAmount;
 
   useEffect(() => {
-    if (paymentType === "FULL") setAmountPaid(netAmount.toFixed(2));
-  }, [paymentType, netAmount]);
+    if (creditPaymentType === "PAID") setAmountPaid(netAmount.toFixed(2));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [creditPaymentType, netAmount]);
 
   /* ── SUBMIT ── */
   const submitSales = async () => {
@@ -455,423 +454,371 @@ export default function SalesAdd({ onClose, onSubmit }) {
 
   /* ── RENDER ── */
   return (
-    <div className="sales-modal show">
-      <div className="sales-container">
-
-        {/* ── HEADER ── */}
-        <div className="sales-header">
-          <div className="sales-header-left">
-            <div className="sales-eyebrow">
-              <span className="sales-eyebrow-dot" />
-              NEW TRANSACTION
-            </div>
-            <h3>Add Sales</h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--xl">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />New Transaction</div>
+            <h3 className="afx-title">Add Sales</h3>
           </div>
-          <div className="tabs-header">
-            {["Tax", "Product", "Billing"].map(tab => (
-              <button key={tab} className={activeTab === tab ? "active-tab" : ""} onClick={() => setActiveTab(tab)}>
-                {tab}
-              </button>
-            ))}
-            <button className="close-btn-sales" onClick={onClose} title="Close">✕</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className="afx-tabs" style={{ padding: 0, background: "none", border: "none" }}>
+              {["Tax", "Product", "Billing"].map(tab => (
+                <button type="button" key={tab} className={`afx-tab ${activeTab === tab ? "is-active" : ""}`} onClick={() => setActiveTab(tab)}>
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <button className="afx-close" onClick={onClose} title="Close">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              ESC
+            </button>
           </div>
         </div>
 
-        {/* ── TAX TAB ── */}
-        {activeTab === "Tax" && (
-          <div className="sales-section">
-            <h4>GST / Tax Settings</h4>
-            <div className="tax-settings-container">
-              <div className={`tax-row-single ${taxMode === "COMMON" ? "selected" : ""}`}>
-                <label className="tax-option">
-                  <input type="radio" name="taxMode" value="COMMON" checked={taxMode === "COMMON"} onChange={() => setTaxMode("COMMON")} />
-                  Common GST
-                  <span className="gst-badge">Default 18%</span>
-                </label>
-                {taxMode === "COMMON" && (
-                  <div className="tax-inline-fields">
-                    <select value={commonTax} onChange={e => setCommonTax(e.target.value)}>
-                      {GST_RATES.map(r => (
-                        <option key={r} value={r}>
-                          {r}% GST{r === 18 ? " (Standard)" : r === 0 ? " (Exempt)" : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-              <div className={`tax-row-single ${taxMode === "PRODUCT" ? "selected" : ""}`}>
-                <label className="tax-option">
-                  <input type="radio" name="taxMode" value="PRODUCT" checked={taxMode === "PRODUCT"} onChange={() => setTaxMode("PRODUCT")} />
-                  Product-wise GST
-                </label>
-                {taxMode === "PRODUCT" && (
-                  <div className="tax-inline-fields">
-                    <select value={taxType} onChange={e => setTaxType(e.target.value)}>
-                      <option value="PERCENT">% GST Rate</option>
-                      <option value="FLAT">₹ Flat Amount</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── PRODUCT TAB ── */}
-        {activeTab === "Product" && (
-          <div className="sales-section">
-            <h4>Select Product</h4>
-
-            <div className="product-row">
-              <SearchableDropdown
-                label="Product Type" options={productTypes} selectedId={selectedType}
-                onSelect={id => handleTypeChange({ target: { value: id } })}
-                search={typeSearch} setSearch={setTypeSearch}
-                open={typeDropdownOpen} setOpen={setTypeDropdownOpen}
-                placeholder="Select product type" dropdownRef={typeDropdownRef} error={errors.selectedType}
-              />
-              <SearchableDropdown
-                label="Product" options={products} selectedId={selectedProduct}
-                onSelect={id => handleProductChange({ target: { value: id } })}
-                search={productSearch} setSearch={setProductSearch}
-                open={productDropdownOpen} setOpen={setProductDropdownOpen}
-                placeholder="Select product" dropdownRef={productDropdownRef} error={errors.selectedProduct}
-              />
-            </div>
-
-            {/* Inventory info — price & stock are always read from product configuration,
-                there is no manual/adhoc price entry here. */}
-            {inventory ? (
-              <div className="inv-box">
-                <div>Selling Price: <b>₹{inventory.unitSellingPrice}</b></div>
-                <div>
-                  Current Stock:{" "}
-                  <b style={{ color: outOfStock ? "#fca5a5" : lowStock ? "#fcd34d" : "#6ee7b7" }}>
-                    {inventory.currentQuantity}
-                    {outOfStock ? " · Out of stock" : lowStock ? " · Low stock" : ""}
-                  </b>
-                </div>
-                {outOfStock && (
-                  <div style={{ color: "#fca5a5", fontSize: 12, width: "100%" }}>
-                    ⚠ This product is out of stock and cannot be added. Add stock via Purchase first.
-                  </div>
-                )}
-              </div>
-            ) : noPriceConfigured ? (
-              <div className="inv-box" style={{ color: "#fca5a5" }}>
-                ⚠ Selling price is not configured for this product. Please set it up in Products first.
-              </div>
-            ) : null}
-
-            {/* Batch loading shimmer */}
-            {selectedProduct && batchesLoading && (
-              <div className="inv-box" style={{ gap: 8, alignItems: "center" }}>
-                <div style={{
-                  width: 14, height: 14, borderRadius: "50%",
-                  border: "2px solid rgba(59,130,246,0.2)",
-                  borderTopColor: "var(--sl-accent)",
-                  animation: "slRing 0.8s linear infinite",
-                  flexShrink: 0,
-                }} />
-                <span style={{ fontSize: 12, color: "var(--sl-text-2)", opacity: 0.6 }}>
-                  Loading batches...
-                </span>
-              </div>
-            )}
-
-            {/* Batch selector — only after load */}
-            {selectedProduct && !batchesLoading && availableBatches.length > 0 && (
-              <div className="inv-box" style={{ flexDirection: "column", gap: 10 }}>
-                <div style={{
-                  fontSize: 10, letterSpacing: "0.12em",
-                  color: "var(--sl-text-2)", textTransform: "uppercase",
-                  fontFamily: "var(--sl-font-m)"
-                }}>
-                  Batch Selection
-                </div>
-                <select
-                  value={selectedBatchId}
-                  onChange={e => setSelectedBatchId(e.target.value)}
-                  style={{ width: "100%" }}
-                >
-                  <option value="">Auto-select (FIFO — oldest expiry first)</option>
-                  {availableBatches.map(b => (
-                    <option key={b.batchId} value={b.batchId}>
-                      {b.batchNumber} · Exp: {b.expiryDate} · Qty: {b.availableQuantity}
-                      {b.expiryStatus === "EXPIRING_SOON" ? " ⚠️" : b.expiryStatus === "EXPIRED" ? " ❌" : " ✅"}
-                    </option>
-                  ))}
-                </select>
-                {selectedBatchId && (() => {
-                  const b = availableBatches.find(x => String(x.batchId) === String(selectedBatchId));
-                  return b ? (
-                    <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
-                      <span>Batch: <b style={{ color: "#93c5fd" }}>{b.batchNumber}</b></span>
-                      <span>Expiry: <b style={{
-                        color: b.expiryStatus === "EXPIRING_SOON" ? "#fbbf24"
-                          : b.expiryStatus === "EXPIRED" ? "#fca5a5" : "#6ee7b7"
-                      }}>{b.expiryDate}</b></span>
-                      <span>MRP: <b>₹{b.mrp}</b></span>
-                      <span>Stock: <b>{b.availableQuantity}</b></span>
-                    </div>
-                  ) : null;
-                })()}
-              </div>
-            )}
-
-            {/* No batches warning — only AFTER load completes with empty result */}
-            {selectedProduct && !batchesLoading && availableBatches.length === 0 && (
-              <div className="inv-box" style={{ color: "#fca5a5", fontSize: 12 }}>
-                ⚠ No batches available for this product. Add stock via Purchase first.
-              </div>
-            )}
-
-            {/* Quantity + GST */}
-            <div className="quantity-tax-row">
-              <div>
-                <label>Quantity</label>
-                <input
-                  type="number" value={quantity}
-                  onChange={e => setQuantity(e.target.value)}
-                  min="1" placeholder="Enter qty"
-                  disabled={outOfStock}
-                />
-                {errors.quantity && <div className="error">{errors.quantity}</div>}
-              </div>
-              {taxMode === "PRODUCT" && (
-                <div className="tax-column">
-                  <label>GST {taxType === "PERCENT" ? "Rate (%)" : "Amount (₹)"}</label>
-                  <div className="tax-input-row">
-                    {taxType === "PERCENT" ? (
-                      <select value={taxInput} onChange={e => setTaxInput(e.target.value)}>
-                        <option value="">Select GST rate</option>
+        <div className="afx-body">
+          {/* ── TAX TAB ── */}
+          {activeTab === "Tax" && (
+            <div>
+              <div className="afx-section-title" style={{ marginBottom: 10 }}>GST / Tax Settings</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div className={`afx-option-row ${taxMode === "COMMON" ? "is-selected" : ""}`}>
+                  <label>
+                    <input type="radio" name="taxMode" value="COMMON" checked={taxMode === "COMMON"} onChange={() => setTaxMode("COMMON")} />
+                    Common GST
+                    <span className="afx-badge">Default 18%</span>
+                  </label>
+                  {taxMode === "COMMON" && (
+                    <div className="afx-option-row-fields">
+                      <select className="afx-select" style={{ minWidth: 160 }} value={commonTax} onChange={e => setCommonTax(e.target.value)}>
                         {GST_RATES.map(r => (
                           <option key={r} value={r}>
-                            {r}%{r === 18 ? " (Standard)" : r === 0 ? " (Exempt)" : ""}
+                            {r}% GST{r === 18 ? " (Standard)" : r === 0 ? " (Exempt)" : ""}
                           </option>
                         ))}
                       </select>
+                    </div>
+                  )}
+                </div>
+                <div className={`afx-option-row ${taxMode === "PRODUCT" ? "is-selected" : ""}`}>
+                  <label>
+                    <input type="radio" name="taxMode" value="PRODUCT" checked={taxMode === "PRODUCT"} onChange={() => setTaxMode("PRODUCT")} />
+                    Product-wise GST
+                  </label>
+                  {taxMode === "PRODUCT" && (
+                    <div className="afx-option-row-fields">
+                      <select className="afx-select" style={{ minWidth: 160 }} value={taxType} onChange={e => setTaxType(e.target.value)}>
+                        <option value="PERCENT">% GST Rate</option>
+                        <option value="FLAT">₹ Flat Amount</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── PRODUCT TAB ── */}
+          {activeTab === "Product" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div className="afx-section-title">Select Product</div>
+
+              <div className="afx-grid">
+                <SearchableDropdown
+                  label="Product Type" options={productTypes} selectedId={selectedType}
+                  onSelect={id => handleTypeChange({ target: { value: id } })}
+                  search={typeSearch} setSearch={setTypeSearch}
+                  open={typeDropdownOpen} setOpen={setTypeDropdownOpen}
+                  placeholder="Select product type" dropdownRef={typeDropdownRef} error={errors.selectedType}
+                />
+                <SearchableDropdown
+                  label="Product" options={products} selectedId={selectedProduct}
+                  onSelect={id => handleProductChange({ target: { value: id } })}
+                  search={productSearch} setSearch={setProductSearch}
+                  open={productDropdownOpen} setOpen={setProductDropdownOpen}
+                  placeholder="Select product" dropdownRef={productDropdownRef} error={errors.selectedProduct}
+                />
+              </div>
+
+              {/* Inventory info — price & stock are always read from product configuration */}
+              {inventory ? (
+                <div className="afx-card">
+                  <div className="afx-card-row"><span>Selling Price</span><strong>₹{inventory.unitSellingPrice}</strong></div>
+                  <div className="afx-card-row">
+                    <span>Current Stock</span>
+                    <strong className={outOfStock ? "afx-text-danger" : lowStock ? "" : "afx-text-success"} style={lowStock ? { color: "var(--afx-warning)" } : undefined}>
+                      {inventory.currentQuantity}{outOfStock ? " · Out of stock" : lowStock ? " · Low stock" : ""}
+                    </strong>
+                  </div>
+                  {outOfStock && (
+                    <div className="afx-error">This product is out of stock and cannot be added. Add stock via Purchase first.</div>
+                  )}
+                </div>
+              ) : noPriceConfigured ? (
+                <div className="afx-alert">Selling price is not configured for this product. Please set it up in Products first.</div>
+              ) : null}
+
+              {/* Batch loading shimmer */}
+              {selectedProduct && batchesLoading && (
+                <div className="afx-card" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <span className="afx-spinner" style={{ borderColor: "var(--afx-border)", borderTopColor: "var(--afx-accent)" }} />
+                  <span style={{ fontSize: 12, color: "var(--afx-text-3)" }}>Loading batches…</span>
+                </div>
+              )}
+
+              {/* Batch selector — only after load */}
+              {selectedProduct && !batchesLoading && availableBatches.length > 0 && (
+                <div className="afx-card">
+                  <div className="afx-section-title" style={{ padding: 0 }}>Batch Selection</div>
+                  <div className="afx-select-wrap">
+                    <select className="afx-select" value={selectedBatchId} onChange={e => setSelectedBatchId(e.target.value)}>
+                      <option value="">Auto-select (FIFO — oldest expiry first)</option>
+                      {availableBatches.map(b => (
+                        <option key={b.batchId} value={b.batchId}>
+                          {b.batchNumber} · Exp: {b.expiryDate} · Qty: {b.availableQuantity}
+                          {b.expiryStatus === "EXPIRING_SOON" ? " (expiring soon)" : b.expiryStatus === "EXPIRED" ? " (expired)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  {selectedBatchId && (() => {
+                    const b = availableBatches.find(x => String(x.batchId) === String(selectedBatchId));
+                    return b ? (
+                      <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--afx-text-2)", flexWrap: "wrap" }}>
+                        <span>Batch: <strong style={{ color: "var(--afx-accent)" }}>{b.batchNumber}</strong></span>
+                        <span>Expiry: <strong style={{
+                          color: b.expiryStatus === "EXPIRING_SOON" ? "var(--afx-warning)"
+                            : b.expiryStatus === "EXPIRED" ? "var(--afx-danger)" : "var(--afx-success)"
+                        }}>{b.expiryDate}</strong></span>
+                        <span>MRP: <strong style={{ color: "var(--afx-text-1)" }}>₹{b.mrp}</strong></span>
+                        <span>Stock: <strong style={{ color: "var(--afx-text-1)" }}>{b.availableQuantity}</strong></span>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+              )}
+
+              {/* No batches warning */}
+              {selectedProduct && !batchesLoading && availableBatches.length === 0 && (
+                <div className="afx-alert">No batches available for this product. Add stock via Purchase first.</div>
+              )}
+
+              {/* Quantity + GST */}
+              <div className="afx-grid">
+                <div className="afx-field">
+                  <label className="afx-label">Quantity</label>
+                  <input
+                    className={`afx-input ${errors.quantity ? "afx-input--err" : ""}`}
+                    type="number" value={quantity}
+                    onChange={e => setQuantity(e.target.value)}
+                    min="1" placeholder="Enter qty"
+                    disabled={outOfStock}
+                  />
+                  {errors.quantity && <div className="afx-error">{errors.quantity}</div>}
+                </div>
+                {taxMode === "PRODUCT" && (
+                  <div className="afx-field">
+                    <label className="afx-label">GST {taxType === "PERCENT" ? "Rate (%)" : "Amount (₹)"}</label>
+                    {taxType === "PERCENT" ? (
+                      <div className="afx-select-wrap">
+                        <select className="afx-select" value={taxInput} onChange={e => setTaxInput(e.target.value)}>
+                          <option value="">Select GST rate</option>
+                          {GST_RATES.map(r => (
+                            <option key={r} value={r}>{r}%{r === 18 ? " (Standard)" : r === 0 ? " (Exempt)" : ""}</option>
+                          ))}
+                        </select>
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
                     ) : (
                       <input
+                        className="afx-input"
                         type="number" value={taxInput}
                         onChange={e => setTaxInput(e.target.value)}
                         placeholder="Flat GST amount" min="0"
                       />
                     )}
-                    {errors.taxInput && <div className="error">{errors.taxInput}</div>}
+                    {errors.taxInput && <div className="afx-error">{errors.taxInput}</div>}
+                  </div>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" className="afx-btn" onClick={clearProductForm}>Clear All</button>
+                <button type="button" className="afx-btn afx-btn--primary" onClick={addItem} disabled={outOfStock || noPriceConfigured}>
+                  {editIndex !== null ? "Update Item" : "+ Add Item"}
+                </button>
+              </div>
+              {errors.lineItems && <div className="afx-error">{errors.lineItems}</div>}
+
+              {/* Line items table */}
+              {lineItems.length > 0 && (
+                <div>
+                  <div className="afx-section-title" style={{ marginBottom: 8 }}>Line Items</div>
+                  <div className="afx-line-table" style={{ overflowX: "auto" }}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Product</th>
+                          <th>Batch</th>
+                          <th>Expiry</th>
+                          <th>Qty</th>
+                          <th>Price (₹)</th>
+                          <th>GST (₹)</th>
+                          <th>Total (₹)</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lineItems.map((it, idx) => (
+                          <tr key={idx}>
+                            <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>{it.productName}</td>
+                            <td style={{ color: "var(--afx-accent)", fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{it.batchNumber || "AUTO"}</td>
+                            <td style={{ fontSize: 11 }}>{it.expiryDate || "—"}</td>
+                            <td>{it.quantity}</td>
+                            <td>{it.sellingPrice}</td>
+                            <td>{it.taxAmount.toFixed(2)}</td>
+                            <td style={{ fontWeight: 700, color: "var(--afx-text-1)" }}>{(it.quantity * it.sellingPrice + it.taxAmount).toFixed(2)}</td>
+                            <td>
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <button type="button" className="afx-icon-btn" style={{ width: 24, height: 24 }} onClick={() => editItem(idx)} title="Edit">
+                                  <svg width="12" height="12" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z"/></svg>
+                                </button>
+                                <button type="button" className="afx-remove-btn" onClick={() => deleteItem(idx)} title="Delete">
+                                  <svg width="12" height="12" viewBox="0 -960 960 960" fill="currentColor"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360Z"/></svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="afx-totals" style={{ marginTop: 10 }}>
+                    <div className="afx-totals-row afx-totals-grand"><span>Total (incl. GST)</span><span>₹{totalAmount.toFixed(2)}</span></div>
                   </div>
                 </div>
               )}
             </div>
+          )}
 
-            {/* Action buttons */}
-            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 14 }}>
-              <button className="clear-all-btn" onClick={clearProductForm}>
-                ✕ Clear All
-              </button>
-              <button
-                className="add-btn"
-                style={{ marginTop: 0 }}
-                onClick={addItem}
-                disabled={outOfStock || noPriceConfigured}
-              >
-                {editIndex !== null ? "✓ Update Item" : "+ Add Item"}
-              </button>
-            </div>
-            {errors.lineItems && <div className="error">{errors.lineItems}</div>}
+          {/* ── BILLING TAB ── */}
+          {activeTab === "Billing" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div className="afx-section-title">Billing &amp; Payment</div>
 
-            {/* Line items table */}
-            {lineItems.length > 0 && (
-              <div className="sales-section" style={{ marginTop: 16, padding: 0, border: "none" }}>
-                <h4>Line Items</h4>
-                <table className="sales-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Batch</th>
-                      <th>Expiry</th>
-                      <th>Qty</th>
-                      <th>Price (₹)</th>
-                      <th>GST (₹)</th>
-                      <th>Total (₹)</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lineItems.map((it, idx) => (
-                      <tr key={idx}>
-                        <td>{it.productName}</td>
-                        <td style={{ color: "#93c5fd", fontFamily: "var(--sl-font-m)", fontSize: 11 }}>
-                          {it.batchNumber || "AUTO"}
-                        </td>
-                        <td style={{ fontSize: 11 }}>{it.expiryDate || "—"}</td>
-                        <td>{it.quantity}</td>
-                        <td>{it.sellingPrice}</td>
-                        <td>{it.taxAmount.toFixed(2)}</td>
-                        <td>{(it.quantity * it.sellingPrice + it.taxAmount).toFixed(2)}</td>
-                        <td>
-                          <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-                            <button className="sl-action-btn edit" onClick={() => editItem(idx)} title="Edit">
-                              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor">
-                                <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z" />
-                              </svg>
-                            </button>
-                            <button className="sl-action-btn delete" onClick={() => deleteItem(idx)} title="Delete">
-                              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor">
-                                <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360Z" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="total-amount">Total (incl. GST): ₹{totalAmount.toFixed(2)}</div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── BILLING TAB ── */}
-        {activeTab === "Billing" && (
-          <div className="sales-section">
-            <h4>Billing &amp; Payment</h4>
-
-            <SearchableDropdown
-              label="Retailer (optional — leave empty for walk-in)"
-              options={retailers} selectedId={selectedRetailer}
-              onSelect={id => setSelectedRetailer(id)}
-              search={retailerSearch} setSearch={setRetailerSearch}
-              open={retailerDropdownOpen} setOpen={setRetailerDropdownOpen}
-              placeholder="Search retailer..." dropdownRef={retailerDropdownRef}
-              error={errors.retailerId}
-            />
-
-            <label>Discount</label>
-            <div className="tax-row">
-              <input
-                type="number" value={discountInput}
-                onChange={e => setDiscountInput(e.target.value)}
-                min="0" placeholder="0"
+              <SearchableDropdown
+                label="Retailer (optional — leave empty for walk-in)"
+                options={retailers} selectedId={selectedRetailer}
+                onSelect={id => setSelectedRetailer(id)}
+                search={retailerSearch} setSearch={setRetailerSearch}
+                open={retailerDropdownOpen} setOpen={setRetailerDropdownOpen}
+                placeholder="Search retailer…" dropdownRef={retailerDropdownRef}
+                error={errors.retailerId}
               />
-              <select value={discountType} onChange={e => setDiscountType(e.target.value)}>
-                <option value="PERCENT">%</option>
-                <option value="FLAT">₹</option>
-              </select>
-            </div>
-            {errors.discountInput && <div className="error">{errors.discountInput}</div>}
 
-            {creditPaymentType !== "CREDIT" && (
-              <>
-                <label>Billing Mode</label>
-                <select value={billingMode} onChange={e => setBillingMode(e.target.value)}>
-                  <option value="">— Select Billing Mode —</option>
-                  <option value="CASH">Cash</option>
-                  <option value="ONLINE">Online / UPI</option>
-                  <option value="CARD">Card</option>
-                </select>
-                {errors.billingMode && <div className="error">{errors.billingMode}</div>}
-              </>
-            )}
-
-            {/* ── Totals breakdown: Subtotal → Discount → Taxable Value → GST → Net Amount ── */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-                background: "rgba(0,0,0,0.28)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: 12,
-                padding: "13px 15px",
-                margin: "4px 0",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--sl-text-2, #8891a8)" }}>
-                <span>Subtotal</span>
-                <span style={{ color: "var(--sl-text-1, #e8eaf2)", fontWeight: 500 }}>₹{lineTotal.toFixed(2)}</span>
+              <div className="afx-field">
+                <label className="afx-label">Discount</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    className="afx-input"
+                    type="number" value={discountInput}
+                    onChange={e => setDiscountInput(e.target.value)}
+                    min="0" placeholder="0"
+                  />
+                  <select className="afx-select" style={{ width: 80, flexShrink: 0 }} value={discountType} onChange={e => setDiscountType(e.target.value)}>
+                    <option value="PERCENT">%</option>
+                    <option value="FLAT">₹</option>
+                  </select>
+                </div>
+                {errors.discountInput && <div className="afx-error">{errors.discountInput}</div>}
               </div>
 
-              {discAmt > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--sl-text-2, #8891a8)" }}>
-                  <span>Discount</span>
-                  <span style={{ color: "#fca5a5", fontWeight: 500 }}>-₹{discAmt.toFixed(2)}</span>
+              {creditPaymentType !== "CREDIT" && (
+                <div className="afx-field">
+                  <label className="afx-label">Billing Mode</label>
+                  <div className="afx-select-wrap">
+                    <select className="afx-select" value={billingMode} onChange={e => setBillingMode(e.target.value)}>
+                      <option value="">— Select Billing Mode —</option>
+                      <option value="CASH">Cash</option>
+                      <option value="ONLINE">Online / UPI</option>
+                      <option value="CARD">Card</option>
+                    </select>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  {errors.billingMode && <div className="afx-error">{errors.billingMode}</div>}
                 </div>
               )}
 
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--sl-text-2, #8891a8)" }}>
-                <span>Taxable Value</span>
-                <span style={{ color: "var(--sl-text-1, #e8eaf2)", fontWeight: 500 }}>₹{discountedTotal.toFixed(2)}</span>
+              {/* ── Totals breakdown ── */}
+              <div className="afx-totals">
+                <div className="afx-totals-row"><span>Subtotal</span><span style={{ color: "var(--afx-text-1)" }}>₹{lineTotal.toFixed(2)}</span></div>
+                {discAmt > 0 && (
+                  <div className="afx-totals-row"><span>Discount</span><span className="afx-text-danger">−₹{discAmt.toFixed(2)}</span></div>
+                )}
+                <div className="afx-totals-row"><span>Taxable Value</span><span style={{ color: "var(--afx-text-1)" }}>₹{discountedTotal.toFixed(2)}</span></div>
+                <div className="afx-totals-row"><span>GST</span><span style={{ color: "var(--afx-text-1)" }}>₹{gstAmount.toFixed(2)}</span></div>
+                <div className="afx-totals-divider" />
+                <div className="afx-totals-row afx-totals-grand"><span>Net Amount</span><span>₹{netAmount.toFixed(2)}</span></div>
               </div>
 
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--sl-text-2, #8891a8)" }}>
-                <span>GST</span>
-                <span style={{ color: "var(--sl-text-1, #e8eaf2)", fontWeight: 500 }}>₹{gstAmount.toFixed(2)}</span>
+              <div className="afx-field">
+                <label className="afx-label">Payment Type</label>
+                <div className="afx-radio-group">
+                  {["PAID", "CREDIT", "PARTIAL"].map(pt => (
+                    <label key={pt} className={`afx-radio ${creditPaymentType === pt ? "is-checked" : ""}`}>
+                      <input
+                        type="radio" checked={creditPaymentType === pt}
+                        onChange={() => {
+                          setCreditPaymentType(pt);
+                          if (pt === "PAID")    setAmountPaid(netAmount.toFixed(2));
+                          if (pt === "CREDIT")  setAmountPaid("0");
+                          if (pt === "PARTIAL") setAmountPaid("");
+                        }}
+                      />
+                      {pt === "PAID" ? "Full Payment" : pt === "CREDIT" ? "Credit (Pay Later)" : "Partial Payment"}
+                    </label>
+                  ))}
+                </div>
               </div>
 
-              <div style={{ height: 1, background: "rgba(255,255,255,0.1)", margin: "2px 0" }} />
+              {(creditPaymentType === "CREDIT" || creditPaymentType === "PARTIAL") && (
+                <div className="afx-field">
+                  <label className="afx-label">Due Date</label>
+                  <input className="afx-input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+                  {errors.dueDate && <div className="afx-error">{errors.dueDate}</div>}
+                </div>
+              )}
 
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 700, fontFamily: "var(--sl-font-d, inherit)" }}>
-                <span style={{ color: "var(--sl-text-1, #e8eaf2)" }}>Net Amount</span>
-                <span style={{ color: "#6ee7b7" }}>₹{netAmount.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <label>Payment Type</label>
-            <div className="radio-group">
-              {["PAID", "CREDIT", "PARTIAL"].map(pt => (
-                <label key={pt} className={`radio-option ${creditPaymentType === pt ? "checked" : ""}`}>
-                  <input
-                    type="radio" checked={creditPaymentType === pt}
-                    onChange={() => {
-                      setCreditPaymentType(pt);
-                      if (pt === "PAID")    setAmountPaid(netAmount.toFixed(2));
-                      if (pt === "CREDIT")  setAmountPaid("0");
-                      if (pt === "PARTIAL") setAmountPaid("");
-                    }}
-                  />
-                  {pt === "PAID" ? "Full Payment" : pt === "CREDIT" ? "Credit (Pay Later)" : "Partial Payment"}
-                </label>
-              ))}
-            </div>
-
-            {(creditPaymentType === "CREDIT" || creditPaymentType === "PARTIAL") && (
-              <>
-                <label>Due Date</label>
+              <div className="afx-field">
+                <label className="afx-label">Amount Paid (₹)</label>
                 <input
-                  type="date" value={dueDate}
-                  onChange={e => setDueDate(e.target.value)}
-                  style={{ width: "100%" }}
+                  className="afx-input"
+                  type="number" value={amountPaid}
+                  onChange={e => setAmountPaid(e.target.value)}
+                  disabled={creditPaymentType === "PAID" || creditPaymentType === "CREDIT"}
+                  min="0" placeholder="0.00"
                 />
-                {errors.dueDate && <div className="error">{errors.dueDate}</div>}
-              </>
-            )}
-
-            <label>Amount Paid (₹)</label>
-            <input
-              type="number" value={amountPaid}
-              onChange={e => setAmountPaid(e.target.value)}
-              disabled={creditPaymentType === "PAID" || creditPaymentType === "CREDIT"}
-              min="0" placeholder="0.00"
-            />
-            {errors.amountPaid && <div className="error">{errors.amountPaid}</div>}
-
-            {creditPaymentType !== "PAID" && (
-              <div className="total-amount" style={{ borderColor: "rgba(239,68,68,0.2)", color: "#fca5a5" }}>
-                Due Amount: ₹{Math.max(0, netAmount - parseFloat(amountPaid || 0)).toFixed(2)}
+                {errors.amountPaid && <div className="afx-error">{errors.amountPaid}</div>}
               </div>
-            )}
-          </div>
-        )}
 
-        {/* ── FOOTER ── */}
-        <div className="sales-footer">
-          <button className="cancel-btn" onClick={onClose}>Cancel</button>
-          <button className="submit-btn" onClick={submitSales}>Submit Sales</button>
+              {creditPaymentType !== "PAID" && (
+                <div className="afx-totals">
+                  <div className="afx-totals-row afx-totals-grand">
+                    <span>Due Amount</span>
+                    <span className="afx-text-danger">₹{Math.max(0, netAmount - parseFloat(amountPaid || 0)).toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
+        <div className="afx-footer">
+          <button className="afx-btn" onClick={onClose}>Cancel</button>
+          <button className="afx-btn afx-btn--primary" onClick={submitSales}>Submit Sales</button>
+        </div>
       </div>
     </div>
   );

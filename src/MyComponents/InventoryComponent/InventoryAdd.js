@@ -1,24 +1,70 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../../Styles/Product/ProductForm.css"; // Reuse same modal CSS
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 
+/* ── Reusable searchable dropdown ── */
+function SearchDrop({ label, options, value, onChange, placeholder, error, getLabel = (o) => o.name, getId = (o) => o.id }) {
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = options.find(o => String(getId(o)) === String(value));
+
+  useEffect(() => {
+    const h = e => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setSearch(""); } };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const filtered = options.filter(o => getLabel(o).toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="afx-field">
+      {label && <label className="afx-label">{label}</label>}
+      <div className="afx-searchdrop" ref={ref}>
+        <div
+          className={`afx-searchdrop-face ${open ? "is-open" : ""} ${selected ? "is-filled" : ""}`}
+          onClick={() => { if (!open) setSearch(""); setOpen(!open); }}
+        >
+          <span>{selected ? getLabel(selected) : (placeholder || "Select…")}</span>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+        {open && (
+          <div className="afx-searchdrop-panel">
+            <input
+              className="afx-searchdrop-input"
+              autoFocus
+              placeholder={`Search ${label || ""}…`}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <div className="afx-searchdrop-list">
+              {filtered.length === 0 ? (
+                <div className="afx-searchdrop-empty">No results</div>
+              ) : filtered.map(o => (
+                <div
+                  key={getId(o)}
+                  className={`afx-searchdrop-item ${String(getId(o)) === String(value) ? "is-selected" : ""}`}
+                  onMouseDown={e => { e.preventDefault(); onChange(getId(o)); setOpen(false); setSearch(""); }}
+                >
+                  {getLabel(o)}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      {error && <div className="afx-error">{error}</div>}
+    </div>
+  );
+}
+
 export default function InventoryAdd({ onSubmit, onClose }) {
   const [products, setProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  /* ================= NEW ADDITIONS ================= */
   const [allProducts, setAllProducts] = useState([]);
   const [productTypes, setProductTypes] = useState([]);
-  const [typeSearch, setTypeSearch] = useState("");
-  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
-  const typeDropdownRef = useRef(null);
   const lastLoadedType = useRef(null);
-
-  /* ================================================= */
 
   const [activeTab, setActiveTab] = useState("details");
 
@@ -29,9 +75,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     unitSellingPrice: "",
   });
 
-  /* ================= NEW FIELD ADDED SAFELY ================= */
   const [productTypeId, setProductTypeId] = useState("");
-  /* ========================================================== */
 
   const [errors, setErrors] = useState({});
   const [initialLoading, setInitialLoading] = useState(true);
@@ -56,35 +100,18 @@ export default function InventoryAdd({ onSubmit, onClose }) {
                 : [];
 
           setProducts(list);
-          setAllProducts(list); // NEW
+          setAllProducts(list);
         }
       })
       .catch((err) => console.error("Error fetching products:", err))
       .finally(() => setInitialLoading(false));
   }, []);
 
-  /* ================= FETCH PRODUCT TYPES ================= */
+  /* FETCH PRODUCT TYPES */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {
-      })
+    apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {})
       .then(res => res.json())
       .then(json => setProductTypes(json?.data?.productTypes || []));
-  }, []);
-
-  /** CLOSE DROPDOWN WHEN CLICK OUTSIDE */
-  useEffect(() => {
-    const clickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setDropdownOpen(false);
-        setSearchTerm("");
-      }
-      if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) {
-        setTypeDropdownOpen(false);
-        setTypeSearch("");
-      }
-    };
-    document.addEventListener("mousedown", clickOutside);
-    return () => document.removeEventListener("mousedown", clickOutside);
   }, []);
 
   /** HANDLE FIELD CHANGE */
@@ -148,17 +175,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     }
   };
 
-  /** FILTER PRODUCTS WHILE SEARCHING */
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  /* ================= NEW FILTERS ================= */
-  const filteredTypes = productTypes.filter(pt =>
-    pt.name.toLowerCase().includes(typeSearch.toLowerCase())
-  );
-
-  /* 🔥 LOAD PRODUCTS WHEN PRODUCT TYPE CHANGES */
+  /* LOAD PRODUCTS WHEN PRODUCT TYPE CHANGES */
   useEffect(() => {
     if (!productTypeId) {
       setProducts(allProducts);
@@ -167,18 +184,16 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     if (lastLoadedType.current === productTypeId) return;
     lastLoadedType.current = productTypeId;
 
-    apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, {
-      })
+    apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, {})
       .then(res => res.json())
       .then(json => setProducts((json?.data || []).filter(p => p.disable === 0)));
   }, [productTypeId, allProducts]);
 
-  /* 🔥 WHEN PRODUCT SELECTED → FETCH ITS PRODUCT TYPE FROM API */
+  /* WHEN PRODUCT SELECTED → FETCH ITS PRODUCT TYPE FROM API */
   useEffect(() => {
     if (!formData.product_id) return;
 
-    apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, {
-      })
+    apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`, {})
       .then(res => res.json())
       .then(json => {
         const typeId = json?.data?.productTypeId || json?.data?.id;
@@ -188,192 +203,108 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   }, [formData.product_id]);
 
   return (
-    <div className="modal-backdrop show">
-      <div className="modal">
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
         {initialLoading ? (
-          <div className="modal-body mf-modal-loading">
-            <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+          <div className="afx-loading">
+            <div className="afx-loader-ring"><div/><div/><div/></div>
           </div>
         ) : (
-        <>
-        
-        <div className="modal-header">
-          <div className="modal-title">
-            <h3>Add Inventory</h3>
-            <div className="small-muted">Fill inventory details</div>
-          </div>
-
-          <div className="modal-controls">
-            <div className="tab-row">
-              {["details", "stock"].map((tab) => (
-                <div
-                  key={tab}
-                  className={`tab ${activeTab === tab ? "active" : ""}`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab === "details" ? "Product" : "Stock & Pricing"}
-                </div>
-              ))}
-            </div>
-
-            <button className="btn-ghost" onClick={onClose} title="Close">
-              ✖
-            </button>
-          </div>
-        </div>
-
-        
-        <form className="modal-body" onSubmit={handleSubmit}>
-          <div className="form-col scrollable">
-            {activeTab === "details" && (
-              <div className="form-grid">
-
-                
-                <div className="custom-select" ref={typeDropdownRef} style={{ width: "100%" }}>
-                  <label>Product Type</label>
-                  <div
-                    className={`select-box ${typeDropdownOpen ? "active" : ""}`}
-                    style={{ width: "100%" }}
-                    onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
-                  >
-                    <input
-                      type="text"
-                      value={
-                        typeDropdownOpen
-                          ? typeSearch
-                          : productTypes.find(t => t.id === productTypeId)?.name || "Select product type"
-                      }
-                      onChange={(e) => setTypeSearch(e.target.value)}
-                      readOnly={!typeDropdownOpen}
-                      className="select-input"
-                      style={{ width: "100%", boxSizing: "border-box" }}
-                    />
-                    {typeDropdownOpen && (
-                      <ul className="options">
-                        {filteredTypes.map(pt => (
-                          <li key={pt.id} onClick={() => { setProductTypeId(pt.id); setTypeDropdownOpen(false); }}>
-                            {pt.name}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-
-
-                
-                <div className="custom-select" ref={dropdownRef}>
-                  <label>Select Product</label>
-                  <div
-                    className={`select-box ${dropdownOpen ? "active" : ""}`}
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                  >
-                    <input
-                      type="text"
-                      value={
-                        dropdownOpen
-                          ? searchTerm
-                          : products.find((p) => p.id === formData.product_id)
-                            ?.name || "Choose a product"
-                      }
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDropdownOpen(true);
-                      }}
-                      readOnly={!dropdownOpen}
-                      className="select-input"
-                      style={{ border: "none", background: "transparent" }}
-                    />
-
-                    <ul className="options">
-                      {dropdownOpen &&
-                        filteredProducts.map((p) => (
-                          <li
-                            key={p.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFormData({
-                                ...formData,
-                                product_id: p.id,
-                              });
-                              setDropdownOpen(false);
-                              setSearchTerm("");
-                            }}
-                          >
-                            {p.name}
-                          </li>
-                        ))}
-
-                      {dropdownOpen && filteredProducts.length === 0 && (
-                        <li style={{ color: "#888" }}>No result found</li>
-                      )}
-                    </ul>
-                  </div>
-
-                  {errors.product_id && (
-                    <div className="error-msg">{errors.product_id}</div>
-                  )}
-                </div>
+          <>
+            <div className="afx-header">
+              <div>
+                <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />New Inventory</div>
+                <h3 className="afx-title">Add Inventory</h3>
               </div>
-            )}
-
-            {activeTab === "stock" && (
-              <div className="form-grid">
-                <div>
-                  <label>Current Quantity</label>
-                  <input
-                    type="number"
-                    name="currentQuantity"
-                    value={formData.currentQuantity}
-                    onChange={handleChange}
-                  />
-                  {errors.currentQuantity && (
-                    <div className="error-msg">{errors.currentQuantity}</div>
-                  )}
-                </div>
-
-                <div>
-                  <label>Reorder Level</label>
-                  <input
-                    type="number"
-                    name="reorderLevel"
-                    value={formData.reorderLevel}
-                    onChange={handleChange}
-                  />
-                  {errors.reorderLevel && (
-                    <div className="error-msg">{errors.reorderLevel}</div>
-                  )}
-                </div>
-
-                <div>
-                  <label>Unit Selling Price</label>
-                  <input
-                    type="number"
-                    name="unitSellingPrice"
-                    value={formData.unitSellingPrice}
-                    onChange={handleChange}
-                  />
-                  {errors.unitSellingPrice && (
-                    <div className="error-msg">{errors.unitSellingPrice}</div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="modal-footer-fixed">
-            <div className="modal-actions">
-              <button className="btn-ghost" type="button" onClick={onClose}>
-                Cancel
-              </button>
-              <button type="submit" className="submit-button">
-                Save Inventory
+              <button className="afx-close" onClick={onClose} title="Close">
+                <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                ESC
               </button>
             </div>
-          </div>
-        </form>
-        </>
+
+            <form onSubmit={handleSubmit}>
+              <div className="afx-body">
+                <div className="afx-tabs">
+                  {["details", "stock"].map((tab) => (
+                    <button
+                      type="button"
+                      key={tab}
+                      className={`afx-tab ${activeTab === tab ? "is-active" : ""}`}
+                      onClick={() => setActiveTab(tab)}
+                    >
+                      {tab === "details" ? "Product" : "Stock & Pricing"}
+                    </button>
+                  ))}
+                </div>
+
+                {activeTab === "details" && (
+                  <div className="afx-grid">
+                    <SearchDrop
+                      label="Product Type"
+                      options={productTypes}
+                      value={productTypeId}
+                      onChange={setProductTypeId}
+                      placeholder="Select product type"
+                    />
+
+                    <SearchDrop
+                      label="Select Product"
+                      options={products}
+                      value={formData.product_id}
+                      onChange={(id) => setFormData({ ...formData, product_id: id })}
+                      placeholder="Choose a product"
+                      error={errors.product_id}
+                    />
+                  </div>
+                )}
+
+                {activeTab === "stock" && (
+                  <div className="afx-grid">
+                    <div className="afx-field">
+                      <label className="afx-label">Current Quantity<span className="afx-req">*</span></label>
+                      <input
+                        type="number"
+                        name="currentQuantity"
+                        className={`afx-input ${errors.currentQuantity ? "afx-input--err" : ""}`}
+                        value={formData.currentQuantity}
+                        onChange={handleChange}
+                      />
+                      {errors.currentQuantity && <div className="afx-error">{errors.currentQuantity}</div>}
+                    </div>
+
+                    <div className="afx-field">
+                      <label className="afx-label">Reorder Level<span className="afx-req">*</span></label>
+                      <input
+                        type="number"
+                        name="reorderLevel"
+                        className={`afx-input ${errors.reorderLevel ? "afx-input--err" : ""}`}
+                        value={formData.reorderLevel}
+                        onChange={handleChange}
+                      />
+                      {errors.reorderLevel && <div className="afx-error">{errors.reorderLevel}</div>}
+                    </div>
+
+                    <div className="afx-field">
+                      <label className="afx-label">Unit Selling Price<span className="afx-req">*</span></label>
+                      <input
+                        type="number"
+                        name="unitSellingPrice"
+                        className={`afx-input ${errors.unitSellingPrice ? "afx-input--err" : ""}`}
+                        value={formData.unitSellingPrice}
+                        onChange={handleChange}
+                      />
+                      {errors.unitSellingPrice && <div className="afx-error">{errors.unitSellingPrice}</div>}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="afx-footer">
+                <button className="afx-btn" type="button" onClick={onClose}>Cancel</button>
+                <button type="submit" className="afx-btn afx-btn--primary">Save Inventory</button>
+              </div>
+            </form>
+          </>
         )}
       </div>
     </div>

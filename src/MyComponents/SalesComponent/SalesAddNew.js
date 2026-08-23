@@ -5,6 +5,24 @@ import SalesView from "./SalesView";
 import { toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import CoinField from "../CommonComponent/CoinField";
+
+/* ─────────────────────────────────────────
+   PRODUCT AVATAR — deterministic color + initials, no image needed
+───────────────────────────────────────── */
+function hashString(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h;
+}
+function productInitials(name) {
+  const parts = String(name || "?").trim().split(/\s+/).slice(0, 2);
+  const s = parts.map(p => p[0]).join("").toUpperCase();
+  return s || "?";
+}
+function productHue(name) {
+  return hashString(String(name || "")) % 360;
+}
 
 /* ─────────────────────────────────────────
    SEARCHABLE DROPDOWN  (san- styling)
@@ -41,7 +59,7 @@ const Dropdown = ({ label, options, selectedId, onSelect, placeholder, error }) 
     <div className="san-dd" ref={ref}>
       {label && <label>{label}</label>}
       <div
-        className={`san-dd-box ${open ? "san-dd-open" : ""} ${error ? "san-dd-err" : ""}`}
+        className={`san-dd-field ${open ? "san-dd-open" : ""} ${error ? "san-dd-err" : ""}`}
         onClick={handleToggle}
       >
         <input
@@ -102,18 +120,21 @@ const BILLING_MODES = [
 ];
 
 const PAYMENT_TYPES = [
-  { id: "PAID",    name: "Full Payment" },
-  { id: "PARTIAL", name: "Partial Payment" },
-  { id: "CREDIT",  name: "Credit (Pay Later)" },
+  { id: "PAID",    name: "Full payment",  sub: "Pay the net amount now" },
+  { id: "PARTIAL", name: "Partial",       sub: "Pay part now, rest later" },
+  { id: "CREDIT",  name: "Credit",        sub: "Pay later, on account" },
 ];
+
+const PAYMENT_ICONS = {
+  PAID:    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3 3 7-7"/></svg>,
+  PARTIAL: <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="8" cy="8" r="6.2"/><path d="M8 1.8A6.2 6.2 0 018 14.2" fill="currentColor" stroke="none"/></svg>,
+  CREDIT:  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.5V8l2.6 1.6"/></svg>,
+};
 
 /* ─────────────────────────────────────────
    MAIN COMPONENT
 ───────────────────────────────────────── */
 export default function SalesAddNew({ onClose, onSubmit }) {
-  const canvasRef    = useRef(null);
-  const animFrameRef = useRef(null);
-
   /* ── Flow step: "catalog" (pick products) → "checkout" (pay) ── */
   const [step, setStep] = useState("catalog");
 
@@ -151,72 +172,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   const [viewUkey, setViewUkey]     = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
-  /* ══════════ 3-D CANVAS ══════════ */
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx    = canvas.getContext("2d");
-    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const orbs = Array.from({ length: 4 }, (_, i) => ({
-      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-      r: 80 + Math.random() * 160,
-      vx: (Math.random() - 0.5) * 0.18, vy: (Math.random() - 0.5) * 0.18,
-      hue: [215, 225, 210, 230][i], alpha: 0.018 + Math.random() * 0.02,
-    }));
-
-    let tick = 0;
-    const draw = () => {
-      tick++;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      const hor = canvas.height * 0.45, vanX = canvas.width / 2, gc = 10;
-      const spd = (tick * 0.2) % (canvas.height / gc);
-      ctx.save(); ctx.globalAlpha = 0.04; ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 0.5;
-      for (let i = 0; i <= gc; i++) {
-        const y = hor + spd + (i * (canvas.height - hor)) / gc;
-        if (y > canvas.height) continue;
-        const sp = ((y - hor) / (canvas.height - hor)) * canvas.width * 1.3;
-        ctx.beginPath(); ctx.moveTo(vanX - sp / 2, y); ctx.lineTo(vanX + sp / 2, y); ctx.stroke();
-      }
-      for (let i = 0; i <= 14; i++) {
-        const t = i / 14, bx = vanX - canvas.width * 0.65 + t * canvas.width * 1.3;
-        ctx.beginPath(); ctx.moveTo(vanX, hor); ctx.lineTo(bx, canvas.height + 10); ctx.stroke();
-      }
-      ctx.restore();
-
-      orbs.forEach(o => {
-        o.x += o.vx; o.y += o.vy;
-        if (o.x < -o.r)              o.x = canvas.width + o.r;
-        if (o.x > canvas.width + o.r) o.x = -o.r;
-        if (o.y < -o.r)              o.y = canvas.height + o.r;
-        if (o.y > canvas.height + o.r) o.y = -o.r;
-        const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
-        g.addColorStop(0, `hsla(${o.hue},75%,55%,${o.alpha})`);
-        g.addColorStop(1, "transparent");
-        ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
-        ctx.fillStyle = g; ctx.fill();
-      });
-
-      const vig = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height / 2, canvas.height * 0.1,
-        canvas.width / 2, canvas.height / 2, canvas.height * 0.9
-      );
-      vig.addColorStop(0, "rgba(0,0,0,0)"); vig.addColorStop(1, "rgba(0,0,0,0.65)");
-      ctx.fillStyle = vig; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      animFrameRef.current = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => {
-      window.removeEventListener("resize", resize);
-      cancelAnimationFrame(animFrameRef.current);
-    };
-  }, []);
+  const [burstToken, setBurstToken] = useState(0);   // ticks up on a completed sale — see CoinField
 
   /* ══════════ FETCH: retailers, product types, all products ══════════
      Stock and sellingPrice now come directly from the GetAllProduct API.
@@ -491,6 +447,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
         return;
       }
       toast.success("Sale added successfully");
+      setBurstToken(t => t + 1);
       if (onSubmit) onSubmit();
       setViewUkey(data.data?.uKey || null);
       setIsViewOpen(true);
@@ -506,10 +463,6 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   /* ══════════ RENDER ══════════ */
   return (
     <div className="san-page">
-      <canvas ref={canvasRef} className="san-canvas" />
-      <div className="san-noise" />
-      <div className="san-top-beam" />
-
       {initialLoading ? (
         <div className="san-screen-loading">
           <div className="san-loader"><div/><div/><div/><div/></div>
@@ -519,12 +472,18 @@ export default function SalesAddNew({ onClose, onSubmit }) {
       <div className="san-content">
 
         <div className="san-page-header">
-          <div className="san-badge"><span className="san-badge-dot" />NEW TRANSACTION</div>
           <div className="san-header-top">
-            <h1 className="san-page-title">New Sale</h1>
+            <div>
+              <div className="san-badge"><span className="san-badge-dot" />New transaction</div>
+              <h1 className="san-page-title">Quick Sale</h1>
+            </div>
             <div className="san-steps">
               <div className={`san-step ${step === "catalog" ? "san-step-active" : "san-step-done"}`}>
-                <span className="san-step-num">1</span> Select Products
+                <span className="san-step-num">
+                  {step === "checkout"
+                    ? <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    : "1"}
+                </span> Products
               </div>
               <div className="san-step-line" />
               <div className={`san-step ${step === "checkout" ? "san-step-active" : ""}`}>
@@ -532,8 +491,9 @@ export default function SalesAddNew({ onClose, onSubmit }) {
               </div>
             </div>
           </div>
-          <div className="san-header-rule" />
         </div>
+
+        {step === "catalog" && <CoinField burstToken={burstToken} />}
 
         {step === "catalog" ? (
           <CatalogStep
@@ -582,37 +542,37 @@ export default function SalesAddNew({ onClose, onSubmit }) {
 
       </div>
 
-      {/* ── Floating cart bar while browsing the catalog ── */}
+      {/* ── Sticky checkout bar while browsing the catalog ── */}
       {step === "catalog" && (
-        <div className="san-cart-float">
-          <div className="san-cart-float-info">
-            {items.length === 0 ? (
-              <>
-                <span className="san-cart-float-count san-cart-float-empty-label">
-                  🛒 Cart is empty
-                </span>
-                <span className="san-cart-float-hint">Add products above to get started</span>
-              </>
-            ) : (
-              <>
-                <span className="san-cart-float-count">
-                  {items.reduce((s, i) => s + i.quantity, 0)} unit{items.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""} · {items.length} item{items.length !== 1 ? "s" : ""}
-                </span>
-                <span className="san-cart-float-amount">₹{subTotal.toFixed(2)}</span>
-              </>
-            )}
+        <div className="san-cart-bar">
+          <div className="san-cart-bar-inner">
+            <div className="san-cart-bar-info">
+              {items.length === 0 ? (
+                <>
+                  <span className="san-cart-bar-count san-cart-bar-empty">Cart is empty</span>
+                  <span className="san-cart-bar-hint">Add products above to get started</span>
+                </>
+              ) : (
+                <>
+                  <span className="san-cart-bar-amount">₹{subTotal.toFixed(2)}</span>
+                  <span className="san-cart-bar-count">
+                    {items.reduce((s, i) => s + i.quantity, 0)} unit{items.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""} · {items.length} item{items.length !== 1 ? "s" : ""}
+                  </span>
+                </>
+              )}
+            </div>
+            <button
+              className="san-btn-checkout"
+              onClick={goToCheckout}
+              disabled={items.length === 0}
+            >
+              Proceed to checkout
+              <svg width="12" height="12" viewBox="0 0 11 11" fill="none">
+                <path d="M2 5.5h7M6 2l3.5 3.5L6 9" stroke="currentColor" strokeWidth="1.6"
+                  strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </div>
-          <button
-            className="san-btn-primary san-cart-float-btn"
-            onClick={goToCheckout}
-            disabled={items.length === 0}
-          >
-            Review &amp; Pay
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M2 5.5h7M6 2l3.5 3.5L6 9" stroke="currentColor" strokeWidth="1.6"
-                strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
         </div>
       )}
 
@@ -642,7 +602,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
 }
 
 /* ─────────────────────────────────────────
-   STEP 1 — CATALOG
+   STEP 1 — CATALOG  (Amazon / Flipkart product-grid reference)
 ───────────────────────────────────────── */
 function CatalogStep({
   productTypes, filteredProducts, search, setSearch, typeFilter, setTypeFilter,
@@ -653,7 +613,7 @@ function CatalogStep({
 
       <div className="san-catalog-toolbar">
         <div className="san-search-bar">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
             <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.4"/>
             <path d="M9.5 9.5L13 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
@@ -701,50 +661,55 @@ function CatalogStep({
             const lowStock   = stock !== null && stock > 0 && stock <= 10;
             const noPrice    = !outOfStock && (!price || price <= 0);
             const isBlocked  = outOfStock || noPrice;
+            const hue        = productHue(p.name);
 
             return (
               <div
                 key={p.id}
                 className={`san-pcard ${inCart > 0 ? "san-pcard-in-cart" : ""} ${outOfStock ? "san-pcard-out-of-stock" : ""}`}
               >
-                <div className="san-pcard-top">
-                  <span className="san-pcard-name">{p.name}</span>
+                <div className="san-pcard-media" style={{ "--hue": hue }}>
+                  <span className="san-pcard-initials">{productInitials(p.name)}</span>
                   {stock !== null && (
                     <span className={`san-stock-badge ${outOfStock ? "san-stock-out" : lowStock ? "san-stock-low" : "san-stock-ok"}`}>
-                      {outOfStock ? "Out of stock" : `${stock} in stock`}
+                      {outOfStock ? "Out of stock" : `${stock} left`}
                     </span>
                   )}
                 </div>
 
-                {price ? (
-                  <span className="san-pcard-price">₹{price}</span>
-                ) : (
-                  <span className="san-pcard-noprice">Price not configured</span>
-                )}
+                <div className="san-pcard-body">
+                  <span className="san-pcard-name">{p.name}</span>
 
-                <div className="san-pcard-action">
-                  {outOfStock ? (
-                    <span className="san-pcard-disabled-note">Add stock via Purchase</span>
-                  ) : noPrice ? (
-                    <span className="san-pcard-disabled-note">Set price in Products</span>
-                  ) : inCart > 0 ? (
-                    <div className="san-qty-ctrl san-qty-ctrl-card">
-                      <button onClick={() => adjustCart(p, -1)}>−</button>
-                      <span>{inCart}</span>
-                      <button onClick={() => adjustCart(p, 1)}>+</button>
-                    </div>
+                  {price ? (
+                    <span className="san-pcard-price">₹{price}</span>
                   ) : (
-                    <button
-                      className="san-pcard-add"
-                      disabled={isBlocked}
-                      onClick={() => adjustCart(p, 1)}
-                    >
-                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                        <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                      </svg>
-                      Add
-                    </button>
+                    <span className="san-pcard-noprice">Price not configured</span>
                   )}
+
+                  <div className="san-pcard-action">
+                    {outOfStock ? (
+                      <span className="san-pcard-disabled-note">Add stock via Purchase</span>
+                    ) : noPrice ? (
+                      <span className="san-pcard-disabled-note">Set price in Products</span>
+                    ) : inCart > 0 ? (
+                      <div className="san-qty-ctrl san-qty-ctrl-tile">
+                        <button onClick={() => adjustCart(p, -1)} aria-label="Decrease quantity">−</button>
+                        <span>{inCart}</span>
+                        <button onClick={() => adjustCart(p, 1)} aria-label="Increase quantity">+</button>
+                      </div>
+                    ) : (
+                      <button
+                        className="san-pcard-add"
+                        disabled={isBlocked}
+                        onClick={() => adjustCart(p, 1)}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                          <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                        </svg>
+                        Add to cart
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -756,7 +721,7 @@ function CatalogStep({
 }
 
 /* ─────────────────────────────────────────
-   STEP 2 — CHECKOUT
+   STEP 2 — CHECKOUT  (Apple Store checkout reference)
 ───────────────────────────────────────── */
 function CheckoutStep({
   items, increaseQty, decreaseQty, deleteItem, openEdit,
@@ -771,7 +736,7 @@ function CheckoutStep({
 }) {
   return (
     <>
-      {/* ── Back button — prominent pill style ── */}
+      {/* ── Back button ── */}
       <button className="san-back-link" onClick={onBack} disabled={submitting}>
         <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
           <path d="M9 5.5H2M5 1.5L1 5.5l4 4" stroke="currentColor" strokeWidth="1.6"
@@ -787,39 +752,34 @@ function CheckoutStep({
       >
       <div className="san-layout">
 
-        <div className="san-panel">
-          <div className="san-panel-header">
-            <div className="san-panel-title">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M1 1.5h1.5l1.5 6h5l1-4H4" stroke="currentColor" strokeWidth="1.2"
-                  strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="5.5" cy="10" r="0.8" fill="currentColor"/>
-                <circle cx="9.5" cy="10" r="0.8" fill="currentColor"/>
-              </svg>
-              Cart
-            </div>
+        <div className="san-block">
+          <div className="san-block-header">
+            <div className="san-block-title">Order summary</div>
             <span className="san-item-count">{items.length} item{items.length !== 1 ? "s" : ""}</span>
           </div>
-          <div className="san-panel-body san-panel-body-right">
+          <div className="san-block-body san-block-body-right">
 
             <div className="san-items-list">
               {items.map((item, idx) => (
                 <div key={idx} className="san-item-row" style={{ animationDelay: `${idx * 0.04}s` }}>
+                  <div className="san-item-avatar" style={{ "--hue": productHue(item.productName) }}>
+                    {productInitials(item.productName)}
+                  </div>
                   <div className="san-item-info">
                     <span className="san-item-name">{item.productName}</span>
                     <span className="san-item-unit">
-                      ₹{item.sellingPrice} / unit
+                      ₹{item.sellingPrice} × {item.quantity}
                       {item.batchNumber && item.batchNumber !== "AUTO" && (
-                        <> · <span className="san-batch-tag">Batch: {item.batchNumber}</span></>
+                        <> · <span className="san-batch-tag">Batch {item.batchNumber}</span></>
                       )}
-                      {item.expiryDate && <> · Exp: {item.expiryDate}</>}
+                      {item.expiryDate && <> · Exp {item.expiryDate}</>}
                     </span>
                   </div>
                   <div className="san-item-controls">
                     <div className="san-qty-ctrl">
-                      <button onClick={() => decreaseQty(idx)}>−</button>
+                      <button onClick={() => decreaseQty(idx)} aria-label="Decrease quantity">−</button>
                       <span>{item.quantity}</span>
-                      <button onClick={() => increaseQty(idx)}>+</button>
+                      <button onClick={() => increaseQty(idx)} aria-label="Increase quantity">+</button>
                     </div>
                     <span className="san-item-total">₹{(item.sellingPrice * item.quantity).toFixed(2)}</span>
 
@@ -846,21 +806,14 @@ function CheckoutStep({
             {errors.items && <span className="san-err">{errors.items}</span>}
 
             <div className="san-field">
-              <label>GST Mode</label>
-              <div style={{ display: "flex", gap: 8 }}>
+              <label>GST mode</label>
+              <div className="san-segmented">
                 {[["COMMON", "Common GST"], ["PRODUCT", "Product-wise"]].map(([val, lbl]) => (
                   <button
                     key={val}
                     type="button"
                     onClick={() => setTaxMode(val)}
-                    style={{
-                      flex: 1, padding: "7px 10px",
-                      background: taxMode === val ? "var(--san-blue-dim)" : "var(--san-deep-bg)",
-                      border: `1px solid ${taxMode === val ? "rgba(59,130,246,0.4)" : "var(--san-border)"}`,
-                      borderRadius: 8, color: taxMode === val ? "var(--san-blue-light)" : "var(--san-text-3)",
-                      fontFamily: "var(--san-font-m)", fontSize: 10, letterSpacing: "0.08em",
-                      cursor: "pointer", transition: "all 0.2s",
-                    }}
+                    className={`san-segmented-btn ${taxMode === val ? "san-segmented-active" : ""}`}
                   >{lbl}</button>
                 ))}
               </div>
@@ -868,7 +821,7 @@ function CheckoutStep({
 
             {taxMode === "COMMON" ? (
               <div className="san-field">
-                <label>GST Rate</label>
+                <label>GST rate</label>
                 <div className="san-tax-row">
                   <select value={commonTax} onChange={e => setCommonTax(e.target.value)} className="san-select">
                     {GST_RATES.map(r => (
@@ -899,7 +852,7 @@ function CheckoutStep({
 
               <div className="san-total-row">
                 <span>Discount</span>
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <div className="san-total-inline">
                   <input
                     type="number"
                     className="san-discount-input"
@@ -910,8 +863,7 @@ function CheckoutStep({
                   <select
                     value={discountType}
                     onChange={e => setDiscountType(e.target.value)}
-                    className="san-select"
-                    style={{ flex: "0 0 60px", padding: "5px 6px", fontSize: 11 }}
+                    className="san-select san-discount-select"
                   >
                     <option value="PERCENT">%</option>
                     <option value="FLAT">₹</option>
@@ -927,7 +879,7 @@ function CheckoutStep({
               )}
 
               <div className="san-total-row">
-                <span>Taxable Value</span>
+                <span>Taxable value</span>
                 <span>₹{taxableValue.toFixed(2)}</span>
               </div>
 
@@ -940,9 +892,8 @@ function CheckoutStep({
                 <span>₹{gstAmount.toFixed(2)}</span>
               </div>
 
-              <div className="san-total-divider" />
-              <div className="san-total-row san-total-net">
-                <span>Net Amount</span>
+              <div className="san-total-net">
+                <span>Net amount</span>
                 <span>₹{netAmount.toFixed(2)}</span>
               </div>
             </div>
@@ -950,17 +901,11 @@ function CheckoutStep({
           </div>
         </div>
 
-        <div className="san-panel">
-          <div className="san-panel-header">
-            <div className="san-panel-title">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <rect x="1" y="2.5" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/>
-                <path d="M1 4.5h10" stroke="currentColor" strokeWidth="1.2"/>
-              </svg>
-              Payment
-            </div>
+        <div className="san-block">
+          <div className="san-block-header">
+            <div className="san-block-title">Payment</div>
           </div>
-          <div className="san-panel-body san-panel-body-right">
+          <div className="san-block-body san-block-body-right">
 
             <div className="san-billing-section">
 
@@ -975,7 +920,7 @@ function CheckoutStep({
 
               {creditPaymentType !== "CREDIT" && (
                 <Dropdown
-                  label="Billing Mode"
+                  label="Billing mode"
                   options={BILLING_MODES}
                   selectedId={billingMode}
                   onSelect={setBillingMode}
@@ -985,9 +930,9 @@ function CheckoutStep({
               )}
 
               <div className="san-field">
-                <label>Payment Type</label>
-                <div style={{ display: "flex", gap: 6 }}>
-                  {PAYMENT_TYPES.map(({ id, name }) => (
+                <label>Payment type</label>
+                <div className="san-pay-tiles">
+                  {PAYMENT_TYPES.map(({ id, name, sub }) => (
                     <button
                       key={id}
                       type="button"
@@ -997,22 +942,26 @@ function CheckoutStep({
                         if (id === "CREDIT")  setAmountPaid("0");
                         if (id === "PARTIAL") setAmountPaid("");
                       }}
-                      style={{
-                        flex: 1, padding: "7px 4px",
-                        background: creditPaymentType === id ? "var(--san-blue-dim)" : "var(--san-deep-bg)",
-                        border: `1px solid ${creditPaymentType === id ? "rgba(59,130,246,0.4)" : "var(--san-border)"}`,
-                        borderRadius: 8, color: creditPaymentType === id ? "var(--san-blue-light)" : "var(--san-text-3)",
-                        fontFamily: "var(--san-font-m)", fontSize: 9, letterSpacing: "0.05em",
-                        cursor: "pointer", transition: "all 0.2s", textAlign: "center",
-                      }}
-                    >{name}</button>
+                      className={`san-pay-tile ${creditPaymentType === id ? "san-pay-tile-active" : ""}`}
+                    >
+                      <span className="san-pay-tile-icon">{PAYMENT_ICONS[id]}</span>
+                      <span className="san-pay-tile-text">
+                        <span className="san-pay-tile-label">{name}</span>
+                        <span className="san-pay-tile-sub">{sub}</span>
+                      </span>
+                      {creditPaymentType === id && (
+                        <span className="san-pay-tile-check">
+                          <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </span>
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
 
               {(creditPaymentType === "CREDIT" || creditPaymentType === "PARTIAL") && (
                 <div className="san-field">
-                  <label>Due Date</label>
+                  <label>Due date</label>
                   <input
                     type="date" value={dueDate}
                     onChange={e => setDueDate(e.target.value)}
@@ -1023,7 +972,7 @@ function CheckoutStep({
               )}
 
               <div className="san-field">
-                <label>Amount Paid (₹)</label>
+                <label>Amount paid (₹)</label>
                 <input
                   type="number"
                   placeholder="0.00"
@@ -1058,7 +1007,7 @@ function CheckoutStep({
                     <path d="M2 6.5l3 3 6-6" stroke="currentColor" strokeWidth="1.6"
                       strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  Submit &amp; View Invoice
+                  Place order
                 </>
               )}
             </button>
@@ -1072,7 +1021,7 @@ function CheckoutStep({
       {/* ── Blocking overlay so the user can't interact with anything else mid-submit ── */}
       {submitting && (
         <div className="san-submit-overlay">
-          <div className="san-submit-overlay-card">
+          <div className="san-submit-overlay-frame">
             <div className="san-loader san-loader-sm"><div/><div/><div/><div/></div>
             <span>Processing sale… please wait</span>
           </div>
@@ -1108,14 +1057,14 @@ function CartItemEditModal({ item, batches, taxMode, taxType, stock, onSave, onC
   };
 
   return (
-    <div className="san-modal-overlay" onMouseDown={onCancel}>
-      <div className="san-modal" onMouseDown={e => e.stopPropagation()}>
-        <div className="san-modal-header">
+    <div className="san-sheet-overlay" onMouseDown={onCancel}>
+      <div className="san-sheet" onMouseDown={e => e.stopPropagation()}>
+        <div className="san-sheet-header">
           <span>{item.productName}</span>
-          <button className="san-modal-close" onClick={onCancel}>✕</button>
+          <button className="san-sheet-close" onClick={onCancel}>✕</button>
         </div>
 
-        <div className="san-modal-body">
+        <div className="san-sheet-body">
           <div className="san-field">
             <label>Quantity</label>
             <input
@@ -1168,7 +1117,7 @@ function CartItemEditModal({ item, batches, taxMode, taxType, stock, onSave, onC
           )}
         </div>
 
-        <div className="san-modal-footer">
+        <div className="san-sheet-footer">
           <button className="san-btn-ghost" onClick={onCancel}>Cancel</button>
           <button className="san-btn-primary" onClick={handleSave}>Save changes</button>
         </div>

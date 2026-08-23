@@ -1,23 +1,24 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/Supplier/Supplier.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
-/* ── Info card helper ── */
-const InfoCard = ({ label, value, mono, accent, full }) => (
-  <div className={`sup-view-card ${full ? "sup-view-card-full" : ""}`}>
-    <span className="sup-view-label">{label}</span>
-    <span className={`sup-view-value ${mono ? "sup-view-mono" : ""} ${accent ? "sup-view-accent" : ""}`}>
-      {value || <span className="sup-view-empty">—</span>}
-    </span>
+
+const Field = ({ label, value, mono, accent, full }) => (
+  <div className={`afx-field ${full ? "afx-field--full" : ""}`}>
+    <label className="afx-label">{label}</label>
+    <div
+      className={`afx-view-value ${mono ? "afx-view-value--mono" : ""}`}
+      style={accent ? { color: "var(--afx-accent)", fontWeight: 600 } : undefined}
+    >
+      {value || <span className="afx-view-value--empty">—</span>}
+    </div>
   </div>
 );
 
-/* ── Outstanding badge ── */
 const OutstandingBadge = ({ amount }) => {
   const val = parseFloat(amount || 0);
-  const color = val > 0 ? "sup-badge-red" : "sup-badge-green";
   return (
-    <span className={`sup-badge ${color}`}>
+    <span className={`afx-badge ${val > 0 ? "afx-text-danger" : "afx-text-success"}`}>
       {val > 0 ? `₹${val.toLocaleString("en-IN", { minimumFractionDigits: 2 })} Due` : "Cleared"}
     </span>
   );
@@ -47,100 +48,81 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
   if (!uKey) return null;
 
   return (
-    <div className="sup-backdrop">
-      <div className="sup-modal sup-modal-view">
-        <div className="sup-top-beam" />
-        <div className="sup-corner sup-tl" /><div className="sup-corner sup-tr" />
-        <div className="sup-corner sup-bl" /><div className="sup-corner sup-br" />
-
-        
-        <div className="sup-header">
-          <div className="sup-header-left">
-            <div className="sup-eyebrow"><span className="sup-eyebrow-dot" />SUPPLIER RECORD</div>
-            <h3 className="sup-title">
-              <span className="sup-title-acc"></span>
-              {supplier ? supplier.shopName : "Loading…"}
-            </h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Supplier Record</div>
+            <h3 className="afx-title">{supplier ? supplier.shopName : "Loading…"}</h3>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {supplier && onEdit && (
-              <button className="sup-btn-ghost" onClick={() => { onClose(); onEdit(uKey); }}>
+              <button className="afx-btn" onClick={() => { onClose(); onEdit(uKey); }}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M2 10h2l5-5-2-2-5 5v2ZM8.5 1.5l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 Edit
               </button>
             )}
-            <button className="sup-close" onClick={onClose}>
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
+            <button className="afx-close" onClick={onClose} title="Close">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
               ESC
             </button>
           </div>
         </div>
 
-        <div className="sup-divider" />
-
-        
-        <div className="sup-body">
-          {error && <div className="sup-alert sup-alert-error">{error}</div>}
+        <div className="afx-body">
+          {error && <div className="afx-alert">{error}</div>}
 
           {!supplier && !error && (
-            <div className="sup-loading">
-              <div className="sup-loader"><div/><div/><div/><div/></div>
-              Loading supplier data…
+            <div className="afx-loading">
+              <div className="afx-loader-ring"><div/><div/><div/></div>
             </div>
           )}
 
           {supplier && (
             <>
-              
-              <div className="sup-view-status-row">
-                <div className="sup-code-badge">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                <span className="afx-tag">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.2"/>
                     <path d="M3 5h4M3 3.5h2M3 6.5h3" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
                   </svg>
                   {supplier.supplierCode}
-                </div>
+                </span>
                 <OutstandingBadge amount={supplier.outstandingBalance} />
-                <span className={`sup-badge ${supplier.disable ? "sup-badge-red" : "sup-badge-green"}`}>
+                <span className="afx-badge" style={supplier.disable ? { color: "var(--afx-danger)" } : { color: "var(--afx-success)" }}>
                   {supplier.disable ? "Inactive" : "Active"}
                 </span>
               </div>
 
-              
-              <div className="sup-view-grid">
-                <InfoCard label="Shop Name"          value={supplier.shopName} />
-                <InfoCard label="Contact Person"      value={supplier.contactPerson} />
-                <InfoCard label="Phone"               value={supplier.phone} mono />
-                <InfoCard label="Email"               value={supplier.email} mono />
-                <InfoCard label="GST Number"          value={supplier.gstNumber} mono accent />
-                <InfoCard label="Drug License Number" value={supplier.drugLicenseNumber} mono />
-                <InfoCard label="Outstanding Balance"
+              <div className="afx-section-title">Details</div>
+              <div className="afx-grid">
+                <Field label="Shop Name"          value={supplier.shopName} />
+                <Field label="Contact Person"      value={supplier.contactPerson} />
+                <Field label="Phone"               value={supplier.phone} mono />
+                <Field label="Email"               value={supplier.email} mono />
+                <Field label="GST Number"          value={supplier.gstNumber} mono accent />
+                <Field label="Drug License Number" value={supplier.drugLicenseNumber} mono />
+                <Field label="Outstanding Balance"
                   value={supplier.outstandingBalance != null
                     ? `₹${parseFloat(supplier.outstandingBalance).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
                     : "₹0.00"
                   }
                   accent={parseFloat(supplier.outstandingBalance || 0) > 0}
                 />
-                <InfoCard label="Created At"
-                  value={supplier.createdAt
-                    ? new Date(supplier.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-                    : "—"
-                  }
+                <Field label="Created At"
+                  value={supplier.createdAt ? new Date(supplier.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                 />
-                <InfoCard label="Address" value={supplier.address} full />
+                <Field label="Address" value={supplier.address} full />
               </div>
             </>
           )}
         </div>
 
-        
         {supplier && (
-          <div className="sup-footer">
-            <button className="sup-btn-ghost" onClick={onClose}>Close</button>
+          <div className="afx-footer">
+            <button className="afx-btn" onClick={onClose}>Close</button>
           </div>
         )}
       </div>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import "../../Styles/Retailer/Retailer.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
 const FIELDS = [
   { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Sharma Medical Store" },
   { key: "ownerName",          label: "Owner Name",           type: "text",     required: false, placeholder: "e.g. Vijay Sharma" },
@@ -105,65 +106,51 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
   };
 
   return (
-    <div className="rtx-backdrop">
-      <div className="rtx-modal">
-        <div className="rtx-top-beam" />
-        <div className="rtx-corner rtx-tl" /><div className="rtx-corner rtx-tr" />
-        <div className="rtx-corner rtx-bl" /><div className="rtx-corner rtx-br" />
-
-        
-        <div className="rtx-header">
-          <div className="rtx-header-left">
-            <div className="rtx-eyebrow"><span className="rtx-eyebrow-dot" />EDIT RETAILER</div>
-            <h3 className="rtx-title">
-              <span className="rtx-title-acc"></span>
-              Update Retailer
-              {retailerCode && <span className="rtx-code-inline">{retailerCode}</span>}
-            </h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Edit Retailer</div>
+            <h3 className="afx-title">Update Retailer{retailerCode && <span style={{ color: "var(--afx-text-3)", fontWeight: 500 }}> · {retailerCode}</span>}</h3>
           </div>
-          <button className="rtx-close" type="button" onClick={onClose}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+          <button className="afx-close" type="button" onClick={onClose}>
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
             ESC
           </button>
         </div>
 
-        <div className="rtx-divider" />
-
-        
-        <div className="rtx-body">
+        <div className="afx-body">
           {fetching ? (
-            <div className="rtx-loading">
-              <div className="rtx-loader"><div/><div/><div/><div/></div>
-              Loading retailer data…
+            <div className="afx-loading">
+              <div className="afx-loader-ring"><div/><div/><div/></div>
             </div>
           ) : (
             <>
-              {errors.general && <div className="rtx-alert">{errors.general}</div>}
+              {errors.general && <div className="afx-alert">{errors.general}</div>}
 
-              
               {outstanding != null && parseFloat(outstanding) > 0 && (
-                <div className="rtx-outstanding-banner">
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <div className="afx-alert" style={{ background: "var(--afx-warning-soft)", borderColor: "rgba(245, 158, 11, 0.3)", color: "var(--afx-warning)" }}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
                     <path d="M6.5 1L12 11.5H1L6.5 1Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
                     <path d="M6.5 5v3M6.5 9.5h.01" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                   </svg>
-                  Outstanding balance: <strong>₹{parseFloat(outstanding).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong>
-                  — this is managed automatically through sales and payments
+                  <span>
+                    Outstanding balance: <strong>₹{parseFloat(outstanding).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong>
+                    {" "}— this is managed automatically through sales and payments
+                  </span>
                 </div>
               )}
 
-              <div className="rtx-grid">
+              <div className="afx-grid">
                 {FIELDS.map(f => (
-                  <div key={f.key} className={`rtx-field ${f.type === "textarea" ? "rtx-field-full" : ""}`}>
-                    <label className="rtx-label">
+                  <div key={f.key} className={`afx-field ${f.type === "textarea" ? "afx-field--full" : ""}`}>
+                    <label className="afx-label">
                       {f.label}
-                      {f.required && <span className="rtx-req"> *</span>}
+                      {f.required && <span className="afx-req">*</span>}
                     </label>
                     {f.type === "textarea" ? (
                       <textarea
-                        className={`rtx-input rtx-textarea ${errors[f.key] ? "rtx-input-err" : ""}`}
+                        className={`afx-textarea ${errors[f.key] ? "afx-textarea--err" : ""}`}
                         value={form[f.key]}
                         onChange={e => set(f.key, e.target.value)}
                         placeholder={f.placeholder}
@@ -171,7 +158,7 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
                       />
                     ) : (
                       <input
-                        className={`rtx-input ${errors[f.key] ? "rtx-input-err" : ""}`}
+                        className={`afx-input ${errors[f.key] ? "afx-input--err" : ""}`}
                         type={f.type}
                         value={form[f.key]}
                         onChange={e => set(f.key, e.target.value)}
@@ -179,7 +166,7 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
                         min={f.key === "creditLimit" ? "0" : undefined}
                       />
                     )}
-                    {errors[f.key] && <span className="rtx-error">{errors[f.key]}</span>}
+                    {errors[f.key] && <span className="afx-error">{errors[f.key]}</span>}
                   </div>
                 ))}
               </div>
@@ -187,14 +174,10 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
           )}
         </div>
 
-        
-        <div className="rtx-footer">
-          <button type="button" className="rtx-btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="button" className="rtx-btn-primary" onClick={submit} disabled={loading || fetching}>
-            {loading
-              ? <><span className="rtx-spinner" /> Updating…</>
-              : <><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> Update Retailer</>
-            }
+        <div className="afx-footer">
+          <button type="button" className="afx-btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="afx-btn afx-btn--primary" onClick={submit} disabled={loading || fetching}>
+            {loading ? <><span className="afx-spinner" /> Updating…</> : "Update Retailer"}
           </button>
         </div>
       </div>

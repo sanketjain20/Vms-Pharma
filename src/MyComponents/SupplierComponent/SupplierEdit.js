@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import "../../Styles/Supplier/Supplier.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
 const FIELD_META = [
   { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Cipla Distributors Pvt Ltd" },
   { key: "contactPerson",      label: "Contact Person",       type: "text",     required: false, placeholder: "e.g. Ramesh Kumar" },
@@ -102,50 +103,38 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
   };
 
   return (
-    <div className="sup-backdrop">
-      <div className="sup-modal">
-        <div className="sup-top-beam" />
-        <div className="sup-corner sup-tl" /><div className="sup-corner sup-tr" />
-        <div className="sup-corner sup-bl" /><div className="sup-corner sup-br" />
-
-        
-        <div className="sup-header">
-          <div className="sup-header-left">
-            <div className="sup-eyebrow"><span className="sup-eyebrow-dot" />EDIT SUPPLIER</div>
-            <h3 className="sup-title"><span className="sup-title-acc"></span> Update Supplier</h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        {fetching ? (
+          <div className="afx-loading">
+            <div className="afx-loader-ring"><div/><div/><div/></div>
           </div>
-          <button className="sup-close" onClick={onClose}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
-            ESC
-          </button>
-        </div>
-
-        <div className="sup-divider" />
-
-        
-        <div className="sup-body">
-          {fetching ? (
-            <div className="sup-loading">
-              <div className="sup-loader"><div/><div/><div/><div/></div>
-              Loading supplier data…
+        ) : (
+          <>
+            <div className="afx-header">
+              <div>
+                <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Edit Supplier</div>
+                <h3 className="afx-title">Update Supplier</h3>
+              </div>
+              <button className="afx-close" onClick={onClose}>
+                <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                ESC
+              </button>
             </div>
-          ) : (
-            <>
-              {errors.general && (
-                <div className="sup-alert sup-alert-error">{errors.general}</div>
-              )}
-              <div className="sup-grid">
+
+            <div className="afx-body">
+              {errors.general && <div className="afx-alert">{errors.general}</div>}
+
+              <div className="afx-grid">
                 {FIELD_META.map(f => (
-                  <div key={f.key} className={`sup-field ${f.type === "textarea" ? "sup-field-full" : ""}`}>
-                    <label className="sup-label">
+                  <div key={f.key} className={`afx-field ${f.type === "textarea" ? "afx-field--full" : ""}`}>
+                    <label className="afx-label">
                       {f.label}
-                      {f.required && <span className="sup-required">*</span>}
+                      {f.required && <span className="afx-req">*</span>}
                     </label>
                     {f.type === "textarea" ? (
                       <textarea
-                        className={`sup-input sup-textarea ${errors[f.key] ? "sup-input-error" : ""}`}
+                        className={`afx-textarea ${errors[f.key] ? "afx-textarea--err" : ""}`}
                         value={form[f.key]}
                         onChange={e => set(f.key, e.target.value)}
                         placeholder={f.placeholder}
@@ -153,37 +142,27 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
                       />
                     ) : (
                       <input
-                        className={`sup-input ${errors[f.key] ? "sup-input-error" : ""}`}
+                        className={`afx-input ${errors[f.key] ? "afx-input--err" : ""}`}
                         type={f.type}
                         value={form[f.key]}
                         onChange={e => set(f.key, e.target.value)}
                         placeholder={f.placeholder}
                       />
                     )}
-                    {errors[f.key] && <span className="sup-error">{errors[f.key]}</span>}
+                    {errors[f.key] && <span className="afx-error">{errors[f.key]}</span>}
                   </div>
                 ))}
               </div>
-            </>
-          )}
-        </div>
+            </div>
 
-        
-        <div className="sup-footer">
-          <button className="sup-btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="sup-btn-primary" onClick={submit} disabled={loading || fetching}>
-            {loading ? (
-              <><span className="sup-spinner" /> Updating…</>
-            ) : (
-              <>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Update Supplier
-              </>
-            )}
-          </button>
-        </div>
+            <div className="afx-footer">
+              <button className="afx-btn" onClick={onClose}>Cancel</button>
+              <button className="afx-btn afx-btn--primary" onClick={submit} disabled={loading}>
+                {loading ? <><span className="afx-spinner" /> Updating…</> : "Update Supplier"}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

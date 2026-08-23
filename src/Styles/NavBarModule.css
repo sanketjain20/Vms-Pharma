@@ -1,24 +1,42 @@
 /* ============================================================
-   NavBarModule.css  ·  VMS Cinematic Dark UI
-   Module variant — no center nav links (used inside app pages)
-   Matches Navbar.css + Home.css + VendorOnboarding.css
+   NavBarModule.css · Premium topbar — module variant
+   Sits in normal flow inside LayoutModule (not fixed), so no
+   top-clearance hack is needed on the pages beneath it.
+   Matches Navbar.css / Sidebar.css / Home.css / Dashboard.css.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
 
 :root {
---nbm-cyan:   #ffffff;
---nbm-purple: #666666;
---nbm-pink:   #ff5078;
   --nbm-h:      62px;
-  --font-hud:   'Orbitron', monospace;
+  --nbm-accent: #6366f1;
+  --font-hud:   'Sora', sans-serif;
   --font-body:  'Inter', sans-serif;
+
+  --nbm-bg:        rgba(0, 0, 0, 0.88);
+  --nbm-bg-scroll: rgba(0, 0, 0, 0.96);
+  --nbm-border:    rgba(255, 255, 255, 0.08);
+  --nbm-text-1:    #f2f3f7;
+  --nbm-text-2:    rgba(242, 243, 247, 0.56);
+  --nbm-text-3:    rgba(242, 243, 247, 0.34);
+  --nbm-chip-bg:   rgba(255, 255, 255, 0.05);
+  --nbm-shadow:    rgba(0, 0, 0, 0.55);
+}
+
+body[data-theme="light"] {
+  --nbm-bg:        rgba(255, 255, 255, 0.9);
+  --nbm-bg-scroll: rgba(255, 255, 255, 0.97);
+  --nbm-border:    rgba(15, 23, 42, 0.09);
+  --nbm-text-1:    #10131c;
+  --nbm-text-2:    rgba(16, 19, 28, 0.56);
+  --nbm-text-3:    rgba(16, 19, 28, 0.38);
+  --nbm-chip-bg:   rgba(15, 23, 42, 0.045);
+  --nbm-shadow:    rgba(15, 23, 42, 0.1);
 }
 
 /* ── Shell ────────────────────────────────────────────────── */
 .nbm-bar {
-  position: static;
-  top: 0; left: 0;
+  position: relative;
   width: 100%;
   height: var(--nbm-h);
   min-height: var(--nbm-h);
@@ -30,93 +48,86 @@
   padding: 0 22px;
   gap: 16px;
 
-  /* Glassmorphism — matches Navbar.css */
- background: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  color: #fff;
+  background: var(--nbm-bg);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-bottom: 1px solid var(--nbm-border);
+  color: var(--nbm-text-1);
   z-index: 1000;
 
-  transition: left 0.3s ease, width 0.3s ease,
-              box-shadow 0.3s ease, background 0.3s ease;
-  position: relative;       /* for scanline + dropdown positioning */
+  transition: box-shadow 0.3s ease, background 0.3s ease;
   overflow: visible;
 }
 
-/* Scrolled state */
 .nbm-bar.scrolled {
- background: rgba(0, 0, 0, 0.96);
-  box-shadow: 0 4px 36px rgba(0, 0, 0, 0.65),
-              0 1px 0 rgba(0, 220, 255, 0.12);
+  background: var(--nbm-bg-scroll);
+  box-shadow: 0 8px 30px var(--nbm-shadow);
 }
-
-/* Sidebar shift */
-.nbm-bar.shifted {
-  left: 200px;
-  width: calc(100% - 200px);
-}
-
-/* ── Scanline sweep ───────────────────────────────────────── */
-.nbm-scan {
-  position: absolute;
-  top: -100%; left: 0; right: 0;
-  height: 200%;
-  background: linear-gradient(
-    to bottom,
-    transparent 44%,
-    rgba(0, 220, 255, 0.025) 50%,
-    transparent 56%
-  );
-  animation: nbmScan 6s linear infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-@keyframes nbmScan { to { top: 100%; } }
 
 /* ── Left — Logo + Shop pill ──────────────────────────────── */
 .nbm-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   flex-shrink: 0;
   z-index: 1;
-  margin-left: 50px;
 }
 
+.nbm-logo-wrap {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  /* the source mark is dark-navy text on an opaque white background
+     (no alpha channel) — a filter can't safely recolor it, so it
+     always sits on its own light card instead of the dark navbar. */
+  background: #ffffff;
+}
 .nbm-logo {
-  height: 34px;
+  height: 18px;
   width: auto;
   object-fit: contain;
-  border-radius: 6px;
-  filter: brightness(1.05);
+  display: block;
 }
 
-.nbm-shop-pill {
+/* Workspace mark — plain text, no chip/pill background. A hairline
+   divider off the logo plus an outline (not filled) store glyph keep
+   it legible as "a place". The name itself stays near-black/near-white
+   (theme text, not a color swap) but carries a wordmark treatment —
+   tracked caps-height letter-spacing plus a thin gradient underline —
+   so it still reads as designed rather than default body copy. */
+.nbm-shop-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-background: rgba(255,255,255,0.05);
-border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 20px;
-  padding: 4px 12px;
+  gap: 7px;
+  padding-left: 13px;
+  margin-left: 1px;
+  border-left: 1px solid var(--nbm-border);
 }
-.nbm-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--nbm-cyan);
-  box-shadow: 0 0 6px var(--nbm-cyan);
-  animation: nbmDotBlink 2s ease-in-out infinite;
+.nbm-shop-badge-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px;
+  color: var(--nbm-accent);
+  flex-shrink: 0;
 }
-@keyframes nbmDotBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
-.nbm-shop-name {
+.nbm-shop-badge-icon svg { width: 15px; height: 15px; }
+.nbm-shop-badge-name {
+  position: relative;
   font-family: var(--font-hud);
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: rgba(0, 220, 255, 0.65);
-  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--nbm-text-1);
+  white-space: nowrap;
+  padding-bottom: 3px;
+  background-image: linear-gradient(120deg, var(--nbm-accent), #06b6d4);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 2px;
+  transition: background-size 0.25s ease;
 }
+.nbm-shop-badge:hover .nbm-shop-badge-name { background-size: 100% 3px; }
 
 /* ── Right — Greeting + Avatar ───────────────────────────── */
 .nbm-right {
@@ -133,16 +144,16 @@ border: 1px solid rgba(255,255,255,0.12);
   line-height: 1.3;
 }
 .nbm-hi {
-  font-size: 9px;
-  color: rgba(160, 195, 255, 0.32);
-  letter-spacing: 1px;
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  color: var(--nbm-text-3);
 }
 .nbm-name {
   font-family: var(--font-hud);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 1px;
-  color: rgba(0, 220, 255, 0.8);
+  letter-spacing: -0.01em;
+  color: var(--nbm-text-1);
 }
 
 /* ── Avatar ───────────────────────────────────────────────── */
@@ -152,39 +163,34 @@ border: 1px solid rgba(255,255,255,0.12);
 }
 
 .nbm-avatar {
-  width: 40px; height: 40px;
-  border-radius: 12px;
+  width: 38px; height: 38px;
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-background: linear-gradient(135deg,
-  rgba(255,255,255,0.08),
-  rgba(120,120,120,0.08));
-  border: 1px solid rgba(0, 220, 255, 0.22);
+  background: linear-gradient(135deg, var(--nbm-accent), #06b6d4);
   position: relative;
-  overflow: hidden;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  overflow: visible;
+  transition: box-shadow 0.25s, transform 0.25s;
 }
 .nbm-avatar:hover,
 .nbm-avatar.open {
-  border-color: rgba(0, 220, 255, 0.55);
-  box-shadow: 0 0 16px rgba(0, 220, 255, 0.25);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--nbm-accent) 18%, transparent);
+  transform: translateY(-1px);
 }
 
-/* Pulse ring */
-.nbm-avatar-ring {
-  position: absolute; inset: -4px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 220, 255, 0.18);
-  animation: nbmRing 3s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes nbmRing {
-  0%,100% { transform: scale(1);   opacity: 0.5; }
-  50%      { transform: scale(1.12); opacity: 0; }
+/* Online status notch — sits on the ring, cut in by the navbar color */
+.nbm-avatar-status {
+  position: absolute;
+  right: -1px; bottom: -1px;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #34d399;
+  border: 2.5px solid var(--nbm-bg-scroll);
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.7);
 }
 
 .nbm-avatar-img {
-  width: 40px; height: 40px;
-  border-radius: 12px;
+  width: 38px; height: 38px;
+  border-radius: 50%;
   object-fit: cover;
 }
 .nbm-avatar-initials {
@@ -192,7 +198,7 @@ background: linear-gradient(135deg,
   font-size: 13px;
   font-weight: 700;
   color: #fff;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   position: relative; z-index: 1;
 }
 
@@ -201,21 +207,19 @@ background: linear-gradient(135deg,
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
-  width: 210px;
+  width: 220px;
 
-  background: rgba(0, 0, 0, 0.96);
-  border: 1px solid rgba(0, 220, 255, 0.14);
+  background: var(--nbm-bg-scroll);
+  border: 1px solid var(--nbm-border);
   border-radius: 16px;
-  overflow: hidden;
   backdrop-filter: blur(22px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75),
-              0 0 0 1px rgba(0, 220, 255, 0.05);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 24px 60px var(--nbm-shadow);
 
-  /* Animated reveal */
   opacity: 0;
   transform: translateY(-10px) scale(0.97);
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.22s ease, transform 0.22s ease;
   z-index: 1002;
 }
 .nbm-dropdown.show {
@@ -224,25 +228,17 @@ background: linear-gradient(135deg,
   pointer-events: all;
 }
 
-/* HUD corner accents */
-.nbm-dropdown::before,
-.nbm-dropdown::after {
+/* Pointer, aimed at the avatar */
+.nbm-dropdown::before {
   content: '';
   position: absolute;
-  width: 11px; height: 11px;
-  pointer-events: none;
-}
-.nbm-dropdown::before {
-  top: 8px; left: 8px;
-  border-top:  1px solid rgba(0, 220, 255, 0.38);
-  border-left: 1px solid rgba(0, 220, 255, 0.38);
-  border-radius: 2px 0 0 0;
-}
-.nbm-dropdown::after {
-  bottom: 8px; right: 8px;
-  border-bottom: 1px solid rgba(0, 220, 255, 0.38);
-  border-right:  1px solid rgba(0, 220, 255, 0.38);
-  border-radius: 0 0 2px 0;
+  top: -6px; right: 12px;
+  width: 12px; height: 12px;
+  background: var(--nbm-bg-scroll);
+  border-left: 1px solid var(--nbm-border);
+  border-top: 1px solid var(--nbm-border);
+  transform: rotate(45deg);
+  border-radius: 3px 0 0 0;
 }
 
 /* User info row */
@@ -250,35 +246,32 @@ background: linear-gradient(135deg,
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 16px 12px;
+  padding: 15px 16px 12px;
 }
 .nbm-dd-avatar-sm {
-  width: 34px; height: 34px;
-  border-radius: 10px;
-  background: linear-gradient(135deg,
-    rgba(0, 220, 255, 0.18),
-    rgba(160, 60, 255, 0.18));
-  border: 1px solid rgba(0, 220, 255, 0.18);
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--nbm-accent), #06b6d4);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
 }
-.nbm-dd-avatar-sm img  { width: 34px; height: 34px; border-radius: 10px; object-fit: cover; }
+.nbm-dd-avatar-sm img  { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 .nbm-dd-avatar-sm span {
   font-family: var(--font-hud);
-  font-size: 11px; font-weight: 700; color: #fff;
+  font-size: 12px; font-weight: 700; color: #fff;
 }
 .nbm-dd-info { overflow: hidden; }
 .nbm-dd-name {
   font-family: var(--font-hud);
-  font-size: 11px; font-weight: 700;
-  color: #fff; letter-spacing: 0.5px;
+  font-size: 12.5px; font-weight: 700;
+  color: var(--nbm-text-1); letter-spacing: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .nbm-dd-shop {
-  font-size: 10px;
-  color: rgba(0, 220, 255, 0.5);
-  letter-spacing: 0.5px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--nbm-text-3);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   margin-top: 2px;
 }
@@ -286,8 +279,7 @@ background: linear-gradient(135deg,
 /* Divider */
 .nbm-dd-divider {
   height: 1px;
-  background: linear-gradient(90deg,
-    transparent, rgba(0, 220, 255, 0.14), transparent);
+  background: var(--nbm-border);
   margin: 0 12px;
 }
 
@@ -297,29 +289,41 @@ background: linear-gradient(135deg,
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 12px 16px;
+  padding: 11px 16px;
   background: transparent;
   border: none;
- color: rgba(200,200,200,0.7);
+  color: var(--nbm-text-2);
   font-family: var(--font-body);
   font-size: 13px; font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.18s, color 0.18s;
 }
-.nbm-dd-item:last-child { margin-bottom: 4px; }
-.nbm-dd-item svg { flex-shrink: 0; opacity: 0.65; transition: opacity 0.2s; }
+.nbm-dd-item:first-of-type { margin-top: 4px; }
+.nbm-dd-item:last-child { margin-bottom: 6px; border-radius: 0 0 15px 15px; }
 .nbm-dd-item:hover {
-  background: rgba(0, 220, 255, 0.07);
-  color: #fff;
+  background: color-mix(in srgb, var(--nbm-accent) 10%, transparent);
+  color: var(--nbm-text-1);
 }
-.nbm-dd-item:hover svg { opacity: 1; }
+
+/* Icon chip — matches the sidebar's per-item colored-chip language */
+.nbm-dd-icon-chip {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: background 0.18s, transform 0.18s;
+}
+.nbm-dd-icon-chip--settings { color: var(--nbm-accent); background: color-mix(in srgb, var(--nbm-accent) 14%, var(--nbm-chip-bg)); }
+.nbm-dd-icon-chip--logout   { color: #f87171; background: color-mix(in srgb, #f87171 14%, var(--nbm-chip-bg)); }
+.nbm-dd-item:hover .nbm-dd-icon-chip { transform: scale(1.06); }
+.nbm-dd-item:hover .nbm-dd-icon-chip--settings { background: color-mix(in srgb, var(--nbm-accent) 24%, var(--nbm-chip-bg)); }
+.nbm-dd-item:hover .nbm-dd-icon-chip--logout   { background: color-mix(in srgb, #f87171 24%, var(--nbm-chip-bg)); }
 
 .nbm-dd-logout:hover {
-  background: rgba(255, 80, 120, 0.08);
-  color: rgba(255, 140, 160, 0.9);
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
 }
-.nbm-dd-logout:hover svg { color: rgba(255, 80, 120, 0.8); opacity: 1; }
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -327,15 +331,20 @@ background: linear-gradient(135deg,
 }
 
 @media (max-width: 768px) {
-  .nbm-bar.shifted { left: 0; width: 100%; }
   .nbm-greeting { display: none; }
 }
 
 @media (max-width: 480px) {
   .nbm-bar    { padding: 0 12px; height: 54px; }
-  .nbm-logo   { height: 28px; }
-  .nbm-shop-pill { display: none; }
-  .nbm-avatar { width: 36px; height: 36px; border-radius: 10px; }
+  .nbm-logo-wrap { height: 26px; padding: 0 8px; }
+  .nbm-logo   { height: 14px; }
+  .nbm-shop-badge { display: none; }
+  .nbm-avatar { width: 34px; height: 34px; }
+  .nbm-avatar-img { width: 34px; height: 34px; }
   .nbm-avatar-initials { font-size: 12px; }
-  .nbm-dropdown { width: 190px; right: -4px; }
+  .nbm-dropdown { width: 200px; right: -4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nbm-shop-badge, .nbm-avatar, .nbm-dropdown, .nbm-dd-icon-chip { transition: none !important; animation: none !important; }
 }

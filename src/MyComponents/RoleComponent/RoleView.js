@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import "../../Styles/Role/RoleAdd.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
 export default function RoleView({ uKey, onClose }) {
   const [roleData, setRoleData] = useState(null);
   const [loading, setLoading]   = useState(true);
@@ -28,67 +29,38 @@ export default function RoleView({ uKey, onClose }) {
 
   const totalPerms = roleData?.permissions?.length || 0;
 
-  if (loading) return (
-    <div className="rl-backdrop">
-      <div className="rl-modal">
-        <div className="rl-body rl-loading-only">
-          <div className="rl-loader-ring"><div/><div/><div/><div/></div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="rl-backdrop">
-      <div className="rl-modal">
-
-        <div className="rl-top-beam" />
-        <div className="rl-corner rl-tl" /><div className="rl-corner rl-tr" />
-        <div className="rl-corner rl-bl" /><div className="rl-corner rl-br" />
-
-        
-        <div className="rl-header">
-          <div className="rl-header-left">
-            <div className="rl-eyebrow">
-              <span className="rl-eyebrow-dot" />
-              ROLE RECORD
-            </div>
-            <h3 className="rl-title">
-              <span className="rl-title-acc"></span>
-              {roleData?.roleCode ? `Role · ${roleData.roleCode}` : "View Role"}
-            </h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--lg">
+        {loading ? (
+          <div className="afx-loading">
+            <div className="afx-loader-ring"><div/><div/><div/></div>
           </div>
-          <button className="rl-close" onClick={onClose} title="Close">
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
-            ESC
-          </button>
-        </div>
+        ) : (
+          <>
+            <div className="afx-header">
+              <div>
+                <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Role Record</div>
+                <h3 className="afx-title">{roleData?.roleCode ? `Role · ${roleData.roleCode}` : "View Role"}</h3>
+              </div>
+              <button className="afx-close" onClick={onClose} title="Close">
+                <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                ESC
+              </button>
+            </div>
 
-        
-        <div className="rl-form-wrapper">
-
-          
-          <div className="rl-body">
-
-            {!loading && roleData && (
-              <>
-                
-                <div className="rl-name-row">
-                  <div className="rl-field">
-                    <label>Role Name</label>
-                    <div className="rl-readonly-wrap">
-                      <input type="text" value={roleData.roleName} readOnly className="rl-readonly-input" />
-                      <span className="rl-readonly-tag">READ ONLY</span>
+            <div className="afx-body">
+              {roleData && (
+                <>
+                  <div className="afx-grid">
+                    <div className="afx-field afx-field--full">
+                      <label className="afx-label">Role Name</label>
+                      <div className="afx-view-value">{roleData.roleName}</div>
                     </div>
                   </div>
-                </div>
 
-                
-                <div className="rl-perms-section">
-                  <div className="rl-perms-header">
-                    <div className="rl-perms-title">
+                  <div className="afx-perms-head">
+                    <div className="afx-perms-title">
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                         <rect x="1" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
                         <rect x="7" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
@@ -97,51 +69,36 @@ export default function RoleView({ uKey, onClose }) {
                       </svg>
                       Assigned Permissions
                     </div>
-                    <span className="rl-perm-count rl-perm-count-active">
+                    <span className={`afx-perms-count ${totalPerms > 0 ? "is-active" : ""}`}>
                       {totalPerms} permission{totalPerms !== 1 ? "s" : ""}
                     </span>
                   </div>
 
-                  <div className="rl-modules-list">
-                    {Object.keys(grouped).map((module, mi) => {
+                  <div className="afx-modules">
+                    {Object.keys(grouped).map((module) => {
                       const perms = grouped[module];
                       return (
-                        <div
-                          key={module}
-                          className="rl-module rl-module-open rl-module-view"
-                          style={{ animationDelay: `${mi * 0.04}s` }}
-                        >
-                          
-                          <div className="rl-module-header rl-module-header-view">
-                            <div className="rl-module-left">
-                              
-                              <div className="rl-module-check rl-check-full">
-                                <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                                  <path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
+                        <div key={module} className="afx-module">
+                          <div className="afx-module-head">
+                            <div className="afx-module-left">
+                              <div className="afx-check is-full">
+                                <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
                               </div>
-                              <span className="rl-module-name">{module}</span>
-                              <span className="rl-module-badge">{perms.length}</span>
+                              <span className="afx-module-name">{module}</span>
+                              <span className="afx-module-badge">{perms.length}</span>
                             </div>
-                            <div className="rl-module-right">
-                              <span className="rl-module-count">{perms.length} action{perms.length !== 1 ? "s" : ""}</span>
+                            <div className="afx-module-right">
+                              <span className="afx-module-count">{perms.length} action{perms.length !== 1 ? "s" : ""}</span>
                             </div>
                           </div>
 
-                          
-                          <div className="rl-actions-grid">
-                            {perms.map((p, pi) => (
-                              <div
-                                key={p.id}
-                                className="rl-action rl-action-checked rl-action-view"
-                                style={{ animationDelay: `${pi * 0.03}s` }}
-                              >
-                                <div className="rl-check rl-check-full">
-                                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                                    <path d="M1 4L3 6L7 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                                  </svg>
+                          <div className="afx-actions-grid">
+                            {perms.map((p) => (
+                              <div key={p.id} className="afx-action is-checked">
+                                <div className="afx-check is-full">
+                                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 4L3 6L7 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
                                 </div>
-                                <span className="rl-action-label">{p.action}</span>
+                                <span className="afx-action-label">{p.action}</span>
                               </div>
                             ))}
                           </div>
@@ -150,7 +107,7 @@ export default function RoleView({ uKey, onClose }) {
                     })}
 
                     {Object.keys(grouped).length === 0 && (
-                      <div className="rl-view-empty">
+                      <div className="afx-items-empty">
                         <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
                           <circle cx="14" cy="14" r="12" stroke="rgba(59,130,246,0.22)" strokeWidth="1.5"/>
                           <path d="M10 14h8" stroke="rgba(59,130,246,0.35)" strokeWidth="1.5" strokeLinecap="round"/>
@@ -159,18 +116,15 @@ export default function RoleView({ uKey, onClose }) {
                       </div>
                     )}
                   </div>
-                </div>
-              </>
-            )}
-          </div>
+                </>
+              )}
+            </div>
 
-          
-          <div className="rl-footer">
-            <button className="rl-btn-cancel" onClick={onClose}>Close</button>
-          </div>
-
-        </div>
-
+            <div className="afx-footer">
+              <button className="afx-btn" onClick={onClose}>Close</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,85 @@
+/* =========================
+   GLOBAL BUSY — small pill, not a big dialog. The overlay still spans the
+   viewport (transparent, cursor:wait) so clicks are blocked while a
+   save/download is in flight, but the visible indicator stays compact.
+========================= */
+.gb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 18px;
+  background: transparent;
+  cursor: wait;
+  pointer-events: auto;
+  animation: gbFadeIn 0.15s ease-out both;
+}
+
+.gb-pill {
+  --gb-bg:     rgba(17, 17, 22, 0.92);
+  --gb-border: rgba(255, 255, 255, 0.1);
+  --gb-text:   #f2f3f7;
+  --gb-accent: #3b82f6;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--gb-bg);
+  border: 1px solid var(--gb-border);
+  color: var(--gb-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  animation: gbPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+body[data-theme="light"] .gb-pill {
+  --gb-bg:     #ffffff;
+  --gb-border: rgba(15, 23, 42, 0.1);
+  --gb-text:   #0f172a;
+  --gb-accent: #2563eb;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+}
+
+.gb-spinner {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--gb-border);
+  border-top-color: var(--gb-accent);
+  animation: gbSpin 0.7s linear infinite;
+}
+
+@keyframes gbSpin { to { transform: rotate(360deg); } }
+@keyframes gbFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes gbPopIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 480px) {
+  .gb-overlay { padding-top: 12px; }
+  .gb-pill { font-size: 12px; padding: 7px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gb-spinner { animation: none; }
+}
+
+/* Theme.css has a legacy fallback that gives any element whose class
+   contains "-overlay" a translucent light haze backdrop in light mode
+   (!important) — meant for old unstyled modal backdrops. It also catches
+   this overlay, turning its deliberate transparent background into a
+   near-white blur that the near-white pill then disappears into. Outrank
+   it so the overlay stays transparent and only the pill is visible. */
+body[data-theme="light"] .gb-overlay.gb-overlay {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

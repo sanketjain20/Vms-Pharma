@@ -9,23 +9,10 @@ import DownloadModal from "../CommonAEUDForm/DownloadModal";
 import PaymentCollectionModal from "../CommonAEUDForm/PaymentCollectionModal";
 import { Status } from "../Enums/Status.js";
 import { toast } from "react-toastify";
-import {
-  useCanvasThemeKey,
-  getPerspectiveCanvasPalette,
-  createOrbField,
-  drawPerspectiveScene,
-} from "../../utils/canvasTheme";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 
 /* ─── tiny xlsx writer ──────────────────────────────────────────────────────── */
-function s2ab(s) {
-  const buf = new ArrayBuffer(s.length);
-  const view = new Uint8Array(buf);
-  for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
-  return buf;
-}
-
 function escapeXml(v) {
   return String(v ?? "")
     .replace(/&/g, "&amp;")
@@ -169,7 +156,7 @@ async function downloadExcel(rows, colDefs, filename) {
 }
 /* ─────────────────────────────────────────────────────────────────────────── */
 
-/* ── Animated count-up number (signature touch shared with Home) ── */
+/* ── Animated count-up number ── */
 function CountUp({ value, duration = 500 }) {
   const [display, setDisplay] = useState(value);
   const fromRef = useRef(value);
@@ -194,104 +181,164 @@ function CountUp({ value, duration = 500 }) {
   return <>{display}</>;
 }
 
-/* ── Mini pulse waveform — same signature motif as the Home page, scaled down ── */
-function MiniPulse({ className = "" }) {
-  return (
-    <svg viewBox="0 0 120 24" className={`dg-mini-pulse ${className}`} preserveAspectRatio="none">
-      <path
-        d="M0,12 L24,12 L29,4 L34,20 L39,12 L58,12 L63,7 L68,17 L73,12 L92,12 L97,3 L102,21 L107,12 L120,12"
-        fill="none"
-      />
-    </svg>
-  );
-}
+/* ── ACTION ICONS — shared by table rows and grid cards ── */
+const ActionIcon = {
+  Edit: () => (
+    <svg viewBox="0 -960 960 960" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z"/></svg>
+  ),
+  View: () => (
+    <svg viewBox="0 -960 960 960" fill="currentColor"><path d="M274-360q31 0 55.5-18t34.5-47l15-46q16-48-8-88.5T302-600H161l19 157q5 35 31.5 59t62.5 24Zm412 0q36 0 62.5-24t31.5-59l19-157H659q-45 0-69 41t-8 89l14 45q10 29 34.5 47t55.5 18Zm-412 80q-66 0-115.5-43.5T101-433L80-600H40v-80h262q44 0 80.5 21.5T440-600h81q21-37 57.5-58.5T659-680h261v80h-40l-21 167q-8 66-57.5 109.5T686-280q-57 0-102.5-32.5T520-399l-15-45q-2-7-4-14.5t-4-21.5h-34q-2 12-4 19.5t-4 14.5l-15 46q-18 54-63.5 87T274-280Z"/></svg>
+  ),
+  Activate: () => (
+    <svg viewBox="0 -960 960 960" fill="currentColor"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>
+  ),
+  Download: () => (
+    <svg viewBox="0 -960 960 960" fill="currentColor"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
+  ),
+  Payment: () => (
+    <svg viewBox="0 -960 960 960" fill="currentColor"><path d="M549-120 280-400h140q24 0 42-13.5t26-36.5H260v-70h228q-8-23-26-36.5T420-570H260v-70h420v70H552q11 15 18 32t10 38h100v70H581q-9 57-52.5 93.5T420-300h-6l232 180h-97ZM160-760q-33 0-56.5-23.5T80-840q0-33 23.5-56.5T160-920h640q33 0 56.5 23.5T880-840q0 33-23.5 56.5T800-760H160Zm0 640q-33 0-56.5-23.5T80-200v-480h80v480h640v-480h80v480q0 33-23.5 56.5T800-120H160Z"/></svg>
+  ),
+  Disable: () => (
+    <svg viewBox="0 -960 960 960" fill="currentColor"><path d="M819-28 701-146q-48 32-103.5 49T480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-62 17-117.5T146-701L27-820l57-57L876-85l-57 57ZM480-160q45 0 85.5-12t76.5-33L487-360l-63 64-170-170 56-56 114 114 7-8-226-226q-21 36-33 76.5T160-480q0 133 93.5 226.5T480-160Zm335-100-59-59q21-35 32.5-75.5T800-480q0-133-93.5-226.5T480-800q-45 0-85.5 11.5T319-756l-59-59q48-31 103.5-48T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 61-17 116.5T815-260ZM602-474l-56-56 104-104 56 56-104 104Zm-64-64ZM424-424Z"/></svg>
+  ),
+  Excel: () => (
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8.5 18l1.75-2.5L8.5 13h1.25L11 15l1.25-2h1.25l-1.75 2.5L13.5 18h-1.25L11 16l-1.25 2H8.5z"/></svg>
+  ),
+};
 
-/* ── VIEW TOGGLE ────────────────────────────────────────────────────────────── */
-function ViewToggle({ view, onChange }) {
+/* ── STAT ICONS — for the KPI card row ── */
+const StatIcon = {
+  Total: () => (
+    <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.3" stroke="currentColor" strokeWidth="1.3"/><rect x="9" y="1" width="6" height="6" rx="1.3" stroke="currentColor" strokeWidth="1.3"/><rect x="1" y="9" width="6" height="6" rx="1.3" stroke="currentColor" strokeWidth="1.3"/><rect x="9" y="9" width="6" height="6" rx="1.3" stroke="currentColor" strokeWidth="1.3"/></svg>
+  ),
+  Check: () => (
+    <svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 12L13 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  Cross: () => (
+    <svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
+  Clock: () => (
+    <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.3" stroke="currentColor" strokeWidth="1.3"/><path d="M8 4.5V8l2.6 1.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+};
+
+/* ── STAT CARD ROW — KPI summary above the toolbar, shared by every module ── */
+function StatCards({ Module, total, breakdown }) {
   return (
-    <div className="dg-view-toggle">
-      <button
-        className={`dg-vt-btn ${view === "table" ? "active" : ""}`}
-        onClick={() => onChange("table")}
-        title="Table view"
-      >
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-          <rect x="1" y="1" width="14" height="3" rx="1"/>
-          <rect x="1" y="6" width="14" height="3" rx="1"/>
-          <rect x="1" y="11" width="14" height="3" rx="1"/>
-        </svg>
-        <span>Table</span>
-      </button>
-      <button
-        className={`dg-vt-btn ${view === "grid" ? "active" : ""}`}
-        onClick={() => onChange("grid")}
-        title="Grid view"
-      >
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-          <rect x="1" y="1" width="6" height="6" rx="1.5"/>
-          <rect x="9" y="1" width="6" height="6" rx="1.5"/>
-          <rect x="1" y="9" width="6" height="6" rx="1.5"/>
-          <rect x="9" y="9" width="6" height="6" rx="1.5"/>
-        </svg>
-        <span>Grid</span>
-      </button>
-      <div className={`dg-vt-pill ${view}`} />
+    <div className="dg-stats">
+      <div className="dg-stat-card dg-stat-card--accent">
+        <span className="dg-stat-icon"><StatIcon.Total /></span>
+        <span className="dg-stat-info">
+          <span className="dg-stat-value"><CountUp value={total} /></span>
+          <span className="dg-stat-label">Total {Module}</span>
+        </span>
+      </div>
+      {breakdown.map(b => (
+        <div key={b.key} className={`dg-stat-card dg-stat-card--${b.color}`}>
+          <span className="dg-stat-icon">{b.icon}</span>
+          <span className="dg-stat-info">
+            <span className="dg-stat-value"><CountUp value={b.value} /></span>
+            <span className="dg-stat-label">{b.label}</span>
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
 
-/* ── GRID CARD ─────────────────────────────────────────────────────────────── */
-function GridCard({ row, columns, index, selectedStatus, can, Module, isReadOnlyModule, onEdit, onView, onDisable, onActivate, onDownload, onPaymentCollection }) {
+/* ── Row/card action buttons — one definition, reused by both views ── */
+function RowActions({ row, selectedStatus, can, Module, isReadOnlyModule, hideActiveInactiveTabs, onEdit, onView, onDisable, onActivate, onDownload, onPaymentCollection }) {
+  const canCollectPayment = Module === "Retailer Outstanding" || Module === "Supplier Outstanding";
+  const paymentTitle = Module === "Supplier Outstanding" ? "Pay Supplier" : "Payment Collection";
+
+  // Whether to show "Activate" vs "Disable" must follow the row's own
+  // status, not which tab is currently selected — otherwise every row on
+  // the "All" tab (which mixes active and inactive rows) shows the same
+  // action, including already-inactive rows showing "Disable" again.
+  const isRowInactive = !hideActiveInactiveTabs && Module !== "Sales" && row.disable === 1;
+
+  if (isRowInactive) {
+    return (
+      <>
+        <button className="dg-icon-btn dg-icon-btn--view" title="View" onClick={() => onView(row)}><ActionIcon.View /></button>
+        {can("Disable") && <button className="dg-icon-btn dg-icon-btn--activate" title="Activate" onClick={() => onActivate(row)}><ActionIcon.Activate /></button>}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {can("Edit") && !isReadOnlyModule && <button className="dg-icon-btn dg-icon-btn--edit" title="Edit" onClick={() => onEdit(row)}><ActionIcon.Edit /></button>}
+      <button className="dg-icon-btn dg-icon-btn--view" title="View" onClick={() => onView(row)}><ActionIcon.View /></button>
+      {canCollectPayment && <button className="dg-icon-btn dg-icon-btn--payment" title={paymentTitle} onClick={() => onPaymentCollection(row)}><ActionIcon.Payment /></button>}
+      {Module === "Sales" && can("Download") && <button className="dg-icon-btn dg-icon-btn--download" title="Download" onClick={() => onDownload(row)}><ActionIcon.Download /></button>}
+      {Module !== "Sales" && can("Disable") && !isReadOnlyModule && <button className="dg-icon-btn dg-icon-btn--disable" title="Disable" onClick={() => onDisable(row)}><ActionIcon.Disable /></button>}
+    </>
+  );
+}
+
+/* ── PAGINATION — shared by table + grid views ── */
+function Pager({ page, totalPages, size, onPageChange, onSizeChange, className = "" }) {
+  return (
+    <div className={`dg-pager ${className}`}>
+      <button className="dg-pager-btn" onClick={() => onPageChange(0)} disabled={page === 0} title="First page">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 2L3 5L7 8M4 2L4 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </button>
+      <button className="dg-pager-btn" onClick={() => onPageChange(Math.max(page - 1, 0))} disabled={page === 0} title="Previous page">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 2L3 5L7 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </button>
+      <div className="dg-pager-info">
+        <span className="dg-pager-cur">{page + 1}</span>
+        <span className="dg-pager-sep">/</span>
+        <span className="dg-pager-tot">{totalPages}</span>
+      </div>
+      <button className="dg-pager-btn" onClick={() => onPageChange(Math.min(page + 1, totalPages - 1))} disabled={page + 1 >= totalPages} title="Next page">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </button>
+      <button className="dg-pager-btn" onClick={() => onPageChange(totalPages - 1)} disabled={page + 1 >= totalPages} title="Last page">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2L7 5L3 8M6 2L6 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </button>
+      <select className="dg-pager-size" value={size} onChange={e => onSizeChange(Number(e.target.value))}>
+        {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
+      </select>
+    </div>
+  );
+}
+
+/* ── VIEW TOGGLE ── */
+function ViewToggle({ view, onChange }) {
+  return (
+    <div className="dg-switch">
+      <button className={`dg-switch-btn ${view === "table" ? "active" : ""}`} onClick={() => onChange("table")} title="Table view">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+          <rect x="1" y="1" width="14" height="3" rx="1"/><rect x="1" y="6" width="14" height="3" rx="1"/><rect x="1" y="11" width="14" height="3" rx="1"/>
+        </svg>
+        <span>Table</span>
+      </button>
+      <button className={`dg-switch-btn ${view === "grid" ? "active" : ""}`} onClick={() => onChange("grid")} title="Grid view">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+          <rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/>
+        </svg>
+        <span>Grid</span>
+      </button>
+      <div className={`dg-switch-thumb ${view}`} />
+    </div>
+  );
+}
+
+/* ── GRID CARD ── */
+function GridItem({ row, columns, index, ...actionProps }) {
+  const { Module } = actionProps;
   const dataCols = columns.filter(c => c.field !== "Action").slice(0, 6);
 
-  const IconEdit = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="13px" viewBox="0 -960 960 960" width="13px" fill="currentColor">
-      <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z"/>
-    </svg>
-  );
-  const IconView = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="13px" viewBox="0 -960 960 960" width="13px" fill="currentColor">
-      <path d="M274-360q31 0 55.5-18t34.5-47l15-46q16-48-8-88.5T302-600H161l19 157q5 35 31.5 59t62.5 24Zm412 0q36 0 62.5-24t31.5-59l19-157H659q-45 0-69 41t-8 89l14 45q10 29 34.5 47t55.5 18Z"/>
-    </svg>
-  );
-  const IconActivate = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="13px" viewBox="0 -960 960 960" width="13px" fill="currentColor">
-      <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
-    </svg>
-  );
-  const IconDownload = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="13px" viewBox="0 -960 960 960" width="13px" fill="currentColor">
-      <path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/>
-    </svg>
-  );
-  const IconPaymentCollection = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="13px" viewBox="0 -960 960 960" width="13px" fill="currentColor">
-      <path d="M549-120 280-400h140q24 0 42-13.5t26-36.5H260v-70h228q-8-23-26-36.5T420-570H260v-70h420v70H552q11 15 18 32t10 38h100v70H581q-9 57-52.5 93.5T420-300h-6l232 180h-97ZM160-760q-33 0-56.5-23.5T80-840q0-33 23.5-56.5T160-920h640q33 0 56.5 23.5T880-840q0 33-23.5 56.5T800-760H160Zm0 640q-33 0-56.5-23.5T80-200v-480h80v480h640v-480h80v480q0 33-23.5 56.5T800-120H160Z"/>
-    </svg>
-  );
-  const IconDisable = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="13px" viewBox="0 -960 960 960" width="13px" fill="currentColor">
-      <path d="M819-28 701-146q-48 32-103.5 49T480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-62 17-117.5T146-701L27-820l57-57L876-85l-57 57Z"/>
-    </svg>
-  );
-
-  /* first non-action field as the "title" */
   const titleCol = dataCols[0];
   const titleVal = titleCol ? String(row[titleCol.field] ?? "") : `Record #${index + 1}`;
 
-  /* status color */
   const cardModuleKey = String(Module || "").toLowerCase().replace(/\s+/g, "");
-  const hideCardStatus = [
-    "purchase",
-    "paymentcollection",
-    "supplierpayment",
-    "supplierpaymnet",
-    "salesreturn",
-    "purchasereturn",
-    "stockadjustment",
-    "retaileroutstanding",
-    "supplieroutstanding",
-    "batch",
+  const hideStatus = [
+    "purchase", "paymentcollection", "supplierpayment", "supplierpaymnet",
+    "salesreturn", "purchasereturn", "stockadjustment",
+    "retaileroutstanding", "supplieroutstanding", "batch",
   ].includes(cardModuleKey);
   const isActive = row.disable === 0;
   const statusColor = Module === "Sales"
@@ -300,33 +347,17 @@ function GridCard({ row, columns, index, selectedStatus, can, Module, isReadOnly
   const statusLabel = Module === "Sales"
     ? row.statusId === Status?.PaymentDone ? "Paid" : "Pending"
     : isActive ? "Active" : "Inactive";
-  const canCollectPayment = Module === "Retailer Outstanding" || Module === "Supplier Outstanding";
-  const paymentActionTitle = Module === "Supplier Outstanding" ? "Pay Supplier" : "Payment Collection";
 
   return (
-    <div className="dg-card" style={{ animationDelay: `${index * 0.04}s` }}>
-      
-      {!hideCardStatus && <div className={`dg-card-beam dg-card-beam-${statusColor}`} />}
-
-      
-      <div className="dg-card-corner dg-cc-tl" />
-      <div className="dg-card-corner dg-cc-tr" />
-      <div className="dg-card-corner dg-cc-bl" />
-      <div className="dg-card-corner dg-cc-br" />
-
-      
-      <div className="dg-card-head">
-        <div className="dg-card-idx">#{String(index + 1).padStart(3, "0")}</div>
-        {!hideCardStatus && (
-          <span className={`dg-card-status dg-card-status-${statusColor}`}>{statusLabel}</span>
-        )}
+    <div className={`dg-item ${!hideStatus ? `dg-item--${statusColor}` : ""}`} style={{ animationDelay: `${index * 0.03}s` }}>
+      <div className="dg-item-top">
+        <span className="dg-item-index">#{String(index + 1).padStart(3, "0")}</span>
+        {!hideStatus && <span className={`dg-item-status dg-item-status--${statusColor}`}>{statusLabel}</span>}
       </div>
 
-      
-      <div className="dg-card-title" title={titleVal}>{titleVal}</div>
+      <div className="dg-item-title" title={titleVal}>{titleVal}</div>
 
-      
-      <div className="dg-card-fields">
+      <div className="dg-item-fields">
         {dataCols.slice(1).map((col, i) => {
           const val = row[col.field];
           let display = "";
@@ -334,36 +365,22 @@ function GridCard({ row, columns, index, selectedStatus, can, Module, isReadOnly
             display = typeof val === "number" ? val.toFixed(2) : typeof val === "object" ? JSON.stringify(val) : String(val);
           }
           return (
-            <div key={i} className="dg-card-field">
-              <span className="dg-card-field-key">{col.header}</span>
-              <span className="dg-card-field-val" title={display}>{display || "—"}</span>
+            <div key={i} className="dg-item-field">
+              <span className="dg-item-field-key">{col.header}</span>
+              <span className="dg-item-field-val" title={display}>{display || "—"}</span>
             </div>
           );
         })}
       </div>
 
-      
-      <div className="dg-card-actions">
-        {selectedStatus === "inactive" ? (
-          <>
-            <button className="dg-card-btn view" title="View" onClick={() => onView(row)}><IconView /></button>
-            {can("Disable") && <button className="dg-card-btn activate" title="Activate" onClick={() => onActivate(row)}><IconActivate /></button>}
-          </>
-        ) : (
-          <>
-            {can("Edit") && !isReadOnlyModule && <button className="dg-card-btn edit" title="Edit" onClick={() => onEdit(row)}><IconEdit /></button>}
-            <button className="dg-card-btn view" title="View" onClick={() => onView(row)}><IconView /></button>
-            {canCollectPayment && <button className="dg-card-btn payment-collection" title={paymentActionTitle} onClick={() => onPaymentCollection(row)}><IconPaymentCollection /></button>}
-            {Module === "Sales" && can("Download") && <button className="dg-card-btn download" title="Download" onClick={() => onDownload(row)}><IconDownload /></button>}
-            {(Module !== "Sales") && can("Disable") && !isReadOnlyModule && <button className="dg-card-btn disable" title="Disable" onClick={() => onDisable(row)}><IconDisable /></button>}
-          </>
-        )}
+      <div className="dg-item-actions">
+        <RowActions row={row} {...actionProps} />
       </div>
     </div>
   );
 }
 
-/* ── MAIN COMPONENT ─────────────────────────────────────────────────────────── */
+/* ── MAIN COMPONENT ── */
 export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, noPagination = false }) {
   const [allData, setAllData] = useState([]);
   const [page, setPage] = useState(0);
@@ -372,7 +389,6 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   const [totalItems, setTotalItems] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchText, setSearchText] = useState("");
-  const [emptyMsg, setEmptyMsg] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editUkey, setEditUkey] = useState(null);
@@ -391,36 +407,23 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   );
   const [hoveredRow, setHoveredRow] = useState(null);
 
-  /* ── view mode: "table" | "grid" ── */
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("dg-view") || "table");
   const handleViewChange = (v) => { setViewMode(v); localStorage.setItem("dg-view", v); };
 
-  /* excel dropdown */
   const [xlDropOpen, setXlDropOpen] = useState(false);
   const [xlLoading, setXlLoading] = useState(false);
   const xlDropRef = useRef(null);
   const gridRequestRef = useRef(0);
 
-  const canvasRef = useRef(null);
-  const animFrameRef = useRef(null);
-
   const can = (perm) => accessList.includes(perm);
   const moduleKey = String(Module || "").toLowerCase().replace(/\s+/g, "");
   const isReadOnlyModule = ["batch"].includes(moduleKey);
-  // Transaction submenus are not status-management screens. Keep their list
-  // focused on the records themselves; Sales has its own payment-status tabs.
   const hideActiveInactiveTabs = [
-    "purchase",
-    "paymentcollection",
-    "supplierpayment",
-    "supplierpaymnet",
-    "salesreturn",
-    "purchasereturn",
-    "stockadjustment",
-    "retaileroutstanding",
-    "supplieroutstanding",
-    "batch",
+    "purchase", "paymentcollection", "supplierpayment", "supplierpaymnet",
+    "salesreturn", "purchasereturn", "stockadjustment",
+    "retaileroutstanding", "supplieroutstanding", "batch",
   ].includes(moduleKey);
+
   useEffect(() => {
     if (!xlDropOpen) return;
     const handler = (e) => {
@@ -444,37 +447,6 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
     }
   };
 
-  /* 3D CANVAS BACKGROUND */
-  const canvasThemeKey = useCanvasThemeKey();
-  const orbsRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const palette = getPerspectiveCanvasPalette();
-    orbsRef.current = createOrbField(4, canvas.width, canvas.height, [215, 225, 230, 210], palette);
-
-    let tick = 0;
-    const draw = () => {
-      tick++;
-      drawPerspectiveScene(ctx, canvas, tick, {
-        horizonRatio: 0.48,
-        gridCount: 10,
-        radialCount: 14,
-        speed: 0.2,
-        orbs: orbsRef.current,
-      });
-      animFrameRef.current = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(animFrameRef.current); };
-  }, [canvasThemeKey]);
-
   const roleId = localStorage.getItem("roleId");
 
   useEffect(() => {
@@ -485,9 +457,6 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   }, [Module]);
 
   const refreshGrid = React.useCallback(() => {
-    // Grid endpoints use page and size as path parameters; search and tab are query parameters.
-    // Non-paginated endpoints also receive the tab filter; they retain their
-    // endpoint shape while the backend applies the selected tab.
     const query = new URLSearchParams({
       ...(searchText.trim() && { search: searchText.trim() }),
       tab: selectedStatus,
@@ -527,14 +496,12 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   useEffect(() => { refreshGrid(); }, [refreshGrid]);
 
   const counts = React.useMemo(() => {
-    // Tab badges represent the records currently loaded in the grid, so All
-    // matches the page-sized Active/Inactive counts instead of the API total.
     const all = allData.length;
     if (Module === "Sales") {
       return { all, payment_done: allData.filter(r => r.statusId === Status.PaymentDone).length, payment_pending: allData.filter(r => r.statusId === Status.PaymentPending).length };
     }
     return { all, active: allData.filter(r => r.disable === 0).length, inactive: allData.filter(r => r.disable === 1).length };
-  }, [allData, Module, totalItems]);
+  }, [allData, Module]);
 
   const filteredData = allData
     .filter(row => {
@@ -549,8 +516,6 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
       }
       return true;
     })
-    // Search is performed by the API for paginated screens. Non-paginated screens
-    // retain their local search behavior.
     .filter(row => noPagination && searchText ? Object.values(row).join(" ").toLowerCase().includes(searchText.toLowerCase()) : true);
 
   const pagedData = React.useMemo(() => {
@@ -600,191 +565,155 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
     document.addEventListener("mouseup", onMouseUp);
   };
 
-  /* ACTION ICONS */
-  const IconEdit = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="currentColor">
-      <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
-    </svg>
-  );
-  const IconView = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="currentColor">
-      <path d="M274-360q31 0 55.5-18t34.5-47l15-46q16-48-8-88.5T302-600H161l19 157q5 35 31.5 59t62.5 24Zm412 0q36 0 62.5-24t31.5-59l19-157H659q-45 0-69 41t-8 89l14 45q10 29 34.5 47t55.5 18Zm-412 80q-66 0-115.5-43.5T101-433L80-600H40v-80h262q44 0 80.5 21.5T440-600h81q21-37 57.5-58.5T659-680h261v80h-40l-21 167q-8 66-57.5 109.5T686-280q-57 0-102.5-32.5T520-399l-15-45q-2-7-4-14.5t-4-21.5h-34q-2 12-4 19.5t-4 14.5l-15 46q-18 54-63.5 87T274-280Z"/>
-    </svg>
-  );
-  const IconActivate = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="currentColor">
-      <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
-    </svg>
-  );
-  const IconDownload = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="currentColor">
-      <path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/>
-    </svg>
-  );
-  const IconPaymentCollection = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="currentColor">
-      <path d="M549-120 280-400h140q24 0 42-13.5t26-36.5H260v-70h228q-8-23-26-36.5T420-570H260v-70h420v70H552q11 15 18 32t10 38h100v70H581q-9 57-52.5 93.5T420-300h-6l232 180h-97ZM160-760q-33 0-56.5-23.5T80-840q0-33 23.5-56.5T160-920h640q33 0 56.5 23.5T880-840q0 33-23.5 56.5T800-760H160Zm0 640q-33 0-56.5-23.5T80-200v-480h80v480h640v-480h80v480q0 33-23.5 56.5T800-120H160Z"/>
-    </svg>
-  );
-  const IconDisable = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="currentColor">
-      <path d="M819-28 701-146q-48 32-103.5 49T480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-62 17-117.5T146-701L27-820l57-57L876-85l-57 57ZM480-160q45 0 85.5-12t76.5-33L487-360l-63 64-170-170 56-56 114 114 7-8-226-226q-21 36-33 76.5T160-480q0 133 93.5 226.5T480-160Zm335-100-59-59q21-35 32.5-75.5T800-480q0-133-93.5-226.5T480-800q-45 0-85.5 11.5T319-756l-59-59q48-31 103.5-48T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 61-17 116.5T815-260ZM602-474l-56-56 104-104 56 56-104 104Zm-64-64ZM424-424Z"/>
-    </svg>
-  );
-  const IconExcel = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="13px" viewBox="0 0 24 24" width="13px" fill="currentColor">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8.5 18l1.75-2.5L8.5 13h1.25L11 15l1.25-2h1.25l-1.75 2.5L13.5 18h-1.25L11 16l-1.25 2H8.5z"/>
-    </svg>
-  );
-
   const totalColWidth = colWidths.reduce((sum, w) => sum + (parseInt(w) || 150), 0);
 
+  const actionProps = {
+    can, Module, isReadOnlyModule, hideActiveInactiveTabs,
+    onEdit: handleEdit, onView: handleView, onDisable: handleDisable,
+    onActivate: handleActivate, onDownload: handleDownload, onPaymentCollection: handlePaymentCollection,
+  };
+
+  const handleSizeChange = (s) => { setSize(s); setPage(0); };
+
+  const statBreakdown = Module === "Sales"
+    ? [
+        { key: "payment_done", label: "Payment Done", value: counts.payment_done, color: "green", icon: <StatIcon.Check /> },
+        { key: "payment_pending", label: "Pending", value: counts.payment_pending, color: "amber", icon: <StatIcon.Clock /> },
+      ]
+    : hideActiveInactiveTabs
+    ? []
+    : [
+        { key: "active", label: "Active", value: counts.active, color: "green", icon: <StatIcon.Check /> },
+        { key: "inactive", label: "Inactive", value: counts.inactive, color: "red", icon: <StatIcon.Cross /> },
+      ];
+
   return (
-    <div className="dg-wrapper">
-      <canvas ref={canvasRef} className="dg-canvas" />
-      <div className="dg-noise" />
-      <div className="dg-glow-blob dg-glow-blob-a" />
-      <div className="dg-glow-blob dg-glow-blob-b" />
-      <div className="dg-top-beam" />
+    <div className="dg-panel">
+      <div className="dg-panel-body">
 
-      <div className="dg-inner">
+        {/* ── STAT CARDS ── */}
+        <StatCards
+          Module={Module}
+          total={noPagination ? filteredData.length : totalItems}
+          breakdown={statBreakdown}
+        />
 
-        
-        <div className="dg-topbar">
-          <div className="dg-search-wrap">
+        {/* ── TOOLBAR ── */}
+        <div className="dg-toolbar">
+          <div className="dg-search-box">
             <FaSearch className="dg-search-icon" />
             <input
               type="text"
-              className="dg-search"
-              placeholder={`      Search ${Module || "records"}…`}
+              className="dg-search-input"
+              placeholder={`Search ${Module || "records"}…`}
               value={searchText}
               onChange={e => { setSearchText(e.target.value); setPage(0); }}
             />
             {searchText && (
               <button className="dg-search-clear" onClick={() => { setSearchText(""); setPage(0); }}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </button>
             )}
           </div>
 
-          <div className="dg-topbar-right">
-            <div className="dg-record-count">
+          <div className="dg-toolbar-end">
+            <div className="dg-count">
               <span className="dg-count-dot" />
               <CountUp value={noPagination ? filteredData.length : totalItems} /> records
             </div>
 
-            
             <ViewToggle view={viewMode} onChange={handleViewChange} />
 
             {can("Add") && !isReadOnlyModule && (
-              <button className="dg-add-btn" onClick={() => setIsModalOpen(true)}>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                </svg>
+              <button className="dg-btn-add" onClick={() => setIsModalOpen(true)}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
                 Add {Module}
               </button>
             )}
           </div>
         </div>
 
-        
-        <div className="dg-chips-row">
-          <div className="dg-chips">
+        {/* ── FILTER ROW: tabs + export ── */}
+        <div className="dg-filter-row">
+          <div className="dg-tabs">
             {Module === "Sales" ? (
-              <>
-                {[
-                  { key: "all", label: "All", count: counts.all },
-                  { key: "payment_done", label: "Payment Done", count: counts.payment_done },
-                  { key: "payment_pending", label: "Pending", count: counts.payment_pending },
-                ].map(c => (
-                  <button key={c.key} className={`dg-chip ${selectedStatus === c.key ? "dg-chip-active" : ""}`} onClick={() => setSelectedStatus(c.key)}>
-                    {c.label}
-                    {selectedStatus === c.key && <span className="dg-chip-count"><CountUp value={c.count} duration={350} /></span>}
-                  </button>
-                ))}
-              </>
+              [
+                { key: "all", label: "All", count: counts.all },
+                { key: "payment_done", label: "Payment Done", count: counts.payment_done },
+                { key: "payment_pending", label: "Pending", count: counts.payment_pending },
+              ].map(c => (
+                <button key={c.key} className={`dg-tab ${selectedStatus === c.key ? "dg-tab--active" : ""}`} onClick={() => setSelectedStatus(c.key)}>
+                  {c.label}
+                  {selectedStatus === c.key && <span className="dg-tab-count"><CountUp value={c.count} duration={350} /></span>}
+                </button>
+              ))
             ) : hideActiveInactiveTabs ? (
-              <button className="dg-chip dg-chip-active" onClick={() => setSelectedStatus("all")}>
+              <button className="dg-tab dg-tab--active" onClick={() => setSelectedStatus("all")}>
                 All
-                <span className="dg-chip-count"><CountUp value={counts.all} duration={350} /></span>
+                <span className="dg-tab-count"><CountUp value={counts.all} duration={350} /></span>
               </button>
             ) : (
-              <>
-                {[
-                  { key: "all", label: "All", count: counts.all },
-                  { key: "active", label: "Active", count: counts.active, color: "green" },
-                  { key: "inactive", label: "Inactive", count: counts.inactive, color: "red" },
-                ].map(c => (
-                  <button key={c.key} className={`dg-chip ${selectedStatus === c.key ? "dg-chip-active" : ""} ${c.color ? `dg-chip-${c.color}` : ""}`} onClick={() => setSelectedStatus(c.key)}>
-                    {c.label}
-                    {selectedStatus === c.key && <span className="dg-chip-count"><CountUp value={c.count} duration={350} /></span>}
-                  </button>
-                ))}
-              </>
+              [
+                { key: "all", label: "All", count: counts.all },
+                { key: "active", label: "Active", count: counts.active, color: "green" },
+                { key: "inactive", label: "Inactive", count: counts.inactive, color: "red" },
+              ].map(c => (
+                <button key={c.key} className={`dg-tab ${selectedStatus === c.key ? "dg-tab--active" : ""} ${c.color ? `dg-tab--${c.color}` : ""}`} onClick={() => setSelectedStatus(c.key)}>
+                  {c.label}
+                  {selectedStatus === c.key && <span className="dg-tab-count"><CountUp value={c.count} duration={350} /></span>}
+                </button>
+              ))
             )}
           </div>
 
-          
-          <div className="dg-xl-wrap" ref={xlDropRef}>
-            <button
-              className={`dg-xl-btn ${xlLoading ? "dg-xl-btn--loading" : ""}`}
-              onClick={() => !xlLoading && setXlDropOpen(o => !o)}
-              title="Export to Excel"
-            >
-              {xlLoading ? <span className="dg-xl-spinner" /> : <IconExcel />}
+          <div className="dg-export" ref={xlDropRef}>
+            <button className={`dg-export-btn ${xlLoading ? "dg-export-btn--loading" : ""}`} onClick={() => !xlLoading && setXlDropOpen(o => !o)} title="Export to Excel">
+              {xlLoading ? <span className="dg-export-spinner" /> : <ActionIcon.Excel />}
               <span>Export</span>
               <svg width="8" height="8" viewBox="0 0 8 8" fill="none" style={{ transition: "transform 0.2s", transform: xlDropOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
                 <path d="M1 2.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
             {xlDropOpen && (
-              <div className="dg-xl-drop">
-                <div className="dg-xl-drop-label">Export as Excel</div>
-                <button className="dg-xl-drop-item" onClick={() => doExport(filteredData, "all")}>
+              <div className="dg-export-menu">
+                <div className="dg-export-menu-label">Export as Excel</div>
+                <button className="dg-export-item" onClick={() => doExport(filteredData, "all")}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
                   Download All
-                  <span className="dg-xl-badge">{filteredData.length}</span>
+                  <span className="dg-export-badge">{filteredData.length}</span>
                 </button>
-                <button className="dg-xl-drop-item" onClick={() => doExport(pagedData, `page${page + 1}`)}>
+                <button className="dg-export-item" onClick={() => doExport(pagedData, `page${page + 1}`)}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <path d="M12 8v8M8 12l4 4 4-4"/>
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12l4 4 4-4"/>
                   </svg>
                   Current Page
-                  <span className="dg-xl-badge">{pagedData.length}</span>
+                  <span className="dg-export-badge">{pagedData.length}</span>
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        
+        {/* ── TABLE VIEW ── */}
         {viewMode === "table" && (
-          <div className="dg-shell">
-            <div className="dg-shell-header">
-              <div className="dg-shell-title">
+          <div className="dg-table-card">
+            <div className="dg-table-card-head">
+              <div className="dg-table-card-title">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <rect x="1" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                  <rect x="7" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                  <rect x="1" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                  <rect x="7" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
+                  <rect x="1" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/><rect x="7" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
+                  <rect x="1" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/><rect x="7" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
                 </svg>
                 Data Grid
-                <MiniPulse />
               </div>
-              <div className="dg-shell-meta">
-                <span className="dg-shell-pulse" />
+              <div className="dg-table-card-meta">
+                <span className="dg-meta-dot" />
                 {pagedData.length} of {noPagination ? filteredData.length : totalItems} shown
               </div>
             </div>
 
-            <div className="dg-scroll">
+            <div className="dg-table-scroll">
               <table className="dg-table" style={{ width: "100%", minWidth: totalColWidth + "px" }}>
                 <colgroup>
                   {colWidths.map((w, i) => <col key={i} style={{ width: w }} />)}
@@ -792,27 +721,26 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
                 <thead>
                   <tr>
                     {columns.map((col, idx) => (
-                      <th key={idx} id={`col-${idx}`} title={col.header} className="dg-th"
-                        style={{ width: colWidths[idx], minWidth: colWidths[idx] }}>
-                        <span className="dg-th-inner">
-                          <span className="dg-col-num">{String(idx + 1).padStart(2, "0")}</span>
+                      <th key={idx} id={`col-${idx}`} title={col.header} className="dg-th" style={{ width: colWidths[idx], minWidth: colWidths[idx] }}>
+                        <span className="dg-th-label">
+                          <span className="dg-col-index">{String(idx + 1).padStart(2, "0")}</span>
                           {col.header}
                         </span>
-                        <div className="dg-resizer" onMouseDown={e => startResize(idx, e)} />
+                        <div className="dg-col-resizer" onMouseDown={e => startResize(idx, e)} />
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {emptyMsg && filteredData.length === 0 ? (
+                  {filteredData.length === 0 ? (
                     <tr>
                       <td colSpan={columns.length} className="dg-empty">
                         <div className="dg-empty-inner">
-                          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                            <circle cx="14" cy="14" r="12" stroke="rgba(139,92,246,0.25)" strokeWidth="1.5"/>
-                            <path d="M10 14h8M14 10v8" stroke="rgba(34,211,238,0.35)" strokeWidth="1.5" strokeLinecap="round"/>
+                          <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+                            <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="1.4" opacity="0.3"/>
+                            <path d="M10 14h8M14 10v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
                           </svg>
-                          {emptyMsg}
+                          No records found
                         </div>
                       </td>
                     </tr>
@@ -820,37 +748,16 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
                     pagedData?.map((row, rowIdx) => (
                       <tr
                         key={rowIdx}
-                        className={`dg-row ${hoveredRow === rowIdx ? "dg-row-hovered" : ""}`}
-                        style={{ animationDelay: `${rowIdx * 0.025}s` }}
+                        className={`dg-row ${hoveredRow === rowIdx ? "dg-row--hover" : ""}`}
+                        style={{ animationDelay: `${rowIdx * 0.02}s` }}
                         onMouseEnter={() => setHoveredRow(rowIdx)}
                         onMouseLeave={() => setHoveredRow(null)}
                       >
                         {columns.map((col, colIdx) => {
                           if (col.field === "Action") {
                             return (
-                              <td key={colIdx} className="dg-action-cell">
-                                {selectedStatus === "inactive" ? (
-                                  <>
-                                    <button className="dg-action-btn view" title="View" onClick={() => handleView(row)}><IconView /></button>
-                                    {can("Disable") && <button className="dg-action-btn activate" title="Activate" onClick={() => handleActivate(row)}><IconActivate /></button>}
-                                  </>
-                                ) : (
-                                  <>
-                                    {can("Edit") && !isReadOnlyModule && <button className="dg-action-btn edit" title="Edit" onClick={() => handleEdit(row)}><IconEdit /></button>}
-                                    <button className="dg-action-btn view" title="View" onClick={() => handleView(row)}><IconView /></button>
-                                    {(Module === "Retailer Outstanding" || Module === "Supplier Outstanding") && (
-                                      <button
-                                        className="dg-action-btn payment-collection"
-                                        title={Module === "Supplier Outstanding" ? "Pay Supplier" : "Payment Collection"}
-                                        onClick={() => handlePaymentCollection(row)}
-                                      >
-                                        <IconPaymentCollection />
-                                      </button>
-                                    )}
-                                    {Module === "Sales" && can("Download") && <button className="dg-action-btn download" title="Download" onClick={() => handleDownload(row)}><IconDownload /></button>}
-                                    {(Module !== "Sales") && can("Disable") && !isReadOnlyModule && <button className="dg-action-btn disable" title="Disable" onClick={() => handleDisable(row)}><IconDisable /></button>}
-                                  </>
-                                )}
+                              <td key={colIdx} className="dg-cell-actions">
+                                <RowActions row={row} selectedStatus={selectedStatus} {...actionProps} />
                               </td>
                             );
                           }
@@ -861,8 +768,8 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
                             else displayValue = typeof value === "object" ? JSON.stringify(value) : String(value);
                           }
                           return (
-                            <td key={colIdx} className="dg-td" title={displayValue}>
-                              {displayValue || <span className="dg-td-empty">—</span>}
+                            <td key={colIdx} className="dg-cell" title={displayValue}>
+                              {displayValue || <span className="dg-cell-empty">—</span>}
                             </td>
                           );
                         })}
@@ -873,104 +780,35 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
               </table>
             </div>
 
-            
-            <div className="dg-pagination">
-              <button className="dg-page-btn" onClick={() => setPage(0)} disabled={page === 0}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M7 2L3 5L7 8M4 2L4 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <button className="dg-page-btn" onClick={() => setPage(p => Math.max(p - 1, 0))} disabled={page === 0}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M7 2L3 5L7 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <div className="dg-page-indicator">
-                <span className="dg-page-cur">{page + 1}</span>
-                <span className="dg-page-sep">/</span>
-                <span className="dg-page-tot">{totalPages}</span>
-              </div>
-              <button className="dg-page-btn" onClick={() => setPage(p => Math.min(p + 1, totalPages - 1))} disabled={page + 1 >= totalPages}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <button className="dg-page-btn" onClick={() => setPage(totalPages - 1)} disabled={page + 1 >= totalPages}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M3 2L7 5L3 8M6 2L6 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <select className="dg-size-select" value={size} onChange={e => { setSize(Number(e.target.value)); setPage(0); }}>
-                {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
-              </select>
-            </div>
+            <Pager page={page} totalPages={totalPages} size={size} onPageChange={setPage} onSizeChange={handleSizeChange} />
           </div>
         )}
 
-        
+        {/* ── GRID VIEW ── */}
         {viewMode === "grid" && (
-          <div className="dg-card-section">
+          <div className="dg-cards">
             {filteredData.length === 0 ? (
-              <div className="dg-card-empty">
-                <svg width="32" height="32" viewBox="0 0 28 28" fill="none">
-                  <circle cx="14" cy="14" r="12" stroke="rgba(139,92,246,0.25)" strokeWidth="1.5"/>
-                  <path d="M10 14h8M14 10v8" stroke="rgba(34,211,238,0.35)" strokeWidth="1.5" strokeLinecap="round"/>
+              <div className="dg-cards-empty">
+                <svg width="30" height="30" viewBox="0 0 28 28" fill="none">
+                  <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="1.4" opacity="0.3"/>
+                  <path d="M10 14h8M14 10v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
                 </svg>
                 <p>No records found</p>
               </div>
             ) : (
               <>
-                <div className="dg-card-grid">
+                <div className="dg-cards-grid">
                   {pagedData.map((row, i) => (
-                    <GridCard
-                      key={i}
-                      row={row}
-                      columns={columns}
-                      index={page * size + i}
-                      selectedStatus={selectedStatus}
-                      can={can}
-                      Module={Module}
-                      isReadOnlyModule={isReadOnlyModule}
-                      onEdit={handleEdit}
-                      onView={handleView}
-                      onDisable={handleDisable}
-                      onActivate={handleActivate}
-                      onDownload={handleDownload}
-                      onPaymentCollection={handlePaymentCollection}
-                    />
+                    <GridItem key={i} row={row} columns={columns} index={page * size + i} selectedStatus={selectedStatus} {...actionProps} />
                   ))}
                 </div>
-
-                
-                <div className="dg-pagination dg-card-pagination">
-                  <button className="dg-page-btn" onClick={() => setPage(0)} disabled={page === 0}>
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 2L3 5L7 8M4 2L4 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </button>
-                  <button className="dg-page-btn" onClick={() => setPage(p => Math.max(p - 1, 0))} disabled={page === 0}>
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 2L3 5L7 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </button>
-                  <div className="dg-page-indicator">
-                    <span className="dg-page-cur">{page + 1}</span>
-                    <span className="dg-page-sep">/</span>
-                    <span className="dg-page-tot">{totalPages}</span>
-                  </div>
-                  <button className="dg-page-btn" onClick={() => setPage(p => Math.min(p + 1, totalPages - 1))} disabled={page + 1 >= totalPages}>
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </button>
-                  <button className="dg-page-btn" onClick={() => setPage(totalPages - 1)} disabled={page + 1 >= totalPages}>
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2L7 5L3 8M6 2L6 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </button>
-                  <select className="dg-size-select" value={size} onChange={e => { setSize(Number(e.target.value)); setPage(0); }}>
-                    {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
-                  </select>
-                </div>
+                <Pager page={page} totalPages={totalPages} size={size} onPageChange={setPage} onSizeChange={handleSizeChange} className="dg-pager--cards" />
               </>
             )}
           </div>
         )}
       </div>
 
-      
       <ModuleModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} moduleName={Module} onSubmit={refreshGrid} />
       <EditModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} moduleName={Module} uKey={editUkey} onSubmit={refreshGrid} />
       {isViewOpen && (

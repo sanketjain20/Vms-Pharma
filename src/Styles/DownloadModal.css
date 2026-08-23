@@ -1,0 +1,41 @@
+/* Content-only styles for the invoice-download progress dialog — chrome
+   comes from ModalShell.css. */
+
+.dl-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 10px 4px 4px;
+}
+
+.dl-ring {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid var(--ms-border);
+}
+
+.dl-ring span {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: var(--ms-accent);
+  animation: dlSpin 0.85s linear infinite;
+}
+
+@keyframes dlSpin { to { transform: rotate(360deg); } }
+
+.dl-text {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ms-text-2);
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-ring span { animation: none; }
+}

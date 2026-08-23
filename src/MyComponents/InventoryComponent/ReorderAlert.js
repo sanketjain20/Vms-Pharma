@@ -70,6 +70,8 @@ export default function ReorderAlert() {
   const [error, setError] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const loadAlerts = () => {
     setLoading(true);
@@ -126,6 +128,21 @@ export default function ReorderAlert() {
       )
     );
   }, [activeFilter, buckets, rows, searchText]);
+
+  const totalPages = Math.max(Math.ceil(filteredRows.length / pageSize), 1);
+
+  const pagedRows = useMemo(() => {
+    const start = page * pageSize;
+    return filteredRows.slice(start, start + pageSize);
+  }, [filteredRows, page, pageSize]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [activeFilter, searchText]);
+
+  useEffect(() => {
+    if (page >= totalPages) setPage(0);
+  }, [totalPages, page]);
 
   return (
     <div className="ea-root">
@@ -196,7 +213,7 @@ export default function ReorderAlert() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRows.map((row, index) => {
+                {pagedRows.map((row, index) => {
                   const status = statusFor(row);
                   return (
                     <tr key={row.inventoryId || row.productId || row.uKey || `${row.productName}-${index}`}>
@@ -218,6 +235,48 @@ export default function ReorderAlert() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {!loading && !error && filteredRows.length > 0 && (
+          <div className="ea-pagination">
+            <button className="ea-page-btn" onClick={() => setPage(0)} disabled={page === 0}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M7 2L3 5L7 8M4 2L4 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <button className="ea-page-btn" onClick={() => setPage((p) => Math.max(p - 1, 0))} disabled={page === 0}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M7 2L3 5L7 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <div className="ea-page-indicator">
+              <span className="ea-page-cur">{page + 1}</span>
+              <span className="ea-page-sep">/</span>
+              <span className="ea-page-tot">{totalPages}</span>
+            </div>
+            <button className="ea-page-btn" onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))} disabled={page + 1 >= totalPages}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <button className="ea-page-btn" onClick={() => setPage(totalPages - 1)} disabled={page + 1 >= totalPages}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M3 2L7 5L3 8M6 2L6 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <select
+              className="ea-size-select"
+              value={pageSize}
+              onChange={(event) => {
+                setPageSize(Number(event.target.value));
+                setPage(0);
+              }}
+            >
+              {[10, 25, 50, 100].map((s) => (
+                <option key={s} value={s}>{s} / page</option>
+              ))}
+            </select>
           </div>
         )}
       </div>

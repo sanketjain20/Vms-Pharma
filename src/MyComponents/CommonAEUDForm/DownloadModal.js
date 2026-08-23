@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
+import ModalShell from "../CommonComponent/ModalShell";
+import "../../Styles/DownloadModal.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import { beginGlobalBusy } from "../../utils/globalBusy";
@@ -125,11 +127,22 @@ export default function DownloadModal({ isOpen, onClose, moduleName, id, onSubmi
     if (!isOpen) return null;
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h3>Downloading {moduleName} invoice...</h3>
-                <p>Please wait while the invoice is being generated.</p>
+        <ModalShell
+            open
+            tone="accent"
+            title={`Downloading ${moduleName} invoice`}
+            size="sm"
+            hideClose
+            busy
+        >
+            <div className="dl-progress">
+                <div className="dl-ring">
+                    <span />
+                </div>
+                <p className="dl-text">
+                    Please wait while the invoice is generated — this closes automatically when it's ready.
+                </p>
             </div>
-        </div>
+        </ModalShell>
     );
 }

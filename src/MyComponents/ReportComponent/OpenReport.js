@@ -1,19 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ReportEntity } from "../Enums/ReportEntity.js";
 import { runReportByModule } from "./ReportService.js";
 import "../../Styles/Report/OpenReport.css";
-import {
-  useCanvasThemeKey,
-  getPerspectiveCanvasPalette,
-  drawPerspectiveScene,
-  isLightTheme,
-} from "../../utils/canvasTheme";
+import LedgerCanvas from "./LedgerCanvas";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
-/* =========================
-   UTILS
-========================= */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HELPERS — unchanged behaviour from the previous OpenReport
+═══════════════════════════════════════════════════════════════════════ */
 function toCamelCase(str) {
   return str
     .replace(/\s(.)/g, (_, g) => g.toUpperCase())
@@ -34,223 +31,224 @@ function getModuleIdByReportName(reportName) {
   if (name.includes("revenue-profit")) return ReportEntity.Revenue;
   if (name.includes("stock"))          return ReportEntity.StockMovement;
   if (name.includes("outstanding"))    return ReportEntity.Outstanding;
-  if (name.includes("customer"))       return ReportEntity.RetailerCustomer; 
+  if (name.includes("customer"))       return ReportEntity.RetailerCustomer;
   if (name.includes("purchase"))       return ReportEntity.Purchase;
   if (name.includes("supplier"))       return ReportEntity.Supplier;
   if (name.includes("payment"))        return ReportEntity.PaymentCollection;
-  if (name.includes("day"))        return ReportEntity.DayBook;
-  if (name.includes("gst"))        return ReportEntity.GSTR1;
-  if(name.includes("loss") || name.includes("profit"))        return ReportEntity.ProfitLoss;
+  if (name.includes("day"))            return ReportEntity.DayBook;
+  if (name.includes("gst"))            return ReportEntity.GSTR1;
+  if (name.includes("loss") || name.includes("profit")) return ReportEntity.ProfitLoss;
 
   return null;
 }
 
-/* =========================
-   CUSTOM DROPDOWN
-========================= */
-function Dropdown({ label, options, value, isOpen, dropdownKey, setOpenKey, onChange }) {
-  const ref = useRef();
-  const [searchTerm, setSearchTerm] = useState("");
+/* ═══════════════════════════════════════════════════════════════════════
+   CUSTOM DROPDOWN — .lg-pick, unfolds like a flap
+═══════════════════════════════════════════════════════════════════════ */
+function Pick({ label, options, value, isOpen, pickKey, setOpenKey, onChange }) {
+  const wrapRef = useRef(null);
+  const faceRef = useRef(null);
+  const drawerRef = useRef(null);
+  const [seek, setSeek] = useState("");
+  const [hi, setHi] = useState(-1);
+  const [rect, setRect] = useState(null);
 
+  /* Outside-click close. The drawer is portaled to document.body (see
+     below), so it is no longer a DOM descendant of wrapRef — it must be
+     checked separately or every click inside it would look "outside". */
   useEffect(() => {
     const close = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpenKey(null);
+      const inWrap = wrapRef.current && wrapRef.current.contains(e.target);
+      const inDrawer = drawerRef.current && drawerRef.current.contains(e.target);
+      if (!inWrap && !inDrawer) setOpenKey(null);
     };
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [setOpenKey]);
 
-  const filteredOptions = options.filter((opt) =>
-    opt.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    if (!isOpen) { setSeek(""); setHi(-1); return; }
+    /* Position the portaled drawer against the trigger's live viewport
+       rect (fixed positioning), and keep it pinned while any ancestor
+       scrolls — including the app's shared .layout-content wrapper,
+       which otherwise would clip an absolutely-positioned drawer. */
+    const update = () => {
+      const r = faceRef.current?.getBoundingClientRect();
+      if (r) setRect({ top: r.bottom + 6, left: r.left, width: r.width });
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [isOpen]);
+
+  const filtered = options.filter((opt) => opt.toLowerCase().includes(seek.toLowerCase()));
+
+  const commit = (opt) => {
+    onChange(opt);
+    setSeek("");
+    setOpenKey(null);
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "Escape") { setOpenKey(null); return; }
+    if (e.key === "ArrowDown") { e.preventDefault(); setHi((h) => Math.min(h + 1, filtered.length - 1)); }
+    if (e.key === "ArrowUp") { e.preventDefault(); setHi((h) => Math.max(h - 1, 0)); }
+    if (e.key === "Enter" && hi >= 0 && filtered[hi]) { e.preventDefault(); commit(filtered[hi]); }
+  };
 
   return (
-    <div className="custom-dropdown" ref={ref}>
+    <div className="lg-pick" ref={wrapRef}>
       <div
-        className={`dropdown-selected ${isOpen ? "open" : ""} ${value ? "has-value" : ""}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpenKey(isOpen ? null : dropdownKey);
-        }}
+        ref={faceRef}
+        className={`lg-pick-face ${isOpen ? "is-open" : ""} ${value ? "is-filled" : ""}`}
+        onClick={() => setOpenKey(isOpen ? null : pickKey)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter") setOpenKey(isOpen ? null : pickKey); }}
       >
-        <span className="dropdown-value">{value || `Select ${label}`}</span>
-        <svg
-          className={`dropdown-chevron ${isOpen ? "flipped" : ""}`}
-          width="12" height="12" viewBox="0 0 12 12" fill="none"
-        >
-          <path d="M2 4.5L6 8L10 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <span>{value || `Select ${label}`}</span>
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+          <path d="M2 4.5L6 8L10 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
 
-      {isOpen && (
-        <div className="dropdown-menu">
-          <div className="dropdown-search-wrap">
+      {isOpen && rect && createPortal(
+        <div
+          className="lg-pick-drawer"
+          ref={drawerRef}
+          style={{ top: rect.top, left: rect.left, width: rect.width }}
+        >
+          <div className="lg-pick-seek">
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <circle cx="4.5" cy="4.5" r="3.5" stroke="currentColor" strokeWidth="1.2"/>
-              <path d="M7.5 7.5L9.5 9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              <circle cx="4.5" cy="4.5" r="3.5" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M7.5 7.5L9.5 9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
             </svg>
             <input
               type="text"
-              placeholder={`Search ${label}…`}
-              value={searchTerm}
-              onMouseDown={(e) => e.stopPropagation()}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="dropdown-search"
+              placeholder={`Search ${label}...`}
+              value={seek}
               autoFocus
+              onMouseDown={(e) => e.stopPropagation()}
+              onChange={(e) => { setSeek(e.target.value); setHi(-1); }}
+              onKeyDown={onKeyDown}
             />
           </div>
-
-          <div
-            className="dropdown-item clear-item"
-            onMouseDown={(e) => {
-              e.stopPropagation();
-              onChange("");
-              setSearchTerm("");
-              setOpenKey(null);
-            }}
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M1 1L9 9M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-            </svg>
-            Clear selection
-          </div>
-
-          <div className="dropdown-list">
-            {filteredOptions.length === 0 ? (
-              <div className="dropdown-empty">No results</div>
-            ) : filteredOptions.map((opt, i) => (
+          <div className="lg-pick-scroll">
+            <div
+              className="lg-pick-item is-erase"
+              onMouseDown={(e) => { e.stopPropagation(); commit(""); }}
+            >
+              <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                <path d="M1 1L9 9M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+              Clear selection
+            </div>
+            {filtered.length === 0 ? (
+              <div className="lg-pick-void">No results</div>
+            ) : filtered.map((opt, i) => (
               <div
                 key={i}
-                className={`dropdown-item ${value === opt ? "selected" : ""}`}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  onChange(opt);
-                  setSearchTerm("");
-                  setOpenKey(null);
-                }}
+                className={`lg-pick-item ${value === opt ? "is-selected" : ""} ${hi === i ? "is-hi" : ""}`}
+                onMouseDown={(e) => { e.stopPropagation(); commit(opt); }}
+                onMouseEnter={() => setHi(i)}
               >
-                {value === opt && (
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M1.5 5L4 7.5L8.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
                 {opt}
               </div>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
 }
 
-/* =========================
-   MAIN COMPONENT
-========================= */
+/* ═══════════════════════════════════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════════════════════════════════ */
 export default function OpenReport() {
-  const location  = useLocation();
-  const navigate  = useNavigate();
+  const location = useLocation();
+  const navigate = useNavigate();
   const reportName = location.state?.reportName;
 
-  const [filters, setFilters]               = useState([]);
-  const [filterOptions, setFilterOptions]   = useState({});
+  const [filters, setFilters] = useState([]);
+  const [filterOptions, setFilterOptions] = useState({});
   const [selectedFilters, setSelectedFilters] = useState({});
-  const [loading, setLoading]               = useState(true);
-  const [reportLoading, setReportLoading]   = useState(false);
-  const [openKey, setOpenKey]               = useState(null);
-  const [activeFilters, setActiveFilters]   = useState(0);
-  const canvasRef = useRef(null);
-  const animFrameRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [openKey, setOpenKey] = useState(null);
+  const [opened, setOpened] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const bookRef = useRef(null);
 
   const moduleId = getModuleIdByReportName(reportName);
 
-  /* Count active filters */
+  /* Paint the closed pose first, then transition open — this is what
+     plays the "book opens" motion (see .lg-leaf.is-opened in the CSS).
+     Two rAFs guarantee the closed pose actually paints before we flip
+     the class, otherwise the browser can coalesce both into one frame
+     and skip the transition entirely. */
   useEffect(() => {
-    setActiveFilters(Object.values(selectedFilters).filter(Boolean).length);
-  }, [selectedFilters]);
+    let raf2;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setOpened(true));
+    });
+    return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
+  }, []);
 
-  const canvasThemeKey = useCanvasThemeKey();
-  const orbsRef = useRef(null);
+  const activeFilters = useMemo(
+    () => Object.values(selectedFilters).filter(Boolean).length,
+    [selectedFilters]
+  );
 
-  /* 3D CANVAS BACKGROUND */
+  /* Pointer tilt on the whole book */
+  const handleBookMove = (e) => {
+    const el = bookRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.setProperty("--lg-tx", px.toFixed(3));
+    el.style.setProperty("--lg-ty", py.toFixed(3));
+  };
+  const handleBookLeave = () => {
+    const el = bookRef.current;
+    if (!el) return;
+    el.style.setProperty("--lg-tx", 0);
+    el.style.setProperty("--lg-ty", 0);
+  };
+
+  /* Fetch filter definitions for this module */
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const palette = getPerspectiveCanvasPalette();
-    const light = isLightTheme();
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    orbsRef.current = Array.from({ length: 5 }, (_, i) => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: 100 + Math.random() * 200,
-      vx: (Math.random() - 0.5) * 0.25,
-      vy: (Math.random() - 0.5) * 0.25,
-      hue: [215, 225, 205, 235, 210][i],
-      alpha: (0.025 + Math.random() * 0.035) * palette.orbAlphaScale,
-    }));
-
-    let tick = 0;
-
-    const draw = () => {
-      tick++;
-      drawPerspectiveScene(ctx, canvas, tick, {
-        horizonRatio: 0.52,
-        gridCount: 16,
-        radialCount: 18,
-        speed: 0.28,
-        gridWidthMult: 1.5,
-        radialWidthMult: 0.75,
-        orbs: orbsRef.current,
-      });
-
-      for (let y = 0; y < canvas.height; y += 4) {
-        ctx.fillStyle = light ? "rgba(59,130,246,0.02)" : "rgba(0,0,0,0.035)";
-        ctx.fillRect(0, y, canvas.width, 1);
-      }
-
-      animFrameRef.current = requestAnimationFrame(draw);
-    };
-
-    draw();
-    return () => {
-      window.removeEventListener("resize", resize);
-      cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [canvasThemeKey]);
-
-  /* FETCH FILTERS */
-  useEffect(() => {
-    if (!moduleId) return;
+    if (!moduleId) { setLoading(false); return; }
     apiClient(`${API_BASE_URL}/api/Filters/GetFiltersByModule/${moduleId}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.status === 200) setFilters(d.data);
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   }, [moduleId]);
 
-  /* FETCH OPTIONS */
+  /* Fetch dropdown option lists for the modules that have them */
   useEffect(() => {
     const map = {
-      [ReportEntity.Product]:     `${API_BASE_URL}/api/Product/GetFilterData`,
-      [ReportEntity.ProductType]: `${API_BASE_URL}/api/ProductType/GetFilterData`,
-      [ReportEntity.Inventory]:   `${API_BASE_URL}/api/Inventory/InvReportFilterData`,
-      [ReportEntity.Sales]:       `${API_BASE_URL}/api/Sales/SalesReportFilterData`,
-      [ReportEntity.Revenue]:     `${API_BASE_URL}/api/Reports/RevenueReportFilterData`,
+      [ReportEntity.Product]:       `${API_BASE_URL}/api/Product/GetFilterData`,
+      [ReportEntity.ProductType]:   `${API_BASE_URL}/api/ProductType/GetFilterData`,
+      [ReportEntity.Inventory]:     `${API_BASE_URL}/api/Inventory/InvReportFilterData`,
+      [ReportEntity.Sales]:         `${API_BASE_URL}/api/Sales/SalesReportFilterData`,
+      [ReportEntity.Revenue]:       `${API_BASE_URL}/api/Reports/RevenueReportFilterData`,
       [ReportEntity.StockMovement]: `${API_BASE_URL}/api/Inventory/StockMovReportFilterData`,
     };
     if (!map[moduleId]) return;
     apiClient(map[moduleId])
       .then((r) => r.json())
-      .then((d) => d.status === 200 && setFilterOptions(d.data));
+      .then((d) => d.status === 200 && setFilterOptions(d.data))
+      .catch(() => {});
   }, [moduleId]);
 
   const handleFilterChange = (name, val) => {
@@ -262,223 +260,181 @@ export default function OpenReport() {
   };
 
   const handleRunReport = async () => {
+    if (reportLoading) return;
     setReportLoading(true);
-    const blob = await runReportByModule(moduleId, selectedFilters);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${reportName}.xlsx`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setReportLoading(false);
+    try {
+      const blob = await runReportByModule(moduleId, selectedFilters);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${reportName}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Report download failed:", err);
+    } finally {
+      setReportLoading(false);
+    }
   };
 
   const handleClearAll = () => setSelectedFilters({});
 
+  const closeThenGo = (go) => {
+    if (closing) return;
+    setClosing(true);
+    setTimeout(go, 480);
+  };
+
+  const handlePreview = () => closeThenGo(() =>
+    navigate("/master/reports/generate", { state: { moduleId, reportName, filters: selectedFilters } })
+  );
+  const handleBack = () => closeThenGo(() => navigate(-1));
+
   return (
-    <div className="or-container">
-      
-      <canvas ref={canvasRef} className="or-bg-canvas" />
-      <div className="or-noise" />
-      <div className="or-top-beam" />
+    <div className="lg-spread">
+      <LedgerCanvas variant="spread" />
 
-      
-      <div className="or-layout">
-
-        
-        <aside className="or-sidebar">
-          <div className="sidebar-header">
-            <div className="sidebar-title-row">
-              <div className="sidebar-icon">
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <path d="M1 2.5h11M3 6.5h7M5 10.5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <span>Filters</span>
-            </div>
-            {activeFilters > 0 && (
-              <button className="clear-all-btn" onClick={handleClearAll}>
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                  <path d="M1 1L7 7M7 1L1 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                </svg>
-                Clear all ({activeFilters})
-              </button>
-            )}
-          </div>
-
-          <div className="sidebar-body">
-            {loading ? (
-              <div className="or-loading">
-                <div className="or-loader">
-                  <div /><div /><div /><div />
+      <div className="lg-frame">
+        <div
+          className={`lg-book ${closing ? "is-closing" : ""}`}
+          ref={bookRef}
+          onMouseMove={handleBookMove}
+          onMouseLeave={handleBookLeave}
+        >
+          {/* ── LEFT LEAF — filters ── */}
+          <section className={`lg-leaf is-verso ${opened && !closing ? "is-opened" : ""}`}>
+            <div className="lg-leaf-head">
+              <div>
+                <div className="lg-leaf-stamp">
+                  <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
+                    <path d="M1 2.5h11M3 6.5h7M5 10.5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                  Filters
                 </div>
-                Loading filters…
+                <h2>Set your parameters</h2>
               </div>
-            ) : filters.length === 0 ? (
-              <div className="or-empty-filters">No filters available</div>
-            ) : (
-              filters.map((f, i) => {
-                const key = toCamelCase(f);
-                const isActive = Boolean(selectedFilters[key]);
-
-                return (
-                  <div
-                    key={i}
-                    className={`filter-row ${openKey === key ? "z-top" : ""} ${isActive ? "filter-active" : ""}`}
-                    style={{ animationDelay: `${i * 0.05}s` }}
-                  >
-                    <label className="filter-label">
-                      {isActive && <span className="filter-active-dot" />}
-                      {f}
-                    </label>
-
-                    {filterOptions[key] ? (
-                      <Dropdown
-                        label={f}
-                        options={filterOptions[key]}
-                        value={selectedFilters[key]}
-                        isOpen={openKey === key}
-                        dropdownKey={key}
-                        setOpenKey={setOpenKey}
-                        onChange={(v) => handleFilterChange(f, v)}
-                      />
-                    ) : (
-                      <div className="input-wrap">
-                        <input
-                          type={f.toLowerCase().includes("date") ? "date" : "text"}
-                          value={selectedFilters[key] || ""}
-                          onChange={(e) => handleFilterChange(f, e.target.value)}
-                          className={`or-input ${f.toLowerCase().includes("date") ? "or-date" : ""}`}
-                          placeholder={f.toLowerCase().includes("date") ? "" : `Enter ${f}…`}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </aside>
-
-        
-        <main className="or-main">
-          
-          <div className="or-main-header">
-            <div className="or-badge">
-              <span className="or-badge-dot" />
-              REPORT CONFIGURATION
-            </div>
-            <h1 className="or-title">
-              <span className="or-title-accent"></span>
-              {reportName}
-            </h1>
-            <div className="or-title-rule" />
-
-            
-            <div className="or-stats-row">
-              <div className="or-stat">
-                <span className="or-stat-val">{filters.length}</span>
-                <span className="or-stat-label">parameters</span>
-              </div>
-              <div className="or-stat-divider" />
-              <div className="or-stat">
-                <span className="or-stat-val" style={{ color: activeFilters > 0 ? "var(--accent)" : undefined }}>
-                  {activeFilters}
-                </span>
-                <span className="or-stat-label">active filters</span>
-              </div>
-              <div className="or-stat-divider" />
-              <div className="or-stat">
-                <span className="or-stat-val" style={{ color: "var(--success)" }}>READY</span>
-                <span className="or-stat-label">status</span>
-              </div>
-            </div>
-          </div>
-
-          
-          <div className="or-preview-box">
-            <div className="preview-topbar">
-              <div className="preview-dots">
-                <span /><span /><span />
-              </div>
-              <span className="preview-label">report.config</span>
-            </div>
-            <div className="preview-body">
-              <div className="preview-line">
-                <span className="pk">module</span>
-                <span className="ps">:</span>
-                <span className="pv">"{reportName}"</span>
-              </div>
-              <div className="preview-line">
-                <span className="pk">filters</span>
-                <span className="ps">:</span>
-                <span className="pv">{`{`}</span>
-              </div>
-              {Object.entries(selectedFilters).map(([k, v], i) => (
-                <div className="preview-line indent" key={i} style={{ animationDelay: `${i * 0.06}s` }}>
-                  <span className="pk">{k}</span>
-                  <span className="ps">:</span>
-                  <span className="pv-string">"{v}"</span>
-                  <span className="ps">,</span>
-                </div>
-              ))}
-              {Object.keys(selectedFilters).length === 0 && (
-                <div className="preview-line indent">
-                  <span className="pv-muted">{"no filters applied"}</span>
-                </div>
+              {activeFilters > 0 && (
+                <button className="lg-clear" onClick={handleClearAll}>
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                    <path d="M1 1L7 7M7 1L1 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  </svg>
+                  Clear ({activeFilters})
+                </button>
               )}
-              <div className="preview-line"><span className="pv">{`}`}</span></div>
             </div>
-          </div>
 
-          
-          {reportLoading && (
-            <div className="or-generating">
-              <div className="or-loader">
-                <div /><div /><div /><div />
-              </div>
-              <span>Generating report…</span>
-            </div>
-          )}
-
-          
-          <div className="or-actions">
-            <button
-              className="or-btn or-btn-primary"
-              onClick={() =>
-                navigate("/master/reports/generate", {
-                  state: { moduleId, reportName, filters: selectedFilters },
+            <div className="lg-slots">
+              {loading ? (
+                <div className="lg-blank">
+                  <div className="lg-quill-ring"><div /><div /><div /><div /></div>
+                  <span>Loading filters...</span>
+                </div>
+              ) : filters.length === 0 ? (
+                <div className="lg-blank"><span>No filters available for this report</span></div>
+              ) : (
+                filters.map((f, i) => {
+                  const key = toCamelCase(f);
+                  const isSet = Boolean(selectedFilters[key]);
+                  return (
+                    <div key={i} className={`lg-slot ${isSet ? "is-set" : ""}`} style={{ "--lg-i": i }}>
+                      <label className="lg-slot-cap">
+                        {isSet && <span className="lg-slot-ink" />}
+                        {f}
+                      </label>
+                      {filterOptions[key] ? (
+                        <Pick
+                          label={f}
+                          options={filterOptions[key]}
+                          value={selectedFilters[key]}
+                          isOpen={openKey === key}
+                          pickKey={key}
+                          setOpenKey={setOpenKey}
+                          onChange={(v) => handleFilterChange(f, v)}
+                        />
+                      ) : (
+                        <div className="lg-write">
+                          <input
+                            type={f.toLowerCase().includes("date") ? "date" : "text"}
+                            value={selectedFilters[key] || ""}
+                            onChange={(e) => handleFilterChange(f, e.target.value)}
+                            placeholder={f.toLowerCase().includes("date") ? "" : `Enter ${f}...`}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
                 })
-              }
-            >
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              Preview
-            </button>
+              )}
+            </div>
+          </section>
 
-            <button
-              className="or-btn or-btn-secondary"
-              onClick={handleRunReport}
-              disabled={reportLoading}
-            >
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <path d="M6.5 1v7M3.5 5l3 3 3-3M2 10.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Download
-            </button>
+          {/* ── GUTTER ── */}
+          <div className="lg-crease"><div className="lg-stitch" /></div>
 
-            <button
-              className="or-btn or-btn-ghost"
-              onClick={() => navigate(-1)}
-            >
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <path d="M8 2L3 6.5L8 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Back
-            </button>
-          </div>
-        </main>
+          {/* ── RIGHT LEAF — folio + live config + actions ── */}
+          <section className={`lg-leaf is-recto ${opened && !closing ? "is-opened" : ""}`}>
+            <div className="lg-folio-stamp"><span /> Report Configuration</div>
+            <h1 className="lg-folio-heading">{reportName || "Untitled report"}</h1>
+
+            <div className="lg-gauge">
+              <div className="lg-gauge-item">
+                <span className="lg-gauge-num">{filters.length}</span>
+                <span className="lg-gauge-lbl">Parameters</span>
+              </div>
+              <div className="lg-gauge-item">
+                <span className="lg-gauge-num" style={{ color: activeFilters > 0 ? "var(--lg-gild)" : undefined }}>{activeFilters}</span>
+                <span className="lg-gauge-lbl">Active filters</span>
+              </div>
+              <div className="lg-gauge-item">
+                <span className="lg-gauge-num lg-gauge-mark">READY</span>
+                <span className="lg-gauge-lbl">Status</span>
+              </div>
+            </div>
+
+            <div className="lg-ledger">
+              <div className="lg-ledger-top">
+                <span>report.config</span>
+                <span>{reportName ? "bound" : "—"}</span>
+              </div>
+              <div className="lg-ledger-line">
+                <span className="lg-ledger-key">module</span>
+                <span className="lg-ledger-ink">"{reportName}"</span>
+              </div>
+              {Object.entries(selectedFilters).length === 0 ? (
+                <div className="lg-ledger-empty">no filters applied</div>
+              ) : (
+                Object.entries(selectedFilters).map(([k, v]) => (
+                  <div className="lg-ledger-line" key={k}>
+                    <span className="lg-ledger-key">{k}</span>
+                    <span className="lg-ledger-ink">"{v}"</span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="lg-acts">
+              <button className="lg-go" onClick={handlePreview}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                Preview
+              </button>
+              <button className={`lg-get ${reportLoading ? "is-busy" : ""}`} onClick={handleRunReport} disabled={reportLoading}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M6.5 1v7M3.5 5l3 3 3-3M2 10.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {reportLoading ? "Downloading..." : "Download"}
+                <span className="lg-get-sheet" />
+              </button>
+              <button className="lg-back" onClick={handleBack}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M8 2L3 6.5L8 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Back
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

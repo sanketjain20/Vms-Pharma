@@ -4,80 +4,80 @@ import "../../Styles/Sidebar.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 
-/* ── Icon Map ─────────────────────────────────────────────── */
-const iconMap = {
-  home: (
-    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-      <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-    </svg>
-  ),
-  product: (
-    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-      <path d="M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-80 92L160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11Zm200-528 77-44-237-137-78 45 238 136Zm-160 93 78-45-237-137-78 45 237 137Z" />
-    </svg>
-  ),
-  vendor: (
-    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-      <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z" />
-    </svg>
-  ),
-  sales: (
-    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-      <path d="M240-80q-50 0-85-35t-35-85v-120h120v-560l60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60v680q0 50-35 85t-85 35H240Zm480-80q17 0 28.5-11.5T760-200v-560H320v440h360v120q0 17 11.5 28.5T720-160Z" />
-    </svg>
-  ),
-  inventory: (
-    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-      <path d="M200-80q-33 0-56.5-23.5T120-160v-451q-18-11-29-28.5T80-680v-120q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v120q0 23-11 40.5T840-611v451q0 33-23.5 56.5T760-80H200Zm0-520v440h560v-440H200Zm-40-80h640v-120H160v120Zm200 280h240v-80H360v80Zm120 20Z" />
-    </svg>
-  ),
-  dashboard: (
-    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-      <path d="M520-600v-240h320v240H520ZM120-440v-400h320v400H120Zm400 320v-400h320v400H520Zm-400 0v-240h320v240H120Zm80-400h160v-240H200v240Zm400 320h160v-240H600v240Zm0-480h160v-80H600v80ZM200-200h160v-80H200v80Zm160-320Zm240-160Zm0 240ZM360-280Z" />
-    </svg>
-  ),
-  reports: (
-    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-      <path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z" />
-    </svg>
-  ),
-  scheduler: (
-    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-      <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-400Zm0 320q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Z" />
-    </svg>
-  ),
-  bulkupload: (
-    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M440-280h80v-168l64 64 56-56-160-160-160 160 56 56 64-64v168ZM160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z"/></svg>
-  ),
-  default: (
-    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-      <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Z" />
-    </svg>
-  ),
-};
-
-const miniIcon = (path) => (
-  <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="currentColor">
-    <path d={path} />
-  </svg>
+/* ── Icon primitives ──────────────────────────────────────────
+   Clean stroke-based glyphs (no filled Material Symbols) so every
+   module can carry its own accent color via `stroke="currentColor"`
+   + a tinted chip background driven by --sic-color / --ssc-color. */
+const S = (props) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...props} />
+);
+const Ss = (props) => (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" {...props} />
 );
 
+/* ── Icon Map (top-level rail items) ─────────────────────────── */
+const iconMap = {
+  home: <S><path d="M3 9.5L10 3l7 6.5" /><path d="M5 8.2V16a1 1 0 001 1h2.5v-5h3v5H14a1 1 0 001-1V8.2" /></S>,
+  dashboard: <S><rect x="3" y="3" width="14" height="14" rx="3" /><path d="M3 8.5h14M8.5 8.5V17" /></S>,
+  product: <S><ellipse cx="10" cy="5.5" rx="6" ry="2.3" /><path d="M4 5.5v9c0 1.27 2.69 2.3 6 2.3s6-1.03 6-2.3v-9" /><path d="M4 10c0 1.27 2.69 2.3 6 2.3s6-1.03 6-2.3" /></S>,
+  inventory: <S><path d="M3 6.8L10 3l7 3.8v6.4L10 17l-7-3.8V6.8z" /><path d="M3 6.8L10 10.6l7-3.8M10 10.6V17" /></S>,
+  sales: <S><path d="M5.5 2.5h9v15l-2-1.3-1.5 1.3-1.5-1.3-1.5 1.3-2.5-1.3v-13.7z" /><path d="M7.7 6.5h4.6M7.7 9.7h4.6" /></S>,
+  reports: <S><path d="M4 16.5V11M9 16.5V5M14 16.5v-8M17.5 16.5v-4.5" /></S>,
+  scheduler: <S><circle cx="10" cy="10.5" r="7" /><path d="M10 6.5v4l3 2" /></S>,
+  bulkupload: <S><path d="M10 13V4M10 4L6.5 7.5M10 4l3.5 3.5" /><path d="M4 13.5v1.5a1 1 0 001 1h10a1 1 0 001-1v-1.5" /></S>,
+  vendor: <S><path d="M10 2.3l6 2.4v4.6c0 4-2.6 6.9-6 8-3.4-1.1-6-4-6-8V4.7l6-2.4z" /><circle cx="10" cy="8.6" r="2" /><path d="M6.4 14.2a3.6 3.6 0 017.2 0" /></S>,
+  default: <S><rect x="3" y="3" width="6" height="6" rx="1.5" /><rect x="11" y="3" width="6" height="6" rx="1.5" /><rect x="3" y="11" width="6" height="6" rx="1.5" /><rect x="11" y="11" width="6" height="6" rx="1.5" /></S>,
+};
+
+/* Accent color per top-level item — this is what makes the rail read
+   as "colored icons", not a monochrome list. */
+const colorMap = {
+  home: "#6366f1",
+  dashboard: "#3b82f6",
+  product: "#8b5cf6",   // "Masters" group reuses this key/icon
+  inventory: "#10b981",
+  sales: "#f472b6",     // "Billing" group reuses this key/icon
+  reports: "#0ea5e9",
+  scheduler: "#a78bfa",
+  bulkupload: "#fb923c",
+  vendor: "#fbbf24",
+  default: "#6b7280",
+};
+
 const subIconMap = {
-  product: miniIcon("M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-80 92L160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11Z"),
-  type: miniIcon("M200-120q-33 0-56.5-23.5T120-200v-160h80v160h160v80H200Zm400 0v-80h160v-160h80v160q0 33-23.5 56.5T760-120H600ZM320-320h320v-320H320v320Z"),
-  user: miniIcon("M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z"),
-  supplier: miniIcon("M160-200v-400h160v-160h320v160h160v400H160Zm240-400h160v-80H400v80Zm-160 320h480v-240H240v240Z"),
-  factory: miniIcon("M80-160v-520h160v160l160-160v160l160-160v520H80Zm560 0v-360h240v360H640Zm80-80h80v-200h-80v200Z"),
-  inventory: miniIcon("M200-80q-33 0-56.5-23.5T120-160v-451q-18-11-29-28.5T80-680v-120q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v120q0 23-11 40.5T840-611v451q0 33-23.5 56.5T760-80H200Z"),
-  batch: miniIcon("M160-160v-480l320-160 320 160v480L480-320 160-160Zm320-252 180-90-180-90-180 90 180 90Z"),
-  alert: miniIcon("M120-160v-80h80v-280q0-83 50-147.5T380-748v-32q0-42 29-71t71-29q42 0 71 29t29 71v32q80 20 130 84.5T760-520v280h80v80H120Zm360 80q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80Z"),
-  reorder: miniIcon("M280-120 80-320l56-56 104 104v-488h80v488l104-104 56 56-200 200Zm400-80v-488L576-584l-56-56 200-200 200 200-56 56-104-104v488h-80Z"),
-  sales: miniIcon("M240-80q-50 0-85-35t-35-85v-120h120v-560l60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60 60 60 60-60v680q0 50-35 85t-85 35H240Z"),
-  return: miniIcon("M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z"),
-  purchase: miniIcon("M280-80q-33 0-56.5-23.5T200-160q0-33 23.5-56.5T280-240q33 0 56.5 23.5T360-160q0 33-23.5 56.5T280-80Zm400 0q-33 0-56.5-23.5T600-160q0-33 23.5-56.5T680-240q33 0 56.5 23.5T760-160q0 33-23.5 56.5T680-80ZM246-720l96 200h280l110-200H246Z"),
-  payment: miniIcon("M160-760h640q33 0 56.5 23.5T880-680v400q0 33-23.5 56.5T800-200H160q-33 0-56.5-23.5T80-280v-400q0-33 23.5-56.5T160-760Zm0 120v80h640v-80H160Z"),
-  ledger: miniIcon("M240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h480q33 0 56.5 23.5T800-800v640q0 33-23.5 56.5T720-80H240Zm80-200h320v-80H320v80Zm0-160h320v-80H320v80Zm0-160h320v-80H320v80Z"),
-  role: miniIcon("M400-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm280 320v-120h-80v-80h80v-120h80v120h80v80h-80v120h-80Z"),
+  product:   <Ss><path d="M2 5.3L8 2l6 3.3v5.4L8 14 2 10.7V5.3z" /><path d="M2 5.3L8 8.6l6-3.3M8 8.6V14" /></Ss>,
+  type:      <Ss><path d="M2 2h5.2l6.8 6.8-5.2 5.2L2 7.2V2z" /><circle cx="5" cy="5" r="1.1" /></Ss>,
+  user:      <Ss><circle cx="8" cy="5.6" r="2.6" /><path d="M3 14a5 5 0 0110 0" /></Ss>,
+  supplier:  <Ss><rect x="1" y="5" width="8" height="6" rx="1" /><path d="M9 7.2h2.6L13.5 9.6V11H9" /><circle cx="4" cy="12.3" r="1.3" /><circle cx="11.3" cy="12.3" r="1.3" /></Ss>,
+  factory:   <Ss><path d="M2 14V8.2l2.6 1.9V8.2l2.6 1.9V6.4l3.2 2.4V14H2z" /><path d="M2 14h10.6" /></Ss>,
+  inventory: <Ss><rect x="2" y="3" width="12" height="3" rx="1" /><rect x="2" y="7.3" width="12" height="3" rx="1" /><rect x="2" y="11.6" width="7.5" height="2" rx="1" /></Ss>,
+  batch:     <Ss><path d="M8 2l6 3-6 3-6-3 6-3z" /><path d="M2 8l6 3 6-3M2 11l6 3 6-3" /></Ss>,
+  alert:     <Ss><path d="M8 2.2a3 3 0 00-3 3v2.1c0 .6-.2 1.1-.6 1.5L3 10h10l-1.4-1.2a2.1 2.1 0 01-.6-1.5V5.2a3 3 0 00-3-3z" /><path d="M6.5 12.3a1.5 1.5 0 003 0" /></Ss>,
+  reorder:   <Ss><path d="M3 4.5h10M3 8h10M3 11.5h10" /><circle cx="6.3" cy="4.5" r="1.3" /><circle cx="10.7" cy="8" r="1.3" /><circle cx="7.3" cy="11.5" r="1.3" /></Ss>,
+  sales:     <Ss><circle cx="6.2" cy="13.4" r="1.2" /><circle cx="12" cy="13.4" r="1.2" /><path d="M1.8 2h2l1.6 8.2c.1.7.7 1.2 1.5 1.2h5.4c.7 0 1.3-.5 1.5-1.2L15 5.2H4.3" /></Ss>,
+  return:    <Ss><path d="M3.8 8a5.2 5.2 0 1 1 8.3 3.6" /><path d="M3.8 4v4h4" /></Ss>,
+  purchase:  <Ss><path d="M4 6h8l1 8H3l1-8z" /><path d="M6 6V4.6a2 2 0 014 0V6" /></Ss>,
+  payment:   <Ss><rect x="2" y="4" width="12" height="9" rx="2" /><path d="M2 7h12" /><circle cx="11.4" cy="9.6" r="1" /></Ss>,
+  ledger:    <Ss><path d="M4.2 2h5.6l3 3v9H4.2V2z" /><path d="M6.2 8.2h4.8M6.2 10.6h4.8M6.2 5.6h2.2" /></Ss>,
+  role:      <Ss><path d="M8 2.2l4.8 2v3.6c0 3-1.9 4.9-4.8 5.8-2.9-.9-4.8-2.8-4.8-5.8V4.2l4.8-2z" /><path d="M5.8 8l1.4 1.4L10.4 6" /></Ss>,
+};
+
+const subColorMap = {
+  product: "#8b5cf6",
+  type: "#a78bfa",
+  user: "#22d3ee",
+  supplier: "#fb923c",
+  factory: "#f59e0b",
+  inventory: "#10b981",
+  batch: "#34d399",
+  alert: "#f87171",
+  reorder: "#fbbf24",
+  sales: "#22d3ee",
+  return: "#f87171",
+  purchase: "#f59e0b",
+  payment: "#34d399",
+  ledger: "#f472b6",
+  role: "#fbbf24",
 };
 
 const normalize = (s = "") => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -92,21 +92,21 @@ function SubMenu({ items, sidebarOpen, onNavigate }) {
       : item)
     .sort((a, b) => a.label.localeCompare(b.label));
 
-  const renderItem = ({ label, key, icon, nested }) => (
+  const renderItem = ({ label, key, icon, color, nested }) => (
     <div key={key} className={`sb-submenu-item ${nested ? "nested" : ""}`} onClick={() => onNavigate(key)}>
-      <span className="sb-sub-icon">{icon || subIconMap.product}</span>
+      <span className="sb-sub-chip" style={{ "--ssc-color": color || subColorMap.product }}>{icon || subIconMap.product}</span>
       <span>{label}</span>
     </div>
   );
 
   return (
-    <div className="sb-submenu" style={{ left: sidebarOpen ? 220 : 64 }}>
+    <div className="sb-submenu" style={{ left: sidebarOpen ? "var(--sb-w-open)" : "var(--sb-w-col)" }}>
       <div className="sb-submenu-glow-line" />
       {sortedItems.map((item) =>
         item.children ? (
           <div key={item.label} className="sb-sub-group">
             <div className="sb-subgroup-header">
-              <span className="sb-sub-icon">{item.icon || subIconMap.product}</span>
+              <span className="sb-sub-chip" style={{ "--ssc-color": item.color || subColorMap.product }}>{item.icon || subIconMap.product}</span>
               <span>{item.label}</span>
             </div>
             <div className="sb-subgroup-items">
@@ -120,23 +120,25 @@ function SubMenu({ items, sidebarOpen, onNavigate }) {
 }
 
 /* ── SidebarItem ──────────────────────────────────────────── */
-function SidebarItem({ icon, label, open, onClick, hasSubmenu, isHovered, onMouseEnter, onMouseLeave, children }) {
+function SidebarItem({ icon, color, label, open, onClick, hasSubmenu, isHovered, onMouseEnter, onMouseLeave, children }) {
   return (
     <div
       className={`sb-item ${hasSubmenu ? "has-submenu" : ""} ${isHovered ? "hovered" : ""}`}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      data-tooltip={label}
     >
-      <span className="sb-icon">{icon}</span>
+      <span className="sb-icon-chip" style={{ "--sic-color": color || colorMap.default }}>{icon}</span>
       <span className={`sb-label ${open ? "visible" : ""}`}>{label}</span>
+      {hasSubmenu && <span className="sb-caret"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1.5L7 5l-4 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></span>}
       {hasSubmenu && isHovered && children}
     </div>
   );
 }
 
 /* ── Divider ──────────────────────────────────────────────── */
-function SidebarDivider({ open }) {
+function SidebarDivider() {
   return (
     <div className="sb-divider">
       <div className="sb-divider-line" />
@@ -282,6 +284,7 @@ export default function Sidebar() {
         className={`sb-toggle ${open ? "open" : ""}`}
         ref={toggleRef}
         onClick={() => setOpen(!open)}
+        aria-label={open ? "Collapse navigation" : "Expand navigation"}
       >
         <span className="sb-toggle-bar" />
         <span className="sb-toggle-bar" />
@@ -316,30 +319,30 @@ export default function Sidebar() {
             </div>
           )}
 
-          
           <SidebarItem
             icon={iconMap.home}
+            color={colorMap.home}
             label="Home"
             open={open}
             onClick={() => navigate("/home")}
           />
 
-          
           {hasDashboard && (
             <SidebarItem
               icon={iconMap.dashboard}
+              color={colorMap.dashboard}
               label="Dashboard"
               open={open}
               onClick={() => handleNavigation(find("dashboard") || "dashboard")}
             />
           )}
 
-          <SidebarDivider open={open} />
+          <SidebarDivider />
 
-          
           {hasMasters && (
             <SidebarItem
               icon={iconMap.product}
+              color={colorMap.product}
               label="Masters"
               open={open}
               hasSubmenu
@@ -351,20 +354,20 @@ export default function Sidebar() {
                 sidebarOpen={open}
                 onNavigate={handleNavigation}
                 items={[
-                  hasManufacturer && { label: "Manufacturer", key: find("manufacturer") || "Manufacturer", icon: subIconMap.factory },
-                  hasSupplier && { label: "Supplier", key: find("supplier") || "Supplier", icon: subIconMap.supplier },
-                  hasRetailer && { label: "Retailer", key: find("retailer") || "Retailer", icon: subIconMap.user },
-                  hasProductType && { label: "Product Type", key: find("producttype") || "ProductType", icon: subIconMap.type },
-                  hasProduct && { label: "Product", key: find("product") || "Product", icon: subIconMap.product },
+                  hasManufacturer && { label: "Manufacturer", key: find("manufacturer") || "Manufacturer", icon: subIconMap.factory, color: subColorMap.factory },
+                  hasSupplier && { label: "Supplier", key: find("supplier") || "Supplier", icon: subIconMap.supplier, color: subColorMap.supplier },
+                  hasRetailer && { label: "Retailer", key: find("retailer") || "Retailer", icon: subIconMap.user, color: subColorMap.user },
+                  hasProductType && { label: "Product Type", key: find("producttype") || "ProductType", icon: subIconMap.type, color: subColorMap.type },
+                  hasProduct && { label: "Product", key: find("product") || "Product", icon: subIconMap.product, color: subColorMap.product },
                 ].filter(Boolean)}
               />
             </SidebarItem>
           )}
 
-          
           {(hasInventory || hasBatch || hasStockAdjustment || hasExpiryAlerts || hasReorderAlerts) && (
             <SidebarItem
               icon={iconMap.inventory}
+              color={colorMap.inventory}
               label="Inventory"
               open={open}
               hasSubmenu={hasInventory || hasBatch || hasStockAdjustment || hasExpiryAlerts || hasReorderAlerts}
@@ -385,20 +388,20 @@ export default function Sidebar() {
                       label: "Inventory",
                       key: find("inventory") || "Inventory",
                       icon: subIconMap.inventory,
+                      color: subColorMap.inventory,
                     },
-
                     hasBatch && {
                       label: "Batches",
                       key: find("batch") || find("batches") || "Batch",
                       icon: subIconMap.batch,
+                      color: subColorMap.batch,
                     },
-
                     hasStockAdjustment && {
                       label: "Stock Adjustment",
                       key: find("stockadjustment") || find("stockadjustments") || find("stock adjustment") || find("stock_adjustment") || "StockAdjustment",
                       icon: subIconMap.reorder,
+                      color: subColorMap.reorder,
                     },
-
                     hasExpiryAlerts && {
                       label: "Expiry Alerts",
                       key:
@@ -407,12 +410,13 @@ export default function Sidebar() {
                         find("alerts")||
                         "Alerts",
                       icon: subIconMap.alert,
+                      color: subColorMap.alert,
                     },
-
                     hasReorderAlerts && {
                       label: "Reorder Alerts",
                       key: "ReorderAlerts",
                       icon: subIconMap.reorder,
+                      color: subColorMap.reorder,
                     },
                   ].filter(Boolean)}
                 />
@@ -420,12 +424,12 @@ export default function Sidebar() {
             </SidebarItem>
           )}
 
-          <SidebarDivider open={open} />
+          <SidebarDivider />
 
-          
           {hasBilling && (
             <SidebarItem
               icon={iconMap.sales}
+              color={colorMap.sales}
               label="Billing"
               open={open}
               hasSubmenu
@@ -440,33 +444,37 @@ export default function Sidebar() {
                   (hasSales || hasSalesReturn) && {
                     label: "Sales",
                     icon: subIconMap.sales,
+                    color: subColorMap.sales,
                     children: [
-                      hasSales && { label: "Sales", key: find("sales") || "Sales", icon: subIconMap.sales },
-                      hasSalesReturn && { label: "Sales Return", key: find("salesreturn") || "SalesReturn", icon: subIconMap.return },
+                      hasSales && { label: "Sales", key: find("sales") || "Sales", icon: subIconMap.sales, color: subColorMap.sales },
+                      hasSalesReturn && { label: "Sales Return", key: find("salesreturn") || "SalesReturn", icon: subIconMap.return, color: subColorMap.return },
                     ].filter(Boolean),
                   },
                   (hasPurchase || hasPurchaseReturn) && {
                     label: "Purchase",
                     icon: subIconMap.purchase,
+                    color: subColorMap.purchase,
                     children: [
-                      hasPurchase && { label: "Purchase", key: find("purchase") || "Purchase", icon: subIconMap.purchase },
-                      hasPurchaseReturn && { label: "Purchase Return", key: find("purchasereturn") || "PurchaseReturn", icon: subIconMap.return },
+                      hasPurchase && { label: "Purchase", key: find("purchase") || "Purchase", icon: subIconMap.purchase, color: subColorMap.purchase },
+                      hasPurchaseReturn && { label: "Purchase Return", key: find("purchasereturn") || "PurchaseReturn", icon: subIconMap.return, color: subColorMap.return },
                     ].filter(Boolean),
                   },
                   (hasPayment || hasSupplierPayment) && {
                     label: "Payments",
                     icon: subIconMap.payment,
+                    color: subColorMap.payment,
                     children: [
-                      hasPayment && { label: "Payment Collection", key: find("paymentcollection") || "PaymentCollection", icon: subIconMap.payment },
-                      hasSupplierPayment && { label: "Supplier Payment", key: find("supplierpayment") || "SupplierPayment", icon: subIconMap.payment },
+                      hasPayment && { label: "Payment Collection", key: find("paymentcollection") || "PaymentCollection", icon: subIconMap.payment, color: subColorMap.payment },
+                      hasSupplierPayment && { label: "Supplier Payment", key: find("supplierpayment") || "SupplierPayment", icon: subIconMap.payment, color: subColorMap.payment },
                     ].filter(Boolean),
                   },
                   (hasRetailerOutstanding || hasSupplierOutstanding) && {
                     label: "Outstanding",
                     icon: subIconMap.ledger,
+                    color: subColorMap.ledger,
                     children: [
-                      hasRetailerOutstanding && { label: "Retailer Outstanding", key: find("retaileroutstanding") || "RetailerOutstanding", icon: subIconMap.ledger },
-                      hasSupplierOutstanding && { label: "Supplier Outstanding", key: find("supplieroutstanding") || "SupplierOutstanding", icon: subIconMap.ledger },
+                      hasRetailerOutstanding && { label: "Retailer Outstanding", key: find("retaileroutstanding") || "RetailerOutstanding", icon: subIconMap.ledger, color: subColorMap.ledger },
+                      hasSupplierOutstanding && { label: "Supplier Outstanding", key: find("supplieroutstanding") || "SupplierOutstanding", icon: subIconMap.ledger, color: subColorMap.ledger },
                     ].filter(Boolean),
                   },
                 ].filter(Boolean)}
@@ -474,22 +482,22 @@ export default function Sidebar() {
             </SidebarItem>
           )}
 
-          <SidebarDivider open={open} />
+          <SidebarDivider />
 
-          
           {hasReports && (
             <SidebarItem
               icon={iconMap.reports}
+              color={colorMap.reports}
               label="Reports"
               open={open}
               onClick={() => handleNavigation(find("reports") || find("report") || "reports")}
             />
           )}
 
-          
           {hasScheduler && (
             <SidebarItem
               icon={iconMap.scheduler}
+              color={colorMap.scheduler}
               label="Scheduler"
               open={open}
               onClick={() => handleNavigation(find("scheduler") || "scheduler")}
@@ -499,18 +507,19 @@ export default function Sidebar() {
           {hasBulkUpload && (
             <SidebarItem
               icon={iconMap.bulkupload}
+              color={colorMap.bulkupload}
               label="Bulk Data Upload"
               open={open}
               onClick={() => handleNavigation(find("bulkupload") || find("bulk upload management") || find("BULK_UPLOAD_MANAGEMENT") || "BulkUpload")}
             />
           )}
 
-          <SidebarDivider open={open} />
+          <SidebarDivider />
 
-          
           {hasVendorGroup && (
             <SidebarItem
               icon={iconMap.vendor}
+              color={colorMap.vendor}
               label="Vendor & Roles"
               open={open}
               hasSubmenu
@@ -522,18 +531,18 @@ export default function Sidebar() {
                 sidebarOpen={open}
                 onNavigate={handleNavigation}
                 items={[
-                  hasVendor && { label: "Vendor", key: find("vendor") || "Vendor", icon: subIconMap.user },
-                  hasRoles && { label: "Roles", key: find("roles") || "Roles", icon: subIconMap.role },
+                  hasVendor && { label: "Vendor", key: find("vendor") || "Vendor", icon: subIconMap.user, color: subColorMap.user },
+                  hasRoles && { label: "Roles", key: find("roles") || "Roles", icon: subIconMap.role, color: subColorMap.role },
                 ].filter(Boolean)}
               />
             </SidebarItem>
           )}
 
-          
           {otherModules.map((mod) => (
             <SidebarItem
               key={mod}
               icon={iconMap[normalize(mod)] || iconMap.default}
+              color={colorMap[normalize(mod)] || colorMap.default}
               label={formatName(mod)}
               open={open}
               onClick={() => handleNavigation(mod)}

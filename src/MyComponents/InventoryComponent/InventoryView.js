@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/Product/ProductForm.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
 export default function InventoryView({ uKey, onClose }) {
   const [inventory, setInventory] = useState(null);
   const [error, setError]         = useState("");
@@ -27,123 +28,93 @@ export default function InventoryView({ uKey, onClose }) {
   }, [uKey]);
 
   if (!uKey) return null;
-  if (loading) return (
-    <div className="modal-backdrop show">
-      <div className="modal">
-        <div className="modal-body mf-modal-loading">
-          <div className="mf-loader-ring"><div/><div/><div/><div/></div>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
-    <div className="modal-backdrop show">
-      <div className="modal">
-
-        
-        <div className="modal-header">
-          <div className="modal-title">
-            <h3>View Inventory {inventory?.inventoryCode && `· ${inventory.inventoryCode}`}</h3>
-            <div className="small-muted">Read-only inventory record</div>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        {loading ? (
+          <div className="afx-loading">
+            <div className="afx-loader-ring"><div/><div/><div/></div>
           </div>
-
-          <div className="modal-controls">
-            <div className="tab-row">
-              {["details", "stock"].map(tab => (
-                <div
-                  key={tab}
-                  className={`tab ${activeTab === tab ? "active" : ""}`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab === "details" ? "Product" : "Stock & Pricing"}
-                </div>
-              ))}
+        ) : (
+          <>
+            <div className="afx-header">
+              <div>
+                <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Read-only Inventory Record</div>
+                <h3 className="afx-title">View Inventory {inventory?.inventoryCode && `· ${inventory.inventoryCode}`}</h3>
+              </div>
+              <button className="afx-close" onClick={onClose} title="Close">
+                <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                ESC
+              </button>
             </div>
-            <button className="btn-ghost" onClick={onClose}>✕ ESC</button>
-          </div>
-        </div>
 
-        
-        <div className="modal-body">
-          <div className="form-col scrollable">
+            <div className="afx-body">
+              {error && <div className="afx-alert">{error}</div>}
 
-            {error && (
-              <div className="mf-error">{error}</div>
-            )}
+              <div className="afx-tabs">
+                {["details", "stock"].map(tab => (
+                  <button type="button" key={tab} className={`afx-tab ${activeTab === tab ? "is-active" : ""}`}
+                    onClick={() => setActiveTab(tab)}>
+                    {tab === "details" ? "Product" : "Stock & Pricing"}
+                  </button>
+                ))}
+              </div>
 
-            
-            {!loading && inventory && activeTab === "details" && (
-              <div className="form-grid">
+              {inventory && activeTab === "details" && (
+                <div className="afx-grid">
+                  <div className="afx-field">
+                    <label className="afx-label">Product Type</label>
+                    <div className="afx-view-value">{inventory.productTypeName || <span className="afx-view-value--empty">—</span>}</div>
+                  </div>
 
-                <div>
-                  <label>Product Type</label>
-                  <div className="custom-select">
-                    <div className="select-box">
-                      <div className="selected">{inventory.productTypeName || "—"}</div>
-                    </div>
+                  <div className="afx-field">
+                    <label className="afx-label">Product Name</label>
+                    <div className="afx-view-value">{inventory.productName || <span className="afx-view-value--empty">—</span>}</div>
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Inventory Code</label>
+                    <div className="afx-view-value afx-view-value--mono">{inventory.inventoryCode || <span className="afx-view-value--empty">—</span>}</div>
                   </div>
                 </div>
+              )}
 
-                <div>
-                  <label>Product Name</label>
-                  <div className="custom-select">
-                    <div className="select-box">
-                      <div className="selected">{inventory.productName || "—"}</div>
-                    </div>
+              {inventory && activeTab === "stock" && (
+                <div className="afx-grid">
+                  <div className="afx-field">
+                    <label className="afx-label">Current Quantity</label>
+                    <div className="afx-view-value">{inventory.currentQuantity ?? <span className="afx-view-value--empty">—</span>}</div>
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Reorder Level</label>
+                    <div className="afx-view-value">{inventory.reorderLevel ?? <span className="afx-view-value--empty">—</span>}</div>
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Unit Cost Price (₹)</label>
+                    <div className="afx-view-value">{inventory.unitCostPrice != null ? `₹ ${inventory.unitCostPrice}` : <span className="afx-view-value--empty">—</span>}</div>
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Unit Selling Price (₹)</label>
+                    <div className="afx-view-value">{inventory.unitSellingPrice != null ? `₹ ${inventory.unitSellingPrice}` : <span className="afx-view-value--empty">—</span>}</div>
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Total Stock Value (₹)</label>
+                    <div className="afx-view-value">{inventory.totalStockValue != null ? `₹ ${inventory.totalStockValue}` : <span className="afx-view-value--empty">—</span>}</div>
                   </div>
                 </div>
+              )}
+            </div>
 
-                <div>
-                  <label>Inventory Code</label>
-                  <input type="text" value={inventory.inventoryCode || "—"} readOnly />
-                </div>
-
-              </div>
-            )}
-
-            
-            {!loading && inventory && activeTab === "stock" && (
-              <div className="form-grid">
-
-                <div>
-                  <label>Current Quantity</label>
-                  <input type="text" value={inventory.currentQuantity ?? "—"} readOnly />
-                </div>
-
-                <div>
-                  <label>Reorder Level</label>
-                  <input type="text" value={inventory.reorderLevel ?? "—"} readOnly />
-                </div>
-
-                <div>
-                  <label>Unit Cost Price (₹)</label>
-                  <input type="text" value={inventory.unitCostPrice != null ? `₹ ${inventory.unitCostPrice}` : "—"} readOnly />
-                </div>
-
-                <div>
-                  <label>Unit Selling Price (₹)</label>
-                  <input type="text" value={inventory.unitSellingPrice != null ? `₹ ${inventory.unitSellingPrice}` : "—"} readOnly />
-                </div>
-
-                <div>
-                  <label>Total Stock Value (₹)</label>
-                  <input type="text" value={inventory.totalStockValue != null ? `₹ ${inventory.totalStockValue}` : "—"} readOnly />
-                </div>
-
-              </div>
-            )}
-
-          </div>
-        </div>
-
-        
-        <div className="modal-footer-fixed">
-          <div className="modal-actions">
-            <button className="btn-ghost" onClick={onClose}>Close</button>
-          </div>
-        </div>
-
+            <div className="afx-footer">
+              <button className="afx-btn" onClick={onClose}>Close</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

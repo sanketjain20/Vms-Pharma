@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import ModalShell from "../CommonComponent/ModalShell";
 import "../../Styles/StatusUpdateCommon.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
@@ -52,81 +53,49 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
     }
   };
 
+  const tone = isActivating ? "success" : "danger";
+
+  const icon = isActivating ? (
+    <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+      <path d="M4 11.5L8.5 16L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+      <circle cx="11" cy="11" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M11 7v5M11 15h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+
   return (
-    <div className="su-overlay">
-      <div className="su-modal">
-
-        
-        <div className="su-top-beam" />
-        
-        <div className="su-corner su-tl" /><div className="su-corner su-tr" />
-        <div className="su-corner su-bl" /><div className="su-corner su-br" />
-
-        
-        <div className={`su-icon-ring ${isActivating ? "su-ring-green" : "su-ring-red"}`}>
-          {isActivating ? (
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <path d="M4 11.5L8.5 16L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          ) : (
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <circle cx="11" cy="11" r="9" stroke="currentColor" strokeWidth="1.8"/>
-              <path d="M11 7v5M11 15h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
-          )}
-        </div>
-
-        
-        <div className="su-heading">
-          {isActivating ? "Activate Record" : "Deactivate Record"}
-        </div>
-
-        
-        <p className="su-body-text">
-          Are you sure you want to{" "}
-          <span className={isActivating ? "su-green" : "su-red"}>
-            {isActivating ? "activate" : "deactivate"}
-          </span>{" "}
-          this <span className="su-module-name">{moduleName}</span>?
-          {!isActivating && (
-            <span className="su-warning-note">
-              <br />This will disable access to this record.
-            </span>
-          )}
-        </p>
-
-        
-        <div className="su-actions">
-          <button className="su-btn-cancel" onClick={onClose} disabled={loading}>
-            Cancel
-          </button>
+    <ModalShell
+      open
+      onClose={loading ? undefined : onClose}
+      tone={tone}
+      icon={icon}
+      title={isActivating ? "Activate Record" : "Deactivate Record"}
+      size="sm"
+      busy={loading}
+      footer={
+        <>
+          <button className="ms-btn" onClick={onClose} disabled={loading}>Cancel</button>
           <button
-            className={`su-btn-confirm ${isActivating ? "su-btn-activate" : "su-btn-disable"}`}
+            className={`ms-btn ${isActivating ? "ms-btn--success" : "ms-btn--danger"}`}
             onClick={handleStatusUpdate}
             disabled={loading}
           >
-            {loading ? (
-              <span className="su-spinner" />
-            ) : isActivating ? (
-              <>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 6.5L5 9.5L10 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Activate {moduleName}
-              </>
-            ) : (
-              <>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.4"/>
-                  <path d="M6 3.5V6.5M6 8.5h.01" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                </svg>
-                Deactivate {moduleName}
-              </>
-            )}
+            {loading ? <span className="ms-spinner" /> : isActivating ? "Activate" : "Deactivate"}
           </button>
-        </div>
-
-      </div>
-    </div>
+        </>
+      }
+    >
+      Are you sure you want to{" "}
+      <span className={`su-verb ${isActivating ? "su-verb-green" : "su-verb-red"}`}>
+        {isActivating ? "activate" : "deactivate"}
+      </span>{" "}
+      this <strong className="su-module">{moduleName}</strong>?
+      {!isActivating && (
+        <div className="su-warning-note">This will disable access to this record.</div>
+      )}
+    </ModalShell>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/VendorOnboarding.css";
 
@@ -42,11 +42,64 @@ const MODULES = [
 
 const STARTING_PATH = ["manufacturer", "supplier", "product-type", "product", "retailer", "purchase", "sales"];
 
+// One plain-English line per starter step — kept separate from MODULES.summary
+// so this stays short and skimmable even where the master-data summary is longer.
+const STEP_HINT = {
+  manufacturer: "Add the companies whose medicines you sell.",
+  supplier: "Add where you buy your stock from.",
+  "product-type": "Group medicines, e.g. Tablet, Syrup, Injection.",
+  product: "Build your medicine list — name, price, GST.",
+  retailer: "Add the pharmacies you sell to.",
+  purchase: "Bring stock in from a supplier.",
+  sales: "Bill a retailer — you're live.",
+};
+
+/* Reveals a section once it scrolls into view, then stays revealed.
+   Respects prefers-reduced-motion by starting already visible. */
+function useReveal() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return undefined;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisible(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.18, rootMargin: "0px 0px -60px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return [ref, visible];
+}
+
 export default function VendorOnboarding() {
   const navigate = useNavigate();
   const [activeGroup, setActiveGroup] = useState("start");
   const [selectedId, setSelectedId] = useState("manufacturer");
   const [showAll, setShowAll] = useState(false);
+
+  const [heroReady, setHeroReady] = useState(false);
+  const [flowRef, flowVisible] = useReveal();
+  const [stepsRef, stepsVisible] = useReveal();
+  const [guideRef, guideVisible] = useReveal();
+
+  useEffect(() => {
+    const t = setTimeout(() => setHeroReady(true), 60);
+    return () => clearTimeout(t);
+  }, []);
 
   const selected = MODULES.find((module) => module.id === selectedId) || MODULES[0];
   const visibleModules = useMemo(
@@ -59,36 +112,88 @@ export default function VendorOnboarding() {
     setActiveGroup(module.group);
   };
 
+  const chooseGroup = (id) => {
+    setActiveGroup(id);
+    setShowAll(false);
+    const first = MODULES.find((module) => module.group === id);
+    if (first) setSelectedId(first.id);
+  };
+
   return (
     <main className="onboarding-page">
-      <section className="onboarding-hero">
+      <section className={`onboarding-hero${heroReady ? " is-ready" : ""}`}>
         <div>
-          <span className="onboarding-eyebrow">VMS GETTING STARTED</span>
-          <h1>Learn VMS in the order you work.</h1>
-          <p>Start with your master data, record stock, bill customers, then use payments and reports. Select any task to see when to use it and open it directly.</p>
+          <span className="onboarding-eyebrow onboarding-fade-1">VMS GETTING STARTED</span>
+          <h1 className="onboarding-fade-2">Learn VMS in the order you work.</h1>
+          <p className="onboarding-fade-3">Start with your master data, record stock, bill customers, then use payments and reports. Select any task to see when to use it and open it directly.</p>
         </div>
-        <button className="onboarding-primary" onClick={() => navigate("/master/manufacturer")}>Start setup</button>
+        <button className="onboarding-primary onboarding-fade-3" onClick={() => navigate("/master/manufacturer")}>Start setup</button>
       </section>
 
-      <section className="onboarding-path" aria-labelledby="recommended-path">
+      <section className={`onboarding-flow reveal${flowVisible ? " is-visible" : ""}`} ref={flowRef} aria-labelledby="business-flow">
+        <div className="onboarding-section-head">
+          <div>
+            <span className="onboarding-eyebrow">THE BIG PICTURE</span>
+            <h2 id="business-flow">How everything connects</h2>
+          </div>
+          <span className="onboarding-path-note">Your business moves through these five stages, in this order, every day.</span>
+        </div>
+
+        <div className="onboarding-flow-track">
+          <svg className="onboarding-flow-svg" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+            <path id="obFlowPath" className="onboarding-flow-line" d="M10,5 L90,5" />
+            <circle r="1.6" className="onboarding-flow-pulse">
+              <animateMotion dur="7s" repeatCount="indefinite">
+                <mpath href="#obFlowPath" />
+              </animateMotion>
+            </circle>
+          </svg>
+
+          <div className="onboarding-flow-nodes">
+            {GROUPS.map((group, index) => (
+              <button
+                key={group.id}
+                className={activeGroup === group.id && !showAll ? "onboarding-flow-node is-active" : "onboarding-flow-node"}
+                style={{ "--i": index }}
+                onClick={() => chooseGroup(group.id)}
+              >
+                <span className="onboarding-flow-icon">{index + 1}</span>
+                <strong>{group.label}</strong>
+                <small>{group.description}</small>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className={`onboarding-path reveal${stepsVisible ? " is-visible" : ""}`} ref={stepsRef} aria-labelledby="recommended-path">
         <div className="onboarding-section-head">
           <div>
             <span className="onboarding-eyebrow">RECOMMENDED FIRST RUN</span>
             <h2 id="recommended-path">Your first 7 steps</h2>
           </div>
-          <span className="onboarding-path-note">Follow this once. After that, use the guide below whenever you need help.</span>
+          <span className="onboarding-path-note">Follow this once, in order. After that, use the guide below whenever you need help.</span>
         </div>
-        <div className="onboarding-path-steps">
+
+        <ol className="onboarding-timeline">
           {STARTING_PATH.map((id, index) => {
             const module = MODULES.find((item) => item.id === id);
-            return <button key={id} className="onboarding-path-step" onClick={() => chooseModule(module)}>
-              <span>{index + 1}</span>{module.name}
-            </button>;
+            return (
+              <li key={id} style={{ "--i": index }}>
+                <button className="onboarding-timeline-item" onClick={() => chooseModule(module)}>
+                  <span className="onboarding-timeline-num">{index + 1}</span>
+                  <span className="onboarding-timeline-copy">
+                    <strong>{module.name}</strong>
+                    <small>{STEP_HINT[id]}</small>
+                  </span>
+                </button>
+              </li>
+            );
           })}
-        </div>
+        </ol>
       </section>
 
-      <section className="onboarding-guide">
+      <section className={`onboarding-guide reveal${guideVisible ? " is-visible" : ""}`} ref={guideRef}>
         <aside className="onboarding-sidebar">
           <span className="onboarding-eyebrow">TASK GUIDE</span>
           <h2>What do you need to do?</h2>
@@ -106,15 +211,20 @@ export default function VendorOnboarding() {
 
         <div className="onboarding-content">
           <div className="onboarding-module-grid">
-            {visibleModules.map((module) => (
-              <button key={module.id} className={selected.id === module.id ? "onboarding-module is-selected" : "onboarding-module"} onClick={() => chooseModule(module)}>
+            {visibleModules.map((module, index) => (
+              <button
+                key={module.id}
+                className={selected.id === module.id ? "onboarding-module is-selected" : "onboarding-module"}
+                style={{ "--i": index }}
+                onClick={() => chooseModule(module)}
+              >
                 <span className="onboarding-module-icon">{module.icon}</span>
                 <span><strong>{module.name}</strong><small>{module.summary}</small></span>
               </button>
             ))}
           </div>
 
-          <article className="onboarding-detail">
+          <article className="onboarding-detail" key={selected.id}>
             <span className="onboarding-detail-icon">{selected.icon}</span>
             <div>
               <span className="onboarding-eyebrow">{GROUPS.find((group) => group.id === selected.group)?.label}</span>

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/Sales/SalesView.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
 export default function SalesView({ uKey, onClose }) {
   const [sales, setSales] = useState(null);
   const [error, setError] = useState("");
@@ -51,218 +52,167 @@ export default function SalesView({ uKey, onClose }) {
     }
   };
 
-  // Resolve badge color for expiry status
-  const expiryColor = (status) => {
-    if (status === "EXPIRED")       return { color: "#fca5a5", background: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.25)" };
-    if (status === "EXPIRING_SOON") return { color: "#fbbf24", background: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)" };
-    return { color: "#6ee7b7", background: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.25)" };
+  // Product name comes back under different keys/shapes depending on the
+  // endpoint — cover string fields under any likely name, and a nested
+  // { name } object, instead of trusting one exact shape.
+  const productLabel = (item) => {
+    const v = item.product ?? item.productName ?? item.productDetails ?? item.Product ?? item.name;
+    if (v == null || v === "") return "—";
+    if (typeof v === "object") return v.name || v.productName || v.product || "—";
+    return v;
   };
 
   if (!uKey) return null;
-  if (!sales && !error) return (
-    <div className="sv-backdrop">
-      <div className="sv-modal">
-        <div className="sv-body" style={{ minHeight: 220, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div className="sv-loader"><div/><div/><div/><div/></div>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
-    <div className="sv-backdrop">
-      <div className="sv-modal">
-        <div className="sv-top-beam" />
-        <div className="sv-corner sv-tl" /><div className="sv-corner sv-tr" />
-        <div className="sv-corner sv-bl" /><div className="sv-corner sv-br" />
-
-        
-        <div className="sv-header">
-          <div className="sv-header-left">
-            <div className="sv-eyebrow">
-              <span className="sv-eyebrow-dot" />
-              SALES RECORD
-            </div>
-            <h3 className="sv-title">
-              <span className="sv-title-acc"></span>
-              {sales ? `Invoice · ${sales.invoiceNumber}` : "Loading…"}
-            </h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--xl">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Sales Record</div>
+            <h3 className="afx-title">{sales ? `Invoice · ${sales.invoiceNumber}` : "Loading…"}</h3>
           </div>
-          <button className="sv-close" onClick={onClose} title="Close">
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+          <button className="afx-close" onClick={onClose} title="Close">
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
             ESC
           </button>
         </div>
 
-        <div className="sv-divider" />
+        <div className="afx-body">
+          {error && <div className="afx-alert">{error}</div>}
 
-        
-        <div className="sv-body">
-          {error && (
-            <div className="sv-error">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.3"/>
-                <path d="M7 4.5V7.5M7 9.5h.01" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-              </svg>
-              {error}
-            </div>
+          {!sales && !error && (
+            <div className="afx-loading"><div className="afx-loader-ring"><div/><div/><div/></div></div>
           )}
 
           {sales && (
             <>
-              
-              <div className="sv-meta-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
-                <div className="sv-meta-card">
-                  <span className="sv-meta-label">Invoice Number</span>
-                  <span className="sv-meta-value">{sales.invoiceNumber}</span>
+              <div className="afx-meta-cards" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+                <div className="afx-meta-card">
+                  <span className="afx-meta-card-label">Invoice Number</span>
+                  <span className="afx-meta-card-val">{sales.invoiceNumber}</span>
                 </div>
-                <div className="sv-meta-card">
-                  <span className="sv-meta-label">Billing Mode</span>
-                  <span className="sv-meta-value">
-                    <span className="sv-badge">{sales.billingMode}</span>
-                  </span>
+                <div className="afx-meta-card">
+                  <span className="afx-meta-card-label">Billing Mode</span>
+                  <span className="afx-meta-card-val"><span className="afx-tag">{sales.billingMode}</span></span>
                 </div>
-                <div className="sv-meta-card">
-                  <span className="sv-meta-label">Date</span>
-                  <span className="sv-meta-value">{sales.createdAt}</span>
+                <div className="afx-meta-card">
+                  <span className="afx-meta-card-label">Date</span>
+                  <span className="afx-meta-card-val">{sales.createdAt}</span>
                 </div>
-
-                
-                <div className="sv-meta-card">
-                  <span className="sv-meta-label">Retailer</span>
-                  <span className="sv-meta-value">
+                <div className="afx-meta-card">
+                  <span className="afx-meta-card-label">Retailer</span>
+                  <span className="afx-meta-card-val">
                     {sales.retailerName
-                      ? <><b>{sales.retailerName}</b> <span style={{ fontSize: 11, color: "var(--sv-text-2)" }}>· {sales.retailerCode}</span></>
-                      : <span style={{ color: "var(--sv-text-2)", fontSize: 12 }}>Walk-in customer</span>
-                    }
+                      ? <>{sales.retailerName} <span className="afx-view-value--muted" style={{ fontSize: 11 }}>· {sales.retailerCode}</span></>
+                      : <span className="afx-view-value--muted" style={{ fontSize: 12 }}>Walk-in customer</span>}
                   </span>
                 </div>
-
-                
-                <div className="sv-meta-card">
-                  <span className="sv-meta-label">Payment Type</span>
-                  <span className="sv-meta-value">
-                    <span className={`sv-badge ${
-                      sales.paymentType === "PAID"    ? "sv-badge-green" :
-                      sales.paymentType === "CREDIT"  ? "sv-badge-red"   : ""
-                    }`}>
+                <div className="afx-meta-card">
+                  <span className="afx-meta-card-label">Payment Type</span>
+                  <span className="afx-meta-card-val">
+                    <span
+                      className="afx-tag"
+                      style={
+                        sales.paymentType === "PAID"   ? { color: "var(--afx-success)", background: "var(--afx-success-soft)" } :
+                        sales.paymentType === "CREDIT" ? { color: "var(--afx-danger)",  background: "var(--afx-danger-soft)"  } : undefined
+                      }
+                    >
                       {sales.paymentType || "—"}
                     </span>
                   </span>
                 </div>
-
-                
-                <div className="sv-meta-card">
-                  <span className="sv-meta-label">Status / Due Date</span>
-                  <span className="sv-meta-value">
-                    <span className={`sv-badge ${Number(sales.remainingAmount) > 0 ? "sv-badge-red" : "sv-badge-green"}`}>
+                <div className="afx-meta-card">
+                  <span className="afx-meta-card-label">Status / Due Date</span>
+                  <span className="afx-meta-card-val">
+                    <span
+                      className="afx-tag"
+                      style={Number(sales.remainingAmount) > 0
+                        ? { color: "var(--afx-danger)", background: "var(--afx-danger-soft)" }
+                        : { color: "var(--afx-success)", background: "var(--afx-success-soft)" }}
+                    >
                       {Number(sales.remainingAmount) > 0 ? "Pending" : "Paid"}
                     </span>
                     {sales.dueDate && (
-                      <span style={{ fontSize: 11, color: "var(--sv-text-2)", marginLeft: 6 }}>
-                        Due: {sales.dueDate}
-                      </span>
+                      <span className="afx-view-value--muted" style={{ fontSize: 11, marginLeft: 6 }}>Due: {sales.dueDate}</span>
                     )}
                   </span>
                 </div>
               </div>
 
-              
-              <div className="sv-table-section">
-                <div className="sv-table-header">
-                  <div className="sv-table-title">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <rect x="1" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                      <rect x="7" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                      <rect x="1" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                      <rect x="7" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                    </svg>
-                    Line Items
-                  </div>
-                  <span className="sv-item-count">{sales.items?.length || 0} items</span>
+              <div className="afx-section-title">Line Items ({sales.items?.length || 0})</div>
+              {!sales.items?.length ? (
+                <div className="afx-items-empty">
+                  <p>No line items found on this record.</p>
                 </div>
-
-                <div className="sv-table-wrap">
-                  <table className="sv-table">
-                    <thead>
-                      <tr>
-                        <th>Product</th>
-                        
-                        <th>Batch No</th>
-                        <th>Expiry</th>
-                        <th>HSN</th>
-                        <th>Qty</th>
-                        <th>Price (₹)</th>
-                        <th>Line Amt (₹)</th>
-                        <th>GST (₹)</th>
-                        <th>Total (₹)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sales.items?.map((item, idx) => {
-                        // expiryStatus may come from backend or we compute it
-                        const expStyle = item.expiryStatus ? expiryColor(item.expiryStatus) : null;
+              ) : (
+              <div className="afx-line-table" style={{ overflowX: "auto" }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Batch No</th>
+                      <th>Expiry</th>
+                      <th>HSN</th>
+                      <th>Qty</th>
+                      <th>Price (₹)</th>
+                      <th>GST (₹)</th>
+                      <th>Total (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      try {
+                        return (sales.items || []).map((item, idx) => {
+                          if (!item) return null;
+                          const qty = Number(item.quantity) || 0;
+                          const price = Number(item.sellingPrice) || 0;
+                          const tax = Number(item.taxAmount) || 0;
+                          return (
+                            <tr key={idx}>
+                              <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>{productLabel(item)}</td>
+                              <td style={{ color: "var(--afx-accent)", fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{item.batchNumberSnapshot || "—"}</td>
+                              <td style={{ fontSize: 11 }}>{item.expiryDateSnapshot || "—"}</td>
+                              <td style={{ fontSize: 11 }}>{item.hsnCodeSnapshot || "—"}</td>
+                              <td>{item.quantity ?? "—"}</td>
+                              <td>{item.sellingPrice ?? "—"}</td>
+                              <td>{tax.toFixed(2)}</td>
+                              <td style={{ fontWeight: 700, color: "var(--afx-text-1)" }}>{Number(item.subtotal ?? qty * price + tax).toFixed(2)}</td>
+                            </tr>
+                          );
+                        });
+                      } catch (e) {
+                        console.error("Failed to render sale line items:", e, sales.items);
                         return (
-                          <tr key={idx} style={{ animationDelay: `${idx * 0.03}s` }}>
-                            <td>{item.product}</td>
-                            
-                            <td style={{ fontFamily: "var(--sv-font-m)", fontSize: 11, color: "#93c5fd" }}>
-                              {item.batchNumberSnapshot || "—"}
-                            </td>
-                            <td>
-                              {item.expiryDateSnapshot ? (
-                                <span style={{
-                                  padding: "2px 7px", borderRadius: 100, fontSize: 10,
-                                  fontFamily: "var(--sv-font-m)",
-                                  background: expStyle?.background || "transparent",
-                                  color: expStyle?.color || "inherit",
-                                  border: `1px solid ${expStyle?.border || "transparent"}`,
-                                }}>
-                                  {item.expiryDateSnapshot}
-                                </span>
-                              ) : "—"}
-                            </td>
-                            <td style={{ fontSize: 11, color: "var(--sv-text-2)" }}>
-                              {item.hsnCodeSnapshot || "—"}
-                            </td>
-                            <td>{item.quantity}</td>
-                            <td>{item.sellingPrice}</td>
-                            <td>{(item.quantity * item.sellingPrice).toFixed(2)}</td>
-                            <td>{item.taxAmount}</td>
-                            <td className="sv-td-highlight">{(item.subtotal).toFixed(2)}</td>
-                          </tr>
+                          <tr><td colSpan={8} className="afx-alert" style={{ display: "table-cell" }}>
+                            Couldn't display line items — unexpected data shape. Check the console for details.
+                          </td></tr>
                         );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                      }
+                    })()}
+                  </tbody>
+                </table>
               </div>
+              )}
 
-              
-              <div className="sv-totals">
-                <div className="sv-totals-row"><span>Items Total</span><span>₹{(sales.totalAmount).toFixed(2)}</span></div>
-                <div className="sv-totals-row"><span>Total GST</span><span>₹{sales.totalTax}</span></div>
-                <div className="sv-totals-row"><span>Discount</span><span className="sv-discount">−₹{sales.totalDiscount}</span></div>
-                <div className="sv-totals-divider" />
-                <div className="sv-totals-row sv-totals-net"><span>Net Amount</span><span>₹{(sales.netAmount).toFixed(2)}</span></div>
+              <div className="afx-totals">
+                <div className="afx-totals-row"><span>Items Total</span><span>₹{(sales.totalAmount).toFixed(2)}</span></div>
+                <div className="afx-totals-row"><span>Total GST</span><span>₹{sales.totalTax}</span></div>
+                <div className="afx-totals-row"><span>Discount</span><span className="afx-text-danger">−₹{sales.totalDiscount}</span></div>
+                <div className="afx-totals-divider" />
+                <div className="afx-totals-row afx-totals-grand"><span>Net Amount</span><span>₹{(sales.netAmount).toFixed(2)}</span></div>
                 {Number(sales.remainingAmount) > 0 && (
-                  <div className="sv-totals-row sv-totals-due">
-                    <span>Due Amount</span>
-                    <span>₹{Number(sales.remainingAmount).toFixed(2)}</span>
-                  </div>
+                  <div className="afx-totals-row"><span>Due Amount</span><span className="afx-text-danger">₹{Number(sales.remainingAmount).toFixed(2)}</span></div>
                 )}
               </div>
             </>
           )}
         </div>
 
-        
         {sales && (
-          <div className="sv-footer">
-            <button className="sv-btn-ghost" onClick={onClose}>Close</button>
-            <button className="sv-btn-print" onClick={handlePrint}>
+          <div className="afx-footer">
+            <button className="afx-btn" onClick={onClose}>Close</button>
+            <button className="afx-btn afx-btn--primary" onClick={handlePrint}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                 <path d="M3 4.5V1.5h7V4.5M3 9.5H1.5V5.5h10V9.5H10M3 7.5h7v4H3v-4Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
               </svg>

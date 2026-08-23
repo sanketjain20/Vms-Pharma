@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/Vendor/VendorView.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
 export default function VendorView({ uKey, onClose }) {
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,123 +29,74 @@ export default function VendorView({ uKey, onClose }) {
 
   /* ── field config ── */
   const fields = vendor ? [
-    { label: "Name",                 value: vendor.name },
-    { label: "Email",                value: vendor.email },
-    { label: "Phone",                value: vendor.phone },
-    { label: "Role",                 value: vendor.roleName },
-    { label: "Shop Name",            value: vendor.shopName },
-    { label: "Vendor Code",          value: vendor.vendorCode },
+    { label: "Name",                  value: vendor.name },
+    { label: "Email",                 value: vendor.email },
+    { label: "Phone",                 value: vendor.phone },
+    { label: "Role",                  value: vendor.roleName },
+    { label: "Shop Name",             value: vendor.shopName },
+    { label: "Vendor Code",           value: vendor.vendorCode },
     { label: "Account Validity Till", value: vendor.expiryDate || "N/A" },
     ...(isMasterVendor ? [{ label: "Vendor Prefix", value: vendor.vendorPrefix || "N/A" }] : []),
     ...(isMasterVendor ? [{ label: "Master Vendor", value: formatBool(vendor.masterVendor) }] : []),
     ...(isMasterVendor ? [{ label: "Worker Limit", value: vendor.subVendorLimit ?? 0 }] : []),
   ] : [];
 
-  if (loading) return (
-    <div className="vv-backdrop">
-      <div className="vv-modal">
-        <div className="vv-body vv-loading vv-loading-only">
-          <div className="vv-loader-ring"><div/><div/><div/><div/></div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="vv-backdrop">
-      <div className="vv-modal">
-
-        
-        <div className="vv-top-beam" />
-        
-        <div className="vv-corner vv-tl" /><div className="vv-corner vv-tr" />
-        <div className="vv-corner vv-bl" /><div className="vv-corner vv-br" />
-
-        
-        <div className="vv-header">
-          <div className="vv-header-left">
-            <div className="vv-eyebrow">
-              <span className="vv-eyebrow-dot" />
-              VENDOR RECORD
-            </div>
-            <h2 className="vv-title">
-              <span className="vv-title-acc"></span>
-              {vendor?.vendorCode ? `Vendor · ${vendor.vendorCode}` : "View Vendor"}
-            </h2>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Vendor Record</div>
+            <h3 className="afx-title">{vendor?.vendorCode ? `Vendor · ${vendor.vendorCode}` : "View Vendor"}</h3>
           </div>
-          <button className="vv-close" onClick={onClose} title="Close">
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+          <button className="afx-close" onClick={onClose} title="Close">
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
             ESC
           </button>
         </div>
 
-        
-        <div className="vv-body">
-
-          {!loading && !vendor && (
-            <div className="vv-empty">
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                <circle cx="14" cy="14" r="12" stroke="rgba(59,130,246,0.25)" strokeWidth="1.5"/>
-                <path d="M14 9v6M14 18h.01" stroke="rgba(59,130,246,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              Vendor not found
+        <div className="afx-body">
+          {loading ? (
+            <div className="afx-loading">
+              <div className="afx-loader-ring"><div/><div/><div/></div>
             </div>
-          )}
-
-          
-          {!loading && vendor && (
+          ) : !vendor ? (
+            <div className="afx-items-empty">Vendor not found</div>
+          ) : (
             <>
-              
-              <div className="vv-status-row">
-                <span className={`vv-status-badge ${isActive ? "vv-active" : "vv-inactive"}`}>
-                  <span className="vv-status-dot" />
+              <div className="afx-option-row" style={{ justifyContent: "flex-start" }}>
+                <span
+                  className="afx-badge"
+                  style={{
+                    background: isActive ? "var(--afx-success-soft)" : "var(--afx-danger-soft)",
+                    color: isActive ? "var(--afx-success)" : "var(--afx-danger)",
+                  }}
+                >
                   {isActive ? "Active" : "Inactive"}
                 </span>
-                <span className="vv-meta-info">
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1"/>
-                    <path d="M5 3v2.5L6.5 7" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-                  </svg>
-                  Read-only view
-                </span>
+                <span style={{ color: "var(--afx-text-3)", fontSize: 11.5 }}>Read-only view</span>
               </div>
 
-              
-              <div className="vv-grid">
+              <div className="afx-grid">
                 {fields.map((f, i) => (
-                  <div key={i} className="vv-field" style={{ animationDelay: `${i * 0.04}s` }}>
-                    <span className="vv-field-label">{f.label}</span>
-                    <div className="vv-field-value-wrap">
-                      <input
-                        type="text"
-                        value={f.value || "—"}
-                        readOnly
-                        className="vv-field-input"
-                      />
-                    </div>
+                  <div key={i} className="afx-field">
+                    <label className="afx-label">{f.label}</label>
+                    <div className="afx-view-value">{f.value || <span className="afx-view-value--empty">—</span>}</div>
                   </div>
                 ))}
 
-                <div className="vv-field vv-full" style={{ animationDelay: `${fields.length * 0.04}s` }}>
-                  <span className="vv-field-label">Address</span>
-                  <textarea
-                    rows={2}
-                    value={vendor.address || "—"}
-                    readOnly
-                    className="vv-field-input"
-                  />
+                <div className="afx-field afx-field--full">
+                  <label className="afx-label">Address</label>
+                  <div className="afx-view-value">{vendor.address || <span className="afx-view-value--empty">—</span>}</div>
                 </div>
               </div>
             </>
           )}
         </div>
 
-        <div className="vv-footer">
-          <button className="vv-btn-close" onClick={onClose}>Close</button>
+        <div className="afx-footer">
+          <button className="afx-btn" onClick={onClose}>Close</button>
         </div>
-
       </div>
     </div>
   );

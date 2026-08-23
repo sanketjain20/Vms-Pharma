@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../../Styles/Manufacturer/Manufacturer.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
@@ -69,42 +69,32 @@ export default function ManufacturerAdd({ onClose, onSubmit }) {
   };
 
   return (
-    <div className="mfx-backdrop">
-      <div className="mfx-modal">
-        <div className="mfx-top-beam" />
-        <div className="mfx-corner mfx-tl" /><div className="mfx-corner mfx-tr" />
-        <div className="mfx-corner mfx-bl" /><div className="mfx-corner mfx-br" />
-
-        
-        <div className="mfx-header">
-          <div className="mfx-header-left">
-            <div className="mfx-eyebrow"><span className="mfx-eyebrow-dot" />NEW MANUFACTURER</div>
-            <h3 className="mfx-title"><span className="mfx-title-acc"></span> Add Manufacturer</h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />New Manufacturer</div>
+            <h3 className="afx-title">Add Manufacturer</h3>
           </div>
-          <button className="mfx-close" type="button" onClick={onClose}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+          <button className="afx-close" type="button" onClick={onClose}>
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
             ESC
           </button>
         </div>
 
-        <div className="mfx-divider" />
+        <div className="afx-body">
+          {errors.general && <div className="afx-alert">{errors.general}</div>}
 
-        
-        <div className="mfx-body">
-          {errors.general && <div className="mfx-alert">{errors.general}</div>}
-
-          <div className="mfx-grid">
+          <div className="afx-grid">
             {FIELDS.map(f => (
-              <div key={f.key} className={`mfx-field ${f.type === "textarea" ? "mfx-field-full" : ""}`}>
-                <label className="mfx-label">
+              <div key={f.key} className={`afx-field ${f.type === "textarea" ? "afx-field--full" : ""}`}>
+                <label className="afx-label">
                   {f.label}
-                  {f.required && <span className="mfx-req"> *</span>}
+                  {f.required && <span className="afx-req">*</span>}
                 </label>
                 {f.type === "textarea" ? (
                   <textarea
-                    className={`mfx-input mfx-textarea ${errors[f.key] ? "mfx-input-err" : ""}`}
+                    className={`afx-textarea ${errors[f.key] ? "afx-textarea--err" : ""}`}
                     value={form[f.key]}
                     onChange={e => set(f.key, e.target.value)}
                     placeholder={f.placeholder}
@@ -112,27 +102,23 @@ export default function ManufacturerAdd({ onClose, onSubmit }) {
                   />
                 ) : (
                   <input
-                    className={`mfx-input ${errors[f.key] ? "mfx-input-err" : ""}`}
+                    className={`afx-input ${errors[f.key] ? "afx-input--err" : ""}`}
                     type={f.type}
                     value={form[f.key]}
                     onChange={e => set(f.key, e.target.value)}
                     placeholder={f.placeholder}
                   />
                 )}
-                {errors[f.key] && <span className="mfx-error">{errors[f.key]}</span>}
+                {errors[f.key] && <span className="afx-error">{errors[f.key]}</span>}
               </div>
             ))}
           </div>
         </div>
 
-        
-        <div className="mfx-footer">
-          <button type="button" className="mfx-btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="button" className="mfx-btn-primary" onClick={submit} disabled={loading}>
-            {loading
-              ? <><span className="mfx-spinner" /> Saving…</>
-              : <><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> Save Manufacturer</>
-            }
+        <div className="afx-footer">
+          <button type="button" className="afx-btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="afx-btn afx-btn--primary" onClick={submit} disabled={loading}>
+            {loading ? <><span className="afx-spinner" /> Saving…</> : "Save Manufacturer"}
           </button>
         </div>
       </div>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import "../../Styles/Role/RoleAdd.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
 export default function RoleEdit({ uKey, onClose, onSubmit }) {
   const [permissions, setPermissions]               = useState([]);
   const [groupedPermissions, setGroupedPermissions] = useState({});
@@ -131,162 +132,121 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
   const initialLoading = !permissionsLoaded || !roleLoaded;
 
   return (
-    <div className="rl-backdrop">
-      <div className="rl-modal">
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--lg">
         {initialLoading ? (
-          <div className="rl-body rl-loading-only">
-            <div className="rl-loader-ring"><div/><div/><div/><div/></div>
+          <div className="afx-loading">
+            <div className="afx-loader-ring"><div/><div/><div/></div>
           </div>
         ) : (
-        <>
-
-        <div className="rl-top-beam" />
-        <div className="rl-corner rl-tl" /><div className="rl-corner rl-tr" />
-        <div className="rl-corner rl-bl" /><div className="rl-corner rl-br" />
-
-        
-        <div className="rl-header">
-          <div className="rl-header-left">
-            <div className="rl-eyebrow">
-              <span className="rl-eyebrow-dot" />
-              EDIT ROLE
-            </div>
-            <h3 className="rl-title">
-              <span className="rl-title-acc"></span>
-              {formData.roleCode ? `Role · ${formData.roleCode}` : "Edit Role"}
-            </h3>
-          </div>
-          <button className="rl-close" onClick={onClose} title="Close">
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
-            ESC
-          </button>
-        </div>
-
-        
-        <form className="rl-form-wrapper" onSubmit={handleSubmit}>
-
-          
-          <div className="rl-body">
-
-            
-            <div className="rl-name-row">
-              <div className="rl-field">
-                <label>Role Name</label>
-                <input
-                  type="text"
-                  name="roleName"
-                  value={formData.roleName}
-                  onChange={handleChange}
-                  placeholder="e.g. Store Manager"
-                  className={errors.roleName ? "rl-input-err" : ""}
-                />
-                {errors.roleName && <span className="rl-err">{errors.roleName}</span>}
+          <>
+            <div className="afx-header">
+              <div>
+                <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Edit Role</div>
+                <h3 className="afx-title">{formData.roleCode ? `Role · ${formData.roleCode}` : "Edit Role"}</h3>
               </div>
+              <button className="afx-close" onClick={onClose} title="Close">
+                <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                ESC
+              </button>
             </div>
 
-            
-            <div className="rl-perms-section">
-              <div className="rl-perms-header">
-                <div className="rl-perms-title">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <rect x="1" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                    <rect x="7" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                    <rect x="1" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                    <rect x="7" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
-                  </svg>
-                  Permissions
+            <form onSubmit={handleSubmit}>
+              <div className="afx-body">
+                <div className="afx-grid">
+                  <div className="afx-field afx-field--full">
+                    <label className="afx-label">Role Name<span className="afx-req">*</span></label>
+                    <input
+                      type="text"
+                      name="roleName"
+                      className={`afx-input ${errors.roleName ? "afx-input--err" : ""}`}
+                      value={formData.roleName}
+                      onChange={handleChange}
+                      placeholder="e.g. Store Manager"
+                    />
+                    {errors.roleName && <span className="afx-error">{errors.roleName}</span>}
+                  </div>
                 </div>
-                <span className={`rl-perm-count ${totalSelected > 0 ? "rl-perm-count-active" : ""}`}>
-                  {totalSelected} / {totalPerms} selected
-                </span>
-              </div>
 
-              {errors.permissionIds && <span className="rl-err rl-err-perms">{errors.permissionIds}</span>}
-
-              <div className="rl-modules-list">
-                {Object.keys(groupedPermissions).map((module, mi) => {
-                  const perms    = groupedPermissions[module];
-                  const isOpen   = expandedModules[module];
-                  const ids      = perms.map(p => p.id);
-                  const allSel   = ids.every(id => formData.permissionIds.includes(id));
-                  const someSel  = ids.some(id => formData.permissionIds.includes(id));
-                  const selCount = ids.filter(id => formData.permissionIds.includes(id)).length;
-
-                  return (
-                    <div key={module} className={`rl-module ${isOpen ? "rl-module-open" : ""}`} style={{ animationDelay: `${mi * 0.04}s` }}>
-                      <div className="rl-module-header" onClick={() => toggleModule(module)}>
-                        <div className="rl-module-left">
-                          <div
-                            className={`rl-module-check ${allSel ? "rl-check-full" : someSel ? "rl-check-partial" : ""}`}
-                            onClick={e => toggleModuleAll(module, perms, e)}
-                            title={allSel ? "Deselect all" : "Select all"}
-                          >
-                            {allSel && (
-                              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                                <path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            )}
-                            {!allSel && someSel && (
-                              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                                <path d="M2 4.5h5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                              </svg>
-                            )}
-                          </div>
-                          <span className="rl-module-name">{module}</span>
-                          {selCount > 0 && <span className="rl-module-badge">{selCount}</span>}
-                        </div>
-                        <div className="rl-module-right">
-                          <span className="rl-module-count">{perms.length} actions</span>
-                          <svg className={`rl-chevron ${isOpen ? "rl-chevron-open" : ""}`} width="11" height="11" viewBox="0 0 11 11" fill="none">
-                            <path d="M2 4L5.5 7.5L9 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                      </div>
-
-                      {isOpen && (
-                        <div className="rl-actions-grid">
-                          {perms.map((p, pi) => {
-                            const checked = formData.permissionIds.includes(p.id);
-                            return (
-                              <div
-                                key={p.id}
-                                className={`rl-action ${checked ? "rl-action-checked" : ""}`}
-                                onClick={() => handlePermissionToggle(p.id)}
-                                style={{ animationDelay: `${pi * 0.03}s` }}
-                              >
-                                <div className={`rl-check ${checked ? "rl-check-full" : ""}`}>
-                                  {checked && (
-                                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                                      <path d="M1 4L3 6L7 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                                    </svg>
-                                  )}
-                                </div>
-                                <span className="rl-action-label">{p.action}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
+                <div>
+                  <div className="afx-perms-head">
+                    <div className="afx-perms-title">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <rect x="1" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
+                        <rect x="7" y="1" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
+                        <rect x="1" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
+                        <rect x="7" y="7" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.1"/>
+                      </svg>
+                      Permissions
                     </div>
-                  );
-                })}
+                    <span className={`afx-perms-count ${totalSelected > 0 ? "is-active" : ""}`}>
+                      {totalSelected} / {totalPerms} selected
+                    </span>
+                  </div>
+
+                  {errors.permissionIds && <div className="afx-error" style={{ marginBottom: 8 }}>{errors.permissionIds}</div>}
+
+                  <div className="afx-modules">
+                    {Object.keys(groupedPermissions).map((module) => {
+                      const perms    = groupedPermissions[module];
+                      const isOpen   = expandedModules[module];
+                      const ids      = perms.map(p => p.id);
+                      const allSel   = ids.every(id => formData.permissionIds.includes(id));
+                      const someSel  = ids.some(id => formData.permissionIds.includes(id));
+                      const selCount = ids.filter(id => formData.permissionIds.includes(id)).length;
+
+                      return (
+                        <div key={module} className="afx-module">
+                          <div className="afx-module-head" onClick={() => toggleModule(module)}>
+                            <div className="afx-module-left">
+                              <div
+                                className={`afx-check ${allSel ? "is-full" : someSel ? "is-partial" : ""}`}
+                                onClick={e => toggleModuleAll(module, perms, e)}
+                                title={allSel ? "Deselect all" : "Select all"}
+                              >
+                                {allSel && <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                {!allSel && someSel && <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M2 4.5h5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>}
+                              </div>
+                              <span className="afx-module-name">{module}</span>
+                              {selCount > 0 && <span className="afx-module-badge">{selCount}</span>}
+                            </div>
+                            <div className="afx-module-right">
+                              <span className="afx-module-count">{perms.length} actions</span>
+                              <svg className={`afx-chevron ${isOpen ? "is-open" : ""}`} width="11" height="11" viewBox="0 0 11 11" fill="none">
+                                <path d="M2 4L5.5 7.5L9 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </div>
+                          </div>
+
+                          {isOpen && (
+                            <div className="afx-actions-grid">
+                              {perms.map((p) => {
+                                const checked = formData.permissionIds.includes(p.id);
+                                return (
+                                  <div key={p.id} className={`afx-action ${checked ? "is-checked" : ""}`} onClick={() => handlePermissionToggle(p.id)}>
+                                    <div className={`afx-check ${checked ? "is-full" : ""}`}>
+                                      {checked && <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 4L3 6L7 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                    </div>
+                                    <span className="afx-action-label">{p.action}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
 
-          </div>
-
-          
-          <div className="rl-footer">
-            <button className="rl-btn-cancel" type="button" onClick={onClose}>Cancel</button>
-            <button type="submit" className="rl-btn-save">Update Role</button>
-          </div>
-
-        </form>
-        </>
+              <div className="afx-footer">
+                <button className="afx-btn" type="button" onClick={onClose}>Cancel</button>
+                <button type="submit" className="afx-btn afx-btn--primary">Update Role</button>
+              </div>
+            </form>
+          </>
         )}
-
       </div>
     </div>
   );

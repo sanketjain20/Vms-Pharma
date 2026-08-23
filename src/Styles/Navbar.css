@@ -1,16 +1,36 @@
 /* ============================================================
-   Navbar.css  ·  VMS Cinematic Dark UI
-   Matches Home.css + VendorOnboarding.css design language
+   Navbar.css · Premium topbar
+   Flat black (dark) / glass white (light) — matches Home /
+   Dashboard / Sidebar / Setting. Used on the Home + Setting layout.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
 
 :root {
---nb-cyan:     #ffffff;
---nb-purple:   #666666;
   --nb-h:        62px;
-  --font-hud:    'Orbitron', monospace;
+  --nb-accent:   #6366f1;
+  --font-hud:    'Sora', sans-serif;
   --font-body:   'Inter', sans-serif;
+
+  --nb-bg:        rgba(0, 0, 0, 0.82);
+  --nb-bg-scroll: rgba(0, 0, 0, 0.94);
+  --nb-border:    rgba(255, 255, 255, 0.08);
+  --nb-text-1:    #f2f3f7;
+  --nb-text-2:    rgba(242, 243, 247, 0.56);
+  --nb-text-3:    rgba(242, 243, 247, 0.36);
+  --nb-chip-bg:   rgba(255, 255, 255, 0.05);
+  --nb-shadow:    rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme="light"] {
+  --nb-bg:        rgba(255, 255, 255, 0.82);
+  --nb-bg-scroll: rgba(255, 255, 255, 0.94);
+  --nb-border:    rgba(15, 23, 42, 0.09);
+  --nb-text-1:    #10131c;
+  --nb-text-2:    rgba(16, 19, 28, 0.56);
+  --nb-text-3:    rgba(16, 19, 28, 0.38);
+  --nb-chip-bg:   rgba(15, 23, 42, 0.045);
+  --nb-shadow:    rgba(15, 23, 42, 0.1);
 }
 
 /* ── Shell ────────────────────────────────────────────────── */
@@ -27,45 +47,23 @@
   padding: 0 24px;
   gap: 16px;
 
-  /* Glassmorphism dark */
-background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-
-  /* Bottom border — subtle cyan line */
- border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: var(--nb-bg);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-bottom: 1px solid var(--nb-border);
 
   transition: left 0.3s ease, width 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
-/* Scrolled — slightly more opaque */
 .topbar.scrolled {
-  background: rgba(0, 0, 0, 0.95);
-  box-shadow: 0 4px 40px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(0, 220, 255, 0.12);
+  background: var(--nb-bg-scroll);
+  box-shadow: 0 8px 30px var(--nb-shadow);
 }
 
-/* Sidebar shift */
 .topbar.shifted {
-  left: 200px;
-  width: calc(100% - 200px);
+  left: 240px;
+  width: calc(100% - 240px);
 }
-
-/* Scanline sweep (same as cards) */
-.topbar-scan {
-  position: absolute;
-  top: -100%; left: 0; right: 0;
-  height: 200%;
-  background: linear-gradient(
-    to bottom,
-    transparent 44%,
-    rgba(0, 220, 255, 0.025) 50%,
-    transparent 56%
-  );
-  animation: nbScan 6s linear infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-@keyframes nbScan { to { top: 100%; } }
 
 /* ── Left — Logo + Shop ───────────────────────────────────── */
 .topbar-left {
@@ -74,78 +72,53 @@ background: rgba(0, 0, 0, 0.85);
   gap: 14px;
   flex-shrink: 0;
   z-index: 1;
-  margin-left: 100px;
+  margin-left: 92px; /* clears the fixed sidebar rail + its floating toggle */
 }
 
 .brand-logo {
-  height: 36px;
+  height: 32px;
   width: auto;
   object-fit: contain;
-  border-radius: 6px;
-  filter: brightness(1.05);
+  border-radius: 7px; /* the mark ships with its own dark backdrop baked in */
 }
 
-.shop-pill {
+/* Workspace mark — plain text, no chip/pill background. A hairline
+   divider off the logo plus an outline (not filled) store glyph keep
+   it legible as "a place". The name itself stays near-black/near-white
+   (theme text, not a color swap) but carries a wordmark treatment —
+   tracked caps-height letter-spacing plus a thin gradient underline —
+   so it still reads as designed rather than default body copy. */
+.shop-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-background: rgba(255,255,255,0.05);
-border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 20px;
-  padding: 4px 12px;
+  gap: 7px;
+  padding-left: 14px;
+  margin-left: 2px;
+  border-left: 1px solid var(--nb-border);
 }
-.shop-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--nb-cyan);
-  box-shadow: 0 0 6px var(--nb-cyan);
-  animation: shopBlink 2s ease-in-out infinite;
+.shop-badge-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px;
+  color: var(--nb-accent);
+  flex-shrink: 0;
 }
-@keyframes shopBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
-.shop-name {
-  font-family: var(--font-hud);
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: rgba(0, 220, 255, 0.7);
-  text-transform: uppercase;
-}
-
-/* ── Center — Nav Links ───────────────────────────────────── */
-.topbar-nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  z-index: 1;
-}
-
-.nav-link {
-  font-family: var(--font-hud);
-  font-size: 9px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: rgba(160, 195, 255, 0.5);
-  background: transparent;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 20px;
-  cursor: pointer;
+.shop-badge-icon svg { width: 15px; height: 15px; }
+.shop-badge-name {
   position: relative;
-  transition: color 0.25s, background 0.25s;
+  font-family: var(--font-hud);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--nb-text-1);
+  white-space: nowrap;
+  padding-bottom: 3px;
+  background-image: linear-gradient(120deg, var(--nb-accent), #06b6d4);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 2px;
+  transition: background-size 0.25s ease;
 }
-.nav-link::after {
-  content: '';
-  position: absolute;
-  bottom: 2px; left: 50%; right: 50%;
-  height: 1px;
-  background: var(--nb-cyan);
-  transition: left 0.25s, right 0.25s;
-  border-radius: 1px;
-}
-.nav-link:hover {
-  color: #fff;
-  background: rgba(0, 220, 255, 0.06);
-}
-.nav-link:hover::after { left: 14px; right: 14px; }
+.shop-badge:hover .shop-badge-name { background-size: 100% 3px; }
 
 /* ── Right — Greeting + Avatar ───────────────────────────── */
 .topbar-right {
@@ -163,16 +136,16 @@ border: 1px solid rgba(255,255,255,0.12);
   line-height: 1.3;
 }
 .greeting-hi {
-  font-size: 9px;
-  color: rgba(160, 195, 255, 0.35);
-  letter-spacing: 1px;
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  color: var(--nb-text-3);
 }
 .greeting-name {
   font-family: var(--font-hud);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 1px;
-  color: rgba(0, 220, 255, 0.85);
+  letter-spacing: -0.01em;
+  color: var(--nb-text-1);
 }
 
 /* ── Profile Avatar ───────────────────────────────────────── */
@@ -182,37 +155,34 @@ border: 1px solid rgba(255,255,255,0.12);
 }
 
 .profile-avatar {
-  width: 40px; height: 40px;
-  border-radius: 12px;
+  width: 38px; height: 38px;
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
- background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(120,120,120,0.08));
-  border: 1px solid rgba(0, 220, 255, 0.25);
+  background: linear-gradient(135deg, var(--nb-accent), #06b6d4);
   position: relative;
-  overflow: hidden;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  overflow: visible;
+  transition: box-shadow 0.25s, transform 0.25s;
 }
 .profile-avatar.open,
 .profile-avatar:hover {
-  border-color: rgba(0, 220, 255, 0.55);
-  box-shadow: 0 0 16px rgba(0, 220, 255, 0.25);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--nb-accent) 18%, transparent);
+  transform: translateY(-1px);
 }
 
-/* Pulse ring */
-.avatar-ring {
-  position: absolute; inset: -3px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 220, 255, 0.2);
-  animation: avatarRing 3s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes avatarRing {
-  0%,100% { transform: scale(1);   opacity: 0.5; }
-  50%      { transform: scale(1.1); opacity: 0; }
+/* Online status notch — sits on the ring, cut in by the navbar color */
+.avatar-status {
+  position: absolute;
+  right: -1px; bottom: -1px;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #34d399;
+  border: 2.5px solid var(--nb-bg-scroll);
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.7);
 }
 
 .avatar-img {
-  width: 40px; height: 40px;
-  border-radius: 12px;
+  width: 38px; height: 38px;
+  border-radius: 50%;
   object-fit: cover;
 }
 .avatar-initials {
@@ -220,27 +190,26 @@ border: 1px solid rgba(255,255,255,0.12);
   font-size: 13px;
   font-weight: 700;
   color: #fff;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 /* ── Dropdown ─────────────────────────────────────────────── */
 .profile-dropdown {
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 14px);
   right: 0;
-  width: 210px;
- background: rgba(0,0,0,0.95); 
-  border: 1px solid rgba(0, 220, 255, 0.15);
+  width: 220px;
+  background: var(--nb-bg-scroll);
+  border: 1px solid var(--nb-border);
   border-radius: 16px;
-  overflow: hidden;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0, 220, 255, 0.06);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 24px 60px var(--nb-shadow);
 
-  /* Animated reveal */
   opacity: 0;
   transform: translateY(-8px) scale(0.97);
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.22s ease, transform 0.22s ease;
 }
 .profile-dropdown.show {
   opacity: 1;
@@ -248,25 +217,17 @@ border: 1px solid rgba(255,255,255,0.12);
   pointer-events: all;
 }
 
-/* HUD corner accents on dropdown */
-.profile-dropdown::before,
-.profile-dropdown::after {
+/* Pointer, aimed at the avatar */
+.profile-dropdown::before {
   content: '';
   position: absolute;
+  top: -6px; right: 12px;
   width: 12px; height: 12px;
-  pointer-events: none;
-}
-.profile-dropdown::before {
-  top: 8px; left: 8px;
-  border-top: 1px solid rgba(0, 220, 255, 0.4);
-  border-left: 1px solid rgba(0, 220, 255, 0.4);
-  border-radius: 2px 0 0 0;
-}
-.profile-dropdown::after {
-  bottom: 8px; right: 8px;
-  border-bottom: 1px solid rgba(0, 220, 255, 0.4);
-  border-right: 1px solid rgba(0, 220, 255, 0.4);
-  border-radius: 0 0 2px 0;
+  background: var(--nb-bg-scroll);
+  border-left: 1px solid var(--nb-border);
+  border-top: 1px solid var(--nb-border);
+  transform: rotate(45deg);
+  border-radius: 3px 0 0 0;
 }
 
 /* User info */
@@ -274,34 +235,32 @@ border: 1px solid rgba(255,255,255,0.12);
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 16px 12px;
+  padding: 15px 16px 12px;
 }
 .dd-avatar-sm {
   width: 36px; height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(0,220,255,0.2), rgba(160,60,255,0.2));
-  border: 1px solid rgba(0,220,255,0.2);
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--nb-accent), #06b6d4);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
 }
-.dd-avatar-sm img { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; }
+.dd-avatar-sm img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 .dd-avatar-sm span { font-family: var(--font-hud); font-size: 12px; font-weight: 700; color: #fff; }
 .dd-info { overflow: hidden; }
 .dd-name {
   font-family: var(--font-hud);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.5px;
+  color: var(--nb-text-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .dd-shop {
-  font-size: 10px;
-  color: rgba(0, 220, 255, 0.55);
-  letter-spacing: 0.5px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--nb-text-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -310,7 +269,7 @@ border: 1px solid rgba(255,255,255,0.12);
 
 .dd-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,220,255,0.15), transparent);
+  background: var(--nb-border);
   margin: 0 12px;
 }
 
@@ -320,40 +279,49 @@ border: 1px solid rgba(255,255,255,0.12);
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 12px 16px;
+  padding: 11px 16px;
   background: transparent;
   border: none;
-  color: rgba(160, 195, 255, 0.65);
+  color: var(--nb-text-2);
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.18s, color 0.18s;
 }
-.dd-item:last-child { margin-bottom: 4px; }
-.dd-item svg { flex-shrink: 0; opacity: 0.7; transition: opacity 0.2s; }
+.dd-item:first-of-type { margin-top: 4px; }
+.dd-item:last-child { margin-bottom: 6px; border-radius: 0 0 15px 15px; }
 .dd-item:hover {
-  background: rgba(0, 220, 255, 0.07);
-  color: #fff;
+  background: color-mix(in srgb, var(--nb-accent) 10%, transparent);
+  color: var(--nb-text-1);
 }
-.dd-item:hover svg { opacity: 1; }
+
+/* Icon chip — matches the sidebar's per-item colored-chip language */
+.dd-icon-chip {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: background 0.18s, transform 0.18s;
+}
+.dd-icon-chip--settings { color: var(--nb-accent); background: color-mix(in srgb, var(--nb-accent) 14%, var(--nb-chip-bg)); }
+.dd-icon-chip--logout   { color: #f87171; background: color-mix(in srgb, #f87171 14%, var(--nb-chip-bg)); }
+.dd-item:hover .dd-icon-chip { transform: scale(1.06); }
+.dd-item:hover .dd-icon-chip--settings { background: color-mix(in srgb, var(--nb-accent) 24%, var(--nb-chip-bg)); }
+.dd-item:hover .dd-icon-chip--logout   { background: color-mix(in srgb, #f87171 24%, var(--nb-chip-bg)); }
 
 .dd-logout:hover {
-  background: rgba(255, 80, 120, 0.08);
-  color: rgba(255, 140, 160, 0.9);
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
 }
-.dd-logout:hover svg { color: rgba(255, 80, 120, 0.8); }
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .topbar { padding: 0 18px; }
-  .topbar-nav { gap: 2px; }
-  .nav-link { font-size: 8px; padding: 6px 10px; }
 }
 
 @media (max-width: 768px) {
-  .topbar-nav { display: none; }
   .topbar-greeting { display: none; }
   .topbar { padding: 0 16px; }
   .topbar.shifted { left: 0; width: 100%; }
@@ -361,9 +329,15 @@ border: 1px solid rgba(255,255,255,0.12);
 
 @media (max-width: 480px) {
   .topbar { padding: 0 12px; height: 56px; }
-  .brand-logo { height: 30px; }
-  .shop-pill { display: none; }
-  .profile-avatar { width: 36px; height: 36px; border-radius: 10px; }
+  .topbar-left { margin-left: 60px; }
+  .brand-logo { height: 26px; }
+  .shop-badge { display: none; }
+  .profile-avatar { width: 34px; height: 34px; }
+  .avatar-img { width: 34px; height: 34px; }
   .avatar-initials { font-size: 12px; }
-  .profile-dropdown { width: 190px; right: -4px; }
+  .profile-dropdown { width: 200px; right: -4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-badge, .profile-avatar, .profile-dropdown, .dd-icon-chip { transition: none !important; animation: none !important; }
 }

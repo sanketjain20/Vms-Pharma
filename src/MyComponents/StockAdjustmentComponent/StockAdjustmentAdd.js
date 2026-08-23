@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import "../../Styles/Product/ProductForm.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
@@ -150,85 +150,91 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
   };
 
   const inventoryLabel = selectedInventory
-    ? `${selectedInventory.inventoryCode || selectedInventory.productCode || selectedInventory.id || selectedInventory.inventoryId} - ${selectedInventory.productName || selectedInventory.name || "Inventory"}`
+    ? `${selectedInventory.inventoryCode || selectedInventory.productCode || selectedInventory.id || selectedInventory.inventoryId} — ${selectedInventory.productName || selectedInventory.name || "Inventory"}`
     : "Choose inventory";
 
   return (
-    <div className="modal-backdrop show">
-      <div className="modal">
-        <div className="modal-header">
-          <div className="modal-title">
-            <h3>Add Stock Adjustment</h3>
-            <div className="small-muted">Adjust inventory stock quantity</div>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />New Adjustment</div>
+            <h3 className="afx-title">Add Stock Adjustment</h3>
           </div>
-
-          <div className="modal-controls">
-            <button className="btn-ghost" type="button" onClick={onClose} title="Close">
-              Close
-            </button>
-          </div>
+          <button className="afx-close" type="button" onClick={onClose}>
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+            ESC
+          </button>
         </div>
 
-        <form className="modal-body" onSubmit={handleSubmit}>
-          <div className="form-col scrollable">
-            <div className="form-grid">
-              <div className="custom-select full" ref={dropdownRef}>
-                <label>Inventory</label>
-                <div
-                  className={`select-box ${inventoryOpen ? "active" : ""}`}
-                  onClick={() => setInventoryOpen(true)}
-                >
-                  <input
-                    type="text"
-                    value={inventoryOpen ? inventorySearch : inventoryLabel}
-                    onChange={(event) => setInventorySearch(event.target.value)}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setInventoryOpen(true);
-                    }}
-                    readOnly={!inventoryOpen}
-                    className="select-input"
-                  />
+        <form onSubmit={handleSubmit}>
+          <div className="afx-body">
+            <div className="afx-grid">
+              <div className="afx-field afx-field--full" ref={dropdownRef}>
+                <label className="afx-label">Inventory<span className="afx-req">*</span></label>
+                <div className="afx-searchdrop">
+                  <div
+                    className={`afx-searchdrop-face ${inventoryOpen ? "is-open" : ""} ${selectedInventory ? "is-filled" : ""}`}
+                    onClick={() => setInventoryOpen(true)}
+                  >
+                    <span>{inventoryLabel}</span>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
 
                   {inventoryOpen && (
-                    <ul className="options">
-                      {filteredInventories.map((item) => {
-                        const id = item.id ?? item.inventoryId;
-                        return (
-                          <li
-                            key={id}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setFormData((current) => ({ ...current, inventoryId: id }));
-                              setErrors((current) => ({ ...current, inventoryId: "" }));
-                              setInventoryOpen(false);
-                              setInventorySearch("");
-                            }}
-                          >
-                            {item.inventoryCode || item.productCode || id} - {item.productName || item.name || "Inventory"}
-                          </li>
-                        );
-                      })}
-                      {filteredInventories.length === 0 && <li style={{ color: "#888" }}>No inventory found</li>}
-                    </ul>
+                    <div className="afx-searchdrop-panel">
+                      <input
+                        className="afx-searchdrop-input"
+                        autoFocus
+                        value={inventorySearch}
+                        placeholder="Search inventory…"
+                        onChange={(event) => setInventorySearch(event.target.value)}
+                      />
+                      <div className="afx-searchdrop-list">
+                        {filteredInventories.length === 0 ? (
+                          <div className="afx-searchdrop-empty">No inventory found</div>
+                        ) : filteredInventories.map((item) => {
+                          const id = item.id ?? item.inventoryId;
+                          return (
+                            <div
+                              key={id}
+                              className={`afx-searchdrop-item ${String(id) === String(formData.inventoryId) ? "is-selected" : ""}`}
+                              onMouseDown={(event) => {
+                                event.preventDefault();
+                                setFormData((current) => ({ ...current, inventoryId: id }));
+                                setErrors((current) => ({ ...current, inventoryId: "" }));
+                                setInventoryOpen(false);
+                                setInventorySearch("");
+                              }}
+                            >
+                              {item.inventoryCode || item.productCode || id} — {item.productName || item.name || "Inventory"}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
-                {errors.inventoryId && <div className="error-msg">{errors.inventoryId}</div>}
+                {errors.inventoryId && <div className="afx-error">{errors.inventoryId}</div>}
               </div>
 
-              <div>
-                <label>Adjustment Type</label>
-                <select name="adjustmentType" value={formData.adjustmentType} onChange={handleChange}>
-                  {ADJUSTMENT_TYPES.map((type) => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
-                {errors.adjustmentType && <div className="error-msg">{errors.adjustmentType}</div>}
+              <div className="afx-field">
+                <label className="afx-label">Adjustment Type</label>
+                <div className="afx-select-wrap">
+                  <select className="afx-select" name="adjustmentType" value={formData.adjustmentType} onChange={handleChange}>
+                    {ADJUSTMENT_TYPES.map((type) => (
+                      <option key={type.value} value={type.value}>{type.label}</option>
+                    ))}
+                  </select>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                {errors.adjustmentType && <div className="afx-error">{errors.adjustmentType}</div>}
               </div>
 
-              <div>
-                <label>Quantity</label>
+              <div className="afx-field">
+                <label className="afx-label">Quantity<span className="afx-req">*</span></label>
                 <input
+                  className={`afx-input ${errors.quantity ? "afx-input--err" : ""}`}
                   type="number"
                   name="quantity"
                   min="1"
@@ -237,12 +243,13 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
                   onChange={handleChange}
                   placeholder="Enter quantity"
                 />
-                {errors.quantity && <div className="error-msg">{errors.quantity}</div>}
+                {errors.quantity && <div className="afx-error">{errors.quantity}</div>}
               </div>
 
-              <div className="full">
-                <label>Note</label>
+              <div className="afx-field afx-field--full">
+                <label className="afx-label">Note</label>
                 <textarea
+                  className="afx-textarea"
                   name="note"
                   rows="4"
                   value={formData.note}
@@ -253,15 +260,11 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
             </div>
           </div>
 
-          <div className="modal-footer-fixed">
-            <div className="modal-actions">
-              <button className="btn-ghost" type="button" onClick={onClose}>
-                Cancel
-              </button>
-              <button type="submit" className="submit-button" disabled={saving}>
-                {saving ? "Saving..." : "Save Adjustment"}
-              </button>
-            </div>
+          <div className="afx-footer">
+            <button className="afx-btn" type="button" onClick={onClose}>Cancel</button>
+            <button type="submit" className="afx-btn afx-btn--primary" disabled={saving}>
+              {saving ? <><span className="afx-spinner" /> Saving…</> : "Save Adjustment"}
+            </button>
           </div>
         </form>
       </div>

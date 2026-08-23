@@ -7,21 +7,26 @@
 
 /* Main content including navbar, content, footer */
 .layout-main {
-  margin-left: 60px; /* initial sidebar collapsed width */
+  /* var(--sb-w-col) tracks the sidebar's own responsive rail width
+     (64px desktop / 60px @1024 / 56px @768 / 0px @480, Sidebar.css) so
+     this never drifts out of sync with the rail across breakpoints. */
+  margin-left: var(--sb-w-col, 64px);
   transition: margin-left 0.3s;
-  width: calc(100% - 60px);
+  width: calc(100% - var(--sb-w-col, 64px));
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
 .layout-main.shifted {
-  margin-left: 200px; /* expanded sidebar width */
-  width: calc(100% - 200px);
+  margin-left: var(--sb-w-open, 240px);
+  width: calc(100% - var(--sb-w-open, 240px));
 }
 
 .layout-content {
   padding: 20px;
   background: var(--bg-base, #000000);
   flex: 1; /* take remaining height */
+  min-width: 0;
   overflow-y: auto;
 }

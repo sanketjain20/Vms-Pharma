@@ -1,20 +1,21 @@
 import React, { useState } from "react";
-import "../../Styles/Retailer/Retailer.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
 const FIELDS = [
-  { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Sharma Medical Store",   half: false },
-  { key: "ownerName",          label: "Owner Name",           type: "text",     required: false, placeholder: "e.g. Vijay Sharma",           half: false },
-  { key: "phone",              label: "Phone",                type: "text",     required: true, placeholder: "e.g. 9876543210",             half: false },
-  { key: "email",              label: "Email",                type: "email",    required: false, placeholder: "e.g. vijay@sharma.com",       half: false },
-  { key: "gstNumber",          label: "GST Number",           type: "text",     required: false, placeholder: "e.g. 27AABCC1234A1Z5",        half: false },
-  { key: "drugLicenseNumber",  label: "Drug License Number",  type: "text",     required: false, placeholder: "e.g. MH-MUM-DL-002",         half: false },
-  { key: "creditLimit",        label: "Credit Limit (₹)",     type: "number",   required: false, placeholder: "0 = unlimited",              half: false },
-  { key: "address",            label: "Address",              type: "textarea", required: false, placeholder: "Full shop address...",        half: true  },
+  { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Sharma Medical Store" },
+  { key: "ownerName",          label: "Owner Name",           type: "text",     required: false, placeholder: "e.g. Vijay Sharma" },
+  { key: "phone",              label: "Phone",                type: "text",     required: true, placeholder: "e.g. 9876543210" },
+  { key: "email",              label: "Email",                type: "email",    required: false, placeholder: "e.g. vijay@sharma.com" },
+  { key: "gstNumber",          label: "GST Number",           type: "text",     required: false, placeholder: "e.g. 27AABCC1234A1Z5" },
+  { key: "drugLicenseNumber",  label: "Drug License Number",  type: "text",     required: false, placeholder: "e.g. MH-MUM-DL-002" },
+  { key: "creditLimit",        label: "Credit Limit (₹)",     type: "number",   required: false, placeholder: "0 = unlimited" },
+  { key: "address",            label: "Address",              type: "textarea", required: false, placeholder: "Full shop address..." },
 ];
 
-const EMPTY = FIELDS.reduce((a, f) => ({ ...a, [f.key]: f.key === "creditLimit" ? "" : "" }), {});
+const EMPTY = FIELDS.reduce((a, f) => ({ ...a, [f.key]: "" }), {});
 
 export default function RetailerAdd({ onClose, onSubmit }) {
   const [form, setForm]       = useState(EMPTY);
@@ -79,34 +80,23 @@ export default function RetailerAdd({ onClose, onSubmit }) {
   };
 
   return (
-    <div className="rtx-backdrop">
-      <div className="rtx-modal">
-        <div className="rtx-top-beam" />
-        <div className="rtx-corner rtx-tl" /><div className="rtx-corner rtx-tr" />
-        <div className="rtx-corner rtx-bl" /><div className="rtx-corner rtx-br" />
-
-        
-        <div className="rtx-header">
-          <div className="rtx-header-left">
-            <div className="rtx-eyebrow"><span className="rtx-eyebrow-dot" />NEW RETAILER</div>
-            <h3 className="rtx-title"><span className="rtx-title-acc"></span> Add Retailer</h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />New Retailer</div>
+            <h3 className="afx-title">Add Retailer</h3>
           </div>
-          <button className="rtx-close" type="button" onClick={onClose}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+          <button className="afx-close" type="button" onClick={onClose}>
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
             ESC
           </button>
         </div>
 
-        <div className="rtx-divider" />
+        <div className="afx-body">
+          {errors.general && <div className="afx-alert">{errors.general}</div>}
 
-        
-        <div className="rtx-body">
-          {errors.general && <div className="rtx-alert">{errors.general}</div>}
-
-          
-          <div className="rtx-info-banner">
+          <div className="afx-info">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
               <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" strokeWidth="1.2"/>
               <path d="M6.5 6v3M6.5 4h.01" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -114,16 +104,16 @@ export default function RetailerAdd({ onClose, onSubmit }) {
             Set Credit Limit to <strong>0</strong> for unlimited credit. Leave blank to set ₹0 limit.
           </div>
 
-          <div className="rtx-grid">
+          <div className="afx-grid">
             {FIELDS.map(f => (
-              <div key={f.key} className={`rtx-field ${f.type === "textarea" ? "rtx-field-full" : ""}`}>
-                <label className="rtx-label">
+              <div key={f.key} className={`afx-field ${f.type === "textarea" ? "afx-field--full" : ""}`}>
+                <label className="afx-label">
                   {f.label}
-                  {f.required && <span className="rtx-req"> *</span>}
+                  {f.required && <span className="afx-req">*</span>}
                 </label>
                 {f.type === "textarea" ? (
                   <textarea
-                    className={`rtx-input rtx-textarea ${errors[f.key] ? "rtx-input-err" : ""}`}
+                    className={`afx-textarea ${errors[f.key] ? "afx-textarea--err" : ""}`}
                     value={form[f.key]}
                     onChange={e => set(f.key, e.target.value)}
                     placeholder={f.placeholder}
@@ -131,7 +121,7 @@ export default function RetailerAdd({ onClose, onSubmit }) {
                   />
                 ) : (
                   <input
-                    className={`rtx-input ${errors[f.key] ? "rtx-input-err" : ""}`}
+                    className={`afx-input ${errors[f.key] ? "afx-input--err" : ""}`}
                     type={f.type}
                     value={form[f.key]}
                     onChange={e => set(f.key, e.target.value)}
@@ -139,20 +129,16 @@ export default function RetailerAdd({ onClose, onSubmit }) {
                     min={f.key === "creditLimit" ? "0" : undefined}
                   />
                 )}
-                {errors[f.key] && <span className="rtx-error">{errors[f.key]}</span>}
+                {errors[f.key] && <span className="afx-error">{errors[f.key]}</span>}
               </div>
             ))}
           </div>
         </div>
 
-        
-        <div className="rtx-footer">
-          <button type="button" className="rtx-btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="button" className="rtx-btn-primary" onClick={submit} disabled={loading}>
-            {loading
-              ? <><span className="rtx-spinner" /> Saving…</>
-              : <><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> Save Retailer</>
-            }
+        <div className="afx-footer">
+          <button type="button" className="afx-btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="afx-btn afx-btn--primary" onClick={submit} disabled={loading}>
+            {loading ? <><span className="afx-spinner" /> Saving…</> : "Save Retailer"}
           </button>
         </div>
       </div>

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/Product/ProductForm.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+
 export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
   const [formData, setFormData] = useState({ id: "", name: "", description: "", typeCode: "" });
   const [originalData, setOriginalData] = useState(null);
@@ -66,69 +67,65 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
   };
 
   return (
-    <div className="modal-backdrop show">
-      <div className="modal">
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--sm">
         {loading ? (
-          <div className="modal-body mf-modal-loading">
-            <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+          <div className="afx-loading">
+            <div className="afx-loader-ring"><div/><div/><div/></div>
           </div>
         ) : (
-        <>
-
-        
-        <div className="modal-header">
-          <div className="modal-title">
-            <h3>Edit Product Type {formData.typeCode && `· ${formData.typeCode}`}</h3>
-            <div className="small-muted">Modify product type details</div>
-          </div>
-          <button className="btn-ghost" onClick={onClose} title="Close">✕ ESC</button>
-        </div>
-
-        
-        <form className="modal-body" onSubmit={handleSubmit}>
-          <div className="form-col">
-            <div className="form-grid">
-
+          <>
+            <div className="afx-header">
               <div>
-                <label>Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Product type name"
-                />
-                {errors.name && <div className="error-msg">{errors.name}</div>}
+                <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Edit Product Type</div>
+                <h3 className="afx-title">Edit Product Type{formData.typeCode && ` · ${formData.typeCode}`}</h3>
+              </div>
+              <button className="afx-close" onClick={onClose} title="Close">
+                <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                ESC
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="afx-body">
+                <div className="afx-grid">
+                  <div className="afx-field afx-field--full">
+                    <label className="afx-label">Name<span className="afx-req">*</span></label>
+                    <input
+                      className={`afx-input ${errors.name ? "afx-input--err" : ""}`}
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Product type name"
+                    />
+                    {errors.name && <div className="afx-error">{errors.name}</div>}
+                  </div>
+
+                  <div className="afx-field afx-field--full">
+                    <label className="afx-label">Description<span className="afx-req">*</span></label>
+                    <textarea
+                      className={`afx-textarea ${errors.description ? "afx-textarea--err" : ""}`}
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      rows={4}
+                      placeholder="Enter description"
+                    />
+                    {errors.description && <div className="afx-error">{errors.description}</div>}
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label>Description</label>
-                <textarea
-                  name="description"
-                  rows={4}
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Enter description"
-                />
-                {errors.description && <div className="error-msg">{errors.description}</div>}
+              <div className="afx-footer">
+                <button className="afx-btn" type="button" onClick={onClose}>Cancel</button>
+                {isChanged() && (
+                  <button type="submit" className="afx-btn afx-btn--primary">Update Product Type</button>
+                )}
               </div>
-
-            </div>
-          </div>
-
-          
-          <div className="modal-footer-fixed">
-            <div className="modal-actions">
-              <button className="btn-ghost" type="button" onClick={onClose}>Cancel</button>
-              {isChanged() && (
-                <button type="submit" className="submit-button">Update Product Type</button>
-              )}
-            </div>
-          </div>
-        </form>
-        </>
+            </form>
+          </>
         )}
-
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/RetailerOutstanding/RetailerLedgerView.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
@@ -7,25 +7,30 @@ import apiClient from "../../Config/apiClient";
 const fmt = n =>
   parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
-/* ── Info card — identical shape to RetailerView Card ── */
-const Card = ({ label, value, mono, accent, danger, full, amber }) => (
-  <div className={`rlv-card ${full ? "rlv-card-full" : ""}`}>
-    <span className="rlv-label">{label}</span>
-    <span
-      className={[
-        "rlv-value",
-        mono   ? "rlv-mono"   : "",
-        accent ? "rlv-accent" : "",
-        danger ? "rlv-danger" : "",
-        amber  ? "rlv-amber"  : "",
-      ].filter(Boolean).join(" ")}
-    >
-      {value ?? <span className="rlv-empty">—</span>}
-    </span>
-  </div>
-);
+const STATUS_TONE = {
+  OVERDUE:  { bg: "var(--afx-danger-soft)",  fg: "var(--afx-danger)",  label: "Overdue"  },
+  DUE_SOON: { bg: "var(--afx-warning-soft)", fg: "var(--afx-warning)", label: "Due Soon" },
+  PENDING:  { bg: "var(--afx-accent-soft)",  fg: "var(--afx-accent)",  label: "Pending"  },
+  PAID:     { bg: "var(--afx-success-soft)", fg: "var(--afx-success)", label: "Paid"     },
+};
 
-/* ── Outstanding progress bar (mirrors CreditBar) ── */
+/* ── Info card — reuses the shared afx-meta-card primitive ── */
+const Card = ({ label, value, mono, accent, danger, amber }) => {
+  const color = danger ? "var(--afx-danger)" : accent ? "var(--afx-accent)" : amber ? "var(--afx-warning)" : undefined;
+  return (
+    <div className="afx-meta-card">
+      <span className="afx-meta-card-label">{label}</span>
+      <span
+        className="afx-meta-card-val"
+        style={{ color, fontFamily: mono ? "var(--afx-font-mono)" : undefined }}
+      >
+        {value ?? <span className="afx-view-value--empty">—</span>}
+      </span>
+    </div>
+  );
+};
+
+/* ── Outstanding progress bar (credit vs partial breakdown) ── */
 const OutstandingBar = ({ totalOutstanding, totalCredit, totalPartial }) => {
   const total   = parseFloat(totalOutstanding || 0);
   const credit  = parseFloat(totalCredit  || 0);
@@ -34,34 +39,25 @@ const OutstandingBar = ({ totalOutstanding, totalCredit, totalPartial }) => {
   const partialPct = total > 0 ? Math.min((partial / total) * 100, 100) : 0;
 
   return (
-    <div className="rlv-bar-wrap">
-      <div className="rlv-bar-labels">
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, color: "var(--afx-text-2)" }}>
         <span>Outstanding Breakdown</span>
-        <span className="rlv-bar-total">₹{fmt(total)} total due</span>
+        <span style={{ fontFamily: "var(--afx-font-mono)", color: "var(--afx-text-1)" }}>₹{fmt(total)} total due</span>
       </div>
 
-      
-      <div className="rlv-bar-track">
-        <div
-          className="rlv-bar-seg rlv-bar-credit"
-          style={{ width: `${creditPct}%` }}
-          title={`Credit: ₹${fmt(credit)}`}
-        />
-        <div
-          className="rlv-bar-seg rlv-bar-partial"
-          style={{ width: `${partialPct}%`, left: `${creditPct}%` }}
-          title={`Partial: ₹${fmt(partial)}`}
-        />
+      <div style={{ position: "relative", height: 8, borderRadius: 999, background: "var(--afx-sunken)", border: "1px solid var(--afx-border)", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, left: 0, width: `${creditPct}%`, background: "var(--afx-danger)" }} title={`Credit: ₹${fmt(credit)}`} />
+        <div style={{ position: "absolute", inset: 0, left: `${creditPct}%`, width: `${partialPct}%`, background: "var(--afx-warning)" }} title={`Partial: ₹${fmt(partial)}`} />
       </div>
 
-      <div className="rlv-bar-legend">
-        <span>
-          <span className="rlv-legend-dot rlv-dot-red" />
-          Credit: <strong style={{ color: "#fca5a5" }}>₹{fmt(credit)}</strong>
+      <div style={{ display: "flex", gap: 16, fontSize: 11.5, color: "var(--afx-text-2)" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--afx-danger)", display: "inline-block" }} />
+          Credit: <strong style={{ color: "var(--afx-danger)" }}>₹{fmt(credit)}</strong>
         </span>
-        <span>
-          <span className="rlv-legend-dot rlv-dot-amber" />
-          Partial: <strong style={{ color: "#fbbf24" }}>₹{fmt(partial)}</strong>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--afx-warning)", display: "inline-block" }} />
+          Partial: <strong style={{ color: "var(--afx-warning)" }}>₹{fmt(partial)}</strong>
         </span>
       </div>
     </div>
@@ -70,14 +66,12 @@ const OutstandingBar = ({ totalOutstanding, totalCredit, totalPartial }) => {
 
 /* ── Status badge for invoice rows ── */
 const StatusBadge = ({ label }) => {
-  const map = {
-    OVERDUE:  ["rlv-badge-red",   "Overdue" ],
-    DUE_SOON: ["rlv-badge-amber", "Due Soon"],
-    PENDING:  ["rlv-badge-blue",  "Pending" ],
-    PAID:     ["rlv-badge-green", "Paid"    ],
-  };
-  const [cls, text] = map[label] || map.PENDING;
-  return <span className={`rlv-badge ${cls}`}>{text}</span>;
+  const tone = STATUS_TONE[label] || STATUS_TONE.PENDING;
+  return (
+    <span className="afx-badge" style={{ background: tone.bg, color: tone.fg }}>
+      {tone.label}
+    </span>
+  );
 };
 
 /* ── Pay Supplier inline form ── */
@@ -133,75 +127,81 @@ function PayForm({ invoice, onSuccess, onCancel }) {
   };
 
   return (
-    <div className="rlv-cpf">
-      <div className="rlv-cpf-top">
-        <span className="rlv-cpf-heading">Pay Supplier</span>
-        <span className="rlv-cpf-inv-label">{invoice.invoiceNumber}</span>
+    <div className="afx-card" style={{ marginTop: 8, marginBottom: 4 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span className="afx-section-title" style={{ paddingTop: 0 }}>Pay Supplier</span>
+        <span style={{ fontFamily: "var(--afx-font-mono)", fontSize: 11.5, color: "var(--afx-text-3)" }}>{invoice.invoiceNumber}</span>
       </div>
 
-      
-      <div className="rlv-cpf-remaining">
+      <div className="afx-card-row">
         <span>Remaining</span>
-        <span className="rlv-cpf-rem-amt">₹{fmt(max)}</span>
+        <strong style={{ fontFamily: "var(--afx-font-mono)" }}>₹{fmt(max)}</strong>
       </div>
 
-      
-      <span className="rlv-field-label">Amount (₹)</span>
-      <div className="rlv-cpf-amt-row">
-        <input
-          type="number"
-          className="rlv-cpf-input"
-          placeholder="0.00"
-          value={amount}
-          min={0.01}
-          max={max}
-          step={0.01}
-          onChange={e => setAmount(e.target.value)}
-        />
-        <button
-          className="rlv-cpf-full-btn"
-          onClick={() => setAmount(max.toFixed(2))}
-          title="Set full remaining amount"
-        >
-          Full ₹{fmt(max)}
-        </button>
-      </div>
-
-      
-      <span className="rlv-field-label" style={{ marginTop: 10 }}>Mode</span>
-      <div className="rlv-cpf-modes">
-        {MODES.map(m => (
+      <div className="afx-field">
+        <label className="afx-label">Amount (₹)</label>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            type="number"
+            className="afx-input"
+            placeholder="0.00"
+            value={amount}
+            min={0.01}
+            max={max}
+            step={0.01}
+            onChange={e => setAmount(e.target.value)}
+          />
           <button
-            key={m.val}
-            className={`rlv-cpf-mode ${mode === m.val ? "active" : ""}`}
-            onClick={() => setMode(m.val)}
+            type="button"
+            className="afx-btn"
+            style={{ whiteSpace: "nowrap" }}
+            onClick={() => setAmount(max.toFixed(2))}
+            title="Set full remaining amount"
           >
-            {m.icon} {m.val}
+            Full ₹{fmt(max)}
           </button>
-        ))}
+        </div>
       </div>
 
-      
-      <span className="rlv-field-label" style={{ marginTop: 10 }}>Note (optional)</span>
-      <input
-        type="text"
-        className="rlv-cpf-input"
-        placeholder="e.g. Received at counter"
-        value={note}
-        onChange={e => setNote(e.target.value)}
-      />
+      <div className="afx-field">
+        <label className="afx-label">Mode</label>
+        <div className="afx-seg-row">
+          {MODES.map(m => (
+            <button
+              key={m.val}
+              type="button"
+              className={`afx-seg-btn ${mode === m.val ? "is-active" : ""}`}
+              onClick={() => setMode(m.val)}
+            >
+              {m.icon} {m.val}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {err && <div className="rlv-cpf-err">{err}</div>}
+      <div className="afx-field">
+        <label className="afx-label">Note (optional)</label>
+        <input
+          type="text"
+          className="afx-input"
+          placeholder="e.g. Received at counter"
+          value={note}
+          onChange={e => setNote(e.target.value)}
+        />
+      </div>
 
-      <div className="rlv-cpf-footer">
-        <button className="rlv-btn-ghost" onClick={onCancel}>Cancel</button>
+      {err && <div className="afx-error">{err}</div>}
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+        <button type="button" className="afx-btn" onClick={onCancel}>Cancel</button>
         <button
-          className="rlv-btn-collect"
+          type="button"
+          className="afx-btn afx-btn--primary"
           onClick={submit}
           disabled={submitting}
         >
           {submitting
-            ? <><span className="rlv-spinner" /> Processing…</>
+            ? <><span className="afx-spinner" /> Processing…</>
             : `Pay ₹${(parseFloat(amount) || 0).toFixed(2)}`}
         </button>
       </div>
@@ -218,7 +218,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
   const [loading,      setLoading]      = useState(true);
   const [activeTab,    setActiveTab]    = useState("invoices");
   const [filterStatus, setFilterStatus] = useState("ALL");
-  const [payingId, setPayingId] = useState(null);
+  const [payingId,     setPayingId]     = useState(null);
 
   /* ── Fetch ── */
   const fetchLedger = async () => {
@@ -255,93 +255,63 @@ export default function SupplierLedgerView({ uKey, onClose }) {
     return inv.statusLabel === filterStatus;
   });
 
-  /* ── Outstanding status label (mirrors CreditBar logic) ── */
+  /* ── Outstanding status label ── */
   const outstanding = parseFloat(ledger?.totalOutstanding || 0);
   const osStatus = overdueCount > 0
-    ? { label: "Has Overdue",  cls: "rlv-badge-red"   }
+    ? { label: "Has Overdue", tone: STATUS_TONE.OVERDUE }
     : outstanding > 0
-    ? { label: "Outstanding",  cls: "rlv-badge-amber" }
-    : { label: "All Settled",  cls: "rlv-badge-green" };
+    ? { label: "Outstanding", tone: STATUS_TONE.DUE_SOON }
+    : { label: "All Settled", tone: STATUS_TONE.PAID };
 
   if (!uKey) return null;
 
   return (
-    <div className="rlv-backdrop">
-      <div className="rlv-modal">
-        <div className="rlv-top-beam" />
-        <div className="rlv-corner rlv-tl" /><div className="rlv-corner rlv-tr" />
-        <div className="rlv-corner rlv-bl" /><div className="rlv-corner rlv-br" />
-
-        
-        <div className="rlv-header">
-          <div className="rlv-header-left">
-            <div className="rlv-eyebrow">
-              <span className="rlv-eyebrow-dot" />
-              SUPPLIER LEDGER
-            </div>
-            <h3 className="rlv-title">
-              <span className="rlv-title-acc"></span>
-              {ledger ? ledger.shopName : "Loading…"}
-            </h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--xl">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Supplier Ledger</div>
+            <h3 className="afx-title">{ledger ? ledger.shopName : "Loading…"}</h3>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {ledger && (
-              <div className="rlv-outstanding-pill">
-                <span className="rlv-op-label">Outstanding</span>
-                <span className="rlv-op-amount">₹{fmt(ledger.totalOutstanding)}</span>
-              </div>
+              <span className="afx-badge" style={{ background: "var(--afx-accent-soft)", color: "var(--afx-accent)" }}>
+                Outstanding&nbsp;₹{fmt(ledger.totalOutstanding)}
+              </span>
             )}
-            <button className="rlv-close" onClick={onClose}>
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
+            <button className="afx-close" onClick={onClose} title="Close">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
               ESC
             </button>
           </div>
         </div>
 
-        <div className="rlv-divider" />
-
-        
-        <div className="rlv-body">
-
-          
+        <div className="afx-body">
           {loading && (
-            <div className="rlv-loading">
-              <div className="rlv-loader"><div/><div/><div/><div/></div>
-              Loading ledger data…
+            <div className="afx-loading">
+              <div className="afx-loader-ring"><div/><div/><div/></div>
             </div>
           )}
 
-          
-          {error && <div className="rlv-alert">{error}</div>}
+          {error && <div className="afx-alert">{error}</div>}
 
-          
           {!loading && !error && ledger && (
             <>
-              
-              <div className="rlv-status-row">
-                <span className="rlv-code-badge">
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.2"/>
-                    <path d="M3 5h4M3 3.5h2M3 6.5h3" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-                  </svg>
-                  {ledger.supplierCode}
-                </span>
-                <span className={`rlv-badge ${osStatus.cls}`}>{osStatus.label}</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                <span className="afx-badge">{ledger.supplierCode}</span>
+                <span className="afx-badge" style={{ background: osStatus.tone.bg, color: osStatus.tone.fg }}>{osStatus.label}</span>
                 {overdueCount > 0 && (
-                  <span className="rlv-badge rlv-badge-red">
+                  <span className="afx-badge" style={{ background: "var(--afx-danger-soft)", color: "var(--afx-danger)" }}>
                     {overdueCount} Overdue Invoice{overdueCount > 1 ? "s" : ""}
                   </span>
                 )}
                 {dueSoonCount > 0 && (
-                  <span className="rlv-badge rlv-badge-amber">
+                  <span className="afx-badge" style={{ background: "var(--afx-warning-soft)", color: "var(--afx-warning)" }}>
                     {dueSoonCount} Due Soon
                   </span>
                 )}
               </div>
 
-              
               <OutstandingBar
                 totalOutstanding={ledger.totalOutstanding}
                 totalCredit={ledger.invoices?.filter(i => i.paymentType === "CREDIT")
@@ -350,8 +320,7 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                   .reduce((s, i) => s + parseFloat(i.remainingAmount || 0), 0)}
               />
 
-              
-              <div className="rlv-view-grid">
+              <div className="afx-meta-cards">
                 <Card label="Shop Name"     value={ledger.shopName} />
                 <Card label="Owner Name"    value={ledger.ownerName} />
                 <Card label="Phone"         value={ledger.phone} mono />
@@ -379,136 +348,102 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                 />
               </div>
 
-              
-              <div className="rlv-tabs">
+              <div className="afx-tabs">
                 {[
-                  { key: "invoices", label: "Invoices",
-                    count: ledger.invoices?.length || 0 },
-                  { key: "history",  label: "Payment History",
-                    count: ledger.paymentHistory?.length || 0 },
+                  { key: "invoices", label: "Invoices",       count: ledger.invoices?.length || 0 },
+                  { key: "history",  label: "Payment History", count: ledger.paymentHistory?.length || 0 },
                 ].map(t => (
                   <button
                     key={t.key}
-                    className={`rlv-tab ${activeTab === t.key ? "active" : ""}`}
+                    type="button"
+                    className={`afx-tab ${activeTab === t.key ? "is-active" : ""}`}
                     onClick={() => setActiveTab(t.key)}
                   >
-                    {t.label}
-                    <span className="rlv-tab-count">{t.count}</span>
+                    {t.label} ({t.count})
                   </button>
                 ))}
               </div>
 
-              
               {activeTab === "invoices" && (
-                <div className="rlv-tab-body">
-
-                  
-                  <div className="rlv-pills">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div className="afx-seg-row">
                     {[
-                      { k: "ALL",      label: "All",       count: ledger.invoices?.length || 0 },
-                      { k: "UNPAID",   label: "Unpaid",
-                        count: ledger.invoices?.filter(i => i.statusLabel !== "PAID").length || 0 },
-                      { k: "OVERDUE",  label: "Overdue",   count: overdueCount  },
-                      { k: "DUE_SOON", label: "Due Soon",  count: dueSoonCount  },
-                      { k: "PENDING",  label: "Pending",   count: pendingCount  },
-                      { k: "PAID",     label: "Paid",      count: paidCount     },
+                      { k: "ALL",      label: "All",      count: ledger.invoices?.length || 0 },
+                      { k: "UNPAID",   label: "Unpaid",   count: ledger.invoices?.filter(i => i.statusLabel !== "PAID").length || 0 },
+                      { k: "OVERDUE",  label: "Overdue",  count: overdueCount  },
+                      { k: "DUE_SOON", label: "Due Soon", count: dueSoonCount  },
+                      { k: "PENDING",  label: "Pending",  count: pendingCount  },
+                      { k: "PAID",     label: "Paid",     count: paidCount     },
                     ].map(p => (
                       <button
                         key={p.k}
-                        className={`rlv-pill ${filterStatus === p.k ? "active" : ""}`}
+                        type="button"
+                        className={`afx-seg-btn ${filterStatus === p.k ? "is-active" : ""}`}
                         onClick={() => setFilterStatus(p.k)}
                       >
-                        {p.label}
-                        <span className="rlv-pill-count">{p.count}</span>
+                        {p.label} ({p.count})
                       </button>
                     ))}
                   </div>
 
                   {filteredInvoices.length === 0 ? (
-                    <div className="rlv-empty">
-                      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                        <circle cx="14" cy="14" r="12" stroke="rgba(59,130,246,0.2)" strokeWidth="1.5"/>
-                        <path d="M10 14h8" stroke="rgba(59,130,246,0.3)" strokeWidth="1.5" strokeLinecap="round"/>
-                      </svg>
+                    <div className="afx-items-empty">
                       <p>No invoices match this filter</p>
                     </div>
                   ) : (
-                    <div className="rlv-invoice-list">
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {filteredInvoices.map((inv, idx) => (
                         <div key={idx}>
-                          <div
-                            className={[
-                              "rlv-inv-row",
-                              inv.statusLabel === "OVERDUE"  ? "rlv-inv-overdue"   : "",
-                              inv.statusLabel === "DUE_SOON" ? "rlv-inv-due-soon"  : "",
-                              inv.statusLabel === "PAID"     ? "rlv-inv-paid"      : "",
-                              payingId === (inv.purchaseId ?? inv.salesId)   ? "rlv-inv-collecting": "",
-                            ].filter(Boolean).join(" ")}
-                            style={{ animationDelay: `${idx * 0.03}s` }}
-                          >
-                            
-                            <div className="rlv-inv-left">
-                              <div className="rlv-inv-number">{inv.invoiceNumber}</div>
-                              <div className="rlv-inv-sub">
+                          <div className="afx-option-row" style={{ justifyContent: "space-between" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}>
+                              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--afx-text-1)" }}>{inv.invoiceNumber}</div>
+                              <div style={{ display: "flex", gap: 6, fontSize: 11.5, color: "var(--afx-text-3)", flexWrap: "wrap" }}>
                                 <span>{inv.invoiceDate || "—"}</span>
                                 {inv.dueDate && (
                                   <>
-                                    <span className="rlv-sep">·</span>
-                                    <span className={inv.isOverdue ? "rlv-danger" : ""}>
-                                      Due {inv.dueDate}
-                                    </span>
+                                    <span>·</span>
+                                    <span style={{ color: inv.isOverdue ? "var(--afx-danger)" : undefined }}>Due {inv.dueDate}</span>
                                   </>
                                 )}
-                                <span className="rlv-sep">·</span>
-                                <span className="rlv-inv-type-tag">{inv.paymentType}</span>
+                                <span>·</span>
+                                <span>{inv.paymentType}</span>
                               </div>
                             </div>
 
-                            
-                            <div className="rlv-inv-amounts">
-                              <div className="rlv-inv-amt-block">
-                                <span className="rlv-amt-label">Invoice</span>
-                                <span className="rlv-amt-val">
-                                  ₹{fmt(inv.netAmount)}
-                                </span>
+                            <div style={{ display: "flex", gap: 18 }}>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
+                                <span style={{ fontSize: 10, color: "var(--afx-text-3)" }}>Invoice</span>
+                                <span style={{ fontFamily: "var(--afx-font-mono)", fontSize: 12.5 }}>₹{fmt(inv.netAmount)}</span>
                               </div>
-                              <div className="rlv-inv-amt-block">
-                                <span className="rlv-amt-label">Paid</span>
-                                <span className="rlv-amt-val rlv-accent">
-                                  ₹{fmt(inv.amountPaid)}
-                                </span>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
+                                <span style={{ fontSize: 10, color: "var(--afx-text-3)" }}>Paid</span>
+                                <span style={{ fontFamily: "var(--afx-font-mono)", fontSize: 12.5, color: "var(--afx-accent)" }}>₹{fmt(inv.amountPaid)}</span>
                               </div>
-                              <div className="rlv-inv-amt-block">
-                                <span className="rlv-amt-label">Due</span>
-                                <span className={`rlv-amt-val ${
-                                  inv.statusLabel === "OVERDUE" ? "rlv-danger"
-                                  : inv.statusLabel === "PAID"  ? "rlv-accent"
-                                  : "rlv-amber"
-                                }`}>
-                                  ₹{fmt(inv.remainingAmount)}
-                                </span>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
+                                <span style={{ fontSize: 10, color: "var(--afx-text-3)" }}>Due</span>
+                                <span style={{
+                                  fontFamily: "var(--afx-font-mono)", fontSize: 12.5,
+                                  color: inv.statusLabel === "OVERDUE" ? "var(--afx-danger)"
+                                    : inv.statusLabel === "PAID" ? "var(--afx-accent)" : "var(--afx-warning)",
+                                }}>₹{fmt(inv.remainingAmount)}</span>
                               </div>
                             </div>
 
-                            
-                            <div className="rlv-inv-right">
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <StatusBadge label={inv.statusLabel} />
                               {inv.statusLabel !== "PAID" && payingId !== (inv.purchaseId ?? inv.salesId) && (
                                 <button
-                                  className="rlv-collect-btn"
+                                  type="button"
+                                  className="afx-btn afx-btn--primary"
+                                  style={{ padding: "6px 12px" }}
                                   onClick={() => setPayingId(inv.purchaseId ?? inv.salesId)}
                                 >
-                                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                                    <circle cx="5.5" cy="5.5" r="4.5" stroke="currentColor" strokeWidth="1.2"/>
-                                    <path d="M5.5 3.5v4M3.5 5.5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                                  </svg>
                                   Pay
                                 </button>
                               )}
                             </div>
                           </div>
 
-                          
                           {payingId === (inv.purchaseId ?? inv.salesId) && (
                             <PayForm
                               invoice={inv}
@@ -523,40 +458,31 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                 </div>
               )}
 
-              
               {activeTab === "history" && (
-                <div className="rlv-tab-body">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {!ledger.paymentHistory?.length ? (
-                    <div className="rlv-empty">
-                      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                        <circle cx="14" cy="14" r="12" stroke="rgba(59,130,246,0.2)" strokeWidth="1.5"/>
-                        <path d="M10 14h8" stroke="rgba(59,130,246,0.3)" strokeWidth="1.5" strokeLinecap="round"/>
-                      </svg>
+                    <div className="afx-items-empty">
                       <p>No payment history yet</p>
                     </div>
                   ) : (
                     <>
-                      
-                      <div className="rlv-history-summary">
-                        <div className="rlv-hs-block">
-                          <span className="rlv-hs-label">Total Paid</span>
-                          <span className="rlv-hs-val rlv-accent">₹{fmt(totalHistory)}</span>
+                      <div className="afx-meta-cards" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+                        <div className="afx-meta-card">
+                          <span className="afx-meta-card-label">Total Paid</span>
+                          <span className="afx-meta-card-val" style={{ color: "var(--afx-accent)" }}>₹{fmt(totalHistory)}</span>
                         </div>
-                        <div className="rlv-hs-block">
-                          <span className="rlv-hs-label">Entries</span>
-                          <span className="rlv-hs-val">{ledger.paymentHistory.length}</span>
+                        <div className="afx-meta-card">
+                          <span className="afx-meta-card-label">Entries</span>
+                          <span className="afx-meta-card-val">{ledger.paymentHistory.length}</span>
                         </div>
-                        <div className="rlv-hs-block">
-                          <span className="rlv-hs-label">Last Paid</span>
-                          <span className="rlv-hs-val">
-                            {ledger.paymentHistory[0]?.paymentDate || "—"}
-                          </span>
+                        <div className="afx-meta-card">
+                          <span className="afx-meta-card-label">Last Paid</span>
+                          <span className="afx-meta-card-val">{ledger.paymentHistory[0]?.paymentDate || "—"}</span>
                         </div>
                       </div>
 
-                      
-                      <div className="rlv-hist-table-wrap">
-                        <table className="rlv-hist-table">
+                      <div className="afx-line-table">
+                        <table>
                           <thead>
                             <tr>
                               <th>#</th>
@@ -570,43 +496,26 @@ export default function SupplierLedgerView({ uKey, onClose }) {
                           </thead>
                           <tbody>
                             {ledger.paymentHistory.map((ph, idx) => (
-                              <tr
-                                key={idx}
-                                style={{ animationDelay: `${idx * 0.025}s` }}
-                              >
-                                <td className="rlv-td-dim">
-                                  {String(idx + 1).padStart(2, "0")}
-                                </td>
-                                <td className="rlv-td-mono rlv-accent">
-                                  {ph.purchaseNumber || "—"}
-                                </td>
-                                <td className="rlv-td-dim">{ph.paymentDate || "—"}</td>
+                              <tr key={idx}>
+                                <td style={{ color: "var(--afx-text-3)" }}>{String(idx + 1).padStart(2, "0")}</td>
+                                <td style={{ fontFamily: "var(--afx-font-mono)", color: "var(--afx-accent)" }}>{ph.purchaseNumber || "—"}</td>
+                                <td style={{ color: "var(--afx-text-3)" }}>{ph.paymentDate || "—"}</td>
                                 <td>
-                                  <span className="rlv-mode-tag">
-                                    {ph.paymentMode === "CASH" ? "💵"
-                                    : ph.paymentMode === "UPI"  ? "📱"
-                                    : ph.paymentMode === "CARD" ? "💳" : "🏦"}
-                                    {ph.paymentMode}
-                                  </span>
+                                  {ph.paymentMode === "CASH" ? "💵"
+                                  : ph.paymentMode === "UPI"  ? "📱"
+                                  : ph.paymentMode === "CARD" ? "💳" : "🏦"}
+                                  {" "}{ph.paymentMode}
                                 </td>
-                                <td className="rlv-td-dim">
-                                  {ph.collectedBy || "—"}
-                                </td>
-                                <td className="rlv-td-dim">
-                                  {ph.notes || <span className="rlv-empty">—</span>}
-                                </td>
-                                <td className="rlv-td-amount">
-                                  ₹{fmt(ph.amount)}
-                                </td>
+                                <td style={{ color: "var(--afx-text-3)" }}>{ph.collectedBy || "—"}</td>
+                                <td style={{ color: "var(--afx-text-3)" }}>{ph.notes || "—"}</td>
+                                <td className="afx-line-total">₹{fmt(ph.amount)}</td>
                               </tr>
                             ))}
                           </tbody>
                           <tfoot>
                             <tr>
-                              <td colSpan={6} className="rlv-tf-label">
-                                Total Paid
-                              </td>
-                              <td className="rlv-tf-total">₹{fmt(totalHistory)}</td>
+                              <td colSpan={6} style={{ textAlign: "right", fontWeight: 700, color: "var(--afx-text-1)" }}>Total Paid</td>
+                              <td className="afx-line-total">₹{fmt(totalHistory)}</td>
                             </tr>
                           </tfoot>
                         </table>
@@ -619,10 +528,9 @@ export default function SupplierLedgerView({ uKey, onClose }) {
           )}
         </div>
 
-        
         {ledger && (
-          <div className="rlv-footer">
-            <button className="rlv-btn-ghost" onClick={onClose}>Close</button>
+          <div className="afx-footer">
+            <button className="afx-btn" onClick={onClose}>Close</button>
           </div>
         )}
       </div>

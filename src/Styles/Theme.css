@@ -675,13 +675,6 @@ body[data-theme="light"] .mm-body .form-submit {
   color: #ffffff !important;
 }
 
-body[data-theme="light"] .Toastify__toast {
-  background: #ffffff !important;
-  color: var(--light-text) !important;
-  border-color: var(--light-border) !important;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12) !important;
-}
-
 body[data-theme="light"] [class$="-page"],
 body[data-theme="light"] [class$="-root"] {
   background-color: var(--light-page) !important;

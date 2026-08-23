@@ -24,7 +24,7 @@ export default function EditModal({ isOpen, onClose, moduleName, uKey, onSubmit 
     case "Product Type": content = <ProductTypeEdit uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
     case "Roles":        content = <RoleEdit        uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
     case "Supplier":     content = <SupplierEdit    uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
-    case "Purchase":     content = <SupplierEdit    uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
+    case "Purchase":     content = <PurchaseEdit    uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
     case "Manufacturer": content = <ManufacturerEdit uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
     case "Retailer":     content = <RetailerEdit    uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
     default:             return null;

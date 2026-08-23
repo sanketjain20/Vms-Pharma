@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../../Styles/Vendor/VendorAdd.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
@@ -100,256 +100,220 @@ export default function VendorAdd({ onClose, onSubmit }) {
   const clearError = (field) => setErrors(p => ({ ...p, [field]: "" }));
 
   if (initialLoading) return (
-    <div className="vd-backdrop">
-      <div className="vd-modal vd-loading-only">
-        <div className="vd-loader-ring"><div/><div/><div/><div/></div>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-loading">
+          <div className="afx-loader-ring"><div/><div/><div/></div>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="vd-backdrop">
-
-      
-      {loading && (
-        <div className="vd-loader-overlay">
-          <div className="vd-loader-ring">
-            <div /><div /><div /><div />
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />New Vendor</div>
+            <h3 className="afx-title">Add Vendor</h3>
           </div>
-        </div>
-      )}
-
-      <div className="vd-modal">
-        
-        <div className="vd-top-beam" />
-        
-        <div className="vd-corner vd-tl" /><div className="vd-corner vd-tr" />
-        <div className="vd-corner vd-bl" /><div className="vd-corner vd-br" />
-
-        
-        <div className="vd-header">
-          <div className="vd-header-left">
-            <div className="vd-eyebrow">
-              <span className="vd-eyebrow-dot" />
-              NEW VENDOR
-            </div>
-            <h2 className="vd-title">
-              <span className="vd-title-acc"></span>
-              Add Vendor
-            </h2>
-          </div>
-          <button className="vd-close" onClick={onClose} title="Close">
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+          <button className="afx-close" onClick={onClose} title="Close">
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
             ESC
           </button>
         </div>
 
-        
-        <form className="vd-form" onSubmit={handleSubmit} noValidate>
-
-          
-          <div className="vd-row">
-            <div className="vd-group">
-              <label>Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => { setName(e.target.value); clearError("name"); }}
-                placeholder="Full name"
-                className={errors.name ? "vd-input-err" : ""}
-              />
-              {errors.name && <span className="vd-err">{errors.name}</span>}
-            </div>
-
-            <div className="vd-group">
-              <label>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => { setEmail(e.target.value); clearError("email"); }}
-                placeholder="email@domain.com"
-                className={errors.email ? "vd-input-err" : ""}
-                pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-              />
-              {errors.email && <span className="vd-err">{errors.email}</span>}
-            </div>
-          </div>
-
-          
-          <div className="vd-row">
-            <div className="vd-group">
-              <label>Password</label>
-              <div className="vd-input-wrap">
-                <input
-                  type={showPass ? "text" : "password"}
-                  value={password}
-                  onChange={e => { setPassword(e.target.value); clearError("password"); }}
-                  placeholder="Set password"
-                  className={errors.password ? "vd-input-err" : ""}
-                />
-                <button type="button" className="vd-eye-btn" onClick={() => setShowPass(s => !s)} tabIndex={-1}>
-                  {showPass ? (
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M1 7C1 7 3 3 7 3s6 4 6 4-2 4-6 4-6-4-6-4Z" stroke="currentColor" strokeWidth="1.2"/>
-                      <circle cx="7" cy="7" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                      <path d="M2 2l10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                    </svg>
-                  ) : (
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M1 7C1 7 3 3 7 3s6 4 6 4-2 4-6 4-6-4-6-4Z" stroke="currentColor" strokeWidth="1.2"/>
-                      <circle cx="7" cy="7" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                    </svg>
-                  )}
-                </button>
-              </div>
-              {errors.password && <span className="vd-err">{errors.password}</span>}
-            </div>
-
-            <div className="vd-group">
-              <label>Phone</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={e => {
-                  const v = e.target.value.replace(/\D/g, "");
-                  if (v.length <= 10) { setPhone(v); clearError("phone"); }
-                }}
-                placeholder="8–10 digit number"
-                className={errors.phone ? "vd-input-err" : ""}
-                pattern="\d{8,10}"
-                maxLength={10}
-              />
-              {errors.phone && <span className="vd-err">{errors.phone}</span>}
-            </div>
-          </div>
-
-          
-          <div className="vd-row">
-            {!useLoggedInVendorPrefix && (
-              <div className="vd-group">
-                <label>Shop Name</label>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="afx-body">
+            <div className="afx-grid">
+              <div className="afx-field">
+                <label className="afx-label">Name<span className="afx-req">*</span></label>
                 <input
                   type="text"
-                  value={shopName}
-                  onChange={e => { setShopName(e.target.value); clearError("shopName"); }}
-                  placeholder="Shop / business name"
-                  className={errors.shopName ? "vd-input-err" : ""}
+                  className={`afx-input ${errors.name ? "afx-input--err" : ""}`}
+                  value={name}
+                  onChange={e => { setName(e.target.value); clearError("name"); }}
+                  placeholder="Full name"
                 />
-                {errors.shopName && <span className="vd-err">{errors.shopName}</span>}
+                {errors.name && <span className="afx-error">{errors.name}</span>}
               </div>
-            )}
 
-            <div className="vd-group">
-              <label>Select Role</label>
-              <select
-                value={roleId}
-                onChange={e => { setRoleId(e.target.value); clearError("roleId"); }}
-                className={errors.roleId ? "vd-input-err" : ""}
-              >
-                <option value="">— Select Role —</option>
-                {roles.map(r => (
-                  <option key={r.id} value={r.id}>{r.roleName}</option>
-                ))}
-              </select>
-              {errors.roleId && <span className="vd-err">{errors.roleId}</span>}
-            </div>
-          </div>
-
-          
-          {!useLoggedInVendorPrefix && (
-            <div className="vd-row">
-              <div className="vd-group vd-full">
-                <label>Address</label>
-                <textarea
-                  rows={2}
-                  value={address}
-                  onChange={e => { setAddress(e.target.value); clearError("address"); }}
-                  placeholder="Full business address"
-                  className={errors.address ? "vd-input-err" : ""}
-                />
-                {errors.address && <span className="vd-err">{errors.address}</span>}
-              </div>
-            </div>
-          )}
-
-          
-          <div className="vd-row">
-            {!useLoggedInVendorPrefix && (
-              <div className="vd-group">
-                <label>Vendor Prefix</label>
+              <div className="afx-field">
+                <label className="afx-label">Email<span className="afx-req">*</span></label>
                 <input
-                  type="text"
-                  value={vendorPrefix}
-                  onChange={e => { setVendorPrefix(e.target.value); clearError("vendorPrefix"); }}
-                  placeholder="e.g. VND"
-                  className={errors.vendorPrefix ? "vd-input-err" : ""}
+                  type="email"
+                  className={`afx-input ${errors.email ? "afx-input--err" : ""}`}
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); clearError("email"); }}
+                  placeholder="email@domain.com"
+                  pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                 />
-                {errors.vendorPrefix && <span className="vd-err">{errors.vendorPrefix}</span>}
+                {errors.email && <span className="afx-error">{errors.email}</span>}
               </div>
-            )}
-            <div className="vd-group">
-              <label>Account Validity Till</label>
-              <input
-                type="date"
-                value={expiryDate}
-                onChange={e => { setExpiryDate(e.target.value); clearError("expiryDate"); }}
-                className={errors.expiryDate ? "vd-input-err" : ""}
-              />
-              {errors.expiryDate && <span className="vd-err">{errors.expiryDate}</span>}
-            </div>
-          </div>
 
-          {!useLoggedInVendorPrefix && (
-            <div className="vd-row">
-              <div className="vd-group">
-                <label>Master Vendor</label>
-                <label className="vd-switch-row">
+              <div className="afx-field">
+                <label className="afx-label">Password<span className="afx-req">*</span></label>
+                <div className="afx-input-wrap">
                   <input
-                    type="checkbox"
-                    checked={masterVendor}
-                    onChange={e => {
-                      const checked = e.target.checked;
-                      setMasterVendor(checked);
-                      if (!checked) {
-                        setSubVendorLimit(0);
-                        clearError("subVendorLimit");
-                      }
-                    }}
+                    type={showPass ? "text" : "password"}
+                    className={`afx-input ${errors.password ? "afx-input--err" : ""}`}
+                    value={password}
+                    onChange={e => { setPassword(e.target.value); clearError("password"); }}
+                    placeholder="Set password"
                   />
-                  <span className="vd-switch" />
-                  <span className="vd-switch-text">
-                    {masterVendor ? "Can create worker credentials" : "Cannot create worker credentials"}
-                  </span>
-                </label>
+                  <button type="button" className="afx-eye-btn" onClick={() => setShowPass(s => !s)} tabIndex={-1}>
+                    {showPass ? (
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M1 7C1 7 3 3 7 3s6 4 6 4-2 4-6 4-6-4-6-4Z" stroke="currentColor" strokeWidth="1.2"/>
+                        <circle cx="7" cy="7" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                        <path d="M2 2l10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                      </svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M1 7C1 7 3 3 7 3s6 4 6 4-2 4-6 4-6-4-6-4Z" stroke="currentColor" strokeWidth="1.2"/>
+                        <circle cx="7" cy="7" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {errors.password && <span className="afx-error">{errors.password}</span>}
               </div>
 
-              {masterVendor && (
-                <div className="vd-group">
-                  <label>Worker Credential Limit</label>
+              <div className="afx-field">
+                <label className="afx-label">Phone<span className="afx-req">*</span></label>
+                <input
+                  type="tel"
+                  className={`afx-input ${errors.phone ? "afx-input--err" : ""}`}
+                  value={phone}
+                  onChange={e => {
+                    const v = e.target.value.replace(/\D/g, "");
+                    if (v.length <= 10) { setPhone(v); clearError("phone"); }
+                  }}
+                  placeholder="8–10 digit number"
+                  pattern="\d{8,10}"
+                  maxLength={10}
+                />
+                {errors.phone && <span className="afx-error">{errors.phone}</span>}
+              </div>
+
+              {!useLoggedInVendorPrefix && (
+                <div className="afx-field">
+                  <label className="afx-label">Shop Name<span className="afx-req">*</span></label>
+                  <input
+                    type="text"
+                    className={`afx-input ${errors.shopName ? "afx-input--err" : ""}`}
+                    value={shopName}
+                    onChange={e => { setShopName(e.target.value); clearError("shopName"); }}
+                    placeholder="Shop / business name"
+                  />
+                  {errors.shopName && <span className="afx-error">{errors.shopName}</span>}
+                </div>
+              )}
+
+              <div className="afx-field">
+                <label className="afx-label">Select Role<span className="afx-req">*</span></label>
+                <div className="afx-select-wrap">
+                  <select
+                    className={`afx-select ${errors.roleId ? "afx-select--err" : ""}`}
+                    value={roleId}
+                    onChange={e => { setRoleId(e.target.value); clearError("roleId"); }}
+                  >
+                    <option value="">— Select Role —</option>
+                    {roles.map(r => (
+                      <option key={r.id} value={r.id}>{r.roleName}</option>
+                    ))}
+                  </select>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                {errors.roleId && <span className="afx-error">{errors.roleId}</span>}
+              </div>
+
+              {!useLoggedInVendorPrefix && (
+                <div className="afx-field afx-field--full">
+                  <label className="afx-label">Address<span className="afx-req">*</span></label>
+                  <textarea
+                    rows={2}
+                    className={`afx-textarea ${errors.address ? "afx-textarea--err" : ""}`}
+                    value={address}
+                    onChange={e => { setAddress(e.target.value); clearError("address"); }}
+                    placeholder="Full business address"
+                  />
+                  {errors.address && <span className="afx-error">{errors.address}</span>}
+                </div>
+              )}
+
+              {!useLoggedInVendorPrefix && (
+                <div className="afx-field">
+                  <label className="afx-label">Vendor Prefix<span className="afx-req">*</span></label>
+                  <input
+                    type="text"
+                    className={`afx-input ${errors.vendorPrefix ? "afx-input--err" : ""}`}
+                    value={vendorPrefix}
+                    onChange={e => { setVendorPrefix(e.target.value); clearError("vendorPrefix"); }}
+                    placeholder="e.g. VND"
+                  />
+                  {errors.vendorPrefix && <span className="afx-error">{errors.vendorPrefix}</span>}
+                </div>
+              )}
+
+              <div className="afx-field">
+                <label className="afx-label">Account Validity Till<span className="afx-req">*</span></label>
+                <input
+                  type="date"
+                  className={`afx-input ${errors.expiryDate ? "afx-input--err" : ""}`}
+                  value={expiryDate}
+                  onChange={e => { setExpiryDate(e.target.value); clearError("expiryDate"); }}
+                />
+                {errors.expiryDate && <span className="afx-error">{errors.expiryDate}</span>}
+              </div>
+
+              {!useLoggedInVendorPrefix && (
+                <div className="afx-field">
+                  <label className="afx-label">Master Vendor</label>
+                  <label className="afx-switch-row">
+                    <input
+                      type="checkbox"
+                      checked={masterVendor}
+                      onChange={e => {
+                        const checked = e.target.checked;
+                        setMasterVendor(checked);
+                        if (!checked) {
+                          setSubVendorLimit(0);
+                          clearError("subVendorLimit");
+                        }
+                      }}
+                    />
+                    <span className="afx-switch" />
+                    <span className="afx-switch-text">
+                      {masterVendor ? "Can create worker credentials" : "Cannot create worker credentials"}
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              {!useLoggedInVendorPrefix && masterVendor && (
+                <div className="afx-field">
+                  <label className="afx-label">Worker Credential Limit</label>
                   <input
                     type="number"
                     min="0"
+                    className={`afx-input ${errors.subVendorLimit ? "afx-input--err" : ""}`}
                     value={subVendorLimit}
                     onChange={e => { setSubVendorLimit(e.target.value); clearError("subVendorLimit"); }}
                     placeholder="0"
-                    className={errors.subVendorLimit ? "vd-input-err" : ""}
                   />
-                  {errors.subVendorLimit && <span className="vd-err">{errors.subVendorLimit}</span>}
+                  {errors.subVendorLimit && <span className="afx-error">{errors.subVendorLimit}</span>}
                 </div>
               )}
             </div>
-          )}
-
-          
-          <div className="vd-footer">
-            <button type="button" className="vd-btn-cancel" onClick={onClose}>Cancel</button>
-            <button type="submit" className="vd-btn-save" disabled={loading}>
-              {loading ? "Saving…" : "Save Vendor"}
-            </button>
           </div>
 
+          <div className="afx-footer">
+            <button type="button" className="afx-btn" onClick={onClose}>Cancel</button>
+            <button type="submit" className="afx-btn afx-btn--primary" disabled={loading}>
+              {loading ? <><span className="afx-spinner" /> Saving…</> : "Save Vendor"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

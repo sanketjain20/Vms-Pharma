@@ -1,73 +1,74 @@
 import React, { useEffect, useState } from "react";
-import "../../Styles/Retailer/Retailer.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
-/* ── Info card ── */
-const Card = ({ label, value, mono, accent, danger, full }) => (
-  <div className={`rtx-view-card ${full ? "rtx-view-card-full" : ""}`}>
-    <span className="rtx-view-label">{label}</span>
-    <span className={`rtx-view-value ${mono ? "rtx-mono" : ""} ${accent ? "rtx-accent" : ""} ${danger ? "rtx-danger" : ""}`}>
-      {value || <span className="rtx-view-empty">—</span>}
-    </span>
+
+/* ── Info field ── */
+const Field = ({ label, value, mono, accent, danger, full }) => (
+  <div className={`afx-field ${full ? "afx-field--full" : ""}`}>
+    <label className="afx-label">{label}</label>
+    <div
+      className={`afx-view-value ${mono ? "afx-view-value--mono" : ""}`}
+      style={accent ? { color: "var(--afx-accent)", fontWeight: 600 } : danger ? { color: "var(--afx-danger)", fontWeight: 600 } : undefined}
+    >
+      {value || <span className="afx-view-value--empty">—</span>}
+    </div>
   </div>
 );
 
-/* ── Credit progress bar ── */
+/* ── Credit usage bar ── */
 const CreditBar = ({ creditLimit, outstandingBalance }) => {
-  const limit   = parseFloat(creditLimit || 0);
-  const used    = parseFloat(outstandingBalance || 0);
-  const avail   = Math.max(limit - used, 0);
-  const pct     = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
-  const barColor = pct >= 100 ? "#ef4444" : pct >= 80 ? "#f59e0b" : "#10b981";
+  const limit = parseFloat(creditLimit || 0);
+  const used  = parseFloat(outstandingBalance || 0);
+  const avail = Math.max(limit - used, 0);
+  const pct   = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
+  const barColor = pct >= 100 ? "var(--afx-danger)" : pct >= 80 ? "var(--afx-warning)" : "var(--afx-success)";
 
   if (limit === 0) {
     return (
-      <div className="rtx-credit-bar-wrap">
-        <div className="rtx-credit-bar-labels">
+      <div className="afx-card">
+        <div className="afx-card-row">
           <span>Credit Limit</span>
-          <span className="rtx-badge rtx-badge-blue">Unlimited</span>
+          <span className="afx-badge">Unlimited</span>
         </div>
-        <div className="rtx-credit-bar-track">
-          <div className="rtx-credit-bar-fill" style={{ width: "30%", background: "#10b981" }} />
+        <div style={{ height: 6, borderRadius: 999, background: "var(--afx-sunken)", border: "1px solid var(--afx-border)", overflow: "hidden" }}>
+          <div style={{ width: "30%", height: "100%", background: "var(--afx-success)" }} />
         </div>
-        <div className="rtx-credit-bar-sub">
-          Outstanding: <strong style={{ color: used > 0 ? "#fca5a5" : "#6ee7b7" }}>
-            ₹{used.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-          </strong>
+        <div className="afx-card-row">
+          <span>Outstanding</span>
+          <strong className={used > 0 ? "afx-text-danger" : "afx-text-success"}>₹{used.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rtx-credit-bar-wrap">
-      <div className="rtx-credit-bar-labels">
+    <div className="afx-card">
+      <div className="afx-card-row">
         <span>Credit Usage</span>
-        <span style={{ fontFamily: "var(--rtx-font-m)", fontSize: 11, color: barColor }}>
-          {pct.toFixed(0)}%
-        </span>
+        <span style={{ fontFamily: "var(--afx-font-mono)", fontSize: 11, color: barColor }}>{pct.toFixed(0)}%</span>
       </div>
-      <div className="rtx-credit-bar-track">
-        <div className="rtx-credit-bar-fill" style={{ width: `${pct}%`, background: barColor }} />
+      <div style={{ height: 6, borderRadius: 999, background: "var(--afx-sunken)", border: "1px solid var(--afx-border)", overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: barColor }} />
       </div>
-      <div className="rtx-credit-bar-sub">
-        <span>Used: <strong style={{ color: "#fca5a5" }}>₹{used.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
-        <span>Available: <strong style={{ color: "#6ee7b7" }}>₹{avail.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
-        <span>Limit: <strong style={{ color: "#93c5fd" }}>₹{limit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+      <div className="afx-card-row">
+        <span>Used: <strong className="afx-text-danger">₹{used.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+        <span>Available: <strong className="afx-text-success">₹{avail.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
+        <span>Limit: <strong>₹{limit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></span>
       </div>
     </div>
   );
 };
 
-/* ── Credit status badge ── */
+/* ── Credit status ── */
 const creditStatus = (creditLimit, outstanding) => {
   const limit = parseFloat(creditLimit || 0);
   const used  = parseFloat(outstanding || 0);
-  if (limit === 0) return { label: "Unlimited", cls: "rtx-badge-blue" };
+  if (limit === 0) return { label: "Unlimited", cls: "" };
   const pct = (used / limit) * 100;
-  if (pct >= 100) return { label: "Limit Reached", cls: "rtx-badge-red" };
-  if (pct >= 80)  return { label: "Warning",       cls: "rtx-badge-amber" };
-  return             { label: "OK",               cls: "rtx-badge-green" };
+  if (pct >= 100) return { label: "Limit Reached", cls: "afx-text-danger" };
+  if (pct >= 80)  return { label: "Warning", cls: "" };
+  return { label: "OK", cls: "afx-text-success" };
 };
 
 const fmt = n => parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
@@ -95,116 +96,90 @@ export default function RetailerView({ uKey, onClose, onEdit }) {
   const cs = data ? creditStatus(data.creditLimit, data.outstandingBalance) : null;
 
   return (
-    <div className="rtx-backdrop">
-      <div className="rtx-modal rtx-modal-view">
-        <div className="rtx-top-beam" />
-        <div className="rtx-corner rtx-tl" /><div className="rtx-corner rtx-tr" />
-        <div className="rtx-corner rtx-bl" /><div className="rtx-corner rtx-br" />
-
-        
-        <div className="rtx-header">
-          <div className="rtx-header-left">
-            <div className="rtx-eyebrow"><span className="rtx-eyebrow-dot" />RETAILER RECORD</div>
-            <h3 className="rtx-title">
-              <span className="rtx-title-acc"></span>
-              {data ? data.shopName : "Loading…"}
-            </h3>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Retailer Record</div>
+            <h3 className="afx-title">{data ? data.shopName : "Loading…"}</h3>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {data && onEdit && (
-              <button type="button" className="rtx-btn-ghost" onClick={() => { onClose(); onEdit(uKey); }}>
+              <button type="button" className="afx-btn" onClick={() => { onClose(); onEdit(uKey); }}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M2 10h2l5-5-2-2-5 5v2ZM8.5 1.5l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 Edit
               </button>
             )}
-            <button className="rtx-close" type="button" onClick={onClose}>
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
+            <button className="afx-close" type="button" onClick={onClose} title="Close">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
               ESC
             </button>
           </div>
         </div>
 
-        <div className="rtx-divider" />
-
-        
-        <div className="rtx-body">
-
-          {error && <div className="rtx-alert">{error}</div>}
+        <div className="afx-body">
+          {error && <div className="afx-alert">{error}</div>}
 
           {!data && !error && (
-            <div className="rtx-loading">
-              <div className="rtx-loader"><div/><div/><div/><div/></div>
-              Loading retailer data…
+            <div className="afx-loading">
+              <div className="afx-loader-ring"><div/><div/><div/></div>
             </div>
           )}
 
           {data && (
             <>
-              
-              <div className="rtx-view-status-row">
-                <span className="rtx-code-badge">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                <span className="afx-tag">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.2"/>
                     <path d="M3 5h4M3 3.5h2M3 6.5h3" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
                   </svg>
                   {data.retailerCode}
                 </span>
-                {cs && <span className={`rtx-badge ${cs.cls}`}>{cs.label}</span>}
-                <span className={`rtx-badge ${data.disable ? "rtx-badge-red" : "rtx-badge-green"}`}>
+                {cs && <span className={`afx-badge ${cs.cls}`}>{cs.label}</span>}
+                <span className="afx-badge" style={data.disable ? { color: "var(--afx-danger)" } : { color: "var(--afx-success)" }}>
                   {data.disable ? "Inactive" : "Active"}
                 </span>
                 {parseFloat(data.outstandingBalance || 0) > 0 && (
-                  <span className="rtx-badge rtx-badge-red">
-                    ₹{fmt(data.outstandingBalance)} Outstanding
-                  </span>
+                  <span className="afx-badge afx-text-danger">₹{fmt(data.outstandingBalance)} Outstanding</span>
                 )}
               </div>
 
-              
               <CreditBar creditLimit={data.creditLimit} outstandingBalance={data.outstandingBalance} />
 
-              
-              <div className="rtx-view-grid">
-                <Card label="Shop Name"           value={data.shopName} />
-                <Card label="Owner Name"           value={data.ownerName} />
-                <Card label="Phone"                value={data.phone} mono />
-                <Card label="Email"                value={data.email} mono />
-                <Card label="GST Number"           value={data.gstNumber} mono accent />
-                <Card label="Drug License No"      value={data.drugLicenseNumber} mono />
-                <Card label="Credit Limit"
+              <div className="afx-section-title">Details</div>
+              <div className="afx-grid">
+                <Field label="Shop Name"      value={data.shopName} />
+                <Field label="Owner Name"     value={data.ownerName} />
+                <Field label="Phone"          value={data.phone} mono />
+                <Field label="Email"          value={data.email} mono />
+                <Field label="GST Number"     value={data.gstNumber} mono accent />
+                <Field label="Drug License No" value={data.drugLicenseNumber} mono />
+                <Field label="Credit Limit"
                   value={parseFloat(data.creditLimit || 0) === 0 ? "Unlimited" : `₹${fmt(data.creditLimit)}`}
                   accent
                 />
-                <Card label="Outstanding Balance"
+                <Field label="Outstanding Balance"
                   value={`₹${fmt(data.outstandingBalance)}`}
                   danger={parseFloat(data.outstandingBalance || 0) > 0}
                 />
-                <Card label="Created At"
-                  value={data.createdAt
-                    ? new Date(data.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-                    : "—"
-                  }
+                <Field label="Created At"
+                  value={data.createdAt ? new Date(data.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                 />
-                <Card label="Updated At"
-                  value={data.updatedAt
-                    ? new Date(data.updatedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-                    : "—"
-                  }
+                <Field label="Updated At"
+                  value={data.updatedAt ? new Date(data.updatedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                 />
-                {data.address && <Card label="Address" value={data.address} full />}
+                {data.address && <Field label="Address" value={data.address} full />}
               </div>
             </>
           )}
         </div>
 
-        
         {data && (
-          <div className="rtx-footer">
-            <button type="button" className="rtx-btn-ghost" onClick={onClose}>Close</button>
+          <div className="afx-footer">
+            <button type="button" className="afx-btn" onClick={onClose}>Close</button>
           </div>
         )}
       </div>

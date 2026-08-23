@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import "../../Styles/SalesReturn/SalesReturnAdd.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
@@ -130,203 +130,195 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
   };
 
   const expiryColor = (date) => {
-    if (!date) return "#6ee7b7";
+    if (!date) return "var(--afx-success)";
     const diff = (new Date(date) - new Date()) / 86400000;
-    if (diff < 0) return "#fca5a5";
-    if (diff < 90) return "#fbbf24";
-    return "#6ee7b7";
+    if (diff < 0) return "var(--afx-danger)";
+    if (diff < 90) return "var(--afx-warning)";
+    return "var(--afx-success)";
   };
 
   return (
-    <div className="sra-backdrop">
-      <div className="sra-modal">
-        <div className="sra-top-beam" />
-        <div className="sra-corner sra-tl" /><div className="sra-corner sra-tr" />
-        <div className="sra-corner sra-bl" /><div className="sra-corner sra-br" />
-
-        <div className="sra-header">
-          <div className="sra-header-left">
-            <div className="sra-eyebrow">
-              <span className="sra-eyebrow-dot" />
-              {step === 1 ? "STEP 1 OF 2 - LOCATE PURCHASE" : "STEP 2 OF 2 - PROCESS RETURN"}
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--lg">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />
+              {step === 1 ? "Step 1 of 2 · Locate Purchase" : "Step 2 of 2 · Process Return"}
             </div>
-            <h3 className="sra-title">
-              <span className="sra-title-acc"></span>
-              {step === 1 ? "Find Original Purchase" : `Return - ${purchaseData?.purchaseNumber}`}
+            <h3 className="afx-title">
+              {step === 1 ? "Find Original Purchase" : `Return · ${purchaseData?.purchaseNumber}`}
             </h3>
           </div>
-          <button className="sra-close" onClick={onClose}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
+          <button className="afx-close" onClick={onClose}>
+            <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
             ESC
           </button>
         </div>
 
-        <div className="sra-progress">
-          <div className={`sra-progress-step ${step >= 1 ? "active" : ""}`}>
-            <span className="sra-progress-num">01</span>
+        <div className="afx-progress">
+          <div className={`afx-progress-step ${step >= 1 ? "is-active" : ""}`}>
+            <span className="afx-progress-num">01</span>
             <span>Locate Purchase</span>
           </div>
-          <div className="sra-progress-line" />
-          <div className={`sra-progress-step ${step >= 2 ? "active" : ""}`}>
-            <span className="sra-progress-num">02</span>
+          <div className="afx-progress-line" />
+          <div className={`afx-progress-step ${step >= 2 ? "is-active" : ""}`}>
+            <span className="afx-progress-num">02</span>
             <span>Process Return</span>
           </div>
         </div>
 
-        <div className="sra-body">
+        <div className="afx-body">
           {step === 1 && (
-            <div className="sra-step">
-              <div className="sra-info-banner">
+            <div>
+              <div className="afx-info" style={{ marginBottom: 14 }}>
                 Enter the purchase number from the original purchase record to begin the return process.
               </div>
 
-              <label className="sra-label">Purchase Number</label>
-              <div className="sra-ukey-row">
+              <label className="afx-label">Purchase Number</label>
+              <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
                 <input
                   type="text"
-                  className="sra-input"
+                  className="afx-input"
                   placeholder="e.g. PUR000001"
                   value={purchaseNumber}
                   onChange={e => { setPurchaseNumber(e.target.value); setFetchErr(""); }}
                   onKeyDown={e => e.key === "Enter" && findPurchase()}
                 />
-                <button className="sra-btn-find" onClick={findPurchase} disabled={fetching}>
-                  {fetching ? "Searching..." : "Find Purchase"}
+                <button className="afx-btn afx-btn--primary" style={{ flexShrink: 0 }} onClick={findPurchase} disabled={fetching}>
+                  {fetching ? <><span className="afx-spinner" /> Searching…</> : "Find Purchase"}
                 </button>
               </div>
-              {fetchErr && <div className="sra-error-banner">{fetchErr}</div>}
+              {fetchErr && <div className="afx-alert" style={{ marginTop: 10 }}>{fetchErr}</div>}
             </div>
           )}
 
           {step === 2 && purchaseData && (
-            <div className="sra-step">
-              <div className="sra-sale-meta">
-                <div className="sra-meta-card">
-                  <span className="sra-meta-label">Purchase</span>
-                  <span className="sra-meta-val">{purchaseData.purchaseNumber}</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div className="afx-meta-cards">
+                <div className="afx-meta-card">
+                  <span className="afx-meta-card-label">Purchase</span>
+                  <span className="afx-meta-card-val">{purchaseData.purchaseNumber}</span>
                 </div>
-                <div className="sra-meta-card">
-                  <span className="sra-meta-label">Supplier Invoice</span>
-                  <span className="sra-meta-val">{purchaseData.supplierInvoiceNumber || "-"}</span>
+                <div className="afx-meta-card">
+                  <span className="afx-meta-card-label">Supplier Invoice</span>
+                  <span className="afx-meta-card-val">{purchaseData.supplierInvoiceNumber || "—"}</span>
                 </div>
-                <div className="sra-meta-card">
-                  <span className="sra-meta-label">Supplier</span>
-                  <span className="sra-meta-val">{purchaseData.supplierName || "-"}</span>
+                <div className="afx-meta-card">
+                  <span className="afx-meta-card-label">Supplier</span>
+                  <span className="afx-meta-card-val">{purchaseData.supplierName || "—"}</span>
                 </div>
-                <div className="sra-meta-card">
-                  <span className="sra-meta-label">Net Amount</span>
-                  <span className="sra-meta-val sra-meta-accent">Rs {Number(purchaseData.netAmount || 0).toFixed(2)}</span>
+                <div className="afx-meta-card">
+                  <span className="afx-meta-card-label">Net Amount</span>
+                  <span className="afx-meta-card-val" style={{ color: "var(--afx-accent)" }}>₹{Number(purchaseData.netAmount || 0).toFixed(2)}</span>
                 </div>
               </div>
 
-              <label className="sra-label">Return Reason <span className="sra-required">*</span></label>
-              <textarea
-                className="sra-textarea"
-                rows={2}
-                placeholder="e.g. Damaged stock, wrong item received, supplier replacement..."
-                value={returnReason}
-                onChange={e => setReturnReason(e.target.value)}
-              />
-              {errors.reason && <div className="sra-error">{errors.reason}</div>}
-
-              <label className="sra-label">Refund Mode</label>
-              <div className="sra-radio-group">
-                {[
-                  { val: "SUPPLIER_CREDIT", label: "Supplier Credit" },
-                  { val: "CASH", label: "Cash" },
-                  { val: "BANK", label: "Bank Transfer" },
-                ].map(mode => (
-                  <label key={mode.val} className={`sra-radio ${refundMode === mode.val ? "checked" : ""}`}>
-                    <input type="radio" checked={refundMode === mode.val} onChange={() => setRefundMode(mode.val)} />
-                    {mode.label}
-                  </label>
-                ))}
+              <div className="afx-field">
+                <label className="afx-label">Return Reason<span className="afx-req">*</span></label>
+                <textarea
+                  className="afx-textarea"
+                  rows={2}
+                  placeholder="e.g. Damaged stock, wrong item received, supplier replacement…"
+                  value={returnReason}
+                  onChange={e => setReturnReason(e.target.value)}
+                />
+                {errors.reason && <div className="afx-error">{errors.reason}</div>}
               </div>
 
-              <div className="sra-items-header">
-                <span className="sra-section-title">Select Return Quantities</span>
-                <span className="sra-items-note">Set 0 to skip an item</span>
+              <div className="afx-field">
+                <label className="afx-label">Refund Mode</label>
+                <div className="afx-radio-group">
+                  {[
+                    { val: "SUPPLIER_CREDIT", label: "Supplier Credit" },
+                    { val: "CASH", label: "Cash" },
+                    { val: "BANK", label: "Bank Transfer" },
+                  ].map(mode => (
+                    <label key={mode.val} className={`afx-radio ${refundMode === mode.val ? "is-checked" : ""}`}>
+                      <input type="radio" checked={refundMode === mode.val} onChange={() => setRefundMode(mode.val)} />
+                      {mode.label}
+                    </label>
+                  ))}
+                </div>
               </div>
 
-              {errors.lines && <div className="sra-error-banner" style={{ marginBottom: 12 }}>{errors.lines}</div>}
+              <div>
+                <div className="afx-section-title" style={{ marginBottom: 8 }}>Select Return Quantities</div>
+                {errors.lines && <div className="afx-alert" style={{ marginBottom: 10 }}>{errors.lines}</div>}
 
-              <div className="sra-items-table-wrap">
-                <table className="sra-items-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Batch No</th>
-                      <th>Expiry</th>
-                      <th>Purchased Qty</th>
-                      <th>Cost (Rs)</th>
-                      <th>GST %</th>
-                      <th>Return Qty</th>
-                      <th>Return Amt</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {returnLines.map((line, idx) => {
-                      const active = line.returnQuantity > 0;
-                      return (
-                        <tr key={idx} className={active ? "sra-row-active" : ""}>
-                          <td className="sra-td-product">{line.productName}</td>
-                          <td style={{ fontFamily: "var(--sra-font-m)", fontSize: 10.5, color: "#93c5fd" }}>
-                            {line.batchNumber || "-"}
-                          </td>
-                          <td>
-                            <span style={{ color: expiryColor(line.expiryDate), fontFamily: "var(--sra-font-m)", fontSize: 10 }}>
-                              {line.expiryDate || "-"}
-                            </span>
-                          </td>
-                          <td className="sra-td-center">{line.max}</td>
-                          <td className="sra-td-center">Rs {line.costPrice.toFixed(2)}</td>
-                          <td className="sra-td-center">{line.gstRate}%</td>
-                          <td>
-                            <div className="sra-qty-control">
-                              <button className="sra-qty-btn" onClick={() => updateQty(idx, line.returnQuantity - 1)} disabled={line.returnQuantity <= 0}>-</button>
-                              <input
-                                type="number"
-                                className="sra-qty-input"
-                                value={line.returnQuantity}
-                                min={0}
-                                max={line.max}
-                                onChange={e => updateQty(idx, e.target.value)}
-                              />
-                              <button className="sra-qty-btn" onClick={() => updateQty(idx, line.returnQuantity + 1)} disabled={line.returnQuantity >= line.max}>+</button>
-                            </div>
-                          </td>
-                          <td className={`sra-td-amount ${active ? "sra-amount-active" : ""}`}>
-                            Rs {lineTotal(line).toFixed(2)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <div className="afx-line-table" style={{ overflowX: "auto" }}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Batch</th>
+                        <th>Expiry</th>
+                        <th>Purchased</th>
+                        <th>Cost (₹)</th>
+                        <th>GST %</th>
+                        <th>Return Qty</th>
+                        <th>Return Amt</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {returnLines.map((line, idx) => {
+                        const active = line.returnQuantity > 0;
+                        return (
+                          <tr key={idx} style={active ? { background: "var(--afx-accent-soft)" } : undefined}>
+                            <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>{line.productName}</td>
+                            <td style={{ fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{line.batchNumber || "—"}</td>
+                            <td>
+                              <span style={{ color: expiryColor(line.expiryDate), fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>
+                                {line.expiryDate || "—"}
+                              </span>
+                            </td>
+                            <td>{line.max}</td>
+                            <td>₹{line.costPrice.toFixed(2)}</td>
+                            <td>{line.gstRate}%</td>
+                            <td>
+                              <div className="afx-qty">
+                                <button className="afx-qty-btn" onClick={() => updateQty(idx, line.returnQuantity - 1)} disabled={line.returnQuantity <= 0}>−</button>
+                                <input
+                                  type="number"
+                                  className="afx-qty-input"
+                                  value={line.returnQuantity}
+                                  min={0}
+                                  max={line.max}
+                                  onChange={e => updateQty(idx, e.target.value)}
+                                />
+                                <button className="afx-qty-btn" onClick={() => updateQty(idx, line.returnQuantity + 1)} disabled={line.returnQuantity >= line.max}>+</button>
+                              </div>
+                            </td>
+                            <td style={{ fontWeight: 700, color: active ? "var(--afx-accent)" : "var(--afx-text-2)" }}>
+                              ₹{lineTotal(line).toFixed(2)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              <div className="sra-total-preview">
-                <span>Estimated Supplier Refund</span>
-                <span className="sra-total-amt">Rs {totalReturnAmt.toFixed(2)}</span>
+              <div className="afx-totals">
+                <div className="afx-totals-row afx-totals-grand">
+                  <span>Estimated Supplier Refund</span>
+                  <span>₹{totalReturnAmt.toFixed(2)}</span>
+                </div>
               </div>
 
-              {errors.submit && <div className="sra-error-banner" style={{ marginTop: 12 }}>{errors.submit}</div>}
+              {errors.submit && <div className="afx-alert">{errors.submit}</div>}
             </div>
           )}
         </div>
 
-        <div className="sra-footer">
+        <div className="afx-footer">
           {step === 2 && (
-            <button className="sra-btn-back" onClick={() => { setStep(1); setPurchaseData(null); }}>
-              Back
-            </button>
+            <button className="afx-btn" onClick={() => { setStep(1); setPurchaseData(null); }}>← Back</button>
           )}
-          <button className="sra-btn-cancel" onClick={onClose}>Cancel</button>
+          <button className="afx-btn" onClick={onClose} style={step === 2 ? {} : { marginLeft: "auto" }}>Cancel</button>
           {step === 2 && (
-            <button className="sra-btn-submit" onClick={handleSubmit} disabled={submitting || !anySelected}>
-              {submitting ? "Processing..." : "Submit Return"}
+            <button className="afx-btn afx-btn--primary" onClick={handleSubmit} disabled={submitting || !anySelected}>
+              {submitting ? <><span className="afx-spinner" /> Processing…</> : "Submit Return"}
             </button>
           )}
         </div>

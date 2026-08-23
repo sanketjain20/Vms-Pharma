@@ -25,13 +25,14 @@ const YearMonthGrid = ({ label, value, onChange, options, type }) => {
   const renderMonthGrid = () => (
     <div className="ymg-grid">
       {options.map((opt) => (
-        <div
+        <button
+          type="button"
           key={opt.value}
-          className={`ymg-item ${value === opt.value ? "ymg-active" : ""}`}
+          className={`ymg-cell ${value === opt.value ? "is-active" : ""}`}
           onClick={() => { onChange(opt.value); setOpen(false); }}
         >
           {opt.label}
-        </div>
+        </button>
       ))}
     </div>
   );
@@ -41,59 +42,51 @@ const YearMonthGrid = ({ label, value, onChange, options, type }) => {
     const years = Array.from({ length: 9 }, (_, i) => start + i);
     return (
       <div className="ymg-grid">
-        <div
-          className="ymg-nav"
-          onClick={() => setYearPage((y) => y - 10)}
-        >
+        <button type="button" className="ymg-nav" onClick={() => setYearPage((y) => y - 10)} aria-label="Earlier years">
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path d="M7 2L3 5L7 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-        </div>
+        </button>
 
         {years.map((yr) => (
-          <div
+          <button
+            type="button"
             key={yr}
-            className={`ymg-item ${value === yr ? "ymg-active" : ""}`}
+            className={`ymg-cell ${value === yr ? "is-active" : ""}`}
             onClick={() => { onChange(yr); setOpen(false); }}
           >
             {yr}
-          </div>
+          </button>
         ))}
 
-        <div
-          className="ymg-nav"
-          onClick={() => setYearPage((y) => y + 10)}
-        >
+        <button type="button" className="ymg-nav" onClick={() => setYearPage((y) => y + 10)} aria-label="Later years">
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-        </div>
+        </button>
       </div>
     );
   };
 
   return (
-    <div className="ymg-select" ref={wrapperRef}>
-      <div className="ymg-row">
-        <label className="ymg-label">{label}</label>
-        <button
-          className={`ymg-display ${open ? "ymg-display-open" : ""}`}
-          onClick={toggle}
-          type="button"
+    <div className="ymg-field" ref={wrapperRef}>
+      <label className="ymg-label">{label}</label>
+      <button
+        type="button"
+        className={`ymg-trigger ${open ? "is-open" : ""}`}
+        onClick={toggle}
+      >
+        <span>{displayValue}</span>
+        <svg
+          className={`ymg-chevron ${open ? "is-up" : ""}`}
+          width="10" height="10" viewBox="0 0 10 10" fill="none"
         >
-          <span>{displayValue}</span>
-          <svg
-            className={`ymg-chevron ${open ? "ymg-chevron-up" : ""}`}
-            width="10" height="10" viewBox="0 0 10 10" fill="none"
-          >
-            <path d="M2 4L5 7L8 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-      </div>
+          <path d="M2 4L5 7L8 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
 
       {open && (
-        <div className="ymg-dropdown">
-          <div className="ymg-dropdown-beam" />
+        <div className="ymg-panel">
           {type === "month" ? renderMonthGrid() : renderYearGrid()}
         </div>
       )}

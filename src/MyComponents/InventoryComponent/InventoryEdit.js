@@ -1,26 +1,72 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../../Styles/Product/ProductForm.css";
-import "../../Styles/Inventory/InventoryEdit.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 
-export default function InventoryEdit({ uKey, onClose, onSubmit }) {
-  const dropdownRef     = useRef(null);
-  const typeDropdownRef = useRef(null);
-  const stockMenuRef    = useRef(null);
+/* ── Reusable searchable dropdown (mirrors InventoryAdd.js) ── */
+function SearchDrop({ label, options, value, onChange, placeholder, error, getLabel = (o) => o.name, getId = (o) => o.id }) {
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = options.find(o => String(getId(o)) === String(value));
 
+  useEffect(() => {
+    const h = e => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setSearch(""); } };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const filtered = options.filter(o => getLabel(o).toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="afx-field">
+      {label && <label className="afx-label">{label}</label>}
+      <div className="afx-searchdrop" ref={ref}>
+        <div
+          className={`afx-searchdrop-face ${open ? "is-open" : ""} ${selected ? "is-filled" : ""}`}
+          onClick={() => { if (!open) setSearch(""); setOpen(!open); }}
+        >
+          <span>{selected ? getLabel(selected) : (placeholder || "Select…")}</span>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+        {open && (
+          <div className="afx-searchdrop-panel">
+            <input
+              className="afx-searchdrop-input"
+              autoFocus
+              placeholder={`Search ${label || ""}…`}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <div className="afx-searchdrop-list">
+              {filtered.length === 0 ? (
+                <div className="afx-searchdrop-empty">No results</div>
+              ) : filtered.map(o => (
+                <div
+                  key={getId(o)}
+                  className={`afx-searchdrop-item ${String(getId(o)) === String(value) ? "is-selected" : ""}`}
+                  onMouseDown={e => { e.preventDefault(); onChange(getId(o)); setOpen(false); setSearch(""); }}
+                >
+                  {getLabel(o)}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      {error && <div className="afx-error">{error}</div>}
+    </div>
+  );
+}
+
+export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   const [products, setProducts]               = useState([]);
-  const [searchTerm, setSearchTerm]           = useState("");
-  const [dropdownOpen, setDropdownOpen]       = useState(false);
   const [productTypes, setProductTypes]       = useState([]);
   const [productTypeId, setProductTypeId]     = useState("");
-  const [typeSearch, setTypeSearch]           = useState("");
-  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [allProducts, setAllProducts]         = useState([]);
   const isInitialLoad                         = useRef(true);
 
-  const [stockMenuOpen, setStockMenuOpen]     = useState(false);
   const [showStockScreen, setShowStockScreen] = useState(false);
   const [stockQty, setStockQty]               = useState("");
   const [stockActionType, setStockActionType] = useState(null);
@@ -50,6 +96,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
         } else { toast.error("Failed to load products"); setInitialLoading(false); }
       })
       .catch(() => { toast.error("Failed to load products"); setInitialLoading(false); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ── FETCH PRODUCT TYPES ── */
@@ -77,25 +124,13 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
         };
         setFormData(init);
         setOriginalData(init);
-        const matched = products.find(p => p.id === inv.productId);
-        setSearchTerm(matched ? matched.name : "");
         if (inv.productTypeId) setProductTypeId(inv.productTypeId);
         isInitialLoad.current = false;
       })
       .catch(() => toast.error("Error loading inventory"))
       .finally(() => setInitialLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products]);
-
-  /* ── CLICK OUTSIDE ── */
-  useEffect(() => {
-    const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setDropdownOpen(false);
-      if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) setTypeDropdownOpen(false);
-      if (stockMenuRef.current && !stockMenuRef.current.contains(e.target)) setStockMenuOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   /* ── PRODUCT → TYPE ── */
   useEffect(() => {
@@ -111,18 +146,12 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`)
       .then(r => r.json())
       .then(json => setProducts(json?.data || []));
-  }, [productTypeId]);
+  }, [productTypeId, allProducts]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value === "" ? "" : Number(value) }));
     setErrors(prev => ({ ...prev, [name]: "" }));
-  };
-
-  const handleProductSelect = (product) => {
-    setFormData(prev => ({ ...prev, product_id: product.id }));
-    setSearchTerm(product.name);
-    setDropdownOpen(false);
   };
 
   const validate = () => {
@@ -193,10 +222,6 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     setShowStockScreen(false);
   };
 
-  const filteredTypes = productTypes.filter(pt =>
-    pt.name.toLowerCase().includes(typeSearch.toLowerCase())
-  );
-
   /* ── STOCK CARDS CONFIG ── */
   const stockCards = [
     { key: "add",     emoji: "➕", label: "Add Stock" },
@@ -205,211 +230,171 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     { key: "adjust",  emoji: "⚖️",  label: "Adjust Stock" },
   ];
 
+  const stockActionTitle =
+    stockActionType === "add"     ? "Add Stock" :
+    stockActionType === "reduce"  ? "Reduce Stock" :
+    stockActionType === "damaged" ? "Mark Damaged Stock" :
+    stockActionType === "adjust"  ? "Adjust Stock Quantity" : "";
+
+  const stockQtyLabel =
+    stockActionType === "adjust"  ? "New Quantity" :
+    stockActionType === "damaged" ? "Damaged Quantity" : "Quantity";
+
   return (
-    <div className="modal-backdrop show">
-      <div className="modal">
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--md">
         {initialLoading ? (
-          <div className="modal-body mf-modal-loading">
-            <div className="mf-loader-ring"><div/><div/><div/><div/></div>
+          <div className="afx-loading">
+            <div className="afx-loader-ring"><div/><div/><div/></div>
           </div>
         ) : (
-        <>
-
-        
-        <div className="modal-header">
-          <div className="modal-title">
-            <h3>Edit Inventory {formData.inventoryCode && `· ${formData.inventoryCode}`}</h3>
-            <div className="small-muted">Update inventory details</div>
-          </div>
-
-          <div className="modal-controls">
-            <div className="tab-row">
-              {["details", "stock"].map(tab => (
-                <div
-                  key={tab}
-                  className={`tab ${activeTab === tab ? "active" : ""}`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab === "details" ? "Product" : "Stock & Pricing"}
-                </div>
-              ))}
+          <>
+            <div className="afx-header">
+              <div>
+                <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Edit Inventory{formData.inventoryCode ? ` · ${formData.inventoryCode}` : ""}</div>
+                <h3 className="afx-title">Update Inventory</h3>
+              </div>
+              <button className="afx-close" onClick={onClose} title="Close">
+                <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                ESC
+              </button>
             </div>
-            <button className="btn-ghost" onClick={onClose}>✕ ESC</button>
-          </div>
-        </div>
 
-        
-        <form className="modal-body">
-          <div className="form-col scrollable">
-
-            
-            {showStockScreen ? (
-
-              stockActionType ? (
-                /* ── ACTION INPUT ── */
-                <div className="stock-screen">
-                  <div className="stock-screen-header">
-                    <h3>
-                      {stockActionType === "add"     && "Add Stock"}
-                      {stockActionType === "reduce"  && "Reduce Stock"}
-                      {stockActionType === "damaged" && "Mark Damaged Stock"}
-                      {stockActionType === "adjust"  && "Adjust Stock Quantity"}
-                    </h3>
-                    <button type="button" className="btn-ghost" onClick={() => setStockActionType(null)}>
-                      ← Back
-                    </button>
-                  </div>
-
-                  <div className="form-grid">
-                    <div>
-                      <label>Current Quantity</label>
-                      <input type="number" value={formData.currentQuantity} readOnly />
-                    </div>
-                    <div>
-                      <label>
-                        {stockActionType === "adjust"  ? "New Quantity" :
-                         stockActionType === "damaged" ? "Damaged Quantity" :
-                         "Quantity"}
-                      </label>
-                      <input
-                        type="number"
-                        value={stockQty}
-                        onChange={e => setStockQty(e.target.value)}
-                        placeholder="Enter quantity"
-                        autoFocus
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: "22px" }}>
-                    <button type="button" className="submit-button" onClick={handleStockUpdate}>
-                      Confirm Update
-                    </button>
-                  </div>
-                </div>
-
-              ) : (
-                /* ── STOCK OPTIONS ── */
-                <div className="stock-screen">
-                  <div className="stock-screen-header">
-                    <h3>Manage Stock</h3>
-                    <button type="button" className="btn-ghost" onClick={() => setShowStockScreen(false)}>
-                      ← Back
-                    </button>
-                  </div>
-
-                  <div className="stock-options-grid">
-                    {stockCards.map(card => (
-                      <div
-                        key={card.key}
-                        className="stock-card"
-                        onClick={() => handleStockAction(card.key)}
-                      >
-                        <span className="stock-card-emoji">{card.emoji}</span>
-                        <span className="stock-card-label">{card.label}</span>
+            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+              <div className="afx-body">
+                {showStockScreen ? (
+                  stockActionType ? (
+                    /* ── ACTION INPUT ── */
+                    <>
+                      <div className="afx-perms-head">
+                        <div className="afx-perms-title">{stockActionTitle}</div>
+                        <button type="button" className="afx-btn" onClick={() => setStockActionType(null)}>← Back</button>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )
-
-            ) : (
-              /* ══ MAIN TABS ══ */
-              <>
-                {activeTab === "details" && (
-                  <div className="form-grid">
-
-                    
-                    <div className="custom-select" ref={typeDropdownRef}>
-                      <label>Product Type</label>
-                      <div
-                        className={`select-box ${typeDropdownOpen ? "active" : ""}`}
-                        onClick={() => setTypeDropdownOpen(o => !o)}
-                      >
-                        <div className="selected">
-                          {productTypes.find(t => t.id === productTypeId)?.name || "Select product type"}
+                      <div className="afx-grid">
+                        <div className="afx-field">
+                          <label className="afx-label">Current Quantity</label>
+                          <input className="afx-input" type="number" value={formData.currentQuantity} readOnly />
                         </div>
-                        {typeDropdownOpen && (
-                          <ul className="options">
-                            {filteredTypes.map(pt => (
-                              <li key={pt.id} onClick={e => { e.stopPropagation(); setProductTypeId(pt.id); setTypeDropdownOpen(false); }}>
-                                {pt.name}
-                              </li>
-                            ))}
-                            {filteredTypes.length === 0 && <li className="no-result">No results found</li>}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
-
-                    
-                    <div className="custom-select" ref={dropdownRef}>
-                      <label>Select Product</label>
-                      <div
-                        className={`select-box ${dropdownOpen ? "active" : ""}`}
-                        onClick={() => setDropdownOpen(o => !o)}
-                      >
-                        <div className="selected">
-                          {products.find(p => p.id === formData.product_id)?.name || "Select product"}
+                        <div className="afx-field">
+                          <label className="afx-label">{stockQtyLabel}</label>
+                          <input
+                            className="afx-input"
+                            type="number"
+                            value={stockQty}
+                            onChange={e => setStockQty(e.target.value)}
+                            placeholder="Enter quantity"
+                            autoFocus
+                          />
                         </div>
-                        {dropdownOpen && (
-                          <ul className="options">
-                            {products.map(p => (
-                              <li key={p.id} onClick={e => { e.stopPropagation(); handleProductSelect(p); }}>
-                                {p.name}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
                       </div>
-                      {errors.product_id && <div className="error-msg">{errors.product_id}</div>}
+                      <div>
+                        <button type="button" className="afx-btn afx-btn--primary" onClick={handleStockUpdate}>
+                          Confirm Update
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    /* ── STOCK OPTIONS ── */
+                    <>
+                      <div className="afx-perms-head">
+                        <div className="afx-perms-title">Manage Stock</div>
+                        <button type="button" className="afx-btn" onClick={() => setShowStockScreen(false)}>← Back</button>
+                      </div>
+                      <div className="afx-actions-grid">
+                        {stockCards.map(card => (
+                          <div
+                            key={card.key}
+                            className="afx-action"
+                            onClick={() => handleStockAction(card.key)}
+                            style={{ cursor: "pointer", flexDirection: "column", gap: 4, padding: "14px 9px" }}
+                          >
+                            <span style={{ fontSize: 18 }}>{card.emoji}</span>
+                            <span className="afx-action-label">{card.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )
+                ) : (
+                  /* ══ MAIN TABS ══ */
+                  <>
+                    <div className="afx-tabs">
+                      {["details", "stock"].map(tab => (
+                        <button
+                          type="button"
+                          key={tab}
+                          className={`afx-tab ${activeTab === tab ? "is-active" : ""}`}
+                          onClick={() => setActiveTab(tab)}
+                        >
+                          {tab === "details" ? "Product" : "Stock & Pricing"}
+                        </button>
+                      ))}
                     </div>
 
-                  </div>
+                    {activeTab === "details" && (
+                      <div className="afx-grid">
+                        <SearchDrop
+                          label="Product Type"
+                          options={productTypes}
+                          value={productTypeId}
+                          onChange={setProductTypeId}
+                          placeholder="Select product type"
+                        />
+                        <SearchDrop
+                          label="Select Product"
+                          options={products}
+                          value={formData.product_id}
+                          onChange={(id) => setFormData(prev => ({ ...prev, product_id: id }))}
+                          placeholder="Select product"
+                          error={errors.product_id}
+                        />
+                      </div>
+                    )}
+
+                    {activeTab === "stock" && (
+                      <div className="afx-grid">
+                        <div className="afx-field">
+                          <label className="afx-label">Current Quantity</label>
+                          <input className="afx-input" type="number" name="currentQuantity" value={formData.currentQuantity} readOnly />
+                        </div>
+                        <div className="afx-field">
+                          <label className="afx-label">Reorder Level<span className="afx-req">*</span></label>
+                          <input
+                            className={`afx-input ${errors.reorderLevel ? "afx-input--err" : ""}`}
+                            type="number" name="reorderLevel" value={formData.reorderLevel}
+                            onChange={handleChange} placeholder="Enter reorder level"
+                          />
+                          {errors.reorderLevel && <div className="afx-error">{errors.reorderLevel}</div>}
+                        </div>
+                        <div className="afx-field">
+                          <label className="afx-label">Unit Selling Price (₹)<span className="afx-req">*</span></label>
+                          <input
+                            className={`afx-input ${errors.unitSellingPrice ? "afx-input--err" : ""}`}
+                            type="number" name="unitSellingPrice" value={formData.unitSellingPrice}
+                            onChange={handleChange} placeholder="Enter price"
+                          />
+                          {errors.unitSellingPrice && <div className="afx-error">{errors.unitSellingPrice}</div>}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
+              </div>
 
-                {activeTab === "stock" && (
-                  <div className="form-grid">
-                    <div>
-                      <label>Current Quantity</label>
-                      <input type="number" name="currentQuantity" value={formData.currentQuantity} readOnly />
-                    </div>
-                    <div>
-                      <label>Reorder Level</label>
-                      <input type="number" name="reorderLevel" value={formData.reorderLevel} onChange={handleChange} placeholder="Enter reorder level" />
-                      {errors.reorderLevel && <div className="error-msg">{errors.reorderLevel}</div>}
-                    </div>
-                    <div>
-                      <label>Unit Selling Price (₹)</label>
-                      <input type="number" name="unitSellingPrice" value={formData.unitSellingPrice} onChange={handleChange} placeholder="Enter price" />
-                      {errors.unitSellingPrice && <div className="error-msg">{errors.unitSellingPrice}</div>}
-                    </div>
-                  </div>
+              <div className="afx-footer">
+                {!showStockScreen && (
+                  <button type="button" className="afx-btn" onClick={() => setShowStockScreen(true)}>⚙ Manage Stock</button>
                 )}
-              </>
-            )}
-          </div>
-
-          
-          <div className="modal-footer-fixed">
-            <div className="modal-actions">
-              {!showStockScreen && (
-                <button type="button" className="btn-secondary" onClick={() => setShowStockScreen(true)}>
-                  ⚙ Manage Stock
-                </button>
-              )}
-              <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-              {!showStockScreen && !stockActionType && (detectChanges() || stockMovementPayload) && (
-                <button type="button" className="submit-button" onClick={handleSubmit}>
-                  Update Inventory
-                </button>
-              )}
-            </div>
-          </div>
-        </form>
-        </>
+                <button type="button" className="afx-btn" onClick={onClose}>Cancel</button>
+                {!showStockScreen && !stockActionType && (detectChanges() || stockMovementPayload) && (
+                  <button type="button" className="afx-btn afx-btn--primary" onClick={handleSubmit}>
+                    Update Inventory
+                  </button>
+                )}
+              </div>
+            </form>
+          </>
         )}
-
       </div>
     </div>
   );

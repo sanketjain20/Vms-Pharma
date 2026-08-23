@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../../Styles/Purchase/Purchase.css";
+import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
-/* ── Searchable dropdown — same pattern as your Sales ── */
+
+/* ── Searchable dropdown — externally controlled open state so a row of
+   these (one per line item) can be tracked by a single index ── */
 const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setOpen }) => {
   const [search, setSearch] = useState("");
   const selected = options.find(o => o.id === value);
@@ -11,30 +13,34 @@ const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setO
     (o.shopName || o.name || "").toLowerCase().includes(search.toLowerCase())
   );
   return (
-    <div className="pfx-drop-wrap" ref={dropRef}>
-      <div className={`pfx-drop-box ${open ? "pfx-drop-open" : ""}`} onClick={() => { if (!open) setSearch(""); setOpen(!open); }}>
-        <input
-          className="pfx-drop-input"
-          value={open ? search : (selected?.shopName || selected?.name || "")}
-          placeholder={placeholder}
-          onChange={e => setSearch(e.target.value)}
-          onClick={e => { e.stopPropagation(); if (!open) setSearch(""); setOpen(true); }}
-        />
-        <span className="pfx-drop-arrow">{open ? "▲" : "▼"}</span>
+    <div className="afx-searchdrop" ref={dropRef}>
+      <div className={`afx-searchdrop-face ${open ? "is-open" : ""} ${selected ? "is-filled" : ""}`} onClick={() => { if (!open) setSearch(""); setOpen(!open); }}>
+        <span>{selected?.shopName || selected?.name || placeholder}</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </div>
       {open && (
-        <ul className="pfx-drop-list">
-          {filtered.map(o => (
-            <li key={o.id}
-              className={o.id === value ? "pfx-drop-selected" : ""}
-              onMouseDown={e => { e.preventDefault(); onChange(o.id); setOpen(false); setSearch(""); }}
-            >
-              {o.shopName || o.name}
-              {o.supplierCode && <span className="pfx-drop-sub">{o.supplierCode}</span>}
-            </li>
-          ))}
-          {filtered.length === 0 && <li className="pfx-drop-empty">No results</li>}
-        </ul>
+        <div className="afx-searchdrop-panel">
+          <input
+            className="afx-searchdrop-input"
+            autoFocus
+            value={search}
+            placeholder="Search…"
+            onChange={e => setSearch(e.target.value)}
+          />
+          <div className="afx-searchdrop-list">
+            {filtered.length === 0 ? (
+              <div className="afx-searchdrop-empty">No results</div>
+            ) : filtered.map(o => (
+              <div key={o.id}
+                className={`afx-searchdrop-item ${o.id === value ? "is-selected" : ""}`}
+                onMouseDown={e => { e.preventDefault(); onChange(o.id); setOpen(false); setSearch(""); }}
+              >
+                {o.shopName || o.name}
+                {o.supplierCode && <span style={{ color: "var(--afx-text-3)", marginLeft: 6, fontSize: 11 }}>{o.supplierCode}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -218,50 +224,38 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
   const hasItemErrors   = errors.items_empty || errors.items;
 
   return (
-    <div className="pfx-backdrop">
-      <div className="pfx-modal">
-
-        
-        <div className="pfx-top-beam" />
-
-        
-        <div className="pfx-header">
-          <div className="pfx-header-left">
-            <div className="pfx-eyebrow"><span className="pfx-eyebrow-dot" />NEW PURCHASE</div>
-            <h2 className="pfx-title"><span className="pfx-title-acc"></span> Create Purchase Entry</h2>
+    <div className="afx-backdrop">
+      <div className="afx-modal afx-modal--xl">
+        <div className="afx-header">
+          <div>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />New Purchase</div>
+            <h3 className="afx-title">Create Purchase Entry</h3>
           </div>
-          <div className="pfx-header-right">
-            <div className="pfx-tab-row">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className="afx-tabs" style={{ padding: 0, background: "none", border: "none" }}>
               {[
                 { id: "DETAILS", label: "Details", hasErr: hasDetailErrors },
                 { id: "ITEMS",   label: `Items ${form.items.length > 0 ? `(${form.items.length})` : ""}`, hasErr: hasItemErrors },
               ].map(t => (
                 <button key={t.id} type="button"
-                  className={`pfx-tab ${activeTab === t.id ? "pfx-tab-active" : ""} ${t.hasErr ? "pfx-tab-err" : ""}`}
+                  className={`afx-tab ${activeTab === t.id ? "is-active" : ""}`}
+                  style={t.hasErr ? { color: "var(--afx-danger)" } : undefined}
                   onClick={() => setActiveTab(t.id)}
                 >{t.label}</button>
               ))}
             </div>
-            <button className="pfx-close-btn" type="button" onClick={onClose}>
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                <path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
+            <button className="afx-close" type="button" onClick={onClose}>
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              ESC
             </button>
           </div>
         </div>
 
-        <div className="pfx-divider" />
-
-        
-        <div className="pfx-body">
-
-          
+        <div className="afx-body">
           {activeTab === "DETAILS" && (
-            <div className="pfx-details-grid">
-
-              
-              <div className="pfx-field">
-                <label className="pfx-label">Supplier <span className="pfx-req">*</span></label>
+            <div className="afx-grid">
+              <div className="afx-field">
+                <label className="afx-label">Supplier<span className="afx-req">*</span></label>
                 <SearchDrop
                   options={suppliers}
                   value={form.supplierId}
@@ -271,62 +265,60 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                   open={supplierOpen}
                   setOpen={setSupplierOpen}
                 />
-                {errors.supplierId && <span className="pfx-error">{errors.supplierId}</span>}
+                {errors.supplierId && <span className="afx-error">{errors.supplierId}</span>}
               </div>
 
-              
-              <div className="pfx-field">
-                <label className="pfx-label">Supplier Invoice No <span className="pfx-req">*</span></label>
-                <input className={`pfx-input ${errors.supplierInvoiceNumber ? "pfx-input-err" : ""}`}
+              <div className="afx-field">
+                <label className="afx-label">Supplier Invoice No<span className="afx-req">*</span></label>
+                <input className={`afx-input ${errors.supplierInvoiceNumber ? "afx-input--err" : ""}`}
                   value={form.supplierInvoiceNumber}
                   onChange={e => setField("supplierInvoiceNumber", e.target.value)}
                   placeholder="e.g. INV-2024-001"
                 />
-                {errors.supplierInvoiceNumber && <span className="pfx-error">{errors.supplierInvoiceNumber}</span>}
+                {errors.supplierInvoiceNumber && <span className="afx-error">{errors.supplierInvoiceNumber}</span>}
               </div>
 
-              
-              <div className="pfx-field">
-                <label className="pfx-label">Invoice Date <span className="pfx-req">*</span></label>
-                <input type="date" className={`pfx-input ${errors.invoiceDate ? "pfx-input-err" : ""}`}
+              <div className="afx-field">
+                <label className="afx-label">Invoice Date<span className="afx-req">*</span></label>
+                <input type="date" className={`afx-input ${errors.invoiceDate ? "afx-input--err" : ""}`}
                   value={form.invoiceDate}
                   onChange={e => setField("invoiceDate", e.target.value)}
                 />
-                {errors.invoiceDate && <span className="pfx-error">{errors.invoiceDate}</span>}
+                {errors.invoiceDate && <span className="afx-error">{errors.invoiceDate}</span>}
               </div>
 
-              
-              <div className="pfx-field">
-                <label className="pfx-label">Payment Status <span className="pfx-req">*</span></label>
-                <select className={`pfx-input ${errors.paymentStatus ? "pfx-input-err" : ""}`}
-                  value={form.paymentStatus}
-                  onChange={e => setField("paymentStatus", e.target.value)}
-                >
-                  <option value="">— Select —</option>
-                  <option value="PAID">Paid in Full</option>
-                  <option value="CREDIT">Credit (Pay Later)</option>
-                  <option value="PARTIAL">Partial Payment</option>
-                </select>
-                {errors.paymentStatus && <span className="pfx-error">{errors.paymentStatus}</span>}
+              <div className="afx-field">
+                <label className="afx-label">Payment Status<span className="afx-req">*</span></label>
+                <div className="afx-select-wrap">
+                  <select className={`afx-select ${errors.paymentStatus ? "afx-select--err" : ""}`}
+                    value={form.paymentStatus}
+                    onChange={e => setField("paymentStatus", e.target.value)}
+                  >
+                    <option value="">— Select —</option>
+                    <option value="PAID">Paid in Full</option>
+                    <option value="CREDIT">Credit (Pay Later)</option>
+                    <option value="PARTIAL">Partial Payment</option>
+                  </select>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                {errors.paymentStatus && <span className="afx-error">{errors.paymentStatus}</span>}
               </div>
 
-              
               {(form.paymentStatus === "CREDIT" || form.paymentStatus === "PARTIAL") && (
-                <div className="pfx-field">
-                  <label className="pfx-label">Due Date <span className="pfx-req">*</span></label>
-                  <input type="date" className={`pfx-input ${errors.dueDate ? "pfx-input-err" : ""}`}
+                <div className="afx-field">
+                  <label className="afx-label">Due Date<span className="afx-req">*</span></label>
+                  <input type="date" className={`afx-input ${errors.dueDate ? "afx-input--err" : ""}`}
                     value={form.dueDate}
                     onChange={e => setField("dueDate", e.target.value)}
                   />
-                  {errors.dueDate && <span className="pfx-error">{errors.dueDate}</span>}
+                  {errors.dueDate && <span className="afx-error">{errors.dueDate}</span>}
                 </div>
               )}
 
-              
               {form.paymentStatus === "PARTIAL" && (
-                <div className="pfx-field">
-                  <label className="pfx-label">Amount Paid (₹)</label>
-                  <input type="number" className="pfx-input" min="0"
+                <div className="afx-field">
+                  <label className="afx-label">Amount Paid (₹)</label>
+                  <input type="number" className="afx-input" min="0"
                     value={form.amountPaid}
                     onChange={e => setField("amountPaid", e.target.value)}
                     placeholder="0.00"
@@ -334,10 +326,9 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                 </div>
               )}
 
-              
-              <div className="pfx-field pfx-field-full">
-                <label className="pfx-label">Notes</label>
-                <textarea className="pfx-input pfx-textarea" rows={3}
+              <div className="afx-field afx-field--full">
+                <label className="afx-label">Notes</label>
+                <textarea className="afx-textarea" rows={3}
                   value={form.notes}
                   onChange={e => setField("notes", e.target.value)}
                   placeholder="Optional notes about this purchase…"
@@ -346,30 +337,26 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
             </div>
           )}
 
-          
           {activeTab === "ITEMS" && (
-            <div className="pfx-items-section">
-              {errors.items_empty && (
-                <div className="pfx-alert">{errors.items_empty}</div>
-              )}
+            <div>
+              {errors.items_empty && <div className="afx-alert" style={{ marginBottom: 12 }}>{errors.items_empty}</div>}
 
               {form.items.length === 0 ? (
-                <div className="pfx-empty-state">
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                    <circle cx="20" cy="20" r="18" stroke="rgba(59,130,246,0.2)" strokeWidth="1.5"/>
-                    <path d="M13 20h14M20 13v14" stroke="rgba(59,130,246,0.3)" strokeWidth="1.5" strokeLinecap="round"/>
+                <div className="afx-items-empty">
+                  <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.4" opacity="0.3"/>
+                    <path d="M13 20h14M20 13v14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.5"/>
                   </svg>
                   <p>No items added yet</p>
-                  <button type="button" className="pfx-btn-add" onClick={addItem}>+ Add First Item</button>
+                  <button type="button" className="afx-line-add" onClick={addItem}>+ Add First Item</button>
                 </div>
               ) : (
                 <>
-                  
-                  <div className="pfx-items-head">
+                  <div className="afx-items-head">
                     <span>Product</span>
                     <span>MFG Date</span>
                     <span>Expiry Date</span>
-                    <span>Quantity</span>
+                    <span>Qty</span>
                     <span>Cost (₹)</span>
                     <span>MRP (₹)</span>
                     <span>GST %</span>
@@ -378,9 +365,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                   </div>
 
                   {form.items.map((item, i) => (
-                    <div key={i} className="pfx-item-row">
-
-                      
+                    <div key={i} className="afx-item-row">
                       <div ref={el => productRefs.current[i] = el}>
                         <SearchDrop
                           options={products}
@@ -391,58 +376,56 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                           open={productOpenIdx === i}
                           setOpen={v => setProductOpenIdx(v ? i : null)}
                         />
-                        {errors.items?.[i]?.productId && <span className="pfx-error">{errors.items[i].productId}</span>}
+                        {errors.items?.[i]?.productId && <span className="afx-error">{errors.items[i].productId}</span>}
                       </div>
 
-                      
                       <div>
-                        <input type="date" className="pfx-cell-input"
+                        <input type="date" className="afx-cell-input"
                           value={item.manufacturingDate}
                           onChange={e => updateItem(i, "manufacturingDate", e.target.value)}
                         />
                       </div>
 
-                      
                       <div>
-                        <input type="date" className={`pfx-cell-input ${errors.items?.[i]?.expiryDate ? "pfx-input-err" : ""}`}
+                        <input type="date" className="afx-cell-input"
+                          style={errors.items?.[i]?.expiryDate ? { borderColor: "var(--afx-danger)" } : undefined}
                           value={item.expiryDate}
                           onChange={e => updateItem(i, "expiryDate", e.target.value)}
                         />
-                        {errors.items?.[i]?.expiryDate && <span className="pfx-error">{errors.items[i].expiryDate}</span>}
+                        {errors.items?.[i]?.expiryDate && <span className="afx-error">{errors.items[i].expiryDate}</span>}
                       </div>
 
-                      
                       <div>
-                        <input type="number" min="1" className={`pfx-cell-input ${errors.items?.[i]?.quantity ? "pfx-input-err" : ""}`}
+                        <input type="number" min="1" className="afx-cell-input"
+                          style={errors.items?.[i]?.quantity ? { borderColor: "var(--afx-danger)" } : undefined}
                           value={item.quantity}
                           onChange={e => updateItem(i, "quantity", e.target.value)}
                         />
-                        {errors.items?.[i]?.quantity && <span className="pfx-error">{errors.items[i].quantity}</span>}
+                        {errors.items?.[i]?.quantity && <span className="afx-error">{errors.items[i].quantity}</span>}
                       </div>
 
-                      
                       <div>
-                        <input type="number" min="0" className={`pfx-cell-input ${errors.items?.[i]?.costPrice ? "pfx-input-err" : ""}`}
+                        <input type="number" min="0" className="afx-cell-input"
+                          style={errors.items?.[i]?.costPrice ? { borderColor: "var(--afx-danger)" } : undefined}
                           value={item.costPrice}
                           onChange={e => updateItem(i, "costPrice", e.target.value)}
                           placeholder="0.00"
                         />
-                        {errors.items?.[i]?.costPrice && <span className="pfx-error">{errors.items[i].costPrice}</span>}
+                        {errors.items?.[i]?.costPrice && <span className="afx-error">{errors.items[i].costPrice}</span>}
                       </div>
 
-                      
                       <div>
-                        <input type="number" min="0" className={`pfx-cell-input ${errors.items?.[i]?.mrp ? "pfx-input-err" : ""}`}
+                        <input type="number" min="0" className="afx-cell-input"
+                          style={errors.items?.[i]?.mrp ? { borderColor: "var(--afx-danger)" } : undefined}
                           value={item.mrp}
                           onChange={e => updateItem(i, "mrp", e.target.value)}
                           placeholder="0.00"
                         />
-                        {errors.items?.[i]?.mrp && <span className="pfx-error">{errors.items[i].mrp}</span>}
+                        {errors.items?.[i]?.mrp && <span className="afx-error">{errors.items[i].mrp}</span>}
                       </div>
 
-                      
                       <div>
-                        <select className="pfx-cell-input"
+                        <select className="afx-cell-input"
                           value={item.gstRate}
                           onChange={e => updateItem(i, "gstRate", e.target.value)}
                         >
@@ -450,13 +433,9 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                         </select>
                       </div>
 
-                      
-                      <div className="pfx-line-total">
-                        ₹{getLineTotal(item).toFixed(2)}
-                      </div>
+                      <div className="afx-line-total">₹{getLineTotal(item).toFixed(2)}</div>
 
-                      
-                      <button type="button" className="pfx-remove-btn" onClick={() => removeItem(i)} title="Remove">
+                      <button type="button" className="afx-remove-btn" onClick={() => removeItem(i)} title="Remove">
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                           <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
                         </svg>
@@ -464,18 +443,17 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                     </div>
                   ))}
 
-                  
-                  <div className="pfx-totals">
-                    <div className="pfx-totals-row">
+                  <div className="afx-totals">
+                    <div className="afx-totals-row">
                       <span>Subtotal</span>
                       <span>₹{(grandTotal - totalTax).toFixed(2)}</span>
                     </div>
-                    <div className="pfx-totals-row">
+                    <div className="afx-totals-row">
                       <span>Total GST</span>
                       <span>₹{totalTax.toFixed(2)}</span>
                     </div>
-                    <div className="pfx-totals-divider" />
-                    <div className="pfx-totals-row pfx-totals-grand">
+                    <div className="afx-totals-divider" />
+                    <div className="afx-totals-row afx-totals-grand">
                       <span>Grand Total</span>
                       <span>₹{grandTotal.toFixed(2)}</span>
                     </div>
@@ -483,21 +461,15 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
                 </>
               )}
 
-              <button type="button" className="pfx-btn-add" onClick={addItem}>+ Add Item</button>
+              <button type="button" className="afx-line-add" style={{ marginTop: 10 }} onClick={addItem}>+ Add Item</button>
             </div>
           )}
         </div>
 
-        
-        <div className="pfx-footer">
-          <button type="button" className="pfx-btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="button" className="pfx-btn-primary" onClick={handleSubmit} disabled={loading}>
-            {loading ? <><span className="pfx-spinner" /> Saving…</> : <>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Save Purchase
-            </>}
+        <div className="afx-footer">
+          <button type="button" className="afx-btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="afx-btn afx-btn--primary" onClick={handleSubmit} disabled={loading}>
+            {loading ? <><span className="afx-spinner" /> Saving…</> : "Save Purchase"}
           </button>
         </div>
       </div>
