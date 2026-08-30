@@ -55,6 +55,14 @@ const apiClient = async (endpoint, options = {}) => {
     stopBusy?.();
   }
 
+  if (response.status === 401 && !url.includes("/api/auth/")) {
+    localStorage.removeItem("vmsUser");
+    localStorage.removeItem("modules");
+    if (window.location.pathname !== "/") {
+      window.location.replace("/");
+    }
+  }
+
   return response;
 };
 

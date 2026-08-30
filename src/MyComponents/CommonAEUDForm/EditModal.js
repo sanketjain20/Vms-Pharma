@@ -11,6 +11,7 @@ import SupplierEdit    from "../SupplierComponent/SupplierEdit";
 import PurchaseEdit    from "../PurchaseComponent/PurchaseEdit";
 import ManufacturerEdit from "../ManufacturerComponent/ManufacturerEdit";
 import RetailerEdit from "../RetailerComponent/RetailerEdit";
+import EventLogDock from "../EventLogComponent/EventLogDock";
 
 export default function EditModal({ isOpen, onClose, moduleName, uKey, onSubmit }) {
   if (!isOpen) return null;
@@ -30,5 +31,11 @@ export default function EditModal({ isOpen, onClose, moduleName, uKey, onSubmit 
     default:             return null;
   }
 
-  return ReactDOM.createPortal(content, document.body);
+  return ReactDOM.createPortal(
+    <>
+      <EventLogDock moduleName={moduleName} uKey={uKey} />
+      {content}
+    </>,
+    document.body
+  );
 }

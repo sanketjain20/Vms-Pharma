@@ -4,6 +4,7 @@ import ReactDOM from "react-dom";
 import PaymentCollect from "../PaymentCollectionComponent/PaymentCollect";
 import RetailerCollectPayment from "../RetailerOutstandingComponent/CollectPayment";
 import SupplierMakePayment from "../SupplierOutstandingComponent/MakePayment";
+import EventLogDock from "../EventLogComponent/EventLogDock";
 
 export default function PaymentCollectionModal({ isOpen, onClose, moduleName, uKey, onSubmit }) {
   if (!isOpen) return null;
@@ -42,5 +43,11 @@ export default function PaymentCollectionModal({ isOpen, onClose, moduleName, uK
       break;
   }
 
-  return ReactDOM.createPortal(content, document.body);
+  return ReactDOM.createPortal(
+    <>
+      <EventLogDock moduleName={moduleName} uKey={uKey} />
+      {content}
+    </>,
+    document.body
+  );
 }

@@ -1,0 +1,422 @@
+/* =========================
+   EVENT LOG — docked tab + bottom-sheet grid shown on View/Edit/Payment
+   Collection screens. Tokens mirror the FormShell (--afx-*) dark-default /
+   light-override convention so this reads as one system with the rest of
+   the app, not a bolt-on. Sits above the .afx-modal it belongs to
+   (110000) and below system-level overlays (VmsAssistant 120000).
+
+   Deliberately a bottom sheet rather than a right-side drawer: a field/old/
+   new grid needs real horizontal room, which a bottom sheet gives at every
+   viewport width (phone included) without competing with the form beside it.
+========================= */
+body {
+  --evl-surface:      #101014;
+  --evl-panel:        #17171d;
+  --evl-sunken:       #0a0a0d;
+  --evl-border:       rgba(255, 255, 255, 0.1);
+  --evl-border-soft:  rgba(255, 255, 255, 0.06);
+  --evl-text-1:       #f2f3f7;
+  --evl-text-2:       #9a9db0;
+  --evl-text-3:       #63667a;
+  --evl-accent:       #3b82f6;
+  --evl-accent-soft:  rgba(59, 130, 246, 0.12);
+  --evl-success:      #10b981;
+  --evl-success-soft: rgba(16, 185, 129, 0.12);
+  --evl-danger:       #ef4444;
+  --evl-danger-soft:  rgba(239, 68, 68, 0.12);
+  --evl-warning:      #f59e0b;
+  --evl-warning-soft: rgba(245, 158, 11, 0.12);
+  --evl-shadow:       rgba(0, 0, 0, 0.55);
+}
+
+body[data-theme="light"] {
+  --evl-surface:      #ffffff;
+  --evl-panel:        #ffffff;
+  --evl-sunken:       #f8fafc;
+  --evl-border:       rgba(15, 23, 42, 0.1);
+  --evl-border-soft:  rgba(15, 23, 42, 0.06);
+  --evl-text-1:       #0f172a;
+  --evl-text-2:       #55627a;
+  --evl-text-3:       #94a3b8;
+  --evl-accent:       #2563eb;
+  --evl-accent-soft:  rgba(37, 99, 235, 0.08);
+  --evl-success:      #059669;
+  --evl-success-soft: rgba(5, 150, 105, 0.1);
+  --evl-danger:       #dc2626;
+  --evl-danger-soft:  rgba(220, 38, 38, 0.08);
+  --evl-warning:      #b45309;
+  --evl-warning-soft: rgba(180, 83, 9, 0.1);
+  --evl-shadow:       rgba(15, 23, 42, 0.16);
+}
+
+/* ── Docked tab ─────────────────────────────────────────────────────── */
+.evl-dock {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 112000;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--evl-border);
+  background: var(--evl-panel);
+  color: var(--evl-text-1);
+  font-family: var(--afx-font, 'Inter', system-ui, sans-serif);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 12px 30px var(--evl-shadow);
+  animation: evlDockIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.evl-dock:hover { border-color: var(--evl-accent); color: var(--evl-accent); }
+.evl-dock:focus-visible { outline: 2px solid var(--evl-accent); outline-offset: 2px; }
+.evl-dock svg { flex-shrink: 0; }
+
+.evl-dock-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--evl-accent-soft);
+  color: var(--evl-accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@keyframes evlDockIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Phone: modal becomes a bottom sheet (see FormShell.css ≤640px), so the
+   dock moves to the top gap instead of being covered by the sheet. */
+@media (max-width: 640px) {
+  .evl-dock { bottom: auto; top: 12px; }
+}
+
+/* ── Overlay + drawer ───────────────────────────────────────────────── */
+.evl-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 112000;
+  background: rgba(6, 7, 10, 0.6);
+  backdrop-filter: blur(2px);
+  animation: evlFadeIn 0.2s ease forwards;
+}
+body[data-theme="light"] .evl-overlay { background: rgba(15, 23, 42, 0.4); }
+.evl-overlay-closing { animation: evlFadeOut 0.2s ease forwards; }
+
+@keyframes evlFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes evlFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+.evl-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 112001;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  max-height: min(78vh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: var(--evl-surface);
+  border: 1px solid var(--evl-border);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -24px 60px var(--evl-shadow);
+  color: var(--evl-text-1);
+  font-family: var(--afx-font, 'Inter', system-ui, sans-serif);
+  animation: evlSheetIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.evl-panel-closing { animation: evlSheetOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards; }
+
+@keyframes evlSheetIn  { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes evlSheetOut { from { transform: translateY(0); } to { transform: translateY(100%); } }
+
+/* Drag-handle affordance — purely visual (no touch-drag-to-dismiss wired
+   up), signals "this is a sheet" the way native bottom sheets do. */
+.evl-sheet-handle {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 0;
+  flex-shrink: 0;
+}
+.evl-sheet-handle span {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--evl-border);
+}
+
+@media (max-width: 900px) {
+  .evl-panel { max-height: min(85vh, 680px); }
+}
+@media (max-width: 640px) {
+  .evl-panel { max-height: 90vh; border-radius: 14px 14px 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evl-dock, .evl-overlay, .evl-panel { animation: none; }
+}
+
+/* ── Panel chrome ───────────────────────────────────────────────────── */
+.evl-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--evl-border-soft);
+  background: linear-gradient(to bottom, var(--evl-accent-soft), transparent);
+  flex-shrink: 0;
+}
+.evl-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--evl-text-2);
+}
+.evl-eyebrow-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--evl-accent);
+}
+.evl-panel-title { margin: 4px 0 0; font-size: 16px; font-weight: 700; color: var(--evl-text-1); }
+.evl-panel-sub { margin: 2px 0 0; font-size: 12px; color: var(--evl-text-3); }
+
+.evl-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--evl-border);
+  background: transparent;
+  color: var(--evl-text-2);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.evl-close:hover { color: var(--evl-text-1); border-color: var(--evl-text-2); }
+
+.evl-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 20px;
+}
+
+.evl-loading, .evl-empty, .evl-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 16px;
+  color: var(--evl-text-3);
+  text-align: center;
+  font-size: 13px;
+}
+.evl-error { color: var(--evl-danger); }
+.evl-loader-ring { width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid var(--evl-border); border-top-color: var(--evl-accent); animation: evlSpin 0.8s linear infinite; }
+@keyframes evlSpin { to { transform: rotate(360deg); } }
+
+/* ── Origin entry ───────────────────────────────────────────────────── */
+.evl-origin {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  background: var(--evl-sunken);
+  border: 1px solid var(--evl-border-soft);
+  font-size: 12.5px;
+  color: var(--evl-text-2);
+}
+.evl-origin-icon {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--evl-success-soft); color: var(--evl-success);
+}
+
+/* ── Timeline ───────────────────────────────────────────────────────── */
+.evl-timeline { display: flex; flex-direction: column; gap: 10px; }
+
+.evl-event {
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid var(--evl-border-soft);
+  background: var(--evl-panel);
+  overflow: hidden;
+}
+
+/* Collapsed by default — this is the clickable summary (who / when /
+   browser); the change grid only mounts once the user opens this event. */
+.evl-event-trigger {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.evl-event-trigger:hover { background: var(--evl-accent-soft); }
+.evl-event-trigger:focus-visible { outline: 2px solid var(--evl-accent); outline-offset: -2px; }
+.evl-event-trigger:disabled { cursor: default; }
+.evl-event-trigger:disabled:hover { background: transparent; }
+
+.evl-event-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.evl-event-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.evl-event-chevron {
+  flex-shrink: 0;
+  color: var(--evl-text-3);
+  transition: transform 0.18s ease;
+}
+.evl-event-open .evl-event-chevron { transform: rotate(90deg); color: var(--evl-accent); }
+
+.evl-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: var(--evl-accent-soft);
+  color: var(--evl-accent);
+}
+.evl-badge--danger  { background: var(--evl-danger-soft); color: var(--evl-danger); }
+.evl-badge--success { background: var(--evl-success-soft); color: var(--evl-success); }
+.evl-badge--warning { background: var(--evl-warning-soft); color: var(--evl-warning); }
+
+.evl-event-time { font-size: 11px; color: var(--evl-text-3); white-space: nowrap; }
+
+.evl-event-actor { font-size: 13px; font-weight: 600; color: var(--evl-text-1); margin-bottom: 2px; }
+.evl-event-meta { font-size: 11.5px; color: var(--evl-text-3); display: flex; gap: 8px; flex-wrap: wrap; }
+.evl-browser { display: inline-flex; align-items: center; gap: 4px; }
+.evl-browser-icon { flex-shrink: 0; }
+
+/* ── Change grid — Field / Old value / New value table ────────────────── */
+/* Sits below .evl-event-trigger, only mounted while that event is open. */
+.evl-grid-wrap {
+  margin: 0 14px 12px;
+  border: 1px solid var(--evl-border-soft);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.evl-grid-scroll { overflow-x: auto; }
+.evl-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  table-layout: fixed;
+}
+.evl-grid th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--evl-sunken);
+  color: var(--evl-text-3);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--evl-border-soft);
+  white-space: nowrap;
+}
+.evl-grid th:first-child { width: 30%; }
+.evl-grid th:nth-child(2),
+.evl-grid th:nth-child(3) { width: 35%; }
+.evl-grid td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--evl-border-soft);
+  color: var(--evl-text-1);
+  vertical-align: top;
+  word-break: break-word;
+}
+.evl-grid tr:last-child td { border-bottom: none; }
+.evl-grid tbody tr:hover td { background: var(--evl-accent-soft); }
+.evl-grid-field { font-weight: 600; color: var(--evl-text-2); }
+.evl-grid-old { color: var(--evl-danger); }
+.evl-grid-new { color: var(--evl-success); font-weight: 600; }
+.evl-grid-empty { color: var(--evl-text-3); }
+
+/* Small screens: a 3-column table gets cramped, so each row becomes a
+   labeled stacked card instead of scrolling sideways. */
+@media (max-width: 520px) {
+  .evl-grid-scroll { overflow-x: visible; }
+  .evl-grid thead { display: none; }
+  .evl-grid, .evl-grid tbody, .evl-grid tr, .evl-grid td { display: block; width: 100%; }
+  .evl-grid tr {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--evl-border-soft);
+  }
+  .evl-grid td {
+    padding: 2px 0;
+    border-bottom: none;
+  }
+  .evl-grid td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--evl-text-3);
+    margin-top: 4px;
+  }
+  .evl-grid td:first-child::before { margin-top: 0; }
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+.evl-panel-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--evl-border-soft);
+  background: var(--evl-sunken);
+  flex-shrink: 0;
+}
+.evl-report-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--evl-border);
+  background: var(--evl-panel);
+  color: var(--evl-accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+.evl-report-link:hover { border-color: var(--evl-accent); }

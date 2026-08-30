@@ -147,6 +147,10 @@ export default function Settings() {
   /* profile state */
   const [shopName, setShopName] = useState("");
   const [origShopName, setOrigShopName] = useState("");
+  const [gstin, setGstin] = useState("");
+  const [origGstin, setOrigGstin] = useState("");
+  const [drugLicenseNumber, setDrugLicenseNumber] = useState("");
+  const [origDrugLicenseNumber, setOrigDrugLicenseNumber] = useState("");
   const [email, setEmail] = useState("");
   const [profilePhoto, setProfilePhoto] = useState("https://via.placeholder.com/140");
   const [origPhoto, setOrigPhoto] = useState("https://via.placeholder.com/140");
@@ -170,6 +174,8 @@ export default function Settings() {
       .then((d) => {
         if (d.status === 200) {
           setShopName(d.data.shopName); setOrigShopName(d.data.shopName);
+          setGstin(d.data.gstin || ""); setOrigGstin(d.data.gstin || "");
+          setDrugLicenseNumber(d.data.drugLicenseNumber || ""); setOrigDrugLicenseNumber(d.data.drugLicenseNumber || "");
           setEmail(d.data.email);
           if (d.data.profilePhoto) {
             setProfilePhoto(d.data.profilePhoto);
@@ -182,8 +188,12 @@ export default function Settings() {
   }, []);
 
   const isDirty = useMemo(
-    () => shopName !== origShopName || (previewPhoto && previewPhoto !== origPhoto),
-    [shopName, origShopName, previewPhoto, origPhoto]
+    () =>
+      shopName !== origShopName ||
+      gstin !== origGstin ||
+      drugLicenseNumber !== origDrugLicenseNumber ||
+      (previewPhoto && previewPhoto !== origPhoto),
+    [shopName, origShopName, gstin, origGstin, drugLicenseNumber, origDrugLicenseNumber, previewPhoto, origPhoto]
   );
 
   const handlePhotoChange = (e) => {
@@ -194,6 +204,8 @@ export default function Settings() {
 
   const discardProfileChanges = () => {
     setShopName(origShopName);
+    setGstin(origGstin);
+    setDrugLicenseNumber(origDrugLicenseNumber);
     setPreviewPhoto(null);
   };
 
@@ -201,20 +213,22 @@ export default function Settings() {
     if (!shopName.trim()) { push("Shop name cannot be empty", "warn"); return; }
     let finalPhoto = previewPhoto || profilePhoto;
     if (finalPhoto?.startsWith("blob:")) finalPhoto = await blobToBase64(finalPhoto);
-    if (shopName === origShopName && finalPhoto === origPhoto) {
+    if (shopName === origShopName && gstin === origGstin && drugLicenseNumber === origDrugLicenseNumber && finalPhoto === origPhoto) {
       push("No changes to save", "info"); return;
     }
     setSaving(true);
     apiClient(`${API_BASE_URL}/api/Vendor/UpdateVendorSetting`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, shopName, profilePicture: finalPhoto }),
+      body: JSON.stringify({ email, shopName, gstin, drugLicenseNumber, profilePicture: finalPhoto }),
     })
       .then((r) => r.json())
       .then((d) => {
         if (d.status === 200) {
           push("Profile updated successfully", "success");
           setOrigShopName(shopName);
+          setOrigGstin(gstin);
+          setOrigDrugLicenseNumber(drugLicenseNumber);
           setProfilePhoto(finalPhoto);
           setOrigPhoto(finalPhoto);
           setPreviewPhoto(null);
@@ -300,6 +314,12 @@ export default function Settings() {
                 </Row>
                 <Row label="Shop name" hint="This is how your shop appears to your team.">
                   <input className="st-input" value={shopName} onChange={(e) => setShopName(e.target.value)} placeholder="Your shop name" />
+                </Row>
+                <Row label="GSTIN" hint="Printed on every tax invoice you issue.">
+                  <input className="st-input" value={gstin} onChange={(e) => setGstin(e.target.value)} placeholder="e.g. 27ABCDE1234F1Z5" />
+                </Row>
+                <Row label="Drug License Number" hint="Required on wholesale invoices under the Drugs & Cosmetics Rules.">
+                  <input className="st-input" value={drugLicenseNumber} onChange={(e) => setDrugLicenseNumber(e.target.value)} placeholder="e.g. MH-MUM-2024-WD-1234" />
                 </Row>
                 <Row label="Email address" hint="Contact support to change your sign-in email.">
                   <input className="st-input" value={email} disabled placeholder="email@example.com" />

@@ -566,6 +566,7 @@ useEffect(() => {
     [ReportEntity.DayBook]:           `${API_BASE_URL}/api/Reports/DayBookReportData`,
     [ReportEntity.GSTR1]:             `${API_BASE_URL}/api/Reports/GstReportData`,
     [ReportEntity.ProfitLoss]:        `${API_BASE_URL}/api/Reports/PnlReportData`,
+    [ReportEntity.AuditLog]:          `${API_BASE_URL}/api/EventLog/GetAuditReportData`,
   };
 
   const downloadApiMap = {
@@ -586,6 +587,7 @@ useEffect(() => {
     [ReportEntity.DayBook]:           `${API_BASE_URL}/api/Reports/DayBookReport`,
     [ReportEntity.GSTR1]:             `${API_BASE_URL}/api/Reports/GstReport`,
     [ReportEntity.ProfitLoss]:        `${API_BASE_URL}/api/Reports/PnlReport`,
+    [ReportEntity.AuditLog]:          `${API_BASE_URL}/api/EventLog/GetAuditReport`,
   };
 
   /* ── Fetch report data ── */

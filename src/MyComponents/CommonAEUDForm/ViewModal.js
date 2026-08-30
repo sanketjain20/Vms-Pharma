@@ -19,6 +19,7 @@ import SalesReturnView from "../SalesReturnComponent/SalesReturnView";
 import PurchaseReturnView from "../PurchaseReturnComponent/PurchaseReturnView";
 import ReatilerLedgerView from "../RetailerOutstandingComponent/RetailerLedgerView";
 import SupplierLedgerView from "../SupplierOutstandingComponent/SupplierLedgerView";
+import EventLogDock from "../EventLogComponent/EventLogDock";
 
 export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
   if (!isOpen) return null;
@@ -45,5 +46,11 @@ export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
     default:             return null;
   }
 
-  return ReactDOM.createPortal(content, document.body);
+  return ReactDOM.createPortal(
+    <>
+      <EventLogDock moduleName={moduleName} uKey={uKey} />
+      {content}
+    </>,
+    document.body
+  );
 }

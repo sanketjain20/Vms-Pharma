@@ -59,6 +59,8 @@ import BulkUploadMasters from "./MyComponents/BulkUploadComponent/BulkUploadMast
 import ShortcutHelp from "./MyComponents/CommonComponent/ShortcutHelp";
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
+import RequireAuth from "./MyComponents/SecurityComponent/RequireAuth";
+import GuestOnly from "./MyComponents/SecurityComponent/GuestOnly";
 import { ImPodcast } from "react-icons/im";
 
 function App() {
@@ -181,16 +183,18 @@ useEffect(() => {
         <Route
           path="/"
           element={
+            <GuestOnly>
             <>
             <div className="login-page">
-              
-            <LoginPage />
-              
 
-              
+            <LoginPage />
+
+
+
             </div>
             <Footer />
 </>
+            </GuestOnly>
           }
 
         />
@@ -199,34 +203,36 @@ useEffect(() => {
         <Route
           path="/forgotpassword"
           element={
-            <>
-              <div className="container">
-                <ForgotPassword />
-              </div>
-              <Footer />
-            </>
+            <GuestOnly>
+              <>
+                <div className="container">
+                  <ForgotPassword />
+                </div>
+                <Footer />
+              </>
+            </GuestOnly>
           }
         />
 
 
-        
-        <Route path="/home" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
+
+        <Route path="/home" element={<RequireAuth><Layout theme={theme} onToggleTheme={toggleTheme} /></RequireAuth>}>
           <Route index element={<Home />} />
         </Route>
 
-        <Route path="/onboarding" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
+        <Route path="/onboarding" element={<RequireAuth><Layout theme={theme} onToggleTheme={toggleTheme} /></RequireAuth>}>
           <Route index element={<VendorOnboarding />} />
         </Route>
 
-        <Route path="/shortcut-help" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
+        <Route path="/shortcut-help" element={<RequireAuth><Layout theme={theme} onToggleTheme={toggleTheme} /></RequireAuth>}>
           <Route index element={<ShortcutHelp />} />
         </Route>
 
-        <Route path="/setting" element={<Layout theme={theme} onToggleTheme={toggleTheme} />}>
+        <Route path="/setting" element={<RequireAuth><Layout theme={theme} onToggleTheme={toggleTheme} /></RequireAuth>}>
           <Route index element={<Setting />} />
         </Route>
-        
-        <Route path="/master" element={<LayoutModule theme={theme} onToggleTheme={toggleTheme} />}>
+
+        <Route path="/master" element={<RequireAuth><LayoutModule theme={theme} onToggleTheme={toggleTheme} /></RequireAuth>}>
 
           
           <Route

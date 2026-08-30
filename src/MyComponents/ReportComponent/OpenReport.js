@@ -38,6 +38,7 @@ function getModuleIdByReportName(reportName) {
   if (name.includes("day"))            return ReportEntity.DayBook;
   if (name.includes("gst"))            return ReportEntity.GSTR1;
   if (name.includes("loss") || name.includes("profit")) return ReportEntity.ProfitLoss;
+  if (name.includes("audit")) return ReportEntity.AuditLog;
 
   return null;
 }

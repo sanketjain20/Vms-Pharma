@@ -48,6 +48,7 @@ export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
       });
       if (res.ok) {
         localStorage.removeItem("vmsUser");
+        localStorage.removeItem("modules");
         navigate("/");
       } else {
         alert("Logout failed");
