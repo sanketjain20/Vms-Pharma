@@ -12,6 +12,7 @@ const FIELD_META = [
   { key: "email",              label: "Email",                type: "email",    required: false, placeholder: "e.g. ramesh@cipla.com" },
   { key: "gstNumber",          label: "GST Number",           type: "text",     required: false, placeholder: "e.g. 27AAPFU0939F1ZV" },
   { key: "drugLicenseNumber",  label: "Drug License Number",  type: "text",     required: false, placeholder: "e.g. MH-MUM-123456" },
+  { key: "leadTimeDays",       label: "Lead Time (days)",     type: "number",   required: false, placeholder: "e.g. 5 — used by VMS Intelligence Smart Purchase" },
   { key: "address",            label: "Address",              type: "textarea", required: false, placeholder: "Full address..." },
 ];
 
@@ -41,6 +42,7 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
             email:             d.email              || "",
             gstNumber:         d.gstNumber          || "",
             drugLicenseNumber: d.drugLicenseNumber  || "",
+            leadTimeDays:      d.leadTimeDays != null ? String(d.leadTimeDays) : "",
             address:           d.address            || "",
           });
         } else {
@@ -48,10 +50,7 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
           toast.error("Failed to load supplier data");
         }
       })
-      .catch(() => {
-        setErrors({ general: "Network error loading supplier" });
-        toast.error("Network error loading supplier");
-      })
+      .catch(() => {})
       .finally(() => setFetching(false));
   }, [uKey]);
 
@@ -83,7 +82,11 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
       const res  = await apiClient(`${API_BASE_URL}/api/Supplier/UpdateSupplier/${uKey}/1`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, gstNumber: form.gstNumber?.toUpperCase() || null }),
+        body: JSON.stringify({
+          ...form,
+          gstNumber: form.gstNumber?.toUpperCase() || null,
+          leadTimeDays: form.leadTimeDays ? parseInt(form.leadTimeDays, 10) : null,
+        }),
       });
       const json = await res.json();
       if (json?.status === 200 || json?.success) {
@@ -96,8 +99,7 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
         toastApiError(json, "Failed to update supplier");
       }
     } catch {
-      setErrors({ general: "Network error. Please try again." });
-      toast.error("Network error. Please try again.");
+      // handled by the global unreachable-backend toast
     }
     finally { setLoading(false); }
   };

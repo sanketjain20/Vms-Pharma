@@ -149,6 +149,8 @@ export default function Settings() {
   const [origShopName, setOrigShopName] = useState("");
   const [gstin, setGstin] = useState("");
   const [origGstin, setOrigGstin] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [origPincode, setOrigPincode] = useState("");
   const [drugLicenseNumber, setDrugLicenseNumber] = useState("");
   const [origDrugLicenseNumber, setOrigDrugLicenseNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -165,6 +167,13 @@ export default function Settings() {
   const [showNew, setShowNew] = useState(false);
   const [showCon, setShowCon] = useState(false);
 
+  /* security state */
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [sessionsError, setSessionsError] = useState(false);
+  const [revokingUKey, setRevokingUKey] = useState(null);
+  const [signingOutAll, setSigningOutAll] = useState(false);
+
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Vendor/SettingDetails`, {
       method: "GET",
@@ -175,6 +184,7 @@ export default function Settings() {
         if (d.status === 200) {
           setShopName(d.data.shopName); setOrigShopName(d.data.shopName);
           setGstin(d.data.gstin || ""); setOrigGstin(d.data.gstin || "");
+          setPincode(d.data.pincode || ""); setOrigPincode(d.data.pincode || "");
           setDrugLicenseNumber(d.data.drugLicenseNumber || ""); setOrigDrugLicenseNumber(d.data.drugLicenseNumber || "");
           setEmail(d.data.email);
           if (d.data.profilePhoto) {
@@ -184,16 +194,17 @@ export default function Settings() {
           }
         } else push(d.message || "Failed to load settings", "error");
       })
-      .catch(() => push("Unable to fetch settings", "error"));
+      .catch(() => {});
   }, []);
 
   const isDirty = useMemo(
     () =>
       shopName !== origShopName ||
       gstin !== origGstin ||
+      pincode !== origPincode ||
       drugLicenseNumber !== origDrugLicenseNumber ||
       (previewPhoto && previewPhoto !== origPhoto),
-    [shopName, origShopName, gstin, origGstin, drugLicenseNumber, origDrugLicenseNumber, previewPhoto, origPhoto]
+    [shopName, origShopName, gstin, origGstin, pincode, origPincode, drugLicenseNumber, origDrugLicenseNumber, previewPhoto, origPhoto]
   );
 
   const handlePhotoChange = (e) => {
@@ -205,22 +216,25 @@ export default function Settings() {
   const discardProfileChanges = () => {
     setShopName(origShopName);
     setGstin(origGstin);
+    setPincode(origPincode);
     setDrugLicenseNumber(origDrugLicenseNumber);
     setPreviewPhoto(null);
   };
 
   const handleSubmitAll = async () => {
     if (!shopName.trim()) { push("Shop name cannot be empty", "warn"); return; }
+    if (pincode && !/^[0-9]{6}$/.test(pincode.trim())) { push("PIN code must be 6 digits", "warn"); return; }
     let finalPhoto = previewPhoto || profilePhoto;
     if (finalPhoto?.startsWith("blob:")) finalPhoto = await blobToBase64(finalPhoto);
-    if (shopName === origShopName && gstin === origGstin && drugLicenseNumber === origDrugLicenseNumber && finalPhoto === origPhoto) {
+    if (shopName === origShopName && gstin === origGstin && pincode === origPincode
+        && drugLicenseNumber === origDrugLicenseNumber && finalPhoto === origPhoto) {
       push("No changes to save", "info"); return;
     }
     setSaving(true);
     apiClient(`${API_BASE_URL}/api/Vendor/UpdateVendorSetting`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, shopName, gstin, drugLicenseNumber, profilePicture: finalPhoto }),
+      body: JSON.stringify({ email, shopName, gstin, pincode, drugLicenseNumber, profilePicture: finalPhoto }),
     })
       .then((r) => r.json())
       .then((d) => {
@@ -228,6 +242,7 @@ export default function Settings() {
           push("Profile updated successfully", "success");
           setOrigShopName(shopName);
           setOrigGstin(gstin);
+          setOrigPincode(pincode);
           setOrigDrugLicenseNumber(drugLicenseNumber);
           setProfilePhoto(finalPhoto);
           setOrigPhoto(finalPhoto);
@@ -257,11 +272,66 @@ export default function Settings() {
       .catch(() => push("Password update failed", "error"));
   };
 
-  const sessions = [
-    { device: "Chrome on Windows", loc: "Delhi, IN", time: "Active now", live: true },
-    { device: "Safari on iPhone", loc: "Delhi, IN", time: "2 hours ago", live: false },
-    { device: "Firefox on Mac", loc: "Mumbai, IN", time: "3 days ago", live: false },
-  ];
+  const fetchSessions = useCallback(() => {
+    setSessionsLoading(true);
+    setSessionsError(false);
+    apiClient(`${API_BASE_URL}/api/auth/Sessions`, { method: "GET" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.status === 200) setSessions(d.data || []);
+        else { setSessionsError(true); push(d.message || "Failed to load sessions", "error"); }
+      })
+      .catch(() => setSessionsError(true))
+      .finally(() => setSessionsLoading(false));
+  }, [push]);
+
+  // Loaded lazily on first visit to the Security tab rather than on mount —
+  // this data isn't needed for Profile/Password and changes per device/login.
+  useEffect(() => {
+    if (tab === "security") fetchSessions();
+  }, [tab, fetchSessions]);
+
+  const handleRevokeSession = (uKey) => {
+    setRevokingUKey(uKey);
+    apiClient(`${API_BASE_URL}/api/auth/Sessions/Revoke/${uKey}`, { method: "POST" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.status === 200) {
+          setSessions((prev) => prev.filter((s) => s.uKey !== uKey));
+          push("Session signed out", "success");
+        } else push(d.message || "Failed to sign out session", "error");
+      })
+      .catch(() => push("Failed to sign out session", "error"))
+      .finally(() => setRevokingUKey(null));
+  };
+
+  const handleSignOutEverywhere = () => {
+    if (!window.confirm("End all active sessions across every device, including this one?")) return;
+    setSigningOutAll(true);
+    apiClient(`${API_BASE_URL}/api/auth/SignOutEverywhere`, { method: "POST" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.status === 200) {
+          localStorage.removeItem("vmsUser");
+          localStorage.removeItem("modules");
+          navigate("/");
+        } else { push(d.message || "Failed to sign out all sessions", "error"); setSigningOutAll(false); }
+      })
+      .catch(() => { push("Failed to sign out all sessions", "error"); setSigningOutAll(false); });
+  };
+
+  const formatSessionTime = (iso) => {
+    if (!iso) return "";
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 2) return "Active now";
+    if (mins < 60) return `${mins} min${mins === 1 ? "" : "s"} ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+    return new Date(iso).toLocaleDateString();
+  };
 
   return (
     <div className="st-root">
@@ -318,6 +388,15 @@ export default function Settings() {
                 <Row label="GSTIN" hint="Printed on every tax invoice you issue.">
                   <input className="st-input" value={gstin} onChange={(e) => setGstin(e.target.value)} placeholder="e.g. 27ABCDE1234F1Z5" />
                 </Row>
+                <Row label="PIN Code" hint="Required to generate an e-invoice IRN or e-way bill — the IRP rejects requests without it.">
+                  <input
+                    className="st-input"
+                    value={pincode}
+                    onChange={(e) => setPincode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+                    placeholder="e.g. 400001"
+                    inputMode="numeric"
+                  />
+                </Row>
                 <Row label="Drug License Number" hint="Required on wholesale invoices under the Drugs & Cosmetics Rules.">
                   <input className="st-input" value={drugLicenseNumber} onChange={(e) => setDrugLicenseNumber(e.target.value)} placeholder="e.g. MH-MUM-2024-WD-1234" />
                 </Row>
@@ -360,24 +439,47 @@ export default function Settings() {
             <div className="st-stage" key="security-panel">
               <div className="st-block">
                 <div className="st-block-kicker">Active sessions</div>
-                {sessions.map((s, i) => (
-                  <Row key={s.device} label={s.device} hint={`${s.loc} · ${s.time}`} first={i === 0}>
-                    {s.live
-                      ? <span className="st-pill st-pill-live">Active now</span>
-                      : <button className="st-btn st-btn-ghost st-btn-sm">Revoke</button>}
+                {sessionsLoading ? (
+                  <Row label="Loading sessions…" first />
+                ) : sessionsError ? (
+                  <Row label="Couldn't load sessions" hint="Check your connection and try again." first>
+                    <button className="st-btn st-btn-ghost st-btn-sm" onClick={fetchSessions}>Retry</button>
                   </Row>
-                ))}
+                ) : sessions.length === 0 ? (
+                  <Row label="No active sessions" first />
+                ) : (
+                  sessions.map((s, i) => (
+                    <Row
+                      key={s.uKey}
+                      label={s.browserLabel || "Unknown device"}
+                      hint={`${s.ipAddress || "Unknown location"} · ${formatSessionTime(s.lastActiveAt)}`}
+                      first={i === 0}
+                    >
+                      {s.current
+                        ? <span className="st-pill st-pill-live">This device</span>
+                        : (
+                          <button
+                            className="st-btn st-btn-ghost st-btn-sm"
+                            onClick={() => handleRevokeSession(s.uKey)}
+                            disabled={revokingUKey === s.uKey}
+                          >
+                            {revokingUKey === s.uKey ? "Signing out…" : "Revoke"}
+                          </button>
+                        )}
+                    </Row>
+                  ))
+                )}
               </div>
 
               <div className="st-block st-block-danger">
                 <div className="st-block-kicker danger">Danger zone</div>
-                <Row label="Sign out everywhere" hint="End all active sessions across every device." first>
-                  <button className="st-btn st-btn-danger">
-                    <Icon d={icons.logout} size={14} /> Sign out all
+                <Row label="Sign out everywhere" hint="End all active sessions across every device, including this one." first>
+                  <button className="st-btn st-btn-danger" onClick={handleSignOutEverywhere} disabled={signingOutAll}>
+                    <Icon d={icons.logout} size={14} /> {signingOutAll ? "Signing out…" : "Sign out all"}
                   </button>
                 </Row>
-                <Row label="Delete account" hint="Permanently remove your account and all data.">
-                  <button className="st-btn st-btn-danger">
+                <Row label="Delete account" hint="Not available yet — contact support to close your account.">
+                  <button className="st-btn st-btn-danger" disabled title="Account deletion isn't available from Settings yet">
                     <Icon d={icons.trash} size={14} /> Delete
                   </button>
                 </Row>

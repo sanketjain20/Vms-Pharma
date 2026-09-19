@@ -1,7 +1,15 @@
 // src/config/apiClient.js
 
+import { toast } from "react-toastify";
 import API_BASE_URL from "./api.config";
 import { beginGlobalBusy } from "../utils/globalBusy";
+
+// Shown once (deduped via toastId, not per failed call) whenever the backend
+// can't be reached at all — DNS failure, connection refused, CORS block,
+// server down. Distinct from a valid HTTP error response (4xx/5xx), which
+// callers already surface with the real message via toastApiError.
+const UNREACHABLE_MESSAGE = "Unable to reach the server. Please contact the admin.";
+const UNREACHABLE_TOAST_ID = "vms-api-unreachable";
 
 const getToken = () => {
   try {
@@ -51,6 +59,9 @@ const apiClient = async (endpoint, options = {}) => {
       headers,
       globalBusyHandled: true,
     });
+  } catch (err) {
+    toast.error(UNREACHABLE_MESSAGE, { toastId: UNREACHABLE_TOAST_ID });
+    throw err;
   } finally {
     stopBusy?.();
   }

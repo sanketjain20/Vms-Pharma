@@ -121,6 +121,8 @@ export default function SalesAdd({ onClose, onSubmit }) {
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);
   const typeDropdownRef    = useRef(null);
   const productDropdownRef = useRef(null);
+  const [scanValue, setScanValue] = useState("");
+  const scanRef = useRef(null);
 
   // ── Pharma fields ─────────────────────────────────────────────────────────
   const [retailers, setRetailers]                     = useState([]);
@@ -247,7 +249,8 @@ export default function SalesAdd({ onClose, onSubmit }) {
             lastLoadedType.current = typeId;
             apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`)
               .then(r => r.json())
-              .then(json => { const list = json?.data ?? []; setProducts(Array.isArray(list) ? list : []); });
+              .then(json => { const list = json?.data ?? []; setProducts(Array.isArray(list) ? list : []); })
+              .catch(() => {});
           }
         }
       })
@@ -347,6 +350,52 @@ export default function SalesAdd({ onClose, onSubmit }) {
 
   const deleteItem = (i) => { const u = [...lineItems]; u.splice(i, 1); setLineItems(u); };
 
+  /* ── BARCODE SCAN-TO-SELECT ──
+     A USB/Bluetooth barcode scanner behaves like a keyboard — it types the
+     code then fires Enter, which the scan input below submits on. Matches
+     the already-loaded product list first, falling back to a live lookup
+     for a product added since this form opened. Scanning only SELECTS the
+     product type + product (same as picking them from the dropdowns) and
+     loads its inventory/batches — it deliberately does not set a quantity
+     or add a line item. Quantity is always a manual choice by the user,
+     who then clicks "+ Add Item" themselves. */
+  const handleBarcodeScan = async (rawCode) => {
+    const code = rawCode.trim();
+    if (!code) return;
+
+    let product = allProducts.find(p => p.barcode === code);
+
+    if (!product) {
+      try {
+        const res  = await apiClient(`${API_BASE_URL}/api/Product/GetProductByBarcode/${encodeURIComponent(code)}`, { method: "GET" });
+        const json = await safeJson(res);
+        if (json?.status === 200 && json?.data) {
+          product = json.data;
+          setAllProducts(prev => prev.some(p => p.id === product.id) ? prev : [...prev, product]);
+        }
+      } catch {
+        toast.error("Barcode lookup failed");
+        return;
+      }
+    }
+
+    if (!product) {
+      toast.error(`No product found for barcode "${code}"`);
+      return;
+    }
+
+    // handleTypeChange resets `products` to [] and kicks off its own fetch
+    // for the type's product list — called first so our merge below (which
+    // guarantees the scanned product is in that list immediately, without
+    // waiting on the network) isn't clobbered by it.
+    handleTypeChange({ target: { value: product.productTypeId ?? "" } });
+    setProducts(prev => prev.some(p => p.id === product.id) ? prev : [...prev, product]);
+    handleProductChange({ target: { value: product.id } });
+    setQuantity("");
+
+    toast.success(`${product.name} selected — enter quantity and Add Item`);
+  };
+
   const editItem = async (index) => {
     const it = lineItems[index];
     setEditIndex(index);
@@ -355,18 +404,23 @@ export default function SalesAdd({ onClose, onSubmit }) {
     setTaxInput(it.taxAmount);
     setSelectedBatchId(it.batchId || "");
     setErrors({});
-    const pRes  = await apiClient(`${API_BASE_URL}/api/Product/GetProductById/${it.productId}`, { method: "GET" });
-    const pJson = await safeJson(pRes);
-    if (pJson?.data) {
-      const typeId = pJson.data.productTypeId;
-      setSelectedType(typeId);
-      lastLoadedType.current = typeId;
-      const lRes  = await apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { method: "GET" });
-      const lJson = await safeJson(lRes);
-      if (Array.isArray(lJson?.data)) setProducts(lJson.data);
-      const iRes  = await apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET" });
-      const iJson = await safeJson(iRes);
-      if (iJson?.status === 200) setInventory(iJson.data);
+    try {
+      const pRes  = await apiClient(`${API_BASE_URL}/api/Product/GetProductById/${it.productId}`, { method: "GET" });
+      const pJson = await safeJson(pRes);
+      if (pJson?.data) {
+        const typeId = pJson.data.productTypeId;
+        setSelectedType(typeId);
+        lastLoadedType.current = typeId;
+        const lRes  = await apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { method: "GET" });
+        const lJson = await safeJson(lRes);
+        if (Array.isArray(lJson?.data)) setProducts(lJson.data);
+        const iRes  = await apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET" });
+        const iJson = await safeJson(iRes);
+        if (iJson?.status === 200) setInventory(iJson.data);
+      }
+    } catch {
+      // backend unreachable — global toast already covers it; the line
+      // item's own fields (set above) still populate the edit fields.
     }
   };
 
@@ -522,6 +576,30 @@ export default function SalesAdd({ onClose, onSubmit }) {
           {activeTab === "Product" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div className="afx-section-title">Select Product</div>
+
+              <form
+                className="afx-scan-field"
+                onSubmit={e => {
+                  e.preventDefault();
+                  const code = scanValue;
+                  setScanValue("");
+                  handleBarcodeScan(code);
+                  scanRef.current?.focus();
+                }}
+                title="Scan a barcode — selects the product type + product; you choose the quantity"
+              >
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 3v10M5 3v10M7.5 3v10M10 3v10M12.5 3v10M14 3v10" />
+                </svg>
+                <input
+                  ref={scanRef}
+                  type="text"
+                  placeholder="Scan or type barcode, then press Enter…"
+                  value={scanValue}
+                  onChange={e => setScanValue(e.target.value)}
+                  autoComplete="off"
+                />
+              </form>
 
               <div className="afx-grid">
                 <SearchableDropdown

@@ -60,9 +60,8 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
         toast.success("Product type updated successfully");
         onSubmit(); onClose();
       } else { toast.error(result.message || "Update failed"); }
-    } catch (error) {
-      console.error("API ERROR:", error);
-      toast.error("Something went wrong during update");
+    } catch {
+      // handled by the global unreachable-backend toast
     }
   };
 

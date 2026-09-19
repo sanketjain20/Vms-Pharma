@@ -47,7 +47,7 @@ export default function ManufacturerEdit({ uKey, onClose, onSubmit }) {
           setErrors({ general: "Failed to load manufacturer data" });
         }
       })
-      .catch(() => setErrors({ general: "Network error loading data" }))
+      .catch(() => {})
       .finally(() => setFetching(false));
   }, [uKey]);
 
@@ -92,7 +92,7 @@ export default function ManufacturerEdit({ uKey, onClose, onSubmit }) {
         setErrors({ general: json?.message || "Failed to update manufacturer" });
       }
     } catch {
-      setErrors({ general: "Network error. Please try again." });
+      // handled by the global unreachable-backend toast
     } finally {
       setLoading(false);
     }

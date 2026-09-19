@@ -82,6 +82,7 @@ export default function ProductForm({ onSubmit, onClose }) {
     scheduleType:    "OTC",
     packSize:        "",
     packUnit:        "STRIP",
+    barcode:         "",
   });
 
   useEffect(() => {
@@ -152,6 +153,7 @@ export default function ProductForm({ onSubmit, onClose }) {
       scheduleType:     formData.scheduleType      || null,
       packSize:         formData.packSize ? parseInt(formData.packSize) : null,
       packUnit:         formData.packUnit          || null,
+      barcode:          formData.barcode?.trim()   || null,
     };
 
     try {
@@ -167,9 +169,8 @@ export default function ProductForm({ onSubmit, onClose }) {
       } else {
         toast.error(result.message || "Product creation failed");
       }
-    } catch (err) {
-      console.error("API ERROR:", err);
-      toast.error("Something went wrong while saving product");
+    } catch {
+      // handled by the global unreachable-backend toast
     }
   };
 
@@ -246,6 +247,11 @@ export default function ProductForm({ onSubmit, onClose }) {
                     <div className="afx-field">
                       <label className="afx-label">HSN Code</label>
                       <input className="afx-input" type="text" name="hsnCode" value={formData.hsnCode} onChange={handleChange} placeholder="e.g. 3004" />
+                    </div>
+
+                    <div className="afx-field">
+                      <label className="afx-label">Barcode</label>
+                      <input className="afx-input" type="text" name="barcode" value={formData.barcode} onChange={handleChange} placeholder="Scan or type — leave blank to auto-generate" autoComplete="off" />
                     </div>
 
                     <div className="afx-field">

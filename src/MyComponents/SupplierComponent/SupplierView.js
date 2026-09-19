@@ -104,6 +104,7 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
                 <Field label="Email"               value={supplier.email} mono />
                 <Field label="GST Number"          value={supplier.gstNumber} mono accent />
                 <Field label="Drug License Number" value={supplier.drugLicenseNumber} mono />
+                <Field label="Lead Time" value={supplier.leadTimeDays != null ? `${supplier.leadTimeDays} day${supplier.leadTimeDays === 1 ? "" : "s"}` : null} />
                 <Field label="Outstanding Balance"
                   value={supplier.outstandingBalance != null
                     ? `₹${parseFloat(supplier.outstandingBalance).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`

@@ -73,7 +73,7 @@ export default function RetailerAdd({ onClose, onSubmit }) {
         setErrors({ general: json?.message || "Failed to create retailer" });
       }
     } catch {
-      setErrors({ general: "Network error. Please try again." });
+      // handled by the global unreachable-backend toast
     } finally {
       setLoading(false);
     }

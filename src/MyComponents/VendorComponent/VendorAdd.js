@@ -17,7 +17,6 @@ export default function VendorAdd({ onClose, onSubmit }) {
   const useLoggedInVendorPrefix = loggedInVendor?.masterVendor === true && !!loggedInVendor?.vendorPrefix;
   const [name, setName]               = useState("");
   const [email, setEmail]             = useState("");
-  const [password, setPassword]       = useState("");
   const [shopName, setShopName]       = useState("");
   const [phone, setPhone]             = useState("");
   const [roleId, setRoleId]           = useState("");
@@ -30,7 +29,6 @@ export default function VendorAdd({ onClose, onSubmit }) {
   const [errors, setErrors]           = useState({});
   const [loading, setLoading]         = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [showPass, setShowPass]       = useState(false);
 
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Roles/getAll`, {
@@ -47,7 +45,6 @@ export default function VendorAdd({ onClose, onSubmit }) {
     let temp = {};
     if (!name.trim())         temp.name         = "Name is required";
     if (!email.trim())        temp.email        = "Email is required";
-    if (!password.trim())     temp.password     = "Password is required";
     if (!useLoggedInVendorPrefix && !shopName.trim()) temp.shopName = "Shop name is required";
     if (!phone.trim())        temp.phone        = "Phone number is required";
     if (!roleId)              temp.roleId       = "Please select a role";
@@ -69,7 +66,6 @@ export default function VendorAdd({ onClose, onSubmit }) {
     const payload = {
       name,
       email,
-      password,
       shopName: useLoggedInVendorPrefix ? loggedInVendor.shopName : shopName,
       phone,
       roleId: Number(roleId),
@@ -91,9 +87,8 @@ export default function VendorAdd({ onClose, onSubmit }) {
         toast.success("Vendor added successfully");
         onSubmit?.(); onClose?.();
       } else { toast.error(result.message || "Vendor creation failed"); }
-    } catch (error) {
-      console.log(error);
-      toast.error("Network error. Please try again!");
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally { setLoading(false); }
   };
 
@@ -151,32 +146,12 @@ export default function VendorAdd({ onClose, onSubmit }) {
                 {errors.email && <span className="afx-error">{errors.email}</span>}
               </div>
 
-              <div className="afx-field">
-                <label className="afx-label">Password<span className="afx-req">*</span></label>
-                <div className="afx-input-wrap">
-                  <input
-                    type={showPass ? "text" : "password"}
-                    className={`afx-input ${errors.password ? "afx-input--err" : ""}`}
-                    value={password}
-                    onChange={e => { setPassword(e.target.value); clearError("password"); }}
-                    placeholder="Set password"
-                  />
-                  <button type="button" className="afx-eye-btn" onClick={() => setShowPass(s => !s)} tabIndex={-1}>
-                    {showPass ? (
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M1 7C1 7 3 3 7 3s6 4 6 4-2 4-6 4-6-4-6-4Z" stroke="currentColor" strokeWidth="1.2"/>
-                        <circle cx="7" cy="7" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                        <path d="M2 2l10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                      </svg>
-                    ) : (
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M1 7C1 7 3 3 7 3s6 4 6 4-2 4-6 4-6-4-6-4Z" stroke="currentColor" strokeWidth="1.2"/>
-                        <circle cx="7" cy="7" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                      </svg>
-                    )}
-                  </button>
-                </div>
-                {errors.password && <span className="afx-error">{errors.password}</span>}
+              <div className="afx-info">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M6.5 6v3M6.5 4h.01" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                </svg>
+                The vendor will get an email with a link to set their own password — no password is set here.
               </div>
 
               <div className="afx-field">

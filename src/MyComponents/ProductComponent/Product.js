@@ -11,6 +11,7 @@ const columns = [
   { header: "Manufacturer", field: "manufacturerName", width: "180px" },
   { header: "Product Type", field: "productType", width: "160px" },
   { header: "HSN Code", field: "hsnCode", width: "120px" },
+  { header: "Barcode", field: "barcode", width: "140px" },
   { header: "Price (₹)", field: "price", width: "120px" },
   { header: "Unit", field: "unit", width: "100px" },
   { header: "Actions", field: "Action", width: "120px" },

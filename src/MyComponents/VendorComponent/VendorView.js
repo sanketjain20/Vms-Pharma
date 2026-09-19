@@ -19,7 +19,7 @@ export default function VendorView({ uKey, onClose }) {
         if (res.status === 200) setVendor(res.data);
         else toast.error(res.message || "Failed to load vendor");
       })
-      .catch(() => toast.error("Network error"))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [uKey]);
 

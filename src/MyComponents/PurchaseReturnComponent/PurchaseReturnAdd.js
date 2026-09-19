@@ -56,10 +56,8 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
         setFetchErr(message);
         toastApiError(json, "Purchase not found");
       }
-    } catch (e) {
-      const message = "Network error: " + e.message;
-      setFetchErr(message);
-      toast.error(message);
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally {
       setFetching(false);
     }
@@ -120,10 +118,8 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
         setErrors({ submit: message });
         toastApiError(json, "Submission failed");
       }
-    } catch (e) {
-      const message = "Network error: " + e.message;
-      setErrors({ submit: message });
-      toast.error(message);
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally {
       setSubmitting(false);
     }

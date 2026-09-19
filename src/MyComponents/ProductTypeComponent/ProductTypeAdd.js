@@ -40,9 +40,8 @@ export default function ProductTypeAdd({ onSubmit, onClose }) {
       } else {
         toast.error(result.message || "Product Type creation failed");
       }
-    } catch (error) {
-      console.error("API ERROR:", error);
-      toast.error("Something went wrong while saving product type");
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally {
       setLoading(false);
     }

@@ -216,7 +216,7 @@ export default function PurchaseAdd({ onSubmit, onClose }) {
       const json = await res.json();
       if (json?.status === 200) { toast.success("Purchase created successfully"); onSubmit?.(); onClose?.(); }
       else toast.error(json?.message || "Failed to create purchase");
-    } catch { toast.error("Network error. Please try again."); }
+    } catch { /* handled by the global unreachable-backend toast */ }
     finally { setLoading(false); }
   };
 

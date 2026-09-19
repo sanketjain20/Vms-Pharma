@@ -93,9 +93,8 @@ export default function RoleForm({ onSubmit, onClose }) {
         toast.success("Role added successfully");
         onSubmit(); onClose();
       } else { toast.error(result.message || "Role creation failed"); }
-    } catch (error) {
-      console.error("API ERROR:", error);
-      toast.error("Something went wrong while saving role");
+    } catch {
+      // handled by the global unreachable-backend toast
     }
   };
 

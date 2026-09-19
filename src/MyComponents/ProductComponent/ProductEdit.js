@@ -88,6 +88,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
     scheduleType:    "OTC",
     packSize:        "",
     packUnit:        "STRIP",
+    barcode:         "",
   });
 
   /* ── FETCH PRODUCT TYPES ── */
@@ -145,6 +146,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
             scheduleType:    p.scheduleType    || "OTC",
             packSize:        p.packSize        || "",
             packUnit:        p.packUnit        || "STRIP",
+            barcode:         p.barcode         || "",
           }));
           setOriginalData({
             name:            p.name,
@@ -158,6 +160,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
             scheduleType:    p.scheduleType    || "OTC",
             packSize:        p.packSize        || "",
             packUnit:        p.packUnit        || "STRIP",
+            barcode:         p.barcode         || "",
           });
         } else {
           toast.error("Error loading product details");
@@ -209,6 +212,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
       scheduleType:    obj.scheduleType    ?? "OTC",
       packSize:        String(obj.packSize ?? ""),
       packUnit:        obj.packUnit        ?? "",
+      barcode:         obj.barcode         ?? "",
     });
     return JSON.stringify(norm(originalData)) !== JSON.stringify(norm(formData));
   };
@@ -231,6 +235,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
       scheduleType:    formData.scheduleType      || null,
       packSize:        formData.packSize ? parseInt(formData.packSize) : null,
       packUnit:        formData.packUnit          || null,
+      barcode:         formData.barcode?.trim()   || null,
     };
 
     try {
@@ -246,9 +251,8 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
       } else {
         toast.error(result.message || "Update failed");
       }
-    } catch (err) {
-      console.error("API ERROR:", err);
-      toast.error("Something went wrong");
+    } catch {
+      // handled by the global unreachable-backend toast
     }
   };
 
@@ -325,6 +329,11 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
                     <div className="afx-field">
                       <label className="afx-label">HSN Code</label>
                       <input className="afx-input" type="text" name="hsnCode" value={formData.hsnCode || ""} onChange={handleChange} placeholder="e.g. 3004" />
+                    </div>
+
+                    <div className="afx-field">
+                      <label className="afx-label">Barcode</label>
+                      <input className="afx-input" type="text" name="barcode" value={formData.barcode || ""} onChange={handleChange} placeholder="Scan or type — leave blank to auto-generate" autoComplete="off" />
                     </div>
 
                     <div className="afx-field">

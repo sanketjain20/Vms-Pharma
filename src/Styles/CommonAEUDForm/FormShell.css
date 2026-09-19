@@ -362,6 +362,37 @@ body[data-theme="light"] .afx-backdrop.afx-backdrop {
 }
 .afx-eye-btn:hover { color: var(--afx-text-1); }
 
+/* barcode scan field — used on Sales Add/Edit to add a line item by
+   scanner or typed code, styled to match .afx-input's sunken look */
+.afx-scan-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--afx-border);
+  background: var(--afx-sunken);
+  color: var(--afx-text-3);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.afx-scan-field:focus-within {
+  border-color: var(--afx-accent);
+  box-shadow: 0 0 0 3px var(--afx-accent-soft);
+}
+.afx-scan-field svg { flex-shrink: 0; }
+.afx-scan-field input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 10px 0;
+  font-family: var(--afx-font-mono);
+  font-size: 13px;
+  color: var(--afx-text-1);
+}
+.afx-scan-field input::placeholder { color: var(--afx-text-3); font-family: var(--afx-font); }
+
 /* select chevron */
 .afx-select { appearance: none; -webkit-appearance: none; cursor: pointer; }
 .afx-select-wrap { position: relative; }

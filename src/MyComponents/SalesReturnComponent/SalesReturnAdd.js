@@ -54,10 +54,8 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
         setFetchErr(message);
         toastApiError(json, "Sale not found");
       }
-    } catch (e) {
-      const message = "Network error: " + e.message;
-      setFetchErr(message);
-      toast.error(message);
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally {
       setFetching(false);
     }
@@ -113,10 +111,8 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
         setErrors({ submit: message });
         toastApiError(json, "Submission failed");
       }
-    } catch (e) {
-      const message = "Network error: " + e.message;
-      setErrors({ submit: message });
-      toast.error(message);
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally {
       setSubmitting(false);
     }

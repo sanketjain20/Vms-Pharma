@@ -12,6 +12,7 @@ const FIELD_META = [
     { key: "email", label: "Email", type: "email", required: false, placeholder: "e.g. ramesh@cipla.com" },
     { key: "gstNumber", label: "GST Number", type: "text", required: false, placeholder: "e.g. 27AAPFU0939F1ZV" },
     { key: "drugLicenseNumber", label: "Drug License Number", type: "text", required: false, placeholder: "e.g. MH-MUM-123456" },
+    { key: "leadTimeDays", label: "Lead Time (days)", type: "number", required: false, placeholder: "e.g. 5 — used by VMS Intelligence Smart Purchase" },
     { key: "address", label: "Address", type: "textarea", required: false, placeholder: "Full address..." },
 ];
 
@@ -57,6 +58,7 @@ export default function SupplierAdd({ onClose, onSubmit }) {
                     body: JSON.stringify({
                         ...form,
                         gstNumber: form.gstNumber?.toUpperCase() || null,
+                        leadTimeDays: form.leadTimeDays ? parseInt(form.leadTimeDays, 10) : null,
                     }),
                 }
             );
@@ -71,8 +73,7 @@ export default function SupplierAdd({ onClose, onSubmit }) {
                 toastApiError(json, "Failed to create supplier");
             }
         } catch {
-            setErrors({ general: "Network error. Please try again." });
-            toast.error("Network error. Please try again.");
+            // handled by the global unreachable-backend toast
         }
         finally { setLoading(false); }
     };

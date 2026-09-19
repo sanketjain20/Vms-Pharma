@@ -34,13 +34,18 @@ import Role from "./MyComponents/RoleComponent/Role";
 import Unauthorized from "./MyComponents/SecurityComponent/Unauthorized";
 import OpenReport from "./MyComponents/ReportComponent/OpenReport";
 import GenerateReport from "./MyComponents/ReportComponent/GenerateReport";
+import Gstr2Recon from "./MyComponents/Gstr2ReconComponent/Gstr2Recon";
+import EInvoice from "./MyComponents/EInvoiceComponent/EInvoice";
+import EwayBill from "./MyComponents/EwayBillComponent/EwayBill";
 import VendorOnboarding from "./MyComponents/VendorOnboarding";
 import SalesAddNew from "./MyComponents/SalesComponent/SalesAddNew";
 import Dashboard from "./MyComponents/DashboardComponent/Dashboard"
+import Intelligence from "./MyComponents/IntelligenceComponent/Intelligence";
 import JobScheduler from "./MyComponents/JobScheduler/JobScheduler";
 import JobView from "./MyComponents/JobScheduler/JobSchedulerView";
 import JobEdit from "./MyComponents/JobScheduler/JobSchedulerEdit";
 import ForgotPassword from "./MyComponents/LoginComponent/ForgotPassword";
+import SetPassword from "./MyComponents/LoginComponent/SetPassword";
 import Retailer from "./MyComponents/RetailerComponent/Retailer";
 import Manufacturer from "./MyComponents/ManufacturerComponent/Manufacturer";
 import Supplier from "./MyComponents/SupplierComponent/Supplier";
@@ -211,6 +216,21 @@ useEffect(() => {
                 <Footer />
               </>
             </GuestOnly>
+          }
+        />
+
+        {/* Unguarded (unlike the routes above): the invitee has no session yet,
+            and a stray existing session on the same browser shouldn't hijack
+            an invite link via GuestOnly's redirect. */}
+        <Route
+          path="/set-password"
+          element={
+            <>
+              <div className="container">
+                <SetPassword />
+              </div>
+              <Footer />
+            </>
           }
         />
 
@@ -387,6 +407,33 @@ useEffect(() => {
             }
           />
 
+          <Route
+            path="gstr2-recon"
+            element={
+              <ModuleGuard moduleName="GSTR2_RECON">
+                <Gstr2Recon />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="e-invoice"
+            element={
+              <ModuleGuard moduleName="E_INVOICE">
+                <EInvoice />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="e-way-bill"
+            element={
+              <ModuleGuard moduleName="E_WAY_BILL">
+                <EwayBill />
+              </ModuleGuard>
+            }
+          />
+
           
           <Route
             path="inventory"
@@ -489,7 +536,16 @@ useEffect(() => {
             }
           />
 
-          
+          <Route
+            path="intelligence"
+            element={
+              <ModuleGuard moduleName="INTELLIGENCE">
+                <Intelligence />
+              </ModuleGuard>
+            }
+          />
+
+
           <Route
             path="job-scheduler"
             element={

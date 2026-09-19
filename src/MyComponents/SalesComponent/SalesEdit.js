@@ -124,6 +124,8 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);
   const typeDropdownRef    = useRef(null);
   const productDropdownRef = useRef(null);
+  const [scanValue, setScanValue] = useState("");
+  const scanRef = useRef(null);
 
   // ── NEW state ─────────────────────────────────────────────────────────────
   const [retailers, setRetailers]           = useState([]);
@@ -167,7 +169,8 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, { method: "GET", headers: { "Content-Type": "application/json" } })
       .then(safeJson)
-      .then(json => { const list = json?.data?.productTypes ?? []; setProductTypes(Array.isArray(list) ? list : []); });
+      .then(json => { const list = json?.data?.productTypes ?? []; setProductTypes(Array.isArray(list) ? list : []); })
+      .catch(() => {});
   }, []);
 
   /* ── FETCH SALE — updated to load new fields ── */
@@ -226,7 +229,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setAvailableBatches([]); setSelectedBatchId("");
     if (!typeId) { setProducts(allProducts); return; }
     apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`, { method: "GET" })
-      .then(safeJson).then(json => setProducts(json?.data ?? []));
+      .then(safeJson).then(json => setProducts(json?.data ?? [])).catch(() => {});
   };
 
   /* ── AUTO SET TYPE — unchanged ── */
@@ -242,7 +245,8 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
             lastLoadedType.current = typeId;
             apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${typeId}`)
               .then(r => r.json())
-              .then(json => { const list = json?.data ?? []; setProducts(Array.isArray(list) ? list : []); });
+              .then(json => { const list = json?.data ?? []; setProducts(Array.isArray(list) ? list : []); })
+              .catch(() => {});
           }
         }
       }).catch(() => {});
@@ -254,7 +258,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setAvailableBatches([]); setSelectedBatchId("");
     if (!prodId) return;
     apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${prodId}`, { method: "GET" })
-      .then(safeJson).then(json => setInventory(json?.data || null));
+      .then(safeJson).then(json => setInventory(json?.data || null)).catch(() => {});
   };
 
   /* ── CLICK OUTSIDE ── */
@@ -343,12 +347,62 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
     setTaxInput(it.taxAmount);
     setTaxType("FLAT"); setErrors({});
     setSelectedBatchId(it.batchId ? String(it.batchId) : "");
-    const iRes  = await apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET" });
-    const iJson = await safeJson(iRes);
-    if (iJson?.data) setInventory(iJson.data);
+    try {
+      const iRes  = await apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET" });
+      const iJson = await safeJson(iRes);
+      if (iJson?.data) setInventory(iJson.data);
+    } catch {
+      // backend unreachable — global toast already covers it; the line
+      // item's own fields (set above) still populate the edit fields.
+    }
   };
 
   const deleteItem = (i) => { const u = [...lineItems]; u.splice(i, 1); setLineItems(u); };
+
+  /* ── BARCODE SCAN-TO-SELECT ──
+     A USB/Bluetooth barcode scanner behaves like a keyboard — it types the
+     code then fires Enter, which the scan input below submits on. Matches
+     the already-loaded product list first, falling back to a live lookup
+     for a product added since this form opened. Scanning only SELECTS the
+     product type + product (same as picking them from the dropdowns) and
+     loads its inventory/batches — it deliberately does not set a quantity
+     or add a line item. Quantity is always a manual choice by the user,
+     who then clicks "+ Add Item" themselves. */
+  const handleBarcodeScan = async (rawCode) => {
+    const code = rawCode.trim();
+    if (!code) return;
+
+    let product = allProducts.find(p => p.barcode === code);
+
+    if (!product) {
+      try {
+        const res  = await apiClient(`${API_BASE_URL}/api/Product/GetProductByBarcode/${encodeURIComponent(code)}`, { method: "GET" });
+        const json = await safeJson(res);
+        if (json?.status === 200 && json?.data) {
+          product = json.data;
+          setAllProducts(prev => prev.some(p => p.id === product.id) ? prev : [...prev, product]);
+        }
+      } catch {
+        toast.error("Barcode lookup failed");
+        return;
+      }
+    }
+
+    if (!product) {
+      toast.error(`No product found for barcode "${code}"`);
+      return;
+    }
+
+    // handleTypeChange's own fetch (async) refreshes the type-filtered
+    // product list — merge the scanned product in immediately too, so
+    // "+ Add Item" works even if clicked before that fetch resolves.
+    handleTypeChange({ target: { value: product.productTypeId ?? "" } });
+    setProducts(prev => prev.some(p => p.id === product.id) ? prev : [...prev, product]);
+    handleProductChange({ target: { value: product.id } });
+    setQuantity("");
+
+    toast.success(`${product.name} selected — enter quantity and Add Item`);
+  };
 
   /* ── TOTALS: Subtotal → Discount → Taxable Value → GST → Net Amount ── */
   const lineSubtotal = lineItems.reduce((s, i) => s + i.sellingPrice * i.quantity, 0);
@@ -500,6 +554,30 @@ export default function SalesEdit({ uKey, onClose, onSubmit }) {
               {activeTab === "Product" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div className="afx-section-title">Update Products</div>
+
+                  <form
+                    className="afx-scan-field"
+                    onSubmit={e => {
+                      e.preventDefault();
+                      const code = scanValue;
+                      setScanValue("");
+                      handleBarcodeScan(code);
+                      scanRef.current?.focus();
+                    }}
+                    title="Scan a barcode — selects the product type + product; you choose the quantity"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 3v10M5 3v10M7.5 3v10M10 3v10M12.5 3v10M14 3v10" />
+                    </svg>
+                    <input
+                      ref={scanRef}
+                      type="text"
+                      placeholder="Scan or type barcode, then press Enter…"
+                      value={scanValue}
+                      onChange={e => setScanValue(e.target.value)}
+                      autoComplete="off"
+                    />
+                  </form>
 
                   <div className="afx-grid">
                     <SearchableDropdown label="Product Type" options={productTypes} selectedId={selectedType}

@@ -1,0 +1,329 @@
+/* =========================
+   SHARED GST LIST-PAGE DESIGN — used by the E-Invoice list, E-Way Bill
+   list, and GSTR-2A/2B Reconciliation screens so they read as one
+   consistent module family rather than three one-off pages. Built on the
+   shared .dg-panel design system (see Styles/DynamicGrid.css) so it also
+   matches every other list screen in the app (same tokens, dark default +
+   light override already handled by .dg-panel itself). Page chrome
+   (.i-container/.i-title) comes from Styles/Inventory.css, same as
+   Purchase/Role/etc.
+========================= */
+
+.gst-panel {
+  margin-top: 4px;
+}
+
+.gst-body {
+  padding: 20px;
+  gap: 22px;
+}
+
+.gst-section + .gst-section {
+  padding-top: 22px;
+  border-top: 1px solid var(--dg-border-soft);
+}
+
+.gst-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.gst-section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dg-text-1);
+}
+
+.gst-section-hint {
+  font-size: 12px;
+  color: var(--dg-text-3);
+}
+
+.gst-count {
+  font-family: var(--dg-font-mono);
+  font-size: 11px;
+  color: var(--dg-text-2);
+  background: var(--dg-surface-raised);
+  border: 1px solid var(--dg-border);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* ── Upload / filter row ──────────────────────────────────── */
+.gst-upload-row,
+.gst-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gst-select {
+  background: var(--dg-surface-raised);
+  color: var(--dg-text-1);
+  border: 1px solid var(--dg-border);
+  border-radius: var(--dg-radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: var(--dg-font);
+  min-height: 36px;
+}
+
+.gst-search {
+  background: var(--dg-surface-raised);
+  color: var(--dg-text-1);
+  border: 1px solid var(--dg-border);
+  border-radius: var(--dg-radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--dg-font);
+  min-height: 36px;
+  min-width: 220px;
+}
+.gst-search::placeholder { color: var(--dg-text-3); }
+
+.gst-file-input {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: var(--dg-surface-raised);
+  border: 1px dashed var(--dg-border);
+  border-radius: var(--dg-radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--dg-text-2);
+  cursor: pointer;
+  transition: border-color var(--dg-tr), color var(--dg-tr);
+  min-width: 200px;
+}
+.gst-file-input:hover {
+  border-color: var(--dg-accent);
+  color: var(--dg-text-1);
+}
+.gst-file-input input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.gst-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--dg-radius-sm);
+  border: 1px solid var(--dg-border);
+  background: var(--dg-surface-raised);
+  color: var(--dg-text-1);
+  font-family: var(--dg-font);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  min-height: 36px;
+  cursor: pointer;
+  transition: background var(--dg-tr), border-color var(--dg-tr), color var(--dg-tr), opacity var(--dg-tr);
+}
+.gst-btn:hover:not(:disabled) {
+  border-color: var(--dg-accent);
+  color: var(--dg-accent-strong);
+}
+.gst-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gst-btn--primary {
+  background: var(--dg-accent);
+  border-color: var(--dg-accent);
+  color: #fff;
+}
+.gst-btn--primary:hover:not(:disabled) {
+  background: var(--dg-accent-strong);
+  border-color: var(--dg-accent-strong);
+  color: #fff;
+}
+
+.gst-btn--sm {
+  padding: 5px 11px;
+  min-height: 28px;
+  font-size: 12px;
+}
+
+.gst-btn--ghost {
+  background: transparent;
+}
+
+.gst-btn--success {
+  border-color: var(--dg-success);
+  color: var(--dg-success);
+}
+.gst-btn--success:hover:not(:disabled) {
+  background: var(--dg-success-soft);
+  color: var(--dg-success);
+  border-color: var(--dg-success);
+}
+
+.gst-btn--danger {
+  border-color: var(--dg-danger);
+  color: var(--dg-danger);
+}
+.gst-btn--danger:hover:not(:disabled) {
+  background: var(--dg-danger-soft);
+  color: var(--dg-danger);
+  border-color: var(--dg-danger);
+}
+
+/* ── Alerts ───────────────────────────────────────────────── */
+.gst-alert {
+  margin-top: 12px;
+  padding: 9px 12px;
+  border-radius: var(--dg-radius-sm);
+  font-size: 12.5px;
+  border: 1px solid transparent;
+}
+.gst-alert--info    { background: var(--dg-accent-soft);  color: var(--dg-accent-strong); border-color: var(--dg-accent); }
+.gst-alert--success { background: var(--dg-success-soft); color: var(--dg-success);        border-color: var(--dg-success); }
+.gst-alert--warning { background: var(--dg-warning-soft); color: var(--dg-warning);        border-color: var(--dg-warning); }
+.gst-alert--danger   { background: var(--dg-danger-soft);  color: var(--dg-danger);         border-color: var(--dg-danger); }
+
+/* ── Badges ───────────────────────────────────────────────── */
+.gst-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gst-badge--success { color: var(--dg-success); background: var(--dg-success-soft); }
+.gst-badge--danger   { color: var(--dg-danger);  background: var(--dg-danger-soft); }
+.gst-badge--warning  { color: var(--dg-warning); background: var(--dg-warning-soft); }
+.gst-badge--accent   { color: var(--dg-accent-strong); background: var(--dg-accent-soft); }
+.gst-badge--slate    { color: var(--dg-text-2); background: var(--dg-slate-soft); }
+
+/* ── Stat pills (run summary) ────────────────────────────── */
+.gst-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.gst-stat {
+  flex: 1 1 160px;
+  border: 1px solid var(--dg-border);
+  border-left-width: 3px;
+  border-radius: var(--dg-radius-md);
+  background: var(--dg-surface-raised);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gst-stat--success { border-left-color: var(--dg-success); }
+.gst-stat--warning  { border-left-color: var(--dg-warning); }
+.gst-stat--danger    { border-left-color: var(--dg-danger); }
+.gst-stat--accent    { border-left-color: var(--dg-accent); }
+
+.gst-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dg-text-3);
+  font-family: var(--dg-font-mono);
+}
+
+.gst-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--dg-text-1);
+  font-family: var(--dg-font-mono);
+}
+
+/* ── Table ────────────────────────────────────────────────── */
+.gst-table-wrap {
+  border: 1px solid var(--dg-border);
+  border-radius: var(--dg-radius-md);
+  overflow: auto;
+  background: var(--dg-surface-sunken);
+}
+
+.gst-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.gst-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--dg-surface-raised);
+  color: var(--dg-text-2);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--dg-border);
+  white-space: nowrap;
+}
+
+.gst-table tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--dg-border-soft);
+  color: var(--dg-text-1);
+  vertical-align: middle;
+}
+
+.gst-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.gst-table tbody tr:hover {
+  background: var(--dg-surface-raised);
+}
+
+.gst-cell-strong { font-weight: 600; }
+.gst-cell-muted  { color: var(--dg-text-3); font-size: 12px; }
+.gst-cell-mono   { font-family: var(--dg-font-mono); font-size: 12px; color: var(--dg-text-2); }
+
+.gst-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.gst-empty {
+  text-align: center;
+  padding: 28px 14px !important;
+  color: var(--dg-text-3);
+  font-size: 13px;
+}
+
+/* ── Pager ────────────────────────────────────────────────── */
+.gst-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.gst-pager-info {
+  font-family: var(--dg-font-mono);
+  font-size: 12px;
+  color: var(--dg-text-2);
+}
+
+@media (max-width: 720px) {
+  .gst-upload-row { flex-direction: column; align-items: stretch; }
+  .gst-stat { flex-basis: 100%; }
+}

@@ -62,7 +62,7 @@ export default function ManufacturerAdd({ onClose, onSubmit }) {
         setErrors({ general: json?.message || "Failed to create manufacturer" });
       }
     } catch {
-      setErrors({ general: "Network error. Please try again." });
+      // handled by the global unreachable-backend toast
     } finally {
       setLoading(false);
     }

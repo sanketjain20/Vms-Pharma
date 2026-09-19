@@ -190,7 +190,7 @@ export default function EventLogPanel({ moduleName, uKey, onClose, closing }) {
         if (json?.status === 200) setData(json.data);
         else setError(json?.message || "Failed to load event log.");
       })
-      .catch((err) => setError(err.message));
+      .catch(() => {});
   }, [moduleKey, uKey]);
 
   useEffect(() => {

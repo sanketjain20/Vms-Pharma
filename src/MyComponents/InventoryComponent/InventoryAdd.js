@@ -111,7 +111,8 @@ export default function InventoryAdd({ onSubmit, onClose }) {
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`, {})
       .then(res => res.json())
-      .then(json => setProductTypes(json?.data?.productTypes || []));
+      .then(json => setProductTypes(json?.data?.productTypes || []))
+      .catch(() => {});
   }, []);
 
   /** HANDLE FIELD CHANGE */
@@ -186,7 +187,8 @@ export default function InventoryAdd({ onSubmit, onClose }) {
 
     apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`, {})
       .then(res => res.json())
-      .then(json => setProducts((json?.data || []).filter(p => p.disable === 0)));
+      .then(json => setProducts((json?.data || []).filter(p => p.disable === 0)))
+      .catch(() => {});
   }, [productTypeId, allProducts]);
 
   /* WHEN PRODUCT SELECTED → FETCH ITS PRODUCT TYPE FROM API */

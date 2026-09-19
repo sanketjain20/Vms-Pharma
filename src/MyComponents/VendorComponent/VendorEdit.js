@@ -76,7 +76,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
           }
         } else { toast.error(res.message || "Failed to fetch vendor"); }
       })
-      .catch(() => toast.error("Network error"))
+      .catch(() => {})
       .finally(() => setVendorLoaded(true));
   }, [uKey, roles]);
 
@@ -125,9 +125,8 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
         toast.success("Vendor updated successfully");
         onSubmit?.(); onClose?.();
       } else { toast.error(result.message || "Vendor update failed"); }
-    } catch (error) {
-      console.log(error);
-      toast.error("Network error. Please try again!");
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally { setLoading(false); }
   };
 

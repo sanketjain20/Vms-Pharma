@@ -119,8 +119,8 @@ function PayForm({ invoice, onSuccess, onCancel }) {
       } else {
         setErr(json.message || "Failed to pay");
       }
-    } catch (e) {
-      setErr("Network error: " + e.message);
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally {
       setSubmitting(false);
     }
@@ -231,8 +231,8 @@ export default function SupplierLedgerView({ uKey, onClose }) {
       const json = await res.json();
       if (json.status === 200) setLedger(json.data);
       else setError(json.message || "Failed to load ledger");
-    } catch (e) {
-      setError("Network error: " + e.message);
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally {
       setLoading(false);
     }

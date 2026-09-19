@@ -50,7 +50,7 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
           setErrors({ general: "Failed to load retailer data" });
         }
       })
-      .catch(() => setErrors({ general: "Network error loading data" }))
+      .catch(() => {})
       .finally(() => setFetching(false));
   }, [uKey]);
 
@@ -99,7 +99,7 @@ export default function RetailerEdit({ uKey, onClose, onSubmit }) {
         setErrors({ general: json?.message || "Failed to update retailer" });
       }
     } catch {
-      setErrors({ general: "Network error. Please try again." });
+      // handled by the global unreachable-backend toast
     } finally {
       setLoading(false);
     }

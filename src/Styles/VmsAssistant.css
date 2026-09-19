@@ -1,15 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
 
 .vmsa-root {
-  --vmsa-panel: #0c0c0e;
-  --vmsa-panel-soft: #131316;
-  --vmsa-line: rgba(255, 255, 255, .1);
+  --vmsa-panel: #111017;
+  --vmsa-panel-soft: #19171f;
+  --vmsa-panel-raise: #201d28;
+  --vmsa-line: rgba(255, 255, 255, .09);
   --vmsa-line-hi: rgba(255, 255, 255, .16);
-  --vmsa-text: #f5f5f7;
-  --vmsa-muted: rgba(245, 245, 247, .6);
-  --vmsa-faint: rgba(245, 245, 247, .38);
-  --vmsa-blue: #60a5fa;
-  --vmsa-blue-deep: #3b82f6;
+  --vmsa-text: #f3f1f8;
+  --vmsa-muted: rgba(243, 241, 248, .62);
+  --vmsa-faint: rgba(243, 241, 248, .4);
+  --vmsa-accent: #a78bfa;
+  --vmsa-accent-deep: #7c3aed;
+  --vmsa-accent-bg: rgba(167, 139, 250, .14);
+  --vmsa-danger: #f87171;
+  --vmsa-danger-bg: rgba(248, 113, 113, .12);
 
   position: fixed;
   right: 28px;
@@ -20,68 +24,84 @@
 
 body[data-theme="light"] .vmsa-root {
   --vmsa-panel: #ffffff;
-  --vmsa-panel-soft: #f4f7fb;
-  --vmsa-line: rgba(15, 23, 42, .1);
-  --vmsa-line-hi: rgba(15, 23, 42, .16);
-  --vmsa-text: #0f172a;
-  --vmsa-muted: #55627a;
-  --vmsa-faint: #78859c;
-  --vmsa-blue: #2563eb;
-  --vmsa-blue-deep: #1d4ed8;
+  --vmsa-panel-soft: #f6f5fb;
+  --vmsa-panel-raise: #eeecf9;
+  --vmsa-line: rgba(30, 20, 60, .1);
+  --vmsa-line-hi: rgba(30, 20, 60, .16);
+  --vmsa-text: #1c1730;
+  --vmsa-muted: #635f78;
+  --vmsa-faint: #8b87a0;
+  --vmsa-accent: #7c3aed;
+  --vmsa-accent-deep: #6025d9;
+  --vmsa-accent-bg: rgba(124, 58, 237, .1);
+  --vmsa-danger: #dc2626;
+  --vmsa-danger-bg: rgba(220, 38, 38, .08);
 }
 
 .vmsa-root * { box-sizing: border-box; }
 
 /* ── Launcher ───────────────────────────────────────────── */
 .vmsa-launcher {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 58px;
+  height: 58px;
   border: 0;
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--vmsa-blue), var(--vmsa-blue-deep));
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--vmsa-accent), var(--vmsa-accent-deep));
   color: #ffffff;
   cursor: pointer;
-  box-shadow: 0 16px 34px rgba(59,130,246,.36);
-  animation: vmsaPop .35s cubic-bezier(.34,1.56,.64,1) both;
+  box-shadow: 0 18px 36px rgba(124, 58, 237, .38), inset 0 1px 0 rgba(255, 255, 255, .25);
+  animation: vmsaPop .35s cubic-bezier(.34, 1.56, .64, 1) both;
   transition: transform .18s ease, box-shadow .18s ease;
 }
-.vmsa-launcher:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 20px 42px rgba(59,130,246,.44); }
-.vmsa-launcher:active { transform: translateY(0) scale(.98); }
+.vmsa-launcher-pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--vmsa-accent);
+  opacity: 0;
+  animation: vmsaPulse 2.6s ease-out infinite;
+  pointer-events: none;
+}
+.vmsa-launcher:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 22px 44px rgba(124, 58, 237, .48); }
+.vmsa-launcher:active { transform: translateY(0) scale(.97); }
 @keyframes vmsaPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+@keyframes vmsaPulse { 0% { opacity: .55; transform: scale(.9); } 100% { opacity: 0; transform: scale(1.35); } }
 
 /* ── Panel ──────────────────────────────────────────────── */
 .vmsa-frame {
   display: flex;
   flex-direction: column;
-  width: min(392px, calc(100vw - 40px));
-  height: min(640px, calc(100vh - 80px));
+  width: min(400px, calc(100vw - 40px));
+  height: min(650px, calc(100vh - 80px));
   overflow: hidden;
   border: 1px solid var(--vmsa-line-hi);
-  border-radius: 20px;
+  border-radius: 22px;
   background: var(--vmsa-panel);
   color: var(--vmsa-text);
-  box-shadow: 0 32px 80px rgba(0,0,0,.45);
-  animation: vmsaOpen .28s cubic-bezier(.16,1,.3,1) both;
+  box-shadow: 0 36px 90px rgba(0, 0, 0, .5);
+  animation: vmsaOpen .28s cubic-bezier(.16, 1, .3, 1) both;
 }
-@keyframes vmsaOpen { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes vmsaOpen { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
 
 .vmsa-head {
   display: grid;
-  grid-template-columns: 38px 1fr 32px 32px;
+  grid-template-columns: 40px 1fr 32px 32px;
   align-items: center;
   gap: 10px;
-  padding: 14px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--vmsa-line);
+  background: linear-gradient(180deg, var(--vmsa-panel-raise), var(--vmsa-panel));
 }
 .vmsa-avatar {
   display: grid; place-items: center;
-  width: 38px; height: 38px;
-  border-radius: 12px;
-  background: rgba(96,165,250,.16);
-  border: 1px solid rgba(96,165,250,.3);
-  color: var(--vmsa-blue);
+  width: 40px; height: 40px;
+  border-radius: 13px;
+  background: linear-gradient(140deg, var(--vmsa-accent), var(--vmsa-accent-deep));
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(124, 58, 237, .3);
 }
 .vmsa-head-text { min-width: 0; }
 .vmsa-name {
@@ -101,8 +121,8 @@ body[data-theme="light"] .vmsa-root {
 .vmsa-status-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vmsa-status strong { color: var(--vmsa-text); font-weight: 700; }
 .vmsa-status svg { flex-shrink: 0; opacity: .6; }
-.vmsa-status:hover { color: var(--vmsa-blue); }
-.vmsa-status:hover strong { color: var(--vmsa-blue); }
+.vmsa-status:hover { color: var(--vmsa-accent); }
+.vmsa-status:hover strong { color: var(--vmsa-accent); }
 
 .vmsa-icon-btn {
   display: grid; place-items: center;
@@ -114,43 +134,98 @@ body[data-theme="light"] .vmsa-root {
   cursor: pointer;
   transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
-.vmsa-icon-btn:hover { background: rgba(96,165,250,.12); color: var(--vmsa-blue); border-color: rgba(96,165,250,.3); }
+.vmsa-icon-btn:hover { background: var(--vmsa-accent-bg); color: var(--vmsa-accent); border-color: rgba(124, 58, 237, .35); }
 
 /* ── Messages ───────────────────────────────────────────── */
 .vmsa-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 14px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .vmsa-msg {
-  max-width: 86%;
-  padding: 10px 13px;
-  border-radius: 14px;
-  font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  animation: vmsaMsgIn .25s cubic-bezier(.16,1,.3,1) both;
+  position: relative;
+  max-width: 88%;
+  padding: 11px 14px;
+  border-radius: 16px;
+  font-size: 13.2px;
+  line-height: 1.55;
+  animation: vmsaMsgIn .25s cubic-bezier(.16, 1, .3, 1) both;
 }
 @keyframes vmsaMsgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-.vmsa-msg-bot {
+.vmsa-msg-assistant {
   align-self: flex-start;
-  border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 5px;
   background: var(--vmsa-panel-soft);
   border: 1px solid var(--vmsa-line);
   color: var(--vmsa-text);
+  padding-right: 34px;
 }
 .vmsa-msg-user {
   align-self: flex-end;
-  border-bottom-right-radius: 4px;
-  background: linear-gradient(135deg, var(--vmsa-blue), var(--vmsa-blue-deep));
+  border-bottom-right-radius: 5px;
+  background: linear-gradient(140deg, var(--vmsa-accent), var(--vmsa-accent-deep));
   color: #ffffff;
 }
+.vmsa-msg-error {
+  background: var(--vmsa-danger-bg);
+  border: 1px solid rgba(248, 113, 113, .3);
+  color: var(--vmsa-text);
+}
+.vmsa-msg-error-label {
+  display: flex; align-items: center; gap: 5px;
+  margin-bottom: 4px;
+  font-size: 11px; font-weight: 700;
+  color: var(--vmsa-danger);
+}
 
-.vmsa-typing { display: flex; align-items: center; gap: 4px; padding: 13px; }
+.vmsa-msg-body :first-child { margin-top: 0; }
+.vmsa-line { min-height: 1.2em; }
+.vmsa-blank-line { height: 8px; }
+.vmsa-list { margin: 2px 0 4px; padding-left: 18px; }
+.vmsa-list li { margin-bottom: 2px; }
+.vmsa-code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(124, 58, 237, .14);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+}
+.vmsa-msg-user .vmsa-code { background: rgba(255, 255, 255, .2); }
+
+.vmsa-msg-action {
+  position: absolute;
+  top: 8px; right: 8px;
+  display: grid; place-items: center;
+  width: 22px; height: 22px;
+  border: 0; border-radius: 7px;
+  background: transparent;
+  color: var(--vmsa-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s ease, background .15s ease, color .15s ease;
+}
+.vmsa-msg-assistant:hover .vmsa-msg-action { opacity: 1; }
+.vmsa-msg-action:hover { background: var(--vmsa-accent-bg); color: var(--vmsa-accent); }
+
+.vmsa-msg-retry {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 6px;
+  padding: 5px 10px;
+  border: 1px solid rgba(248, 113, 113, .35);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--vmsa-danger);
+  font: inherit; font-size: 11.5px; font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.vmsa-msg-retry:hover { background: var(--vmsa-danger-bg); }
+
+.vmsa-typing { display: flex; align-items: center; gap: 4px; padding: 14px; }
 .vmsa-typing span {
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--vmsa-faint);
@@ -168,7 +243,7 @@ body[data-theme="light"] .vmsa-root {
   border-top: 1px dashed var(--vmsa-line);
   display: grid;
   gap: 8px;
-  animation: vmsaMsgIn .3s cubic-bezier(.16,1,.3,1) both;
+  animation: vmsaMsgIn .3s cubic-bezier(.16, 1, .3, 1) both;
 }
 .vmsa-suggestions-label {
   font-size: 10px;
@@ -191,9 +266,9 @@ body[data-theme="light"] .vmsa-root {
 }
 .vmsa-chip-ghost { color: var(--vmsa-muted); font-weight: 700; }
 .vmsa-chip:hover {
-  background: rgba(96,165,250,.12);
-  color: var(--vmsa-blue);
-  border-color: rgba(96,165,250,.3);
+  background: var(--vmsa-accent-bg);
+  color: var(--vmsa-accent);
+  border-color: rgba(124, 58, 237, .35);
 }
 
 .vmsa-fyi {
@@ -215,25 +290,26 @@ body[data-theme="light"] .vmsa-root {
 .vmsa-fyi button {
   border: 0; background: none; padding: 0; cursor: pointer;
   font: inherit; font-size: 11px; font-weight: 700;
-  color: var(--vmsa-blue);
+  color: var(--vmsa-accent);
   text-decoration: underline;
 }
 
 /* ── Compose ────────────────────────────────────────────── */
 .vmsa-compose {
   display: grid;
-  grid-template-columns: 1fr 40px;
+  grid-template-columns: 1fr 42px;
   gap: 8px;
   padding: 12px 14px;
   border-top: 1px solid var(--vmsa-line);
+  background: var(--vmsa-panel-soft);
 }
 .vmsa-compose input {
   width: 100%;
   min-width: 0;
-  padding: 11px 13px;
+  padding: 11px 14px;
   border: 1px solid var(--vmsa-line-hi);
-  border-radius: 12px;
-  background: var(--vmsa-panel-soft);
+  border-radius: 13px;
+  background: var(--vmsa-panel);
   color: var(--vmsa-text);
   outline: none;
   font: inherit;
@@ -241,15 +317,16 @@ body[data-theme="light"] .vmsa-root {
   transition: border-color .18s ease, box-shadow .18s ease;
 }
 .vmsa-compose input::placeholder { color: var(--vmsa-faint); }
-.vmsa-compose input:focus { border-color: rgba(96,165,250,.55); box-shadow: 0 0 0 3px rgba(96,165,250,.14); }
+.vmsa-compose input:focus { border-color: rgba(167, 139, 250, .6); box-shadow: 0 0 0 3px var(--vmsa-accent-bg); }
+.vmsa-compose input:disabled { opacity: .6; }
 
 /* Named with "primary" so this app's global light-theme rule (which
    force-mutes any plain <button> text color) leaves it alone. */
 .vmsa-compose button {
   display: grid; place-items: center;
   border: 0;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--vmsa-blue), var(--vmsa-blue-deep));
+  border-radius: 13px;
+  background: linear-gradient(140deg, var(--vmsa-accent), var(--vmsa-accent-deep));
   color: #ffffff !important;
   cursor: pointer;
   transition: transform .15s ease, opacity .15s ease;
@@ -260,10 +337,11 @@ body[data-theme="light"] .vmsa-root {
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 520px) {
   .vmsa-root { right: 14px; bottom: 14px; }
-  .vmsa-frame { width: calc(100vw - 28px); height: min(600px, calc(100vh - 28px)); border-radius: 18px; }
+  .vmsa-frame { width: calc(100vw - 28px); height: min(610px, calc(100vh - 28px)); border-radius: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .vmsa-launcher, .vmsa-frame, .vmsa-msg { animation: none !important; }
+  .vmsa-launcher-pulse { animation: none !important; display: none; }
   .vmsa-typing span { animation: none !important; opacity: .6; }
 }

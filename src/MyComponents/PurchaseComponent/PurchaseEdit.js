@@ -116,7 +116,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
           toast.error("Failed to load purchase");
         }
       })
-      .catch(() => toast.error("Network error loading purchase"))
+      .catch(() => {})
       .finally(() => setFetching(false));
   }, [uKey]);
 
@@ -235,7 +235,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
       const json = await res.json();
       if (json?.status === 200) { toast.success("Purchase updated successfully"); onSubmit?.(); onClose?.(); }
       else toast.error(json?.message || "Failed to update purchase");
-    } catch { toast.error("Network error. Please try again."); }
+    } catch { /* handled by the global unreachable-backend toast */ }
     finally { setLoading(false); }
   };
 

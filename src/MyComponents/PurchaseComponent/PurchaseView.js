@@ -25,6 +25,9 @@ const productLabel = (item) => {
 export default function PurchaseView({ uKey, onClose, onEdit }) {
   const [purchase, setPurchase] = useState(null);
   const [error, setError]       = useState("");
+  const [ewayBill, setEwayBill] = useState(null);
+  const [ewayBusy, setEwayBusy] = useState(false);
+  const [ewayMessage, setEwayMessage] = useState("");
 
   useEffect(() => {
     if (!uKey) return;
@@ -39,6 +42,49 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
       })
       .catch(err => setError(err.message));
   }, [uKey]);
+
+  useEffect(() => {
+    if (!uKey || !purchase) return;
+    // Purchase itself carries the e-way status summary — no separate
+    // status endpoint needed, unlike Sales which currently doesn't expose
+    // it on GetSalesByUkey.
+    if (purchase.ewayBillStatus && purchase.ewayBillStatus !== "NOT_APPLICABLE") {
+      setEwayBill({
+        status: purchase.ewayBillStatus,
+        ewayBillNo: purchase.ewayBillNo,
+        ewayError: purchase.ewayError,
+      });
+    }
+  }, [uKey, purchase]);
+
+  const handleGenerateEwayBill = async () => {
+    const vehicleNumber = window.prompt("Vehicle number (e.g. MH12AB1234):");
+    if (!vehicleNumber) return;
+    const distanceStr = window.prompt("Approximate transport distance (km):", "100");
+    if (!distanceStr) return;
+
+    setEwayBusy(true);
+    setEwayMessage("");
+    try {
+      const res = await apiClient(`${API_BASE_URL}/api/EwayBill/GenerateFromPurchase/${uKey}`, {
+        method: "POST",
+        body: JSON.stringify({
+          vehicleNumber,
+          transportDistanceKm: Number(distanceStr),
+          transportMode: "ROAD",
+        }),
+      });
+      const result = await res.json();
+      setEwayMessage(result.message || (res.ok ? "E-way bill generated." : "Failed to generate e-way bill."));
+      if (res.ok) {
+        setEwayBill({ status: "GENERATED", ewayBillNo: result.data?.ewayBillNo });
+      }
+    } catch (err) {
+      setEwayMessage("Failed to generate e-way bill: " + err.message);
+    } finally {
+      setEwayBusy(false);
+    }
+  };
 
   if (!uKey) return null;
 
@@ -78,6 +124,18 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
 
         <div className="afx-body">
           {error && <div className="afx-alert">{error}</div>}
+          {ewayMessage && <div className="afx-alert">{ewayMessage}</div>}
+
+          {ewayBill && (
+            <div style={{ marginBottom: 10 }}>
+              <span className="afx-tag" style={
+                ewayBill.status === "GENERATED" ? { color: "var(--afx-success)", background: "var(--afx-success-soft)" } :
+                ewayBill.status === "FAILED"    ? { color: "var(--afx-danger)",  background: "var(--afx-danger-soft)"  } : undefined
+              }>
+                E-Way Bill: {ewayBill.status}{ewayBill.ewayBillNo ? ` · ${ewayBill.ewayBillNo}` : ""}
+              </span>
+            </div>
+          )}
 
           {!purchase && !error && (
             <div className="afx-loading"><div className="afx-loader-ring"><div/><div/><div/></div></div>
@@ -204,6 +262,11 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
         {purchase && (
           <div className="afx-footer">
             <button type="button" className="afx-btn" onClick={onClose}>Close</button>
+            {(!ewayBill || ewayBill.status === "FAILED") && (
+              <button type="button" className="afx-btn" disabled={ewayBusy} onClick={handleGenerateEwayBill}>
+                {ewayBusy ? "Generating…" : "Generate E-Way Bill"}
+              </button>
+            )}
           </div>
         )}
       </div>

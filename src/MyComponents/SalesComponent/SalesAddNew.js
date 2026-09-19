@@ -301,6 +301,44 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     });
   };
 
+  /* ══════════ BARCODE SCAN-TO-SELECT ══════════
+     A USB/Bluetooth barcode scanner behaves like a keyboard — it types the
+     code then fires Enter, which is all the scan input below listens for.
+     Matches against the already-loaded catalog first (instant, the normal
+     case); falls back to a live lookup only for a product added since this
+     page loaded, so a fresh scan still works without a full page refresh.
+     Scanning only SELECTS the product — filters the catalog down to it and
+     picks its type chip — it deliberately does not add it to the cart or
+     choose a quantity. The user adds it and sets quantity themselves via
+     the card's Add to cart / +/- controls, same as picking it by hand. */
+  const handleBarcodeScan = async (rawCode) => {
+    const code = rawCode.trim();
+    if (!code) return;
+
+    const localMatch = allProducts.find(p => p.barcode === code);
+    if (localMatch) {
+      setTypeFilter(localMatch.productTypeId ?? localMatch.typeId ?? "");
+      setSearch(localMatch.name);
+      toast.success(`${localMatch.name} selected`);
+      return;
+    }
+
+    try {
+      const res  = await apiClient(`${API_BASE_URL}/api/Product/GetProductByBarcode/${encodeURIComponent(code)}`);
+      const json = await res.json();
+      if (json.status === 200 && json.data) {
+        setAllProducts(prev => prev.some(p => p.id === json.data.id) ? prev : [...prev, json.data]);
+        setTypeFilter(json.data.productTypeId ?? json.data.typeId ?? "");
+        setSearch(json.data.name);
+        toast.success(`${json.data.name} selected`);
+      } else {
+        toast.error(`No product found for barcode "${code}"`);
+      }
+    } catch {
+      toast.error("Barcode lookup failed");
+    }
+  };
+
   /* ══════════ CART ROW HELPERS (checkout step) ══════════ */
   const increaseQty = (i) => {
     const it = items[i];
@@ -506,6 +544,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
             priceFor={priceFor}
             stockFor={stockFor}
             adjustCart={adjustCart}
+            onScan={handleBarcodeScan}
             items={items}
             subTotal={subTotal}
             onProceed={goToCheckout}
@@ -606,12 +645,37 @@ export default function SalesAddNew({ onClose, onSubmit }) {
 ───────────────────────────────────────── */
 function CatalogStep({
   productTypes, filteredProducts, search, setSearch, typeFilter, setTypeFilter,
-  allProducts, cartQtyFor, priceFor, stockFor, adjustCart,
+  allProducts, cartQtyFor, priceFor, stockFor, adjustCart, onScan,
 }) {
+  const [scanValue, setScanValue] = useState("");
+  const scanRef = useRef(null);
+
+  const submitScan = (e) => {
+    e.preventDefault();
+    const code = scanValue;
+    setScanValue("");
+    onScan(code);
+    scanRef.current?.focus();
+  };
+
   return (
     <div className="san-catalog">
 
       <div className="san-catalog-toolbar">
+        <form className="san-search-bar" onSubmit={submitScan} title="Scan a barcode — selects the product; choose the quantity yourself">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 3v10M5 3v10M7.5 3v10M10 3v10M12.5 3v10M14 3v10" />
+          </svg>
+          <input
+            ref={scanRef}
+            type="text"
+            placeholder="Scan barcode…"
+            value={scanValue}
+            onChange={e => setScanValue(e.target.value)}
+            autoComplete="off"
+          />
+        </form>
+
         <div className="san-search-bar">
           <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
             <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.4"/>

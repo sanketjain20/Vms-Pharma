@@ -68,8 +68,8 @@ function InvoiceRow({ invoice, active, onCollect, onCancel, onSuccess }) {
       } else {
         setError(json.message || "Collection failed");
       }
-    } catch (e) {
-      setError("Network error: " + e.message);
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally {
       setSubmitting(false);
     }
@@ -179,8 +179,8 @@ export default function CollectPayment({ uKey, onClose, onSuccess }) {
       } else {
         setError(json.message || "Failed to load ledger");
       }
-    } catch (e) {
-      setError("Network error: " + e.message);
+    } catch {
+      // handled by the global unreachable-backend toast
     } finally {
       setLoading(false);
     }

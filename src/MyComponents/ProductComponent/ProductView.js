@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import Barcode, { printBarcodeLabel } from "../CommonComponent/Barcode";
 const fmt = n => parseFloat(n || 0).toFixed(2);
 
 /* ── Read-only field ── */
@@ -82,6 +83,23 @@ export default function ProductView({ uKey, onClose }) {
                   <ViewField label="Product Code" value={product.productCode} mono />
                   <ViewField label="Product Type" value={product.productType} />
                   <ViewField label="Product Name" value={product.name} />
+                  <ViewField label="Barcode" value={product.barcode} mono />
+
+                  {product.barcode && (
+                    <div className="afx-field afx-field--full">
+                      <label className="afx-label">Barcode Label</label>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                        <Barcode value={product.barcode} height={40} width={1.4} fontSize={11} />
+                        <button
+                          type="button"
+                          className="afx-btn"
+                          onClick={() => printBarcodeLabel(product.barcode, product.name)}
+                        >
+                          Print Label
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {product.description && (
                     <div className="afx-field afx-field--full">

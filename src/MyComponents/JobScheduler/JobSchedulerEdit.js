@@ -47,6 +47,9 @@ export default function JobSchedulerEdit() {
           setJob({ ...j, runTime: j.runTime?.substring(0, 5) || "", intervalDays: j.intervalDays || "" });
           if (j.daysOfWeek) setSelectedDays(j.daysOfWeek.split(","));
         }
+      } catch {
+        // backend unreachable — global toast already covers it; job stays
+        // null, which renders the "Job not found" state below.
       } finally {
         setLoading(false);
       }

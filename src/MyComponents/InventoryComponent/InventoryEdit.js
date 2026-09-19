@@ -95,7 +95,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
           setAllProducts(res.data.products);
         } else { toast.error("Failed to load products"); setInitialLoading(false); }
       })
-      .catch(() => { toast.error("Failed to load products"); setInitialLoading(false); });
+      .catch(() => setInitialLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -103,7 +103,8 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`)
       .then(r => r.json())
-      .then(json => setProductTypes(json?.data?.productTypes || []));
+      .then(json => setProductTypes(json?.data?.productTypes || []))
+      .catch(() => {});
   }, []);
 
   /* ── FETCH INVENTORY ── */
@@ -127,7 +128,7 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
         if (inv.productTypeId) setProductTypeId(inv.productTypeId);
         isInitialLoad.current = false;
       })
-      .catch(() => toast.error("Error loading inventory"))
+      .catch(() => {})
       .finally(() => setInitialLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products]);
@@ -137,7 +138,8 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     if (!formData.product_id) return;
     apiClient(`${API_BASE_URL}/api/ProductType/GetProdTypeByProductId/${formData.product_id}`)
       .then(r => r.json())
-      .then(json => { if (json?.data?.id) setProductTypeId(json.data.id); });
+      .then(json => { if (json?.data?.id) setProductTypeId(json.data.id); })
+      .catch(() => {});
   }, [formData.product_id]);
 
   /* ── TYPE → PRODUCTS ── */
@@ -145,7 +147,8 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     if (!productTypeId) { setProducts(allProducts); return; }
     apiClient(`${API_BASE_URL}/api/Product/GetProdByProdId/${productTypeId}`)
       .then(r => r.json())
-      .then(json => setProducts(json?.data || []));
+      .then(json => setProducts(json?.data || []))
+      .catch(() => {});
   }, [productTypeId, allProducts]);
 
   const handleChange = (e) => {

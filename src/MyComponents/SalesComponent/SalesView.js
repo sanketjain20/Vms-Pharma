@@ -6,6 +6,11 @@ import apiClient from "../../Config/apiClient";
 export default function SalesView({ uKey, onClose }) {
   const [sales, setSales] = useState(null);
   const [error, setError] = useState("");
+  const [eInvoice, setEInvoice] = useState(null);
+  const [eInvoiceBusy, setEInvoiceBusy] = useState(false);
+  const [eInvoiceMessage, setEInvoiceMessage] = useState("");
+  const [ewayBusy, setEwayBusy] = useState(false);
+  const [ewayMessage, setEwayMessage] = useState("");
 
   useEffect(() => {
     if (!uKey) return;
@@ -23,6 +28,80 @@ export default function SalesView({ uKey, onClose }) {
       })
       .catch((err) => { console.error(err); setError(err.message); });
   }, [uKey]);
+
+  const loadEInvoice = React.useCallback(() => {
+    if (!uKey) return;
+    apiClient(`${API_BASE_URL}/api/EInvoice/GetEInvoiceByUKey/${uKey}`, { method: "GET" })
+      .then((res) => res.json())
+      .then((data) => { if (data.status === 200) setEInvoice(data.data); })
+      .catch((err) => console.error("Failed to load e-invoice status:", err));
+  }, [uKey]);
+
+  useEffect(() => { loadEInvoice(); }, [loadEInvoice]);
+
+  const handleGenerateIrn = async () => {
+    setEInvoiceBusy(true);
+    setEInvoiceMessage("");
+    try {
+      const res = await apiClient(`${API_BASE_URL}/api/EInvoice/GenerateIrn/${uKey}`, { method: "POST" });
+      const result = await res.json();
+      setEInvoiceMessage(result.message || (res.ok ? "IRN generated." : "Failed to generate IRN."));
+      if (result.data) setEInvoice(result.data);
+    } catch (err) {
+      setEInvoiceMessage("Failed to generate IRN: " + err.message);
+    } finally {
+      setEInvoiceBusy(false);
+    }
+  };
+
+  const handleCancelIrn = async () => {
+    const remarks = window.prompt("Reason for cancelling this IRN (required):");
+    if (!remarks) return;
+    setEInvoiceBusy(true);
+    setEInvoiceMessage("");
+    try {
+      const res = await apiClient(`${API_BASE_URL}/api/EInvoice/CancelIrn/${uKey}`, {
+        method: "POST",
+        body: JSON.stringify({ cancelReasonCode: "3", remarks }),
+      });
+      const result = await res.json();
+      setEInvoiceMessage(result.message || (res.ok ? "IRN cancelled." : "Failed to cancel IRN."));
+      if (result.data) setEInvoice(result.data);
+    } catch (err) {
+      setEInvoiceMessage("Failed to cancel IRN: " + err.message);
+    } finally {
+      setEInvoiceBusy(false);
+    }
+  };
+
+  const handleGenerateEwayBill = async () => {
+    const vehicleNumber = window.prompt("Vehicle number (e.g. MH12AB1234):");
+    if (!vehicleNumber) return;
+    const distanceStr = window.prompt("Approximate transport distance (km):", "100");
+    if (!distanceStr) return;
+
+    setEwayBusy(true);
+    setEwayMessage("");
+    try {
+      const res = await apiClient(`${API_BASE_URL}/api/EwayBill/GenerateFromSales/${uKey}`, {
+        method: "POST",
+        body: JSON.stringify({
+          vehicleNumber,
+          transportDistanceKm: Number(distanceStr),
+          transportMode: "ROAD",
+        }),
+      });
+      const result = await res.json();
+      setEwayMessage(result.message || (res.ok ? "E-way bill generated." : "Failed to generate e-way bill."));
+      if (res.ok) {
+        setSales((prev) => prev && { ...prev, ewayBillStatus: "GENERATED", ewayBillNo: result.data?.ewayBillNo });
+      }
+    } catch (err) {
+      setEwayMessage("Failed to generate e-way bill: " + err.message);
+    } finally {
+      setEwayBusy(false);
+    }
+  };
 
   const handlePrint = async () => {
     try {
@@ -138,7 +217,55 @@ export default function SalesView({ uKey, onClose }) {
                     )}
                   </span>
                 </div>
+                {eInvoice && eInvoice.irnStatus !== "NOT_APPLICABLE" && (
+                  <div className="afx-meta-card">
+                    <span className="afx-meta-card-label">E-Invoice (IRN)</span>
+                    <span className="afx-meta-card-val">
+                      <span
+                        className="afx-tag"
+                        style={
+                          eInvoice.irnStatus === "GENERATED" ? { color: "var(--afx-success)", background: "var(--afx-success-soft)" } :
+                          eInvoice.irnStatus === "FAILED"    ? { color: "var(--afx-danger)",  background: "var(--afx-danger-soft)"  } :
+                          eInvoice.irnStatus === "CANCELLED" ? { color: "var(--afx-danger)",  background: "var(--afx-danger-soft)"  } : undefined
+                        }
+                        title={eInvoice.irn || eInvoice.irpError || ""}
+                      >
+                        {eInvoice.irnStatus}
+                      </span>
+                      {eInvoice.irn && (
+                        <span className="afx-view-value--muted" style={{ fontSize: 10, marginLeft: 6, fontFamily: "var(--afx-font-mono)" }}>
+                          {eInvoice.irn.slice(0, 16)}…
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+                {sales.ewayBillStatus && sales.ewayBillStatus !== "NOT_APPLICABLE" && (
+                  <div className="afx-meta-card">
+                    <span className="afx-meta-card-label">E-Way Bill</span>
+                    <span className="afx-meta-card-val">
+                      <span
+                        className="afx-tag"
+                        style={
+                          sales.ewayBillStatus === "GENERATED" ? { color: "var(--afx-success)", background: "var(--afx-success-soft)" } :
+                          sales.ewayBillStatus === "FAILED"    ? { color: "var(--afx-danger)",  background: "var(--afx-danger-soft)"  } : undefined
+                        }
+                        title={sales.ewayBillNo || sales.ewayError || ""}
+                      >
+                        {sales.ewayBillStatus}
+                      </span>
+                      {sales.ewayBillNo && (
+                        <span className="afx-view-value--muted" style={{ fontSize: 10, marginLeft: 6, fontFamily: "var(--afx-font-mono)" }}>
+                          {sales.ewayBillNo}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {eInvoiceMessage && <div className="afx-alert" style={{ marginTop: 8 }}>{eInvoiceMessage}</div>}
+              {ewayMessage && <div className="afx-alert" style={{ marginTop: 8 }}>{ewayMessage}</div>}
 
               <div className="afx-section-title">Line Items ({sales.items?.length || 0})</div>
               {!sales.items?.length ? (
@@ -212,6 +339,21 @@ export default function SalesView({ uKey, onClose }) {
         {sales && (
           <div className="afx-footer">
             <button className="afx-btn" onClick={onClose}>Close</button>
+            {eInvoice && (eInvoice.irnStatus === "PENDING" || eInvoice.irnStatus === "FAILED") && (
+              <button className="afx-btn" disabled={eInvoiceBusy} onClick={handleGenerateIrn}>
+                {eInvoiceBusy ? "Generating…" : "Generate IRN"}
+              </button>
+            )}
+            {(!sales.ewayBillStatus || sales.ewayBillStatus === "NOT_APPLICABLE" || sales.ewayBillStatus === "FAILED") && (
+              <button className="afx-btn" disabled={ewayBusy} onClick={handleGenerateEwayBill}>
+                {ewayBusy ? "Generating…" : "Generate E-Way Bill"}
+              </button>
+            )}
+            {eInvoice && eInvoice.irnStatus === "GENERATED" && eInvoice.cancellable && (
+              <button className="afx-btn" disabled={eInvoiceBusy} onClick={handleCancelIrn}>
+                {eInvoiceBusy ? "Cancelling…" : "Cancel IRN"}
+              </button>
+            )}
             <button className="afx-btn afx-btn--primary" onClick={handlePrint}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                 <path d="M3 4.5V1.5h7V4.5M3 9.5H1.5V5.5h10V9.5H10M3 7.5h7v4H3v-4Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>

@@ -246,8 +246,13 @@ function StatCards({ Module, total, breakdown }) {
   );
 }
 
-/* ── Row/card action buttons — one definition, reused by both views ── */
-function RowActions({ row, selectedStatus, can, Module, isReadOnlyModule, hideActiveInactiveTabs, onEdit, onView, onDisable, onActivate, onDownload, onPaymentCollection }) {
+/* ── Row/card action buttons — one definition, reused by both views ──
+ * `extraActions` is an escape hatch for feature-specific buttons (e.g. the
+ * E-Invoice/E-Way Bill actions on Sales, Purchase) so those features don't
+ * have to add another `Module === "X"` branch in here — pass a render prop
+ * `(row) => <>...buttons...</>` from the screen that needs them via
+ * <DynamicGrid extraActions={...} />. */
+function RowActions({ row, selectedStatus, can, Module, isReadOnlyModule, hideActiveInactiveTabs, onEdit, onView, onDisable, onActivate, onDownload, onPaymentCollection, extraActions }) {
   const canCollectPayment = Module === "Retailer Outstanding" || Module === "Supplier Outstanding";
   const paymentTitle = Module === "Supplier Outstanding" ? "Pay Supplier" : "Payment Collection";
 
@@ -273,6 +278,7 @@ function RowActions({ row, selectedStatus, can, Module, isReadOnlyModule, hideAc
       {canCollectPayment && <button className="dg-icon-btn dg-icon-btn--payment" title={paymentTitle} onClick={() => onPaymentCollection(row)}><ActionIcon.Payment /></button>}
       {Module === "Sales" && can("Download") && <button className="dg-icon-btn dg-icon-btn--download" title="Download" onClick={() => onDownload(row)}><ActionIcon.Download /></button>}
       {Module !== "Sales" && can("Disable") && !isReadOnlyModule && <button className="dg-icon-btn dg-icon-btn--disable" title="Disable" onClick={() => onDisable(row)}><ActionIcon.Disable /></button>}
+      {typeof extraActions === "function" && extraActions(row)}
     </>
   );
 }
@@ -381,7 +387,7 @@ function GridItem({ row, columns, index, ...actionProps }) {
 }
 
 /* ── MAIN COMPONENT ── */
-export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, noPagination = false }) {
+export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, noPagination = false, extraActions }) {
   const [allData, setAllData] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -453,7 +459,12 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
     if (!Module) return;
     apiClient(`${API_BASE_URL}/api/Access/GetUserModuleAccess/${ModuleId}/${roleId}`, { method: "GET" })
       .then(r => r.json())
-      .then(res => { if (res.status === 200 && Array.isArray(res.data)) setAccessList(res.data); });
+      .then(res => { if (res.status === 200 && Array.isArray(res.data)) setAccessList(res.data); })
+      .catch(() => {
+        // Backend unreachable — the global toast already covers it; grid
+        // just falls back to no extra per-row access (buttons stay hidden
+        // rather than crashing with an unhandled rejection).
+      });
   }, [Module]);
 
   const refreshGrid = React.useCallback(() => {
@@ -571,6 +582,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
     can, Module, isReadOnlyModule, hideActiveInactiveTabs,
     onEdit: handleEdit, onView: handleView, onDisable: handleDisable,
     onActivate: handleActivate, onDownload: handleDownload, onPaymentCollection: handlePaymentCollection,
+    extraActions,
   };
 
   const handleSizeChange = (s) => { setSize(s); setPage(0); };
