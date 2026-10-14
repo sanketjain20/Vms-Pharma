@@ -178,7 +178,9 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
     if (!detectChanges() && !stockMovementPayload) return toast.info("No changes to update");
     if (!inventoryId) return toast.error("Inventory ID missing");
 
-    apiClient(`${apiUpdateInventoryBase}/${inventoryId}`, {
+    // The update endpoint is keyed by the inventory's uKey, not its numeric id
+    // (inventoryId is still what the stock-movement body expects).
+    apiClient(`${apiUpdateInventoryBase}/${uKey}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -77,7 +77,7 @@ describe("SalesEdit — barcode scan-to-select", () => {
     scan(input, "8901234567890");
 
     await screen.findByDisplayValue("Paracetamol");
-    expect(screen.getByDisplayValue("Tablets")).toBeInTheDocument();
+    expect(screen.getByText("Tablets")).toHaveClass("is-active");
     await screen.findByText("₹50");
     expect(toast.success).toHaveBeenCalledWith("Paracetamol selected — enter quantity and Add Item");
 
@@ -109,7 +109,7 @@ describe("SalesEdit — barcode scan-to-select", () => {
     fireEvent.click(screen.getByRole("button", { name: "+ Add Item" }));
 
     const row = await screen.findByText("Paracetamol");
-    expect(row.closest("tr")).toHaveTextContent("3");
+    expect(row.closest(".afx-line-row")).toHaveTextContent("3");
   });
 
   it("shows an error toast and selects nothing when the barcode matches no product", async () => {

@@ -3,17 +3,27 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 
-const Field = ({ label, value, mono, accent, full }) => (
+const Field = ({ label, value, mono, accent, danger, full }) => (
   <div className={`afx-field ${full ? "afx-field--full" : ""}`}>
     <label className="afx-label">{label}</label>
     <div
       className={`afx-view-value ${mono ? "afx-view-value--mono" : ""}`}
-      style={accent ? { color: "var(--afx-accent)", fontWeight: 600 } : undefined}
+      style={danger ? { color: "var(--afx-danger)", fontWeight: 600 } : accent ? { color: "var(--afx-accent)", fontWeight: 600 } : undefined}
     >
       {value || <span className="afx-view-value--empty">—</span>}
     </div>
   </div>
 );
+
+/* ── Section 197/206C(9) certificate status, "today" vs validFrom/validTo ── */
+const certificateStatus = (data) => {
+  if (!data.certificateNumber && data.certificateRatePercent == null) return "None on file";
+  if (!data.certificateValidFrom || !data.certificateValidTo) return "Incomplete";
+  const today = new Date().toISOString().slice(0, 10);
+  if (today < data.certificateValidFrom) return "Not yet active";
+  if (today > data.certificateValidTo) return "Expired";
+  return "Active";
+};
 
 const OutstandingBadge = ({ amount }) => {
   const val = parseFloat(amount || 0);
@@ -103,6 +113,15 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
                 <Field label="Phone"               value={supplier.phone} mono />
                 <Field label="Email"               value={supplier.email} mono />
                 <Field label="GST Number"          value={supplier.gstNumber} mono accent />
+                <Field label="PAN"                 value={supplier.pan} mono />
+                <Field label="Country"              value={supplier.country || "IN"} mono />
+                <Field label="Non-Resident / Export Party" value={supplier.nonResidentParty ? "Yes — TDS not deducted" : "No"}
+                  danger={!!supplier.nonResidentParty} />
+                <Field label="Lower/Nil Deduction Certificate"
+                  value={certificateStatus(supplier)}
+                  accent={certificateStatus(supplier) === "Active"}
+                  danger={certificateStatus(supplier) === "Expired"}
+                />
                 <Field label="Drug License Number" value={supplier.drugLicenseNumber} mono />
                 <Field label="Lead Time" value={supplier.leadTimeDays != null ? `${supplier.leadTimeDays} day${supplier.leadTimeDays === 1 ? "" : "s"}` : null} />
                 <Field label="Outstanding Balance"
@@ -111,6 +130,13 @@ export default function SupplierView({ uKey, onClose, onEdit }) {
                     : "₹0.00"
                   }
                   accent={parseFloat(supplier.outstandingBalance || 0) > 0}
+                />
+                <Field label="Advance Balance"
+                  value={supplier.advanceBalance != null
+                    ? `₹${parseFloat(supplier.advanceBalance).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+                    : "₹0.00"
+                  }
+                  accent={parseFloat(supplier.advanceBalance || 0) > 0}
                 />
                 <Field label="Created At"
                   value={supplier.createdAt ? new Date(supplier.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}

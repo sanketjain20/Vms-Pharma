@@ -4,6 +4,7 @@ import apiClient from "../../Config/apiClient";
 import "../../Styles/Inventory.css";
 import "../../Styles/DynamicGrid.css";
 import "../../Styles/GstShared/GstListPage.css";
+import GstModeBanner, { ModeTag } from "../GstConnectionComponent/GstModeBanner";
 
 const STATUS_META = {
   PENDING: { label: "Pending", tone: "accent" },
@@ -97,6 +98,8 @@ export default function EInvoice() {
         E-Invoices (IRN)
       </h2>
 
+      <GstModeBanner />
+
       <div className="dg-panel gst-panel">
         <div className="dg-panel-body gst-body">
           <section className="gst-section">
@@ -133,6 +136,7 @@ export default function EInvoice() {
                       <td><StatusBadge status={r.irnStatus} /></td>
                       <td className="gst-cell-mono" title={r.irn || r.irpError || ""}>
                         {r.irn ? `${r.irn.slice(0, 16)}…` : (r.irpError ? "Failed" : "—")}
+                        {r.irn && <ModeTag mode={r.mode} />}
                       </td>
                       <td className="gst-cell-muted">{fmtDate(r.ackDate)}</td>
                       <td className="gst-actions">

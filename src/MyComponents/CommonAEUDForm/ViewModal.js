@@ -19,6 +19,8 @@ import SalesReturnView from "../SalesReturnComponent/SalesReturnView";
 import PurchaseReturnView from "../PurchaseReturnComponent/PurchaseReturnView";
 import ReatilerLedgerView from "../RetailerOutstandingComponent/RetailerLedgerView";
 import SupplierLedgerView from "../SupplierOutstandingComponent/SupplierLedgerView";
+import GodownView from "../GodownComponent/GodownView";
+import SchemeView from "../SchemeComponent/SchemeView";
 import EventLogDock from "../EventLogComponent/EventLogDock";
 
 export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
@@ -43,6 +45,8 @@ export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
     case "Purchase Return": content = <PurchaseReturnView uKey={uKey} onClose={onClose} />; break;
     case "Retailer Outstanding": content = <ReatilerLedgerView uKey={uKey} onClose={onClose} />; break;
     case "Supplier Outstanding": content = <SupplierLedgerView uKey={uKey} onClose={onClose} />; break;
+    case "Godown":        content = <GodownView       uKey={uKey} onClose={onClose} />; break;
+    case "Scheme":        content = <SchemeView       uKey={uKey} onClose={onClose} />; break;
     default:             return null;
   }
 

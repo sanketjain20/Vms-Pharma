@@ -61,6 +61,9 @@ export const runReportByModule = async (moduleId, filters) => {
     case ReportEntity.ProfitLoss:
         apiUrl = `${API_BASE_URL}/api/Reports/PnlReport`;
         break;
+    case ReportEntity.NarcoticRegister:
+        apiUrl = `${API_BASE_URL}/api/Reports/NarcoticRegisterReport`;
+        break;
     default:
       throw new Error("Invalid module ID");
   }

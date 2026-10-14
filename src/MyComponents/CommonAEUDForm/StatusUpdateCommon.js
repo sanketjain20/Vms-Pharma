@@ -23,6 +23,8 @@ export default function StatusUpdateCommon({ moduleName, uKey, isDisable, onClos
       "Manufacturer": `${API_BASE_URL}/api/Manufacturer/ToggleManufacturer/${uKey}/${isDisable}`,
       "Retailer":     `${API_BASE_URL}/api/Retailer/ToggleDisable/${uKey}/${isDisable}`,
       "Supplier":     `${API_BASE_URL}/api/Supplier/ToggleDisable/${uKey}/${isDisable}`,
+      "Godown":       `${API_BASE_URL}/api/Godown/ToggleGodown/${uKey}/${isDisable}`,
+      "Scheme":       `${API_BASE_URL}/api/Scheme/ToggleScheme/${uKey}/${isDisable}`,
     };
 
     const apiUrl = apiMap[moduleName];

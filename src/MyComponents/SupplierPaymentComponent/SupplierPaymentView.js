@@ -119,6 +119,24 @@ export default function SupplierPaymentView({ uKey, onClose, onReverse }) {
                 <Card label="Reference no"  value={data.referenceNumber} mono />
               </div>
 
+              {parseFloat(data.taxableAdvanceAmount || 0) > 0 && (
+                <>
+                  <div className="afx-section-title">Advance</div>
+                  <div className="afx-grid">
+                    <Card label="Advance (before 194Q)" value={`₹${fmt(data.taxableAdvanceAmount)}`} accent />
+                    {parseFloat(data.taxAmount || 0) > 0 && (
+                      <Card label={`194Q withheld (${data.taxSectionCode || "194Q"})`} value={`₹${fmt(data.taxAmount)} @ ${data.taxRate}%`} danger />
+                    )}
+                    <Card label="Supplier's advance balance after" value={`₹${fmt(data.supplierAdvanceBalanceAfter)}`} />
+                  </div>
+                  {parseFloat(data.taxAmount || 0) > 0 && (
+                    <div className="afx-info">
+                      This 194Q amount was genuinely withheld from the advance and deposited — unlike the retailer/TCS side, this is real tax, not an estimate.
+                    </div>
+                  )}
+                </>
+              )}
+
               {data.notes && (
                 <>
                   <div className="afx-section-title">Notes</div>

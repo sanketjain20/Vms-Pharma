@@ -60,3 +60,25 @@ describe("GuestOnly", () => {
     expect(screen.queryByText("Protected Home")).not.toBeInTheDocument();
   });
 });
+
+describe("GuestOnly — field reps", () => {
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  it("sends a signed-in field rep to the rep app, not the office home", () => {
+    localStorage.setItem("vmsUser", JSON.stringify({ data: { token: makeToken(3600), fieldRep: true } }));
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route path="/" element={<GuestOnly><div>Login Page</div></GuestOnly>} />
+          <Route path="/home" element={<div>Protected Home</div>} />
+          <Route path="/rep" element={<div>Rep App</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Rep App")).toBeInTheDocument();
+    expect(screen.queryByText("Protected Home")).not.toBeInTheDocument();
+  });
+});

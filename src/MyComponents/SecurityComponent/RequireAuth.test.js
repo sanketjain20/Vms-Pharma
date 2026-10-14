@@ -119,3 +119,42 @@ describe("RequireAuth", () => {
     });
   });
 });
+
+describe("RequireAuth — field reps", () => {
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  const repUser = () => ({ data: { token: makeToken(3600), fieldRep: true } });
+
+  function renderRoutes(path, user) {
+    localStorage.setItem("vmsUser", JSON.stringify(user));
+    return render(
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/home" element={<RequireAuth><div>Protected Home</div></RequireAuth>} />
+          <Route path="/rep" element={<RequireAuth allowRep><div>Rep App</div></RequireAuth>} />
+        </Routes>
+      </MemoryRouter>
+    );
+  }
+
+  it("sends a field rep away from office pages to the rep app", () => {
+    renderRoutes("/home", repUser());
+
+    expect(screen.getByText("Rep App")).toBeInTheDocument();
+    expect(screen.queryByText("Protected Home")).not.toBeInTheDocument();
+  });
+
+  it("lets a field rep into the rep app itself", () => {
+    renderRoutes("/rep", repUser());
+
+    expect(screen.getByText("Rep App")).toBeInTheDocument();
+  });
+
+  it("still lets office users into office pages", () => {
+    renderRoutes("/home", { data: { token: makeToken(3600), fieldRep: false } });
+
+    expect(screen.getByText("Protected Home")).toBeInTheDocument();
+  });
+});

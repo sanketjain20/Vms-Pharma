@@ -1,18 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/NavBarModule.css";
-import udoyralogo from "../../Images/udoyraname.png";
+import udyoralogo from "../../Images/udyoraname.png";
 import ThemeToggle from "./ThemeToggle";
+import GodownSwitcher from "./GodownSwitcher";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 
-export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
+export default function NavBarModule({ sidebarOpen, theme, onToggleTheme, activeGodownId, godowns, onChangeGodown }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [scrolled, setScrolled]         = useState(false);
   const navigate    = useNavigate();
   const profileRef  = useRef(null);
 
-  const user         = JSON.parse(localStorage.getItem("vmsUser")) || {};
+  const user         = (() => { try { return JSON.parse(localStorage.getItem("vmsUser")) || {}; } catch { return {}; } })();
   const vendorName   = user?.data?.name      || "Vendor";
   const vendorShop   = user?.data?.shopName  || "";
   const profileImage = user?.data?.profilePhoto || null;
@@ -49,6 +50,7 @@ export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
       if (res.ok) {
         localStorage.removeItem("vmsUser");
         localStorage.removeItem("modules");
+        localStorage.removeItem("activeGodownId");
         navigate("/");
       } else {
         alert("Logout failed");
@@ -64,22 +66,15 @@ export default function NavBarModule({ sidebarOpen, theme, onToggleTheme }) {
 
       <div className="nbm-left">
         <span className="nbm-logo-wrap">
-          <img src={udoyralogo} alt="Udoyra" className="nbm-logo" />
+          <img src={udyoralogo} alt="Udyora" className="nbm-logo" />
         </span>
 
-        {vendorShop && (
-          <div className="nbm-shop-badge">
-            <span className="nbm-shop-badge-icon">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1.5 6.3l1-4.1h11l1 4.1" />
-                <path d="M2 6.3v6.7a1 1 0 001 1h10a1 1 0 001-1V6.3" />
-                <path d="M1.5 6.3a1.9 1.9 0 003.8 0M5.3 6.3a1.9 1.9 0 003.8 0M9.1 6.3a1.9 1.9 0 003.8 0" />
-                <path d="M6.2 14v-3.2h3.6V14" />
-              </svg>
-            </span>
-            <span className="nbm-shop-badge-name">{vendorShop}</span>
-          </div>
-        )}
+        <GodownSwitcher
+          godowns={godowns}
+          activeGodownId={activeGodownId}
+          onChange={onChangeGodown}
+          vendorShop={vendorShop}
+        />
       </div>
 
       <div className="nbm-right">

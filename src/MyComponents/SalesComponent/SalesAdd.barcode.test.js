@@ -63,14 +63,14 @@ describe("SalesAdd — barcode scan-to-select", () => {
     scan(input, "8901234567890");
 
     await screen.findByDisplayValue("Paracetamol");
-    expect(screen.getByDisplayValue("Tablets")).toBeInTheDocument();
+    expect(screen.getByText("Tablets")).toHaveClass("is-active");
     await screen.findByText("₹50");
     expect(toast.success).toHaveBeenCalledWith("Paracetamol selected — enter quantity and Add Item");
 
     // quantity must stay blank — the user chooses it, scanning never does
     expect(screen.getByPlaceholderText("Enter qty")).toHaveValue(null);
     // nothing was added to the cart/line items by the scan itself
-    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByText("No items added yet")).toBeInTheDocument();
   });
 
   it("falls back to the barcode API for a product not yet in the loaded catalog", async () => {
@@ -98,7 +98,7 @@ describe("SalesAdd — barcode scan-to-select", () => {
     fireEvent.click(screen.getByRole("button", { name: "+ Add Item" }));
 
     const row = await screen.findByText("Paracetamol");
-    expect(row.closest("tr")).toHaveTextContent("3");
+    expect(row.closest(".afx-line-row")).toHaveTextContent("3");
   });
 
   it("shows an error toast and selects nothing when the barcode matches no product", async () => {

@@ -87,7 +87,7 @@ describe("EventLogPanel", () => {
   });
 
   it("opens the grid for the clicked event only, on click", async () => {
-    const user = userEvent.setup();
+    const user = userEvent; // user-event v13 (pinned in package.json) has no setup()
     renderPanel({
       moduleName: "MANUFACTURER",
       events: [
@@ -124,7 +124,7 @@ describe("EventLogPanel", () => {
   });
 
   it("shows a dash, not a crossed-out value, for a field with no old value", async () => {
-    const user = userEvent.setup();
+    const user = userEvent; // user-event v13 (pinned in package.json) has no setup()
     renderPanel({
       moduleName: "MANUFACTURER",
       events: [

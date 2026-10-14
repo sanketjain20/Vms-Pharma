@@ -1,0 +1,70 @@
+import React, { useState } from "react";
+import DynamicGrid from "../CommonComponent/DynamicGrid";
+import API_BASE_URL from "../../Config/api.config";
+import apiClient from "../../Config/apiClient";
+import { toast } from "react-toastify";
+import { toastApiError } from "../../utils/toastMessage";
+import "../../Styles/CommonAEUDForm/FormShell.css";
+import "../../Styles/Inventory.css";
+import StockTransferAdd from "./StockTransferAdd";
+import StockTransferEdit from "./StockTransferEdit";
+import StockTransferView from "./StockTransferView";
+
+const config = { title: "Stock transfers", singular: "Stock transfer", base: "StockTransfer", list: "GetAllStockTransfersPaged", detail: "GetStockTransferByUKey", add: "AddStockTransfer", update: "UpdateStockTransfer", cancel: "CancelStockTransfer", id: 38, number: "transferNumber", party: "fromGodownName", date: "transferDate", actions: { DRAFT: ["DispatchStockTransfer", "Dispatch"], IN_TRANSIT: ["ReceiveStockTransfer", "Receive"] } };
+
+function readResponse(response) {
+  return response.text().then(text => {
+    if (!text || !text.trim()) return null;
+    try { return JSON.parse(text); }
+    catch { throw new Error(text.trim() || `Invalid server response (${response.status})`); }
+  });
+}
+
+export default function StockTransfer() {
+  const [form, setForm] = useState(null);
+  const [detailUKey, setDetailUKey] = useState(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const baseUrl = `${API_BASE_URL}/api/${config.base}`;
+  const columns = [
+    { field: config.number, header: "Document" },
+    { field: config.party, header: "From godown" },
+    { field: "toGodownName", header: "To godown" },
+    { field: config.date, header: "Date" },
+    { field: "status", header: "Status" },
+    { field: "totalUnits", header: "Units" },
+    { field: "Action", header: "Actions", width: "220px" },
+  ];
+  const api = async (url, options = {}) => {
+    const response = await apiClient(url, options);
+    const result = await readResponse(response);
+    if (!response.ok || (result?.status != null && result.status !== 200)) {
+      throw new Error(result?.message || result?.error || `Request failed (${response.status})`);
+    }
+    return result?.data;
+  };
+  const perform = async (row, action) => {
+    try {
+      setBusy(true); setError("");
+      await api(`${baseUrl}/${action}/${row.uKey}`, { method: "POST", body: JSON.stringify({}) });
+      window.dispatchEvent(new Event("document-grid-refresh"));
+      setDetailUKey(null);
+      toast.success(`${config.singular} updated successfully.`);
+    } catch (e) { setError(e.message || "Action failed"); toastApiError(e.message, "Action failed"); }
+    finally { setBusy(false); }
+  };
+  const actions = (row, { can, ActionIcon }) => <>
+    <button className="dg-icon-btn dg-icon-btn--view" title="View" aria-label="View" onClick={() => setDetailUKey(row.uKey)}><ActionIcon.View /></button>
+    {config.update && row.status === "DRAFT" && can("Edit") && <button className="dg-icon-btn dg-icon-btn--edit" title="Edit" aria-label="Edit" onClick={() => setForm({ uKey: row.uKey })}><ActionIcon.Edit /></button>}
+    {config.actions[row.status] && can("Edit") && <button className="dg-icon-btn dg-icon-btn--activate" title={config.actions[row.status][1]} aria-label={config.actions[row.status][1]} disabled={busy} onClick={() => perform(row, config.actions[row.status][0])}><ActionIcon.Activate /></button>}
+    {row.status !== "CANCELLED" && can("Disable") && <button className="dg-icon-btn dg-icon-btn--disable" disabled={busy} title="Cancel" aria-label="Cancel" onClick={() => perform(row, config.cancel)}><ActionIcon.Disable /></button>}
+  </>;
+  return <main className="ops-page">
+    {detailUKey && <StockTransferView uKey={detailUKey} onClose={() => setDetailUKey(null)} onEdit={uKey => setForm({ uKey })} />}
+    <header className="ops-header"><div><span className="ops-eyebrow">OPERATIONS / DOCUMENTS</span><h1>{config.title}</h1><p>Manage documents and their status.</p></div></header>
+    {error && <div className="ops-error" role="alert">{error}<button onClick={() => setError("")}>Dismiss</button></div>}
+    <DynamicGrid Module={config.title} ModuleId={String(config.id)} apiUrl={`${baseUrl}/${config.list}`} columns={columns} customActionsOnly customAddAction={() => setForm({})} customAddLabel={`Add ${config.singular}`} extraActions={actions} />
+    {form && !form.uKey && <StockTransferAdd onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />}
+    {form && form.uKey && <StockTransferEdit uKey={form.uKey} onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />}
+  </main>;
+}

@@ -167,6 +167,36 @@ body[data-theme="light"] .db-noise { opacity: 0.012; mix-blend-mode: multiply; }
 .db-header-rule { display: none; }
 
 /* =========================
+   SHOW-ALL TOGGLE
+========================= */
+.db-showall {
+  display: inline-flex; align-items: center; gap: 10px;
+  cursor: pointer; user-select: none;
+}
+.db-showall-label {
+  font-family: var(--db-font-b); font-size: 12.5px; font-weight: 600;
+  color: var(--db-text-2);
+}
+.db-switch {
+  position: relative; display: inline-flex; align-items: center;
+  width: 38px; height: 22px; border-radius: 100px;
+  background: var(--db-track-bg); border: 1px solid var(--db-border2);
+  transition: background var(--db-tr), border-color var(--db-tr);
+}
+.db-switch input {
+  position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer;
+}
+.db-switch-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--db-text-1);
+  box-shadow: 0 2px 6px var(--db-shadow);
+  transition: transform .3s var(--db-spring), background .3s;
+}
+.db-switch--on { background: rgba(99,102,241,.28); border-color: #6366f1; }
+.db-switch--on .db-switch-knob { transform: translateX(16px); background: #818cf8; }
+
+/* =========================
    VIEW SWITCHER — sliding pill, Linear-style
 ========================= */
 .db-viewbar {
@@ -213,6 +243,23 @@ body[data-theme="light"] .db-noise { opacity: 0.012; mix-blend-mode: multiply; }
   .db-viewtab { padding: 10px; }
   .db-viewtab svg { width: 16px; height: 16px; }
 }
+
+/* =========================
+   SHOW-ALL — every section stacked, each headed by a divider so it's
+   still clear where one section ends and the next begins.
+========================= */
+.db-view--all { display: flex; flex-direction: column; gap: 8px; }
+.db-section:not(:first-child) { margin-top: 30px; }
+.db-section-heading {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 10px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--db-border);
+}
+.db-section-heading h2 {
+  margin: 0; font-family: var(--db-font-d); font-size: 17px; font-weight: 700;
+  color: var(--db-text-1);
+}
+.db-section-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 /* =========================
    LOADING

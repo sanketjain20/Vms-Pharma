@@ -567,6 +567,7 @@ useEffect(() => {
     [ReportEntity.GSTR1]:             `${API_BASE_URL}/api/Reports/GstReportData`,
     [ReportEntity.ProfitLoss]:        `${API_BASE_URL}/api/Reports/PnlReportData`,
     [ReportEntity.AuditLog]:          `${API_BASE_URL}/api/EventLog/GetAuditReportData`,
+    [ReportEntity.NarcoticRegister]:  `${API_BASE_URL}/api/Reports/NarcoticRegisterReportData`,
   };
 
   const downloadApiMap = {
@@ -588,6 +589,7 @@ useEffect(() => {
     [ReportEntity.GSTR1]:             `${API_BASE_URL}/api/Reports/GstReport`,
     [ReportEntity.ProfitLoss]:        `${API_BASE_URL}/api/Reports/PnlReport`,
     [ReportEntity.AuditLog]:          `${API_BASE_URL}/api/EventLog/GetAuditReport`,
+    [ReportEntity.NarcoticRegister]:  `${API_BASE_URL}/api/Reports/NarcoticRegisterReport`,
   };
 
   /* ── Fetch report data ── */

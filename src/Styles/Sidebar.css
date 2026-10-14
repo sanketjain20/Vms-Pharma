@@ -271,7 +271,7 @@ body[data-theme="light"] {
 .sb-submenu {
   position: fixed;
   top: 0;
-  width: 220px;
+  width: var(--sb-sub-w, 220px);
   height: 100vh;
 
   background: var(--sb-bg);
@@ -383,12 +383,10 @@ body[data-theme="light"] {
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 1024px) {
   :root { --sb-w-col: 60px; --sb-w-open: 220px; }
-  .sb-submenu { width: 200px; }
 }
 
 @media (max-width: 768px) {
   :root { --sb-w-col: 56px; --sb-w-open: 210px; }
-  .sb-submenu { width: 190px; }
 }
 
 @media (max-width: 480px) {
@@ -411,4 +409,66 @@ body[data-theme="light"] {
 
 @media (prefers-reduced-motion: reduce) {
   .sb-sidebar, .sb-submenu, .sb-icon-chip, .sb-toggle-bar, .sb-label { transition: none !important; animation: none !important; }
+}
+
+/* ── Search results: page name with its menu path underneath ───────── */
+.sb-search-results button { display: flex; flex-direction: column; gap: 2px; }
+.sb-search-results button .sb-sr-label {
+  padding: 0; border: 0; width: auto;
+  color: var(--sb-text-1); font-style: normal; font-size: 12.5px; font-weight: 500;
+}
+.sb-search-results button .sb-sr-path {
+  padding: 0; border: 0; width: auto;
+  color: var(--sb-text-3); font-style: normal; font-size: 10.5px; letter-spacing: 0.02em;
+}
+
+/* keyboard focus on a sub-menu page */
+.sb-submenu-item:focus-visible { outline: 2px solid rgba(99, 102, 241, 0.6); outline-offset: -2px; }
+
+/* ── Cascading menus: level 2 panel + level 3 panel beside it ─────────
+   Panels are fixed and full height, so opening one never resizes the rail or the page, and the level-3
+   panel starts exactly where the level-2 panel ends (--sb-sub-w) so the two never overlap. */
+:root { --sb-sub-w: 220px; }
+.sb-submenu { width: var(--sb-sub-w); }
+
+/* a sub menu row: same look as a page row, plus a caret, and a highlight while its panel is open */
+.sb-submenu-item.has-children { padding-right: 12px; }
+.sb-submenu-label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-submenu-item.is-open { background: var(--sb-hover-bg); color: var(--sb-text-1); }
+.sb-sub-caret {
+  display: flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; flex-shrink: 0;
+  color: var(--sb-text-3);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.sb-submenu-item:hover .sb-sub-caret,
+.sb-submenu-item.is-open .sb-sub-caret { color: var(--sb-text-1); transform: translateX(2px); }
+
+/* level 3 */
+.sb-submenu--l3 {
+  left: calc(var(--sb-l2-left, var(--sb-w-col)) + var(--sb-sub-w));   /* starts where level 2 ends */
+  z-index: 9998;                         /* tucked under level 2's edge so the seam stays clean */
+  animation: submenuSlide 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.sb-l3-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 18px 10px;
+  font-family: var(--font-body);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--sb-text-3);
+}
+.sb-l3-back {
+  display: none;                         /* only needed where there is no hover (phones) */
+  width: 26px; height: 26px; padding: 0;
+  border: 1px solid var(--sb-border); border-radius: 8px;
+  background: var(--sb-chip-bg); color: var(--sb-text-1); font-size: 16px; line-height: 1; cursor: pointer;
+}
+.sb-submenu--l3 .sb-submenu-item { padding: 11px 18px; font-size: 13px; }
+
+@media (max-width: 1024px) { :root { --sb-sub-w: 200px; } }
+@media (max-width: 768px)  { :root { --sb-sub-w: 190px; } }
+@media (max-width: 480px) {
+  /* phone: level 3 replaces level 2 in the same slot, with a back button */
+  .sb-submenu--l3 { left: 0 !important; width: 100%; z-index: 10001; }
+  .sb-l3-back { display: inline-flex; align-items: center; justify-content: center; }
 }

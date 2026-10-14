@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./Styles/Toast.css";
@@ -34,8 +34,17 @@ import Role from "./MyComponents/RoleComponent/Role";
 import Unauthorized from "./MyComponents/SecurityComponent/Unauthorized";
 import OpenReport from "./MyComponents/ReportComponent/OpenReport";
 import GenerateReport from "./MyComponents/ReportComponent/GenerateReport";
+import Accounting from "./MyComponents/AccountingComponent/Accounting";
+import OperationsWorkspace from "./MyComponents/OperationsComponent/OperationsWorkspace";
+import PurchaseOrder from "./MyComponents/PurchaseOrderComponent/PurchaseOrder";
+import SalesOrder from "./MyComponents/SalesOrderComponent/SalesOrder";
+import DeliveryChallan from "./MyComponents/DeliveryChallanComponent/DeliveryChallan";
+import StockTransfer from "./MyComponents/StockTransferComponent/StockTransfer";
 import Gstr2Recon from "./MyComponents/Gstr2ReconComponent/Gstr2Recon";
 import EInvoice from "./MyComponents/EInvoiceComponent/EInvoice";
+import FieldRep from "./MyComponents/FieldRepComponent/FieldRep";
+import FieldOrder from "./MyComponents/FieldOrderComponent/FieldOrder";
+import FieldCollection from "./MyComponents/FieldCollectionComponent/FieldCollection";
 import EwayBill from "./MyComponents/EwayBillComponent/EwayBill";
 import VendorOnboarding from "./MyComponents/VendorOnboarding";
 import SalesAddNew from "./MyComponents/SalesComponent/SalesAddNew";
@@ -48,6 +57,8 @@ import ForgotPassword from "./MyComponents/LoginComponent/ForgotPassword";
 import SetPassword from "./MyComponents/LoginComponent/SetPassword";
 import Retailer from "./MyComponents/RetailerComponent/Retailer";
 import Manufacturer from "./MyComponents/ManufacturerComponent/Manufacturer";
+import Godown from "./MyComponents/GodownComponent/Godown";
+import Scheme from "./MyComponents/SchemeComponent/Scheme";
 import Supplier from "./MyComponents/SupplierComponent/Supplier";
 import PaymentCollection from "./MyComponents/PaymentCollectionComponent/PaymentCollection";
 import Purchase from "./MyComponents/PurchaseComponent/Purchase";
@@ -61,20 +72,62 @@ import SupplierOutstanding from "./MyComponents/SupplierOutstandingComponent/Sup
 import StockAdjustment from "./MyComponents/StockAdjustmentComponent/StockAdjustment";
 import BulkUploadTransactions from "./MyComponents/BulkUploadComponent/BulkUploadTransactions";
 import BulkUploadMasters from "./MyComponents/BulkUploadComponent/BulkUploadMasters";
+import MargImport from "./MyComponents/MargImportComponent/MargImport";
 import ShortcutHelp from "./MyComponents/CommonComponent/ShortcutHelp";
 // 🔒 FRONTEND MODULE GUARD
 import ModuleGuard from "./MyComponents/SecurityComponent/ModuleGuard";
 import RequireAuth from "./MyComponents/SecurityComponent/RequireAuth";
 import GuestOnly from "./MyComponents/SecurityComponent/GuestOnly";
+import RepApp from "./MyComponents/RepAppComponent/RepApp";
 import { ImPodcast } from "react-icons/im";
+import API_BASE_URL from "./Config/api.config";
+import apiClient from "./Config/apiClient";
 
 function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem("vmsTheme") || "dark");
+  const [activeGodownId, setActiveGodownId] = useState(() => localStorage.getItem("activeGodownId") || "");
+  const [godowns, setGodowns] = useState([]);
 
   useEffect(() => {
     document.body.dataset.theme = theme;
     localStorage.setItem("vmsTheme", theme);
   }, [theme]);
+
+  // Load the vendor's godowns once authenticated, and reconcile the persisted
+  // active-godown id against the live list — a single-godown vendor (the
+  // common case pre-feature) never sees anything change; only guard against
+  // firing before login exists, or every page load 401s on the login screen.
+  useEffect(() => {
+    let token = null;
+    try { token = JSON.parse(localStorage.getItem("vmsUser") || "null")?.data?.token; } catch { /* clear or malformed session; auth guard handles it */ }
+    if (!token) return;
+    apiClient(`${API_BASE_URL}/api/Godown/GetGodownDropdown`, { method: "GET" })
+      .then(r => r.json())
+      .then(json => {
+        if (json?.status !== 200 || !Array.isArray(json.data)) return;
+        setGodowns(json.data);
+        const stillValid = json.data.some(g => String(g.id) === activeGodownId);
+        if (!stillValid) {
+          const fallback = json.data.find(g => g.isDefault) || json.data[0];
+          if (fallback) setActiveGodownId(String(fallback.id));
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (activeGodownId) localStorage.setItem("activeGodownId", activeGodownId);
+  }, [activeGodownId]);
+
+  // Switching godowns changes what every list/report reads (via the
+  // X-Godown-Id header in apiClient) — a full reload is the simplest way to
+  // guarantee every already-mounted screen (DynamicGrid has no external
+  // refresh handle) picks up the new scope rather than showing stale data.
+  const handleChangeGodown = (id) => {
+    setActiveGodownId(String(id));
+    window.location.reload();
+  };
 
   useEffect(() => {
     installGlobalBusyFetchInterceptor();
@@ -84,6 +137,8 @@ function App() {
     setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
   };
 const navigate = useNavigate();
+const { pathname } = useLocation();
+const isRepApp = pathname === "/rep" || pathname.startsWith("/rep/");
 useEffect(() => {
   const shortcuts = {
     // MASTER MODULES
@@ -236,6 +291,9 @@ useEffect(() => {
 
 
 
+        {/* Field-rep app: its own phone-first shell, no office Layout. */}
+        <Route path="/rep" element={<RequireAuth allowRep><RepApp theme={theme} onToggleTheme={toggleTheme} /></RequireAuth>} />
+
         <Route path="/home" element={<RequireAuth><Layout theme={theme} onToggleTheme={toggleTheme} /></RequireAuth>}>
           <Route index element={<Home />} />
         </Route>
@@ -252,7 +310,7 @@ useEffect(() => {
           <Route index element={<Setting />} />
         </Route>
 
-        <Route path="/master" element={<RequireAuth><LayoutModule theme={theme} onToggleTheme={toggleTheme} /></RequireAuth>}>
+        <Route path="/master" element={<RequireAuth><LayoutModule theme={theme} onToggleTheme={toggleTheme} activeGodownId={activeGodownId} godowns={godowns} onChangeGodown={handleChangeGodown} /></RequireAuth>}>
 
           
           <Route
@@ -290,6 +348,25 @@ useEffect(() => {
             element={
               <ModuleGuard moduleName="MANUFACTURER">
                 <Manufacturer />
+              </ModuleGuard>
+            }
+          />
+
+
+          <Route
+            path="godown"
+            element={
+              <ModuleGuard moduleName="GODOWN">
+                <Godown />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="scheme"
+            element={
+              <ModuleGuard moduleName="SCHEME">
+                <Scheme />
               </ModuleGuard>
             }
           />
@@ -408,10 +485,48 @@ useEffect(() => {
           />
 
           <Route
+            path="accounting"
+            element={<ModuleGuard moduleName="REPORTS"><Accounting /></ModuleGuard>}
+          />
+
+          <Route path="purchase-order" element={<ModuleGuard moduleName="PURCHASE_ORDER"><PurchaseOrder /></ModuleGuard>} />
+          <Route path="sales-order" element={<ModuleGuard moduleName="SALES_ORDER"><SalesOrder /></ModuleGuard>} />
+          <Route path="delivery-challan" element={<ModuleGuard moduleName="DELIVERY_CHALLAN"><DeliveryChallan /></ModuleGuard>} />
+          <Route path="stock-transfer" element={<ModuleGuard moduleName="STOCK_TRANSFER"><StockTransfer /></ModuleGuard>} />
+          <Route path="gst-return" element={<ModuleGuard moduleName="GST_RETURN"><OperationsWorkspace /></ModuleGuard>} />
+
+          <Route
             path="gstr2-recon"
             element={
               <ModuleGuard moduleName="GSTR2_RECON">
                 <Gstr2Recon />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="field-rep"
+            element={
+              <ModuleGuard moduleName="FIELD_REP">
+                <FieldRep />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="field-collection"
+            element={
+              <ModuleGuard moduleName="FIELD_COLLECTION">
+                <FieldCollection />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="field-order"
+            element={
+              <ModuleGuard moduleName="FIELD_ORDER">
+                <FieldOrder />
               </ModuleGuard>
             }
           />
@@ -498,6 +613,16 @@ useEffect(() => {
             }
           />
 
+          {/* Import masters / outstanding / stock from Marg exports; shares the Bulk Upload permission. */}
+          <Route
+            path="marg-import"
+            element={
+              <ModuleGuard moduleName={["BULK_UPLOAD_MANAGEMENT", "BULKUPLOADMANAGEMENT", "BULK UPLOAD MANAGEMENT"]}>
+                <MargImport />
+              </ModuleGuard>
+            }
+          />
+
           
           <Route
             path="sales"
@@ -577,7 +702,8 @@ useEffect(() => {
         
         <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>
-      <VmsAssistant />
+      {/* The office assistant calls office APIs a field rep can't use, and its bubble would sit on the rep app's tab bar. */}
+      {!isRepApp && <VmsAssistant />}
       <GlobalBusyOverlay />
     </>
   );

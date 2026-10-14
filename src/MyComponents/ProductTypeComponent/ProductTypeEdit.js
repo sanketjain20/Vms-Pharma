@@ -50,7 +50,7 @@ export default function ProductTypeEdit({ uKey, onClose, onSubmit }) {
     if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
 
     try {
-      const response = await apiClient(`${apiUpdate}/${formData.id}`, {
+      const response = await apiClient(`${apiUpdate}/${uKey}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: formData.name.trim(), description: formData.description.trim() }),

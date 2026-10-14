@@ -19,6 +19,7 @@ const MODULE_KEY_MAP = {
   "Retailer Outstanding": "RETAILER_OUTSTANDING",
   "Supplier Outstanding": "SUPPLIER_OUTSTANDING",
   "Batch": "BATCH",
+  "Godown": "GODOWN",
 };
 
 export function toAuditModuleKey(moduleName) {

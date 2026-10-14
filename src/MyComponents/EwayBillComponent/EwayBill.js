@@ -4,6 +4,7 @@ import apiClient from "../../Config/apiClient";
 import "../../Styles/Inventory.css";
 import "../../Styles/DynamicGrid.css";
 import "../../Styles/GstShared/GstListPage.css";
+import GstModeBanner, { ModeTag } from "../GstConnectionComponent/GstModeBanner";
 
 const STATUS_META = {
   PENDING: { label: "Pending", tone: "accent" },
@@ -110,6 +111,8 @@ export default function EwayBill() {
         E-Way Bills
       </h2>
 
+      <GstModeBanner />
+
       <div className="dg-panel gst-panel">
         <div className="dg-panel-body gst-body">
           <section className="gst-section">
@@ -140,7 +143,7 @@ export default function EwayBill() {
                 <tbody>
                   {rows.map((r) => (
                     <tr key={r.uKey}>
-                      <td className="gst-cell-mono gst-cell-strong">{r.ewayBillNo || "—"}</td>
+                      <td className="gst-cell-mono gst-cell-strong">{r.ewayBillNo || "—"}{r.ewayBillNo && <ModeTag mode={r.mode} />}</td>
                       <td><SupplyTypeBadge type={r.supplyType} /></td>
                       <td>{r.docNo}</td>
                       <td className="gst-cell-mono">{r.fromGstin || "URP"} → {r.toGstin || "URP"}</td>

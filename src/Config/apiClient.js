@@ -14,8 +14,6 @@ const UNREACHABLE_TOAST_ID = "vms-api-unreachable";
 const getToken = () => {
   try {
     const user = JSON.parse(localStorage.getItem("vmsUser"));
-    const raw = user?.data?.token;
-    console.log("Raw:", raw);
     return user?.data?.token;
   } catch {
     return null;
@@ -36,6 +34,11 @@ const apiClient = async (endpoint, options = {}) => {
 
   if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const godownId = localStorage.getItem("activeGodownId");
+  if (godownId && !headers.has("X-Godown-Id")) {
+    headers.set("X-Godown-Id", godownId);
   }
 
   const isFormData =
@@ -69,6 +72,7 @@ const apiClient = async (endpoint, options = {}) => {
   if (response.status === 401 && !url.includes("/api/auth/")) {
     localStorage.removeItem("vmsUser");
     localStorage.removeItem("modules");
+    localStorage.removeItem("activeGodownId");
     if (window.location.pathname !== "/") {
       window.location.replace("/");
     }

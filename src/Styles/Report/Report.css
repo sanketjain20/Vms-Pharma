@@ -13,13 +13,14 @@
   --lg-paper-lift: rgba(255,255,255,0.08);
   --lg-rule:       rgba(255,255,255,0.10);
   --lg-rule-soft:  rgba(255,255,255,0.06);
-  --lg-gild:       #d4af37;
-  --lg-gild-soft:  rgba(212,175,55,0.5);
+  --lg-gild:       #5b8bef;
+  --lg-gild-soft:  rgba(91,139,239,0.5);
   --lg-cast:       rgba(0,0,0,0.55);
   --lg-f-display:  'Sora', sans-serif;
   --lg-f-body:     'Inter', sans-serif;
   --lg-f-mono:     'JetBrains Mono', monospace;
   --lg-ease:       cubic-bezier(0.16, 1, 0.3, 1);
+  --lg-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
 
   position: relative;
   z-index: 1;
@@ -38,8 +39,8 @@ body[data-theme="light"] .lg-desk {
   --lg-paper-lift: #ffffff;
   --lg-rule:       rgba(20,19,15,0.14);
   --lg-rule-soft:  rgba(20,19,15,0.08);
-  --lg-gild:       #9c7a12;
-  --lg-gild-soft:  rgba(156,122,18,0.45);
+  --lg-gild:       #2450a8;
+  --lg-gild-soft:  rgba(36,80,168,0.45);
   --lg-cast:       rgba(20,19,15,0.18);
 }
 
@@ -101,6 +102,7 @@ body[data-theme="light"] .lg-desk {
 }
 
 .lg-masthead-heading {
+  position: relative;
   margin: 0;
   font-family: var(--lg-f-display);
   font-weight: 700;
@@ -110,8 +112,23 @@ body[data-theme="light"] .lg-desk {
 }
 
 .lg-masthead-heading em {
+  position: relative;
   font-style: normal;
   color: var(--lg-gild);
+  text-shadow: 0 0 22px var(--lg-gild-soft);
+}
+
+.lg-masthead-heading em::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: -3px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--lg-gild), transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: lgUnderlineDraw 1s var(--lg-ease) 0.5s forwards;
 }
 
 .lg-masthead-note {
@@ -211,6 +228,9 @@ body[data-theme="light"] .lg-desk {
 
 .lg-seek input::placeholder { color: var(--lg-ink-faint); }
 
+.lg-seek svg { transition: color 0.25s ease, transform 0.25s ease; }
+.lg-seek:focus-within svg { color: var(--lg-gild); transform: scale(1.08); }
+
 .lg-console-num {
   display: flex;
   flex-direction: column;
@@ -269,6 +289,8 @@ body[data-theme="light"] .lg-desk {
 .lg-mode-glide.shelf { transform: translateX(0); }
 .lg-mode-glide.index { transform: translateX(100%); }
 
+.lg-mode-glide { transition: transform 0.5s var(--lg-spring); }
+
 /* ═══════════════════════════════════════════════════════════════════════
    SHELF — grid of ledger volumes
 ═══════════════════════════════════════════════════════════════════════ */
@@ -280,7 +302,7 @@ body[data-theme="light"] .lg-desk {
 }
 
 .lg-volume {
-  --lg-accent: #d4af37;
+  --lg-accent: #5b8bef;
   --lg-i: 0;
   position: relative;
   height: 260px;
@@ -304,6 +326,14 @@ body[data-theme="light"] .lg-desk {
   background: var(--lg-paper);
   box-shadow: 0 20px 46px var(--lg-cast);
   overflow: hidden;
+  transition: transform 0.35s var(--lg-ease), box-shadow 0.35s var(--lg-ease);
+}
+
+.lg-volume:hover .lg-volume-leaf,
+.lg-volume:focus-visible .lg-volume-leaf,
+.lg-volume.is-open .lg-volume-leaf {
+  transform: translateY(-5px);
+  box-shadow: 0 34px 64px var(--lg-cast);
 }
 
 .lg-volume-leaf::before {
@@ -374,6 +404,12 @@ body[data-theme="light"] .lg-desk {
   background: linear-gradient(180deg, var(--lg-accent), color-mix(in srgb, var(--lg-accent) 55%, black));
   border-radius: 4px 0 0 4px;
   box-shadow: inset -2px 0 4px rgba(0,0,0,0.35);
+  animation: lgSpineGlow 3.6s ease-in-out calc(var(--lg-i, 0) * 0.15s) infinite;
+}
+
+@keyframes lgSpineGlow {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.22); }
 }
 
 body[data-theme="light"] .lg-volume-spine {
@@ -394,6 +430,7 @@ body[data-theme="light"] .lg-volume-spine {
   inset: 0 0 0 14px;
   border-radius: 0 10px 10px 0;
   background:
+    radial-gradient(circle at calc(50% + var(--lg-tx, 0) * 60%) calc(50% + var(--lg-ty, 0) * 60%), rgba(255,255,255,0.22), transparent 55%),
     linear-gradient(135deg, color-mix(in srgb, var(--lg-accent) 20%, transparent), transparent 60%),
     var(--lg-paper-lift);
   border: 1px solid var(--lg-rule);
@@ -416,6 +453,31 @@ body[data-theme="light"] .lg-volume-spine {
   background: linear-gradient(100deg, transparent, rgba(255,255,255,0.28), transparent);
   transform: translateX(-160%) rotate(12deg);
   transition: transform 0.6s ease;
+}
+
+/* ── Ribbon bookmark flourish, peeking from the top of each volume ── */
+.lg-volume-face::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 24px;
+  width: 9px;
+  height: 24px;
+  background: linear-gradient(180deg, var(--lg-accent), color-mix(in srgb, var(--lg-accent) 55%, black));
+  clip-path: polygon(0 0, 100% 0, 100% 76%, 50% 100%, 0 76%);
+  box-shadow: 0 4px 10px var(--lg-cast);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.lg-volume:hover .lg-volume-face::before,
+.lg-volume:focus-visible .lg-volume-face::before,
+.lg-volume.is-open .lg-volume-face::before {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .lg-volume-cover-mark {
@@ -498,7 +560,7 @@ body[data-theme="light"] .lg-volume-spine {
 .lg-index { display: flex; flex-direction: column; gap: 2px; }
 
 .lg-entry {
-  --lg-accent: #d4af37;
+  --lg-accent: #5b8bef;
   --lg-i: 0;
   position: relative;
   display: grid;
@@ -518,6 +580,12 @@ body[data-theme="light"] .lg-volume-spine {
   font-size: 13px;
   color: var(--lg-accent);
   text-align: center;
+  transition: transform 0.25s var(--lg-ease);
+}
+
+.lg-entry:hover .lg-entry-folio,
+.lg-entry:focus-visible .lg-entry-folio {
+  transform: scale(1.15);
 }
 
 .lg-entry-body h3 {
@@ -616,6 +684,21 @@ body[data-theme="light"] .lg-volume-spine {
   background: linear-gradient(90deg, transparent 40%, rgba(0,0,0,0.28) 78%, rgba(0,0,0,0.5) 100%);
 }
 
+.lg-turn-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 55%, color-mix(in srgb, var(--lg-gild) 35%, transparent) 92%, transparent 100%);
+  opacity: 0;
+  animation: lgTurnGleam 0.74s cubic-bezier(0.6, 0, 0.4, 1) forwards;
+}
+
+@keyframes lgTurnGleam {
+  0%, 55%  { opacity: 0; }
+  70%      { opacity: 0.9; }
+  100%     { opacity: 0; }
+}
+
 .lg-turn-mark {
   position: absolute;
   top: 50%; left: 50%;
@@ -649,6 +732,10 @@ body[data-theme="light"] .lg-volume-spine {
 @keyframes lgPulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%      { opacity: 0.4; transform: scale(0.75); }
+}
+
+@keyframes lgUnderlineDraw {
+  to { transform: scaleX(1); }
 }
 
 @keyframes lgTurn {
@@ -723,10 +810,19 @@ body[data-theme="light"] .lg-desk button.lg-volume-open {
     transform: none !important;
   }
   .lg-masthead-stamp span { animation: none; }
+  .lg-masthead-heading em::after { animation: none; transform: scaleX(1); }
   .lg-volume-face { transition: none; }
   .lg-volume:hover .lg-volume-face,
   .lg-volume:focus-visible .lg-volume-face,
   .lg-volume.is-open .lg-volume-face { transform: none; }
+  .lg-volume-leaf { transition: none; }
+  .lg-volume:hover .lg-volume-leaf,
+  .lg-volume:focus-visible .lg-volume-leaf,
+  .lg-volume.is-open .lg-volume-leaf { transform: none; }
   .lg-turn-sheet { animation: lgFadeShow 0.25s ease forwards; }
+  .lg-turn-sheet::before { animation: none; opacity: 0; }
   .lg-mode-glide { transition: none; }
+  .lg-entry-folio { transition: none; }
+  .lg-volume-spine { animation: none; }
+  .lg-volume-face::before { transition: none; }
 }

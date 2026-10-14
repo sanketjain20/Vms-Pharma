@@ -127,6 +127,30 @@ export default function PaymentView({ uKey, onClose, onDelete }) {
                 <Card label="Reference no" value={data.referenceNumber} mono />
               </div>
 
+              {parseFloat(data.taxableAdvanceAmount || 0) > 0 && (
+                <>
+                  <div className="afx-section-title">Advance</div>
+                  <div className="afx-grid">
+                    <Card label="Banked as advance" value={`₹${fmt(data.taxableAdvanceAmount)}`} accent />
+                    <Card label="Retailer's advance balance after" value={`₹${fmt(data.retailerAdvanceBalanceAfter)}`} />
+                    {parseFloat(data.taxAmount || 0) > 0 && (
+                      <>
+                        <Card label={`Est. 194Q liability (${data.taxSectionCode || "194Q"})`} value={`₹${fmt(data.taxAmount)} @ ${data.taxRate}%`} />
+                      </>
+                    )}
+                  </div>
+                  {parseFloat(data.taxAmount || 0) > 0 && (
+                    <div className="afx-info">
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M6.5 1L12 11.5H1L6.5 1Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                        <path d="M6.5 5v3M6.5 9.5h.01" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                      </svg>
+                      This is only an estimate of the retailer's own 194Q liability (TCS 206C(1H) was withdrawn 1 Apr 2025) — nothing was withheld from the amount collected.
+                    </div>
+                  )}
+                </>
+              )}
+
               {data.notes && (
                 <>
                   <div className="afx-section-title">Notes</div>

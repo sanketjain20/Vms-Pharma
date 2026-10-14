@@ -49,7 +49,7 @@ const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setO
 
 const GST_RATES = [0, 5, 12, 18, 28];
 
-export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
+export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = false }) {
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts]   = useState([]);
   const [activeTab, setActiveTab] = useState("DETAILS");
@@ -70,7 +70,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
 
   /* ── FETCH DROPDOWNS ── */
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/suppliers/dropdown`)
+    apiClient(`${API_BASE_URL}/api/Supplier/GetSupplierDropdown`)
       .then(r => r.json()).then(json => setSuppliers(json.data || [])).catch(() => {});
 
     apiClient(`${API_BASE_URL}/api/Product/GetAllProduct`)
@@ -86,7 +86,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
   useEffect(() => {
     if (!uKey) return;
     setFetching(true);
-    apiClient(`${API_BASE_URL}/api/Purchase/GetPurchaseByUKey/${uKey}`)
+    apiClient(`${API_BASE_URL}/api/${documentMode ? "PurchaseOrder/GetPurchaseOrderByUKey" : "Purchase/GetPurchaseByUKey"}/${uKey}`)
       .then(r => r.json())
       .then(json => {
         if (json?.status === 200 && json.data) {
@@ -107,7 +107,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
               manufacturingDate: it.manufacturingDate || "",
               expiryDate:        it.expiryDate        || "",
               quantity:          it.quantity          || 1,
-              costPrice:         it.costPrice         || "",
+              costPrice:         (documentMode ? it.unitCost : it.costPrice) || "",
               mrp:               it.mrp               || "",
               gstRate:           it.gstRate           || 0,
             })),
@@ -207,7 +207,13 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
     }
     setLoading(true);
     try {
-      const payload = {
+      const payload = documentMode ? {
+        supplierId: Number(form.supplierId), godownId: Number(localStorage.getItem("activeGodownId") || 0) || null,
+        orderDate: form.invoiceDate || new Date().toISOString().slice(0, 10), expectedDate: null, terms: "", notes: form.notes,
+        supplierInvoiceNumber: form.supplierInvoiceNumber || null, invoiceDate: form.invoiceDate || null,
+        paymentStatus: form.paymentStatus, dueDate: form.dueDate || null, amountPaid: parseFloat(form.amountPaid || 0),
+        items: form.items.map(it => ({ productId: it.productId, quantity: parseInt(it.quantity), unitCost: parseFloat(it.costPrice), gstRate: parseFloat(it.gstRate || 0) })),
+      } : {
         supplierId:            form.supplierId,
         supplierInvoiceNumber: form.supplierInvoiceNumber,
         invoiceDate:           form.invoiceDate,
@@ -227,13 +233,15 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
         })),
       };
 
-      const res  = await apiClient(`${API_BASE_URL}/api/Purchase/UpdatePurchase/${uKey}`, {
+      const updatedBy = JSON.parse(localStorage.getItem("vmsUser"))?.data?.vendorId;
+
+      const res  = await apiClient(`${API_BASE_URL}/api/${documentMode ? "PurchaseOrder/UpdatePurchaseOrder" : `Purchase/UpdatePurchase/${uKey}?updatedBy=${updatedBy}`}${documentMode ? `/${uKey}` : ""}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const json = await res.json();
-      if (json?.status === 200) { toast.success("Purchase updated successfully"); onSubmit?.(); onClose?.(); }
+      if (json?.status === 200) { toast.success(documentMode ? "Purchase order updated successfully" : "Purchase updated successfully"); onSubmit?.(); onClose?.(); }
       else toast.error(json?.message || "Failed to update purchase");
     } catch { /* handled by the global unreachable-backend toast */ }
     finally { setLoading(false); }
@@ -377,104 +385,106 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose }) {
                     </div>
                   ) : (
                     <>
-                      <div className="afx-items-head" style={{ gridTemplateColumns: "1.4fr 0.9fr 0.9fr 0.9fr 0.6fr 0.8fr 0.8fr 0.6fr 0.8fr auto" }}>
-                        <span>Product</span>
-                        <span>Batch No</span>
-                        <span>MFG Date</span>
-                        <span>Expiry Date</span>
-                        <span>Qty</span>
-                        <span>Cost (₹)</span>
-                        <span>MRP (₹)</span>
-                        <span>GST %</span>
-                        <span>Total (₹)</span>
-                        <span></span>
+                      <div className="afx-items-list">
+                        {form.items.map((item, i) => (
+                          <div key={i} className="afx-item-card">
+                            <div className="afx-item-card-top">
+                              <div className="afx-item-card-product" ref={el => productRefs.current[i] = el}>
+                                <SearchDrop
+                                  options={products}
+                                  value={item.productId}
+                                  onChange={v => updateItem(i, "productId", v)}
+                                  placeholder="Select product"
+                                  dropRef={{ current: productRefs.current[i] }}
+                                  open={productOpenIdx === i}
+                                  setOpen={v => setProductOpenIdx(v ? i : null)}
+                                />
+                                {errors.items?.[i]?.productId && <span className="afx-error">{errors.items[i].productId}</span>}
+                              </div>
+                              <button type="button" className="afx-remove-btn" onClick={() => removeItem(i)} title="Remove item">
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                                </svg>
+                              </button>
+                            </div>
+
+                            <div className="afx-item-card-fields">
+                              <div className="afx-item-field">
+                                <label className="afx-item-field-label">Batch No<span className="afx-req">*</span></label>
+                                <input className="afx-cell-input"
+                                  style={errors.items?.[i]?.batchNumber ? { borderColor: "var(--afx-danger)" } : undefined}
+                                  value={item.batchNumber}
+                                  onChange={e => updateItem(i, "batchNumber", e.target.value)}
+                                  placeholder="Batch No"
+                                />
+                                {errors.items?.[i]?.batchNumber && <span className="afx-error">{errors.items[i].batchNumber}</span>}
+                              </div>
+
+                              <div className="afx-item-field">
+                                <label className="afx-item-field-label">MFG Date</label>
+                                <input type="date" className="afx-cell-input"
+                                  value={item.manufacturingDate}
+                                  onChange={e => updateItem(i, "manufacturingDate", e.target.value)}
+                                />
+                              </div>
+
+                              <div className="afx-item-field">
+                                <label className="afx-item-field-label">Expiry Date<span className="afx-req">*</span></label>
+                                <input type="date" className="afx-cell-input"
+                                  style={errors.items?.[i]?.expiryDate ? { borderColor: "var(--afx-danger)" } : undefined}
+                                  value={item.expiryDate}
+                                  onChange={e => updateItem(i, "expiryDate", e.target.value)}
+                                />
+                                {errors.items?.[i]?.expiryDate && <span className="afx-error">{errors.items[i].expiryDate}</span>}
+                              </div>
+
+                              <div className="afx-item-field">
+                                <label className="afx-item-field-label">Qty<span className="afx-req">*</span></label>
+                                <input type="number" min="1" className="afx-cell-input"
+                                  style={errors.items?.[i]?.quantity ? { borderColor: "var(--afx-danger)" } : undefined}
+                                  value={item.quantity}
+                                  onChange={e => updateItem(i, "quantity", e.target.value)}
+                                />
+                                {errors.items?.[i]?.quantity && <span className="afx-error">{errors.items[i].quantity}</span>}
+                              </div>
+
+                              <div className="afx-item-field">
+                                <label className="afx-item-field-label">Cost (₹)<span className="afx-req">*</span></label>
+                                <input type="number" min="0" className="afx-cell-input"
+                                  style={errors.items?.[i]?.costPrice ? { borderColor: "var(--afx-danger)" } : undefined}
+                                  value={item.costPrice}
+                                  onChange={e => updateItem(i, "costPrice", e.target.value)}
+                                  placeholder="0.00"
+                                />
+                                {errors.items?.[i]?.costPrice && <span className="afx-error">{errors.items[i].costPrice}</span>}
+                              </div>
+
+                              <div className="afx-item-field">
+                                <label className="afx-item-field-label">MRP (₹)<span className="afx-req">*</span></label>
+                                <input type="number" min="0" className="afx-cell-input"
+                                  style={errors.items?.[i]?.mrp ? { borderColor: "var(--afx-danger)" } : undefined}
+                                  value={item.mrp}
+                                  onChange={e => updateItem(i, "mrp", e.target.value)}
+                                  placeholder="0.00"
+                                />
+                                {errors.items?.[i]?.mrp && <span className="afx-error">{errors.items[i].mrp}</span>}
+                              </div>
+
+                              <div className="afx-item-field">
+                                <label className="afx-item-field-label">GST %</label>
+                                <select className="afx-cell-input" value={item.gstRate} onChange={e => updateItem(i, "gstRate", e.target.value)}>
+                                  {GST_RATES.map(r => <option key={r} value={r}>{r}%</option>)}
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="afx-item-card-footer">
+                              <span className="afx-item-card-footer-label">Line total</span>
+                              <span className="afx-line-total">₹{getLineTotal(item).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-
-                      {form.items.map((item, i) => (
-                        <div key={i} className="afx-item-row" style={{ gridTemplateColumns: "1.4fr 0.9fr 0.9fr 0.9fr 0.6fr 0.8fr 0.8fr 0.6fr 0.8fr auto" }}>
-                          <div ref={el => productRefs.current[i] = el}>
-                            <SearchDrop
-                              options={products}
-                              value={item.productId}
-                              onChange={v => updateItem(i, "productId", v)}
-                              placeholder="Select product"
-                              dropRef={{ current: productRefs.current[i] }}
-                              open={productOpenIdx === i}
-                              setOpen={v => setProductOpenIdx(v ? i : null)}
-                            />
-                            {errors.items?.[i]?.productId && <span className="afx-error">{errors.items[i].productId}</span>}
-                          </div>
-
-                          <div>
-                            <input className="afx-cell-input"
-                              style={errors.items?.[i]?.batchNumber ? { borderColor: "var(--afx-danger)" } : undefined}
-                              value={item.batchNumber}
-                              onChange={e => updateItem(i, "batchNumber", e.target.value)}
-                              placeholder="Batch No"
-                            />
-                            {errors.items?.[i]?.batchNumber && <span className="afx-error">{errors.items[i].batchNumber}</span>}
-                          </div>
-
-                          <div>
-                            <input type="date" className="afx-cell-input"
-                              value={item.manufacturingDate}
-                              onChange={e => updateItem(i, "manufacturingDate", e.target.value)}
-                            />
-                          </div>
-
-                          <div>
-                            <input type="date" className="afx-cell-input"
-                              style={errors.items?.[i]?.expiryDate ? { borderColor: "var(--afx-danger)" } : undefined}
-                              value={item.expiryDate}
-                              onChange={e => updateItem(i, "expiryDate", e.target.value)}
-                            />
-                            {errors.items?.[i]?.expiryDate && <span className="afx-error">{errors.items[i].expiryDate}</span>}
-                          </div>
-
-                          <div>
-                            <input type="number" min="1" className="afx-cell-input"
-                              style={errors.items?.[i]?.quantity ? { borderColor: "var(--afx-danger)" } : undefined}
-                              value={item.quantity}
-                              onChange={e => updateItem(i, "quantity", e.target.value)}
-                            />
-                            {errors.items?.[i]?.quantity && <span className="afx-error">{errors.items[i].quantity}</span>}
-                          </div>
-
-                          <div>
-                            <input type="number" min="0" className="afx-cell-input"
-                              style={errors.items?.[i]?.costPrice ? { borderColor: "var(--afx-danger)" } : undefined}
-                              value={item.costPrice}
-                              onChange={e => updateItem(i, "costPrice", e.target.value)}
-                              placeholder="0.00"
-                            />
-                            {errors.items?.[i]?.costPrice && <span className="afx-error">{errors.items[i].costPrice}</span>}
-                          </div>
-
-                          <div>
-                            <input type="number" min="0" className="afx-cell-input"
-                              style={errors.items?.[i]?.mrp ? { borderColor: "var(--afx-danger)" } : undefined}
-                              value={item.mrp}
-                              onChange={e => updateItem(i, "mrp", e.target.value)}
-                              placeholder="0.00"
-                            />
-                            {errors.items?.[i]?.mrp && <span className="afx-error">{errors.items[i].mrp}</span>}
-                          </div>
-
-                          <div>
-                            <select className="afx-cell-input" value={item.gstRate} onChange={e => updateItem(i, "gstRate", e.target.value)}>
-                              {GST_RATES.map(r => <option key={r} value={r}>{r}%</option>)}
-                            </select>
-                          </div>
-
-                          <div className="afx-line-total">₹{getLineTotal(item).toFixed(2)}</div>
-
-                          <button type="button" className="afx-remove-btn" onClick={() => removeItem(i)} title="Remove">
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
 
                       <div className="afx-totals">
                         <div className="afx-totals-row"><span>Subtotal</span><span>₹{(grandTotal - totalTax).toFixed(2)}</span></div>

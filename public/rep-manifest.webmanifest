@@ -1,0 +1,15 @@
+{
+  "name": "VMS Field Rep",
+  "short_name": "VMS Rep",
+  "description": "Take orders and check in at retailers — works offline.",
+  "start_url": "/rep",
+  "scope": "/rep",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0f766e",
+  "background_color": "#050b0b",
+  "icons": [
+    { "src": "/logo192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "/logo512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" }
+  ]
+}

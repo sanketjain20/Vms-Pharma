@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Navbar from "./Navbar";
@@ -33,7 +33,8 @@ describe("Navbar logout", () => {
     await userEvent.click(openDropdown());
     await userEvent.click(screen.getByText(/logout/i));
 
-    expect(localStorage.getItem("vmsUser")).toBeNull();
+    // the logout handler is async and user-event v13's click does not wait for it
+    await waitFor(() => expect(localStorage.getItem("vmsUser")).toBeNull());
     expect(localStorage.getItem("modules")).toBeNull();
   });
 
@@ -45,6 +46,7 @@ describe("Navbar logout", () => {
     await userEvent.click(openDropdown());
     await userEvent.click(screen.getByText(/logout/i));
 
+    await waitFor(() => expect(window.alert).toHaveBeenCalledWith("Logout failed"));
     expect(localStorage.getItem("vmsUser")).not.toBeNull();
     expect(localStorage.getItem("modules")).not.toBeNull();
   });

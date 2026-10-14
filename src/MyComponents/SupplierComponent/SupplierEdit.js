@@ -11,12 +11,20 @@ const FIELD_META = [
   { key: "phone",              label: "Phone",                type: "text",     required: true, placeholder: "e.g. 9876543210" },
   { key: "email",              label: "Email",                type: "email",    required: false, placeholder: "e.g. ramesh@cipla.com" },
   { key: "gstNumber",          label: "GST Number",           type: "text",     required: false, placeholder: "e.g. 27AAPFU0939F1ZV" },
+  { key: "pan",                label: "PAN",                  type: "text",     required: false, placeholder: "e.g. ABCDE1234F — used for TDS rate lookup" },
   { key: "drugLicenseNumber",  label: "Drug License Number",  type: "text",     required: false, placeholder: "e.g. MH-MUM-123456" },
   { key: "leadTimeDays",       label: "Lead Time (days)",     type: "number",   required: false, placeholder: "e.g. 5 — used by VMS Intelligence Smart Purchase" },
+  { key: "country",            label: "Country",              type: "text",     required: false, placeholder: "e.g. IN — leave blank for India" },
+  { key: "nonResidentParty",   label: "Non-resident / export party (no TDS deducted)", type: "checkbox", required: false },
+  { key: "certificateNumber",      label: "Lower/Nil Deduction Certificate No.", type: "text",   required: false, placeholder: "e.g. 1234567890" },
+  { key: "certificateSectionRef",  label: "Certificate Section",                 type: "text",   required: false, placeholder: "e.g. 197 or 206C(9)" },
+  { key: "certificateRatePercent", label: "Certificate Rate (%)",                type: "number", required: false, placeholder: "0 = nil deduction" },
+  { key: "certificateValidFrom",   label: "Certificate Valid From",              type: "date",   required: false },
+  { key: "certificateValidTo",     label: "Certificate Valid To",                type: "date",   required: false },
   { key: "address",            label: "Address",              type: "textarea", required: false, placeholder: "Full address..." },
 ];
 
-const EMPTY = FIELD_META.reduce((acc, f) => ({ ...acc, [f.key]: "" }), {});
+const EMPTY = FIELD_META.reduce((acc, f) => ({ ...acc, [f.key]: f.type === "checkbox" ? false : "" }), {});
 
 export default function SupplierEdit({ uKey, onClose, onSubmit }) {
   const [form, setForm]       = useState(EMPTY);
@@ -41,8 +49,16 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
             phone:             d.phone              || "",
             email:             d.email              || "",
             gstNumber:         d.gstNumber          || "",
+            pan:               d.pan                || "",
             drugLicenseNumber: d.drugLicenseNumber  || "",
             leadTimeDays:      d.leadTimeDays != null ? String(d.leadTimeDays) : "",
+            country:           d.country            || "",
+            nonResidentParty:  !!d.nonResidentParty,
+            certificateNumber:      d.certificateNumber || "",
+            certificateSectionRef:  d.certificateSectionRef || "",
+            certificateRatePercent: d.certificateRatePercent != null ? String(d.certificateRatePercent) : "",
+            certificateValidFrom:   d.certificateValidFrom || "",
+            certificateValidTo:     d.certificateValidTo || "",
             address:           d.address            || "",
           });
         } else {
@@ -67,6 +83,12 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Invalid email";
     if (form.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(form.gstNumber.toUpperCase()))
       e.gstNumber = "Invalid GST format (e.g. 27AAPFU0939F1ZV)";
+    if (form.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(form.pan.toUpperCase().trim()))
+      e.pan = "Invalid PAN format (e.g. ABCDE1234F)";
+    if (form.certificateRatePercent && isNaN(parseFloat(form.certificateRatePercent)))
+      e.certificateRatePercent = "Certificate rate must be a number";
+    if (form.certificateValidFrom && form.certificateValidTo && form.certificateValidFrom > form.certificateValidTo)
+      e.certificateValidTo = "Valid To must be on or after Valid From";
     return e;
   };
 
@@ -85,7 +107,13 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
         body: JSON.stringify({
           ...form,
           gstNumber: form.gstNumber?.toUpperCase() || null,
+          pan: form.pan?.toUpperCase().trim() || null,
           leadTimeDays: form.leadTimeDays ? parseInt(form.leadTimeDays, 10) : null,
+          country: form.country?.toUpperCase().trim() || null,
+          nonResidentParty: !!form.nonResidentParty,
+          certificateRatePercent: form.certificateRatePercent ? parseFloat(form.certificateRatePercent) : null,
+          certificateValidFrom: form.certificateValidFrom || null,
+          certificateValidTo: form.certificateValidTo || null,
         }),
       });
       const json = await res.json();
@@ -129,27 +157,40 @@ export default function SupplierEdit({ uKey, onClose, onSubmit }) {
 
               <div className="afx-grid">
                 {FIELD_META.map(f => (
-                  <div key={f.key} className={`afx-field ${f.type === "textarea" ? "afx-field--full" : ""}`}>
-                    <label className="afx-label">
-                      {f.label}
-                      {f.required && <span className="afx-req">*</span>}
-                    </label>
-                    {f.type === "textarea" ? (
-                      <textarea
-                        className={`afx-textarea ${errors[f.key] ? "afx-textarea--err" : ""}`}
-                        value={form[f.key]}
-                        onChange={e => set(f.key, e.target.value)}
-                        placeholder={f.placeholder}
-                        rows={3}
-                      />
+                  <div key={f.key} className={`afx-field ${f.type === "textarea" || f.type === "checkbox" ? "afx-field--full" : ""}`}>
+                    {f.type === "checkbox" ? (
+                      <label className="afx-checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={!!form[f.key]}
+                          onChange={e => set(f.key, e.target.checked)}
+                        />
+                        {f.label}
+                      </label>
                     ) : (
-                      <input
-                        className={`afx-input ${errors[f.key] ? "afx-input--err" : ""}`}
-                        type={f.type}
-                        value={form[f.key]}
-                        onChange={e => set(f.key, e.target.value)}
-                        placeholder={f.placeholder}
-                      />
+                      <>
+                        <label className="afx-label">
+                          {f.label}
+                          {f.required && <span className="afx-req">*</span>}
+                        </label>
+                        {f.type === "textarea" ? (
+                          <textarea
+                            className={`afx-textarea ${errors[f.key] ? "afx-textarea--err" : ""}`}
+                            value={form[f.key]}
+                            onChange={e => set(f.key, e.target.value)}
+                            placeholder={f.placeholder}
+                            rows={3}
+                          />
+                        ) : (
+                          <input
+                            className={`afx-input ${errors[f.key] ? "afx-input--err" : ""}`}
+                            type={f.type}
+                            value={form[f.key]}
+                            onChange={e => set(f.key, e.target.value)}
+                            placeholder={f.placeholder}
+                          />
+                        )}
+                      </>
                     )}
                     {errors[f.key] && <span className="afx-error">{errors[f.key]}</span>}
                   </div>

@@ -194,7 +194,7 @@ describe("VMS Intelligence dashboard", () => {
 
     render(<Intelligence />);
     await screen.findByText("63%");
-    await userEvent.click(screen.getByRole("button", { name: /^restock$/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^restock recommendations$/i }));
 
     const whyButton = await screen.findByRole("button", { name: "Why?" });
     expect(screen.queryByText(/Average daily sales: 2.0/)).not.toBeInTheDocument();
@@ -210,7 +210,7 @@ describe("VMS Intelligence dashboard", () => {
 
     render(<Intelligence />);
     await screen.findByText("63%");
-    await userEvent.click(screen.getByRole("button", { name: /^restock$/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^restock recommendations$/i }));
     apiClient.mockClear();
 
     await userEvent.type(screen.getByLabelText(/Target coverage/i), "45");
@@ -237,7 +237,7 @@ describe("VMS Intelligence dashboard", () => {
 
     render(<Intelligence />);
     await screen.findByText("63%");
-    await userEvent.click(screen.getByRole("button", { name: /suppliers/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^supplier cost trends$/i }));
 
     expect(await screen.findByText("Supplier B (₹10/unit)")).toBeInTheDocument();
     expect(screen.getByText("Rising")).toBeInTheDocument();
@@ -248,7 +248,7 @@ describe("VMS Intelligence dashboard", () => {
 
     render(<Intelligence />);
     await screen.findByText("63%");
-    await userEvent.click(screen.getByRole("button", { name: /^profit$/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^profit insights$/i }));
 
     expect(await screen.findByText("Vitamin C")).toBeInTheDocument();
     expect(screen.getByText("Cheap Syrup")).toBeInTheDocument();
@@ -271,7 +271,7 @@ describe("VMS Intelligence dashboard", () => {
 
     render(<Intelligence />);
     await screen.findByText("63%");
-    await userEvent.click(screen.getByRole("button", { name: /^restock$/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^restock recommendations$/i }));
 
     expect(await screen.findByText("Buy before price rises")).toBeInTheDocument();
   });
@@ -281,7 +281,7 @@ describe("VMS Intelligence dashboard", () => {
 
     render(<Intelligence />);
     await screen.findByText("63%");
-    await userEvent.click(screen.getByRole("button", { name: /^restock$/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^restock recommendations$/i }));
     apiClient.mockClear();
 
     await userEvent.click(screen.getByText("Advanced thresholds"));
@@ -299,7 +299,7 @@ describe("VMS Intelligence dashboard", () => {
     render(<Intelligence />);
     await screen.findByText("Nothing urgent right now — everything looks healthy.");
 
-    await userEvent.click(screen.getByRole("button", { name: /^restock$/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^restock recommendations$/i }));
     expect(screen.getByText(/No purchases recommended right now/i)).toBeInTheDocument();
     expect(screen.getByText("No products at risk of stocking out.")).toBeInTheDocument();
 

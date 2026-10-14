@@ -7,8 +7,8 @@ import apiClient from "../../Config/apiClient";
 
 /* ── Per-volume spine colour, cycling like packaging lot bands ──────── */
 const ACCENTS = [
-  "#d4af37", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#f59e0b",
-  "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#14b8a6", "#a855f7",
+  "#5b8bef", "#10b981", "#ef4444", "#8b5cf6", "#f59e0b", "#06b6d4",
+  "#ec4899", "#84cc16", "#f97316", "#14b8a6", "#a855f7", "#eab308",
 ];
 const getAccent = (i) => ACCENTS[i % ACCENTS.length];
 

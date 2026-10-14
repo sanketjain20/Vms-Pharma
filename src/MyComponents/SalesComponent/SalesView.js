@@ -3,7 +3,7 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 
-export default function SalesView({ uKey, onClose }) {
+export default function SalesView({ uKey, onClose, documentMode = false }) {
   const [sales, setSales] = useState(null);
   const [error, setError] = useState("");
   const [eInvoice, setEInvoice] = useState(null);
@@ -11,10 +11,11 @@ export default function SalesView({ uKey, onClose }) {
   const [eInvoiceMessage, setEInvoiceMessage] = useState("");
   const [ewayBusy, setEwayBusy] = useState(false);
   const [ewayMessage, setEwayMessage] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   useEffect(() => {
     if (!uKey) return;
-    apiClient(`${API_BASE_URL}/api/Sales/GetSalesByUkey/${uKey}`, {
+    apiClient(`${API_BASE_URL}/api/${documentMode ? "SalesOrder/GetSalesOrderByUKey" : "Sales/GetSalesByUkey"}/${uKey}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     })
@@ -23,7 +24,12 @@ export default function SalesView({ uKey, onClose }) {
         return res.json();
       })
       .then((data) => {
-        if (data.status === 200) setSales(data.data);
+        if (data.status === 200) setSales(documentMode ? {
+          ...data.data,
+          invoiceNumber: data.data.orderNumber,
+          createdAt: data.data.orderDate,
+          items: (data.data.items || []).map(item => ({ ...item, sellingPrice: item.unitPrice, price: item.unitPrice })),
+        } : data.data);
         else setError(data.message || "Failed to fetch sales");
       })
       .catch((err) => { console.error(err); setError(err.message); });
@@ -37,7 +43,7 @@ export default function SalesView({ uKey, onClose }) {
       .catch((err) => console.error("Failed to load e-invoice status:", err));
   }, [uKey]);
 
-  useEffect(() => { loadEInvoice(); }, [loadEInvoice]);
+  useEffect(() => { if (!documentMode) loadEInvoice(); }, [documentMode, loadEInvoice]);
 
   const handleGenerateIrn = async () => {
     setEInvoiceBusy(true);
@@ -131,6 +137,37 @@ export default function SalesView({ uKey, onClose }) {
     }
   };
 
+  const prepareNotification = async (type) => {
+    setNotificationMessage("");
+    const result = await apiClient(`${API_BASE_URL}/api/CustomerNotification/${type === "INVOICE" ? "Invoice" : "PaymentReminder"}/${uKey}`, { method: "GET" });
+    const json = await result.json();
+    if (json.status !== 200) throw new Error(json.message || "Could not prepare notification");
+    return json.data;
+  };
+
+  const handleWhatsApp = async (type) => {
+    // Open synchronously from the click so browsers do not treat it as a popup.
+    const target = window.open("", "_blank");
+    try {
+      const notification = await prepareNotification(type);
+      target.location.href = notification.whatsappUrl;
+    } catch (err) {
+      target?.close();
+      setNotificationMessage(err.message);
+    }
+  };
+
+  const handleSms = async (type) => {
+    setNotificationMessage("");
+    try {
+      const res = await apiClient(`${API_BASE_URL}/api/CustomerNotification/Sms`, {
+        method: "POST", body: JSON.stringify({ saleUKey: uKey, type }),
+      });
+      const json = await res.json();
+      setNotificationMessage(json.message || (json.status === 200 ? "SMS sent." : "SMS could not be sent."));
+    } catch { setNotificationMessage("SMS could not be sent."); }
+  };
+
   // Product name comes back under different keys/shapes depending on the
   // endpoint — cover string fields under any likely name, and a nested
   // { name } object, instead of trusting one exact shape.
@@ -141,6 +178,11 @@ export default function SalesView({ uKey, onClose }) {
     return v;
   };
 
+  // Schemes: a Disc column only when some row carries a discount, and the free units counted (they are not charged).
+  const lineDiscount = (item) => Number(item?.discountAmount) || 0;
+  const hasDiscount = (sales?.items || []).some((i) => lineDiscount(i) > 0);
+  const freeUnits = (sales?.items || []).reduce((s, i) => s + (i?.freeItem ? Number(i.quantity) || 0 : 0), 0);
+
   if (!uKey) return null;
 
   return (
@@ -148,8 +190,8 @@ export default function SalesView({ uKey, onClose }) {
       <div className="afx-modal afx-modal--xl">
         <div className="afx-header">
           <div>
-            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Sales Record</div>
-            <h3 className="afx-title">{sales ? `Invoice · ${sales.invoiceNumber}` : "Loading…"}</h3>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />{documentMode ? "Sales Order" : "Sales Record"}</div>
+            <h3 className="afx-title">{sales ? `${documentMode ? "Order" : "Invoice"} · ${sales.invoiceNumber}` : "Loading…"}</h3>
           </div>
           <button className="afx-close" onClick={onClose} title="Close">
             <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
@@ -159,6 +201,7 @@ export default function SalesView({ uKey, onClose }) {
 
         <div className="afx-body">
           {error && <div className="afx-alert">{error}</div>}
+          {notificationMessage && <div className="afx-info">{notificationMessage}</div>}
 
           {!sales && !error && (
             <div className="afx-loading"><div className="afx-loader-ring"><div/><div/><div/></div></div>
@@ -283,6 +326,7 @@ export default function SalesView({ uKey, onClose }) {
                       <th>HSN</th>
                       <th>Qty</th>
                       <th>Price (₹)</th>
+                      {hasDiscount && <th>Disc (₹)</th>}
                       <th>GST (₹)</th>
                       <th>Total (₹)</th>
                     </tr>
@@ -297,21 +341,26 @@ export default function SalesView({ uKey, onClose }) {
                           const tax = Number(item.taxAmount) || 0;
                           return (
                             <tr key={idx}>
-                              <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>{productLabel(item)}</td>
+                              <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>
+                                {productLabel(item)}
+                                {item.freeItem && <strong className="afx-text-success"> FREE</strong>}
+                                {item.schemeNameSnapshot && <div style={{ fontSize: 11, fontWeight: 400, color: "var(--afx-text-3)" }}>Scheme: {item.schemeNameSnapshot}</div>}
+                              </td>
                               <td style={{ color: "var(--afx-accent)", fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{item.batchNumberSnapshot || "—"}</td>
                               <td style={{ fontSize: 11 }}>{item.expiryDateSnapshot || "—"}</td>
                               <td style={{ fontSize: 11 }}>{item.hsnCodeSnapshot || "—"}</td>
                               <td>{item.quantity ?? "—"}</td>
                               <td>{item.sellingPrice ?? "—"}</td>
+                              {hasDiscount && <td>{lineDiscount(item) > 0 ? lineDiscount(item).toFixed(2) : "—"}</td>}
                               <td>{tax.toFixed(2)}</td>
-                              <td style={{ fontWeight: 700, color: "var(--afx-text-1)" }}>{Number(item.subtotal ?? qty * price + tax).toFixed(2)}</td>
+                              <td style={{ fontWeight: 700, color: "var(--afx-text-1)" }}>{(Number(item.subtotal ?? qty * price + tax) - lineDiscount(item)).toFixed(2)}</td>
                             </tr>
                           );
                         });
                       } catch (e) {
                         console.error("Failed to render sale line items:", e, sales.items);
                         return (
-                          <tr><td colSpan={8} className="afx-alert" style={{ display: "table-cell" }}>
+                          <tr><td colSpan={9} className="afx-alert" style={{ display: "table-cell" }}>
                             Couldn't display line items — unexpected data shape. Check the console for details.
                           </td></tr>
                         );
@@ -325,11 +374,35 @@ export default function SalesView({ uKey, onClose }) {
               <div className="afx-totals">
                 <div className="afx-totals-row"><span>Items Total</span><span>₹{(sales.totalAmount).toFixed(2)}</span></div>
                 <div className="afx-totals-row"><span>Total GST</span><span>₹{sales.totalTax}</span></div>
-                <div className="afx-totals-row"><span>Discount</span><span className="afx-text-danger">−₹{sales.totalDiscount}</span></div>
+                {Number(sales.schemeDiscount) > 0 && (
+                  <div className="afx-totals-row"><span>Scheme discount</span><span className="afx-text-danger">−₹{Number(sales.schemeDiscount).toFixed(2)}</span></div>
+                )}
+                <div className="afx-totals-row"><span>Discount</span><span className="afx-text-danger">−₹{Number(sales.schemeDiscount) > 0 ? Number(sales.manualDiscount ?? 0) : sales.totalDiscount}</span></div>
+                {freeUnits > 0 && (
+                  <div className="afx-totals-row"><span>Free units (not charged)</span><span className="afx-text-success">{freeUnits}</span></div>
+                )}
+                {Number(sales.tcsAmount) > 0 && (
+                  <div className="afx-totals-row">
+                    <span>TCS{sales.tcsSectionCode ? ` (${sales.tcsSectionCode})` : ""} @ {sales.tcsRate}%</span>
+                    <span>+₹{Number(sales.tcsAmount).toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="afx-totals-divider" />
                 <div className="afx-totals-row afx-totals-grand"><span>Net Amount</span><span>₹{(sales.netAmount).toFixed(2)}</span></div>
+                {Number(sales.retailerTdsAmount) > 0 && (
+                  <div className="afx-totals-row">
+                    <span>Retailer TDS{sales.retailerTdsSectionCode ? ` (${sales.retailerTdsSectionCode})` : ""} @ {sales.retailerTdsRate}% — est., withheld by them</span>
+                    <span>₹{Number(sales.retailerTdsAmount).toFixed(2)}</span>
+                  </div>
+                )}
                 {Number(sales.remainingAmount) > 0 && (
                   <div className="afx-totals-row"><span>Due Amount</span><span className="afx-text-danger">₹{Number(sales.remainingAmount).toFixed(2)}</span></div>
+                )}
+                {sales.retailerId != null && Number(sales.retailerOutstandingBalance) > 0 && (
+                  <div className="afx-totals-row">
+                    <span>Retailer Outstanding</span>
+                    <span className="afx-text-danger">₹{Number(sales.retailerOutstandingBalance).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  </div>
                 )}
               </div>
             </>
@@ -360,6 +433,9 @@ export default function SalesView({ uKey, onClose }) {
               </svg>
               Print Invoice
             </button>
+            <button className="afx-btn" onClick={() => handleWhatsApp("INVOICE")}>WhatsApp Invoice</button>
+            {Number(sales.remainingAmount) > 0 && <button className="afx-btn" onClick={() => handleWhatsApp("PAYMENT_REMINDER")}>WhatsApp Reminder</button>}
+            <button className="afx-btn" onClick={() => handleSms(Number(sales.remainingAmount) > 0 ? "PAYMENT_REMINDER" : "INVOICE")}>Send SMS</button>
           </div>
         )}
       </div>

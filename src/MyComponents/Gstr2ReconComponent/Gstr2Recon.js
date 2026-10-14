@@ -37,6 +37,84 @@ function ResolutionBadge({ status }) {
 const fmtMoney = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const fmtDate = (d) => (d ? new Date(d).toLocaleString() : "—");
 
+/* ── Sample files ──────────────────────────────────────────────────────
+   Mirrors exactly what Gstr2bJsonParser / Gstr2aJsonParser (backend) read:
+   2B keys off data.docdata.b2b[], 2A keys off b2b[] at the root; dates as
+   dd-MM-yyyy. A couple of extra fields the real portal export also carries
+   (pos, typ, rt, txval, num) are included so the shape looks authentic —
+   the parser ignores anything it doesn't need. */
+const SAMPLE_GSTR2B = {
+  data: {
+    gstin: "27AAAAA0000A1Z5",
+    ret_period: "042026",
+    docdata: {
+      b2b: [
+        {
+          ctin: "27AABCU9603R1ZM",
+          trdnm: "Sample Pharma Distributors Pvt Ltd",
+          inv: [
+            {
+              inum: "INV/2026/00123",
+              dt: "05-04-2026",
+              val: "11800.00",
+              pos: "27",
+              typ: "R",
+              itcavl: "Y",
+              items: [
+                { num: 1, rt: 18, txval: "10000.00", iamt: "0.00", camt: "900.00", samt: "900.00" },
+              ],
+            },
+            {
+              inum: "INV/2026/00145",
+              dt: "18-04-2026",
+              val: "5310.00",
+              pos: "27",
+              typ: "R",
+              itcavl: "Y",
+              items: [
+                { num: 1, rt: 12, txval: "4741.07", iamt: "0.00", camt: "284.46", samt: "284.46" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+};
+
+const SAMPLE_GSTR2A = {
+  gstin: "27AAAAA0000A1Z5",
+  fp: "042026",
+  b2b: [
+    {
+      ctin: "27AABCU9603R1ZM",
+      trdnm: "Sample Pharma Distributors Pvt Ltd",
+      inv: [
+        {
+          inum: "INV/2026/00123",
+          idt: "05-04-2026",
+          val: "11800.00",
+          pos: "27",
+          itcavl: "Y",
+          itms: [
+            { itm_det: { rt: 18, txval: "10000.00", iamt: "0.00", camt: "900.00", samt: "900.00" } },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+function downloadJson(obj, fileName) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function Gstr2Recon() {
   const [imports, setImports] = useState([]);
   const [returnType, setReturnType] = useState("GSTR2B");
@@ -142,6 +220,11 @@ export default function Gstr2Recon() {
     window.open(`${API_BASE_URL}/api/Gstr2Recon/ExportResults/${activeRunUKey}`, "_blank");
   };
 
+  const handleDownloadSample = (type) => {
+    if (type === "GSTR2B") downloadJson(SAMPLE_GSTR2B, "sample-gstr2b.json");
+    else downloadJson(SAMPLE_GSTR2A, "sample-gstr2a.json");
+  };
+
   return (
     <div className="i-container">
       <h2 className="i-title">
@@ -162,6 +245,41 @@ export default function Gstr2Recon() {
               <h3 className="gst-section-title">Upload a portal export</h3>
               <span className="gst-section-hint">JSON only — export GSTR-2A/2B from the GST portal</span>
             </div>
+
+            <details className="gst-info">
+              <summary>What is this, and which file do I upload?</summary>
+              <div className="gst-info-body">
+                <p>
+                  GSTR-2A and GSTR-2B are auto-drafted purchase statements that the GST Network generates
+                  for you, listing every invoice your <strong>suppliers</strong> have reported selling to you
+                  in their own GST filings. This tool matches those portal records against the purchases
+                  already recorded in VMS, so you can see — before you file GSTR-3B — exactly how much
+                  Input Tax Credit (ITC) is safely matched, and which invoices are missing, mismatched, or
+                  at risk of being rejected because a supplier hasn't filed them yet.
+                </p>
+                <p>
+                  <strong>Which file to upload:</strong> only the <strong>JSON</strong> file downloaded from
+                  the official GST portal for the return period you want to reconcile —
+                  <em> Services → Returns Dashboard → GSTR-2A or GSTR-2B → Download → Generate JSON File to download</em>.
+                  Don't upload the PDF or Excel summary the portal also offers; those aren't parsed. GSTR-2B is
+                  recommended since it's the frozen, month-locked statement GST law bases ITC eligibility on —
+                  GSTR-2A is informational and updates continuously.
+                </p>
+                <p className="gst-info-note">
+                  Not sure what the file looks like? Download a sample below to see the expected shape —
+                  useful for a test run before you upload a real export.
+                </p>
+                <div className="gst-sample-row">
+                  <button type="button" className="gst-btn gst-btn--sm gst-btn--ghost" onClick={() => handleDownloadSample("GSTR2B")}>
+                    ⬇ Download sample GSTR-2B
+                  </button>
+                  <button type="button" className="gst-btn gst-btn--sm gst-btn--ghost" onClick={() => handleDownloadSample("GSTR2A")}>
+                    ⬇ Download sample GSTR-2A
+                  </button>
+                </div>
+              </div>
+            </details>
+
             <div className="gst-upload-row">
               <select className="gst-select" value={returnType} onChange={(e) => setReturnType(e.target.value)}>
                 <option value="GSTR2B">GSTR-2B (recommended)</option>

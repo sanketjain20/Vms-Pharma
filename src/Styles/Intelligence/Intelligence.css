@@ -82,6 +82,49 @@ body[data-theme="light"] .vint-root {
 }
 .vint-refresh:disabled { opacity: 0.6; cursor: default; }
 
+/* ── Header actions cluster + show-all toggle ─────────────────────────── */
+.vint-header-actions {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.vint-showall {
+  display: inline-flex; align-items: center; gap: 10px;
+  cursor: pointer; user-select: none;
+}
+.vint-showall-label {
+  font-size: 0.85rem; font-weight: 600; color: var(--vint-text-2);
+}
+.vint-switch {
+  position: relative; display: inline-flex; align-items: center;
+  width: 38px; height: 22px; border-radius: 100px;
+  background: var(--vint-muted-bg); border: 1px solid var(--vint-border);
+  transition: background .25s ease, border-color .25s ease;
+}
+.vint-switch input {
+  position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer;
+}
+.vint-switch-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--vint-text-1);
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  transition: transform .25s ease, background .25s ease;
+}
+.vint-switch-on { background: color-mix(in srgb, #6366f1 28%, transparent); border-color: #6366f1; }
+.vint-switch-on .vint-switch-knob { transform: translateX(16px); background: #818cf8; }
+
+/* ── Show-all: every section stacked with a divider heading ──────────── */
+.vint-view-all { display: flex; flex-direction: column; gap: 8px; }
+.vint-section:not(:first-child) { margin-top: 30px; }
+.vint-section-heading {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 10px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--vint-border);
+}
+.vint-section-heading h2 {
+  margin: 0; font-size: 17px; font-weight: 700; color: var(--vint-text-1);
+}
+.vint-section-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
 /* ── View switcher (sliding pill nav) ─────────────────────────────────── */
 .vint-viewbar {
   position: relative;

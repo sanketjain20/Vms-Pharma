@@ -3,6 +3,7 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { calculateTcsPreview, partyHasPan } from "../../utils/taxPreview";
 
 const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setOpen, displayKey = "name" }) => {
   const [search, setSearch] = useState("");
@@ -69,6 +70,18 @@ export default function PaymentCollect({
   const [selectedRetailer, setSelectedRetailer] = useState(null);
   const [selectedInvoice, setSelectedInvoice]   = useState(null);
 
+  /* ── Retailer-TDS estimate on an advance (see Utils/taxPreview.js) —
+     best-effort only, the backend is the source of truth at submit time.
+     TCS 206C(1H) itself was withdrawn 1 Apr 2025, so this is never
+     withheld from what's collected; it's purely an estimate of what a
+     retailer who's self-declared they deduct 194Q (Retailer
+     .buyerDeductsTds194Q) will owe once their FY cumulative crosses the
+     vendor's threshold. Stays "not enabled" silently on any fetch
+     failure. */
+  const [tcsSetting, setTcsSetting]             = useState(null);
+  const [retailerTaxInfo, setRetailerTaxInfo]   = useState(null);
+  const [retailerTurnover, setRetailerTurnover] = useState(null);
+
   const [form, setForm] = useState({
     amount:          "",
     paymentMode:     "CASH",
@@ -100,9 +113,11 @@ export default function PaymentCollect({
       .then(json => {
         const list = (json?.data || []).map(r => ({
           id:   r.retailerId,
+          uKey: r.uKey,
           name: r.shopName,
           sub:  `${r.retailerCode} · Outstanding: ₹${fmt(r.outstandingBalance)}`,
           outstandingBalance: r.outstandingBalance,
+          advanceBalance:     r.advanceBalance,
           creditLimit:        r.creditLimit,
           phone:              r.phone,
           retailerCode:       r.retailerCode,
@@ -110,7 +125,29 @@ export default function PaymentCollect({
         setRetailers(list);
       })
       .catch(() => {});
+
+    apiClient(`${API_BASE_URL}/api/TcsSetting/Get`)
+      .then(r => r.json())
+      .then(json => setTcsSetting(json?.status === 200 ? json.data : null))
+      .catch(() => setTcsSetting(null));
   }, []);
+
+  /* ── FETCH SELECTED RETAILER'S PAN/GSTIN + FY TURNOVER, for the estimate ── */
+  useEffect(() => {
+    setRetailerTaxInfo(null);
+    setRetailerTurnover(null);
+    if (!selectedRetailer?.uKey || !tcsSetting?.enabled) return;
+
+    apiClient(`${API_BASE_URL}/api/Retailer/Get/${selectedRetailer.uKey}`)
+      .then(r => r.json())
+      .then(json => setRetailerTaxInfo(json?.status === 200 ? json.data : null))
+      .catch(() => setRetailerTaxInfo(null));
+
+    apiClient(`${API_BASE_URL}/api/TcsSetting/GetPartyTurnover/${selectedRetailer.uKey}`)
+      .then(r => r.json())
+      .then(json => setRetailerTurnover(json?.status === 200 ? json.data : null))
+      .catch(() => setRetailerTurnover(null));
+  }, [selectedRetailer?.uKey, tcsSetting?.enabled]);
 
   /* ── LOAD UNPAID INVOICES WHEN RETAILER SELECTED ── */
   const handleRetailerSelect = (retailer, prefill = {}) => {
@@ -216,8 +253,10 @@ export default function PaymentCollect({
     if (!selectedRetailer)       e.retailer = "Select a retailer";
     if (!form.amount || parseFloat(form.amount) <= 0)
       e.amount = "Enter a valid amount";
-    if (selectedRetailer && parseFloat(form.amount) > parseFloat(selectedRetailer.outstandingBalance))
-      e.amount = `Cannot exceed outstanding ₹${fmt(selectedRetailer.outstandingBalance)}`;
+    // Invoice-linked payments stay hard-capped at that invoice's own
+    // remaining amount. A general (non-invoice-linked) payment is no
+    // longer capped at outstanding — anything beyond it is banked as an
+    // advance (see the preview below) instead of being rejected.
     if (selectedInvoice && parseFloat(form.amount) > parseFloat(selectedInvoice.remainingAmount))
       e.amount = `Cannot exceed invoice remaining ₹${fmt(selectedInvoice.remainingAmount)}`;
     if (!form.paymentDate)       e.paymentDate = "Payment date is required";
@@ -261,9 +300,31 @@ export default function PaymentCollect({
   };
 
   const outstanding = selectedRetailer ? parseFloat(selectedRetailer.outstandingBalance || 0) : 0;
-  const maxAmount   = selectedInvoice
-    ? parseFloat(selectedInvoice.remainingAmount || 0)
-    : outstanding;
+  const advanceBalance = selectedRetailer ? parseFloat(selectedRetailer.advanceBalance || 0) : 0;
+  // Only an invoice-linked payment has a hard cap (that invoice's own
+  // remaining amount). A general payment has no ceiling any more — see
+  // the advance preview below.
+  const maxAmount   = selectedInvoice ? parseFloat(selectedInvoice.remainingAmount || 0) : 0;
+
+  const enteredAmount  = parseFloat(form.amount || 0);
+  const appliedToOutstanding = selectedInvoice ? enteredAmount : Math.min(enteredAmount, outstanding);
+  const advanceAmount = selectedInvoice ? 0 : Math.max(0, enteredAmount - outstanding);
+
+  // Best-effort estimate of the retailer's own 194Q liability on the
+  // advance portion only — the backend is authoritative at submit time.
+  // See the state comment near retailerTaxInfo above for why this is
+  // never actually withheld from what's collected.
+  const advanceTdsPreview = (advanceAmount > 0 && tcsSetting?.enabled && retailerTaxInfo?.buyerDeductsTds194Q
+      && !retailerTaxInfo?.nonResidentParty)
+    ? calculateTcsPreview({
+        cumulativeBefore: retailerTurnover?.cumulativeConsideration || 0,
+        consideration: advanceAmount,
+        threshold: tcsSetting.thresholdAmount,
+        ratePercent: tcsSetting.ratePercent,
+        ratePercentWithoutPan: tcsSetting.ratePercentWithoutPan,
+        hasPan: partyHasPan(retailerTaxInfo?.pan, retailerTaxInfo?.gstNumber),
+      })
+    : { taxable: 0, rate: 0, tcs: 0 };
 
   return (
     <div className="afx-backdrop">
@@ -299,6 +360,12 @@ export default function PaymentCollect({
                 <span>Total outstanding</span>
                 <strong className="afx-text-danger">₹{fmt(outstanding)}</strong>
               </div>
+              {advanceBalance > 0 && (
+                <div className="afx-card-row">
+                  <span>Existing advance balance</span>
+                  <strong className="afx-text-success">₹{fmt(advanceBalance)}</strong>
+                </div>
+              )}
               {selectedRetailer.phone && (
                 <div className="afx-card-row">
                   <span>Phone</span>
@@ -343,6 +410,12 @@ export default function PaymentCollect({
                 placeholder="0.00"
               />
               {errors.amount && <span className="afx-error">{errors.amount}</span>}
+              {!errors.amount && !selectedInvoice && advanceAmount > 0 && (
+                <span className="afx-hint">
+                  ₹{fmt(advanceAmount)} above outstanding will be banked as an advance for this retailer
+                  {advanceTdsPreview.tcs > 0 && ` (est. ${advanceTdsPreview.rate}% 194Q liability ₹${fmt(advanceTdsPreview.tcs)} on their side)`}.
+                </span>
+              )}
             </div>
 
             <div className="afx-field">
@@ -398,14 +471,26 @@ export default function PaymentCollect({
                 <span className="afx-text-danger">₹{fmt(outstanding)}</span>
               </div>
               <div className="afx-totals-row">
-                <span>Collecting</span>
-                <span className="afx-text-success">−₹{fmt(form.amount)}</span>
+                <span>Applied to outstanding</span>
+                <span className="afx-text-success">−₹{fmt(appliedToOutstanding)}</span>
               </div>
+              {advanceAmount > 0 && (
+                <div className="afx-totals-row">
+                  <span>Banked as advance</span>
+                  <span className="afx-text-success">₹{fmt(advanceAmount)}</span>
+                </div>
+              )}
               <div className="afx-totals-divider" />
               <div className="afx-totals-row afx-totals-grand">
                 <span>Remaining after this payment</span>
-                <span>₹{fmt(Math.max(0, outstanding - parseFloat(form.amount || 0)))}</span>
+                <span>₹{fmt(Math.max(0, outstanding - appliedToOutstanding))}</span>
               </div>
+              {advanceAmount > 0 && (
+                <div className="afx-totals-row">
+                  <span>Advance balance after</span>
+                  <span>₹{fmt(advanceBalance + advanceAmount)}</span>
+                </div>
+              )}
             </div>
           )}
         </div>

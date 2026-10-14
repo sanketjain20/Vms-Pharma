@@ -16,6 +16,16 @@ const Field = ({ label, value, mono, accent, danger, full }) => (
   </div>
 );
 
+/* ── Section 197/206C(9) certificate status, "today" vs validFrom/validTo ── */
+const certificateStatus = (data) => {
+  if (!data.certificateNumber && data.certificateRatePercent == null) return "None on file";
+  if (!data.certificateValidFrom || !data.certificateValidTo) return "Incomplete";
+  const today = new Date().toISOString().slice(0, 10);
+  if (today < data.certificateValidFrom) return "Not yet active";
+  if (today > data.certificateValidTo) return "Expired";
+  return "Active";
+};
+
 /* ── Credit usage bar ── */
 const CreditBar = ({ creditLimit, outstandingBalance }) => {
   const limit = parseFloat(creditLimit || 0);
@@ -156,6 +166,17 @@ export default function RetailerView({ uKey, onClose, onEdit }) {
                 <Field label="Phone"          value={data.phone} mono />
                 <Field label="Email"          value={data.email} mono />
                 <Field label="GST Number"     value={data.gstNumber} mono accent />
+                <Field label="PAN"            value={data.pan} mono />
+                <Field label="Country"        value={data.country || "IN"} mono />
+                <Field label="Non-Resident / Export Party" value={data.nonResidentParty ? "Yes — excluded from the Retailer-TDS estimate" : "No"}
+                  danger={!!data.nonResidentParty} />
+                <Field label="Buyer Deducts TDS (194Q)" value={data.buyerDeductsTds194Q ? "Yes — tracked as an estimate, not collected by us" : "No"}
+                  danger={!!data.buyerDeductsTds194Q} />
+                <Field label="Lower/Nil Deduction Certificate"
+                  value={certificateStatus(data)}
+                  accent={certificateStatus(data) === "Active"}
+                  danger={certificateStatus(data) === "Expired"}
+                />
                 <Field label="Drug License No" value={data.drugLicenseNumber} mono />
                 <Field label="Credit Limit"
                   value={parseFloat(data.creditLimit || 0) === 0 ? "Unlimited" : `₹${fmt(data.creditLimit)}`}
@@ -164,6 +185,10 @@ export default function RetailerView({ uKey, onClose, onEdit }) {
                 <Field label="Outstanding Balance"
                   value={`₹${fmt(data.outstandingBalance)}`}
                   danger={parseFloat(data.outstandingBalance || 0) > 0}
+                />
+                <Field label="Advance Balance"
+                  value={`₹${fmt(data.advanceBalance)}`}
+                  accent={parseFloat(data.advanceBalance || 0) > 0}
                 />
                 <Field label="Created At"
                   value={data.createdAt ? new Date(data.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}

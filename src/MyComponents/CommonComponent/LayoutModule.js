@@ -5,16 +5,22 @@ import Sidebar from "./Sidebar";
 import Footer from "../CommonComponent/Footer";
 import "../../Styles/layout.css";
 
-function LayoutModule({ theme, onToggleTheme }) {
+function LayoutModule({ theme, onToggleTheme, activeGodownId, godowns, onChangeGodown }) {
 
   return (
     <div className="layout">
-      
+
       <Sidebar />
 
-      
+
       <div className="layout-main ">
-        <NavBarModule theme={theme} onToggleTheme={onToggleTheme} />
+        <NavBarModule
+          theme={theme}
+          onToggleTheme={onToggleTheme}
+          activeGodownId={activeGodownId}
+          godowns={godowns}
+          onChangeGodown={onChangeGodown}
+        />
         <div className="layout-content">
           <Outlet />
         </div>

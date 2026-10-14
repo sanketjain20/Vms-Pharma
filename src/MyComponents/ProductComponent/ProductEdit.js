@@ -239,7 +239,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
     };
 
     try {
-      const res    = await apiClient(`${API_BASE_URL}/api/Product/UpdateProd/${formData.id}`, {
+      const res    = await apiClient(`${API_BASE_URL}/api/Product/UpdateProd/${uKey}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

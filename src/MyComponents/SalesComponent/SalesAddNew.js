@@ -6,6 +6,7 @@ import { toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import CoinField from "../CommonComponent/CoinField";
+import { calculateTcsPreview, partyHasPan } from "../../utils/taxPreview";
 
 /* ─────────────────────────────────────────
    PRODUCT AVATAR — deterministic color + initials, no image needed
@@ -174,6 +175,18 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   const [submitting, setSubmitting] = useState(false);
   const [burstToken, setBurstToken] = useState(0);   // ticks up on a completed sale — see CoinField
 
+  /* ── Retailer-TDS preview (see Utils/tcsPreview.js) — best-effort only,
+     the backend is the source of truth at submit time. 206C(1H) TCS was
+     withdrawn from 1 Apr 2025, so this is never added to the invoice; it's
+     an estimate of what a retailer who has self-declared they deduct 194Q
+     (Retailer.buyerDeductsTds194Q) will withhold when paying us. Stays "not
+     enabled" silently if the current role lacks TCS View permission or any
+     call fails; sale creation itself was never permission-gated, only this
+     preview is. */
+  const [tcsSetting, setTcsSetting]             = useState(null);
+  const [retailerTaxInfo, setRetailerTaxInfo]   = useState(null);
+  const [retailerTurnover, setRetailerTurnover] = useState(null);
+
   /* ══════════ FETCH: retailers, product types, all products ══════════
      Stock and sellingPrice now come directly from the GetAllProduct API.
      No separate inventory API call needed. Selling price is fully managed
@@ -183,9 +196,14 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     apiClient(`${API_BASE_URL}/api/Retailer/Dropdown`)
       .then(r => r.json())
       .then(json => setRetailers(
-        (json?.data ?? []).map(r => ({ id: r.id, name: `${r.shopName} · ${r.ownerName}` }))
+        (json?.data ?? []).map(r => ({ id: r.id, uKey: r.uKey, name: `${r.shopName} · ${r.ownerName}` }))
       ))
       .catch(() => {});
+
+    apiClient(`${API_BASE_URL}/api/TcsSetting/Get`)
+      .then(r => r.json())
+      .then(json => setTcsSetting(json?.status === 200 ? json.data : null))
+      .catch(() => setTcsSetting(null));
 
     apiClient(`${API_BASE_URL}/api/ProductType/GetAllProductType`)
       .then(r => r.json())
@@ -209,6 +227,25 @@ export default function SalesAddNew({ onClose, onSubmit }) {
       .catch(() => {})
       .finally(() => setInitialLoading(false));
   }, []);
+
+  /* ── FETCH SELECTED RETAILER'S PAN/GSTIN + FY TURNOVER, for the TCS preview ── */
+  useEffect(() => {
+    setRetailerTaxInfo(null);
+    setRetailerTurnover(null);
+    const retailer = retailers.find(r => String(r.id) === String(selectedRetailer));
+    if (!retailer?.uKey || !tcsSetting?.enabled) return;
+
+    apiClient(`${API_BASE_URL}/api/Retailer/Get/${retailer.uKey}`)
+      .then(r => r.json())
+      .then(json => setRetailerTaxInfo(json?.status === 200 ? json.data : null))
+      .catch(() => setRetailerTaxInfo(null));
+
+    apiClient(`${API_BASE_URL}/api/TcsSetting/GetPartyTurnover/${retailer.uKey}`)
+      .then(r => r.json())
+      .then(json => setRetailerTurnover(json?.status === 200 ? json.data : null))
+      .catch(() => setRetailerTurnover(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRetailer, tcsSetting?.enabled]);
 
   /* ── Lazy batch fetch (only needed when fine-tuning a cart line) ── */
   const ensureBatches = (productId) => {
@@ -385,12 +422,28 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   const gstAmount = taxMode === "PRODUCT" ? lineTaxTotal : commonTaxAmount;
   const netAmount = discountedSub + gstAmount;
 
-  /* ── Auto-sync payment amount for FULL / CREDIT modes whenever net changes ── */
+  // Retailer-TDS estimate only ever applies against a retailer who has
+  // self-declared they deduct 194Q (SalesCommonRepository requires
+  // buyerDeductsTds194Q === true), matching the backend condition exactly.
+  // This is never added to the invoice — see the state comment above.
+  const retailerTdsPreview = (selectedRetailer && tcsSetting?.enabled && retailerTaxInfo?.buyerDeductsTds194Q)
+    ? calculateTcsPreview({
+        cumulativeBefore: retailerTurnover?.cumulativeConsideration || 0,
+        consideration: netAmount,
+        threshold: tcsSetting.thresholdAmount,
+        ratePercent: tcsSetting.ratePercent,
+        ratePercentWithoutPan: tcsSetting.ratePercentWithoutPan,
+        hasPan: partyHasPan(retailerTaxInfo?.pan, retailerTaxInfo?.gstNumber),
+      })
+    : { taxable: 0, rate: 0, tcs: 0 };
+  const payableAmount = netAmount;
+
+  /* ── Auto-sync payment amount for FULL / CREDIT modes whenever the payable amount changes ── */
   useEffect(() => {
-    if (creditPaymentType === "PAID")   setAmountPaid(netAmount.toFixed(2));
+    if (creditPaymentType === "PAID")   setAmountPaid(payableAmount.toFixed(2));
     if (creditPaymentType === "CREDIT") setAmountPaid("0");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [netAmount, creditPaymentType]);
+  }, [payableAmount, creditPaymentType]);
 
   const resetAll = () => {
     setItems([]);
@@ -419,11 +472,11 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     if (creditPaymentType !== "CREDIT" && !billingMode) tempErrors.billingMode = "Select billing mode";
     if (discountInput < 0)   tempErrors.discountInput = "Discount cannot be negative";
 
-    if (creditPaymentType === "PAID" && parseFloat(amountPaid) !== netAmount)
-      tempErrors.amountPaid = "Amount must equal net amount";
+    if (creditPaymentType === "PAID" && parseFloat(amountPaid) !== payableAmount)
+      tempErrors.amountPaid = "Amount must equal the payable amount";
     if (creditPaymentType === "PARTIAL") {
       if (!amountPaid || amountPaid <= 0) tempErrors.amountPaid = "Enter valid amount paid";
-      else if (parseFloat(amountPaid) >= netAmount) tempErrors.amountPaid = "Partial must be less than total";
+      else if (parseFloat(amountPaid) >= payableAmount) tempErrors.amountPaid = "Partial must be less than total";
     }
     if (creditPaymentType === "CREDIT" && parseFloat(amountPaid) !== 0)
       tempErrors.amountPaid = "Amount paid must be 0 for credit";
@@ -446,7 +499,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
       billingMode,
       totalDiscount: finalDiscount,
       amountPaid: parseFloat(amountPaid),
-      remainingAmount: parseFloat((netAmount - parseFloat(amountPaid)).toFixed(2)),
+      remainingAmount: parseFloat((payableAmount - parseFloat(amountPaid)).toFixed(2)),
       retailerId: selectedRetailer ? parseInt(selectedRetailer) : null,
       paymentType: creditPaymentType,
       dueDate: dueDate || null,
@@ -566,6 +619,9 @@ export default function SalesAddNew({ onClose, onSubmit }) {
             taxableValue={discountedSub}
             gstAmount={gstAmount}
             netAmount={netAmount}
+            retailerTdsPreview={retailerTdsPreview}
+            tcsSetting={tcsSetting}
+            payableAmount={payableAmount}
             errors={errors}
             retailers={retailers}
             selectedRetailer={selectedRetailer} setSelectedRetailer={setSelectedRetailer}
@@ -791,7 +847,7 @@ function CheckoutStep({
   items, increaseQty, decreaseQty, deleteItem, openEdit,
   taxMode, setTaxMode, commonTax, setCommonTax, taxType, setTaxType,
   discountInput, setDiscountInput, discountType, setDiscountType,
-  subTotal, discAmt, taxableValue, gstAmount, netAmount, errors,
+  subTotal, discAmt, taxableValue, gstAmount, netAmount, retailerTdsPreview, tcsSetting, payableAmount, errors,
   retailers, selectedRetailer, setSelectedRetailer,
   billingMode, setBillingMode,
   creditPaymentType, setCreditPaymentType,
@@ -960,6 +1016,19 @@ function CheckoutStep({
                 <span>Net amount</span>
                 <span>₹{netAmount.toFixed(2)}</span>
               </div>
+
+              <div className="san-total-net">
+                <span>Payable amount</span>
+                <span>₹{payableAmount.toFixed(2)}</span>
+              </div>
+              {retailerTdsPreview.tcs > 0 && (
+                <span className="san-hint">
+                  Retailer TDS{tcsSetting?.sectionCode ? ` (${tcsSetting.sectionCode})` : ""}: this retailer is expected to
+                  withhold ~₹{retailerTdsPreview.tcs.toFixed(2)} (@ {retailerTdsPreview.rate}%) when paying you, since their
+                  purchases from you crossed the FY threshold — estimated, not added to this invoice, and not something
+                  you collect or remit.
+                </span>
+              )}
             </div>
 
           </div>
@@ -1002,7 +1071,7 @@ function CheckoutStep({
                       type="button"
                       onClick={() => {
                         setCreditPaymentType(id);
-                        if (id === "PAID")    setAmountPaid(netAmount.toFixed(2));
+                        if (id === "PAID")    setAmountPaid(payableAmount.toFixed(2));
                         if (id === "CREDIT")  setAmountPaid("0");
                         if (id === "PARTIAL") setAmountPaid("");
                       }}
@@ -1050,7 +1119,7 @@ function CheckoutStep({
 
               {creditPaymentType !== "PAID" && parseFloat(amountPaid) >= 0 && (
                 <div className="san-due-badge">
-                  Due: ₹{Math.max(0, netAmount - parseFloat(amountPaid || 0)).toFixed(2)}
+                  Due: ₹{Math.max(0, payableAmount - parseFloat(amountPaid || 0)).toFixed(2)}
                 </div>
               )}
             </div>

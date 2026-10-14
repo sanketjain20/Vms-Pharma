@@ -4,6 +4,7 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { returnValue } from "../../utils/salesSchemes";
 
 export default function SalesReturnAdd({ onClose, onSubmit }) {
   // ── Step state ────────────────────────────────────────────────────────────
@@ -40,6 +41,8 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
             salesItemId:    item.id,
             productName:    item.product,
             sellingPrice:   item.sellingPrice,
+            discountAmount: item.discountAmount || 0,   // what the units were sold off by: the refund is net of it
+            free:           !!item.freeItem,
             max:            item.quantity,
             batchSnapshot:  item.batchNumberSnapshot,
             expirySnapshot: item.expiryDateSnapshot,
@@ -70,7 +73,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
 
   // ── Totals preview ────────────────────────────────────────────────────────
   const totalReturnAmt = returnLines.reduce(
-    (s, l) => s + (l.returnQuantity * l.sellingPrice), 0
+    (s, l) => s + returnValue(l, l.returnQuantity), 0
   );
   const anySelected = returnLines.some(l => l.returnQuantity > 0);
 
@@ -259,7 +262,10 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
                         const active = line.returnQuantity > 0;
                         return (
                           <tr key={idx} style={active ? { background: "var(--afx-accent-soft)" } : undefined}>
-                            <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>{line.productName}</td>
+                            <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>
+                              {line.productName}
+                              {line.free && <strong className="afx-text-success"> FREE</strong>}
+                            </td>
                             <td style={{ fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{line.batchSnapshot || "—"}</td>
                             <td>
                               {line.expirySnapshot ? (
@@ -284,7 +290,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
                               </div>
                             </td>
                             <td style={{ fontWeight: 700, color: active ? "var(--afx-accent)" : "var(--afx-text-2)" }}>
-                              ₹{(line.returnQuantity * line.sellingPrice).toFixed(2)}
+                              ₹{returnValue(line, line.returnQuantity).toFixed(2)}
                             </td>
                           </tr>
                         );

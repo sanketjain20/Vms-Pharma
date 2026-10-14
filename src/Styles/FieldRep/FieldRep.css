@@ -1,0 +1,169 @@
+/* =========================
+   FIELD-REP MODULE (Field Reps + Field Orders office screens)
+   Built on the shared .dg-panel / .gst-* list-page design (see
+   Styles/GstShared/GstListPage.css) — this file only adds what those don't
+   have: segmented sub-tabs, inline forms, the order detail card and the
+   conflict highlighting. Every class is fr-prefixed and uses the --dg-*
+   tokens, so dark/light theming comes for free.
+========================= */
+
+.fr-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  margin-bottom: 18px;
+  border: 1px solid var(--dg-border);
+  border-radius: 10px;
+  background: var(--dg-surface-raised);
+}
+.fr-tab {
+  padding: 7px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dg-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--dg-font);
+  cursor: pointer;
+}
+.fr-tab:hover { color: var(--dg-text-1); }
+.fr-tab.is-active { background: var(--dg-accent-strong); color: #fff; }
+
+.fr-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--dg-border);
+  border-radius: 10px;
+  background: var(--dg-surface-raised);
+}
+.fr-field { display: flex; flex-direction: column; gap: 5px; }
+.fr-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dg-text-3);
+}
+.fr-form-actions { grid-column: 1 / -1; display: flex; gap: 8px; }
+
+.fr-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.fr-sub {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--dg-border);
+  border-radius: 12px;
+  background: var(--dg-surface-raised);
+}
+.fr-sub-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.fr-sub-title { margin: 0; font-size: 14px; font-weight: 700; color: var(--dg-text-1); }
+
+.fr-row-selected td { background: rgba(59, 130, 246, 0.08); }
+.fr-clickable { cursor: pointer; }
+
+/* order detail */
+.fr-detail-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.fr-detail-meta dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--dg-text-3); }
+.fr-detail-meta dd { margin: 2px 0 0; font-size: 13px; font-weight: 600; color: var(--dg-text-1); }
+
+.fr-qty-input {
+  width: 74px;
+  padding: 5px 8px;
+  border: 1px solid var(--dg-border);
+  border-radius: var(--dg-radius-sm);
+  background: var(--dg-surface-raised);
+  color: var(--dg-text-1);
+  font-size: 13px;
+  font-family: var(--dg-font);
+}
+
+/* a line whose price or stock moved since the rep quoted it */
+.fr-conflict-row td { background: rgba(245, 158, 11, 0.08); }
+.fr-changed { color: #d97706; font-weight: 700; }
+.fr-short { color: #dc2626; font-weight: 700; }
+
+.fr-actions { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-top: 14px; }
+.fr-action-group { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+
+.fr-map-link { color: var(--dg-accent-strong); text-decoration: none; font-family: var(--dg-font-mono, monospace); font-size: 12px; }
+.fr-map-link:hover { text-decoration: underline; }
+
+@media (max-width: 720px) {
+  .fr-tabs { display: flex; }
+  .fr-tab { flex: 1; }
+}
+
+/* ── Performance tab ───────────────────────────────────────── */
+.fr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 4px 0 16px; }
+.fr-kpi { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--dg-border); background: var(--dg-surface-raised, var(--dg-surface)); }
+.fr-kpi-label { font-size: 12px; font-weight: 600; color: var(--dg-text-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.fr-kpi-value { font-size: 26px; font-weight: 700; color: var(--dg-text-1); margin-top: 4px; line-height: 1.1; }
+.fr-kpi-sub { font-size: 12.5px; color: var(--dg-text-2); margin-top: 4px; }
+
+.fr-perf-cell { display: flex; align-items: center; gap: 10px; min-width: 150px; }
+.fr-bar { flex: 0 0 64px; height: 7px; border-radius: 4px; background: var(--dg-border); overflow: hidden; }
+.fr-bar > span { display: block; height: 100%; border-radius: 4px; background: var(--dg-slate); }
+.fr-bar--good > span { background: var(--dg-success); }
+.fr-bar--mid > span { background: var(--dg-warning); }
+.fr-bar--poor > span { background: var(--dg-danger); }
+
+.fr-help { margin-top: 18px; font-size: 13px; color: var(--dg-text-2); }
+.fr-help summary { cursor: pointer; font-weight: 600; color: var(--dg-text-1); }
+.fr-help ul { margin: 10px 0 0; padding-left: 20px; display: grid; gap: 6px; }
+
+/* Theme.css forces text colour (!important, very high specificity) on every non-"primary" button in light mode,
+   which turned the ACTIVE tab's white text dark-on-blue. The repeated class is deliberate: it is what outranks it. */
+body[data-theme="light"] .fr-tabs button.fr-tab.is-active.is-active.is-active.is-active { color: #fff !important; }
+
+/* ───────────── previous-period deltas, targets ───────────── */
+.fr-delta { display: inline-block; font-size: 12px; font-weight: 600; }
+.fr-delta--good { color: var(--dg-success, #16a34a); }
+.fr-delta--bad { color: var(--dg-danger, #dc2626); }
+.fr-delta--neutral { color: var(--dg-text-3, #6b7280); }
+.fr-target-cell { display: grid; gap: 4px; min-width: 190px; }
+
+/* ── Pagination + search (Field Reps / Orders / Collections) ───────── */
+.fr-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+.fr-pager-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--dg-border);
+  border-radius: 8px;
+  background: var(--dg-surface-raised);
+  color: var(--dg-text-2);
+  font-family: var(--dg-font);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.fr-pager-btn:hover:not(:disabled):not(.is-active) { border-color: var(--dg-accent); color: var(--dg-accent); }
+.fr-pager-btn.is-active { background: var(--dg-accent); border-color: var(--dg-accent); color: #fff; font-weight: 700; cursor: default; }
+.fr-pager-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.fr-pager-gap { color: var(--dg-text-3); padding: 0 2px; }
+
+.fr-search-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+.fr-search-row .gst-search { flex: 1 1 260px; max-width: 420px; }

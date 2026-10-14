@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AuthLayout from "./AuthLayout";
+import OtpBoxes from "../CommonComponent/OtpBoxes";
 import "../../Styles/Login/ForgotPassword.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
@@ -26,51 +27,6 @@ function StepDots({ current }) {
           </span>
           {i < STEPS.length - 1 && <span className={`auth-step-line${idx > i ? " is-done" : ""}`} />}
         </React.Fragment>
-      ))}
-    </div>
-  );
-}
-
-function OtpBoxes({ value, onChange }) {
-  const refs = useRef([]);
-  const digits = value.padEnd(6, " ").split("").slice(0, 6);
-
-  const handleKey = (e, i) => {
-    if (e.key === "Backspace") {
-      const next = value.slice(0, i > 0 && !value[i] ? i - 1 : i);
-      onChange(next);
-      if (i > 0 && !value[i]) refs.current[i - 1]?.focus();
-    }
-  };
-  const handleChange = (e, i) => {
-    const ch = e.target.value.replace(/\D/g, "").slice(-1);
-    if (!ch) return;
-    const arr = value.padEnd(6, " ").split("");
-    arr[i] = ch;
-    onChange(arr.join("").replace(/\s/g, "").slice(0, 6));
-    if (i < 5) refs.current[i + 1]?.focus();
-  };
-  const handlePaste = (e) => {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (pasted) { onChange(pasted); refs.current[Math.min(pasted.length, 5)]?.focus(); }
-    e.preventDefault();
-  };
-
-  return (
-    <div className="auth-otp-line">
-      {[0, 1, 2, 3, 4, 5].map((i) => (
-        <input
-          key={i}
-          ref={(el) => (refs.current[i] = el)}
-          className={`auth-otp-cell${digits[i] && digits[i] !== " " ? " is-filled" : ""}`}
-          type="text"
-          inputMode="numeric"
-          maxLength={1}
-          value={digits[i] !== " " ? digits[i] : ""}
-          onChange={(e) => handleChange(e, i)}
-          onKeyDown={(e) => handleKey(e, i)}
-          onPaste={handlePaste}
-        />
       ))}
     </div>
   );

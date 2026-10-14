@@ -51,11 +51,25 @@ export function isAuthenticated() {
   }
 }
 
-export default function RequireAuth({ children }) {
+// A field rep only ever works in the rep app; the office screens would just
+// 403 for them, so bounce them to /rep instead of showing broken pages.
+export function isFieldRep() {
+  try {
+    return JSON.parse(localStorage.getItem("vmsUser"))?.data?.fieldRep === true;
+  } catch {
+    return false;
+  }
+}
+
+export default function RequireAuth({ children, allowRep = false }) {
   const location = useLocation();
 
   if (!isAuthenticated()) {
     return <Navigate to="/" replace state={{ from: location }} />;
+  }
+
+  if (isFieldRep() && !allowRep) {
+    return <Navigate to="/rep" replace />;
   }
 
   return children;

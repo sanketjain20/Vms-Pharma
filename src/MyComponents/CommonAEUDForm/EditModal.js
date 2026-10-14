@@ -11,6 +11,8 @@ import SupplierEdit    from "../SupplierComponent/SupplierEdit";
 import PurchaseEdit    from "../PurchaseComponent/PurchaseEdit";
 import ManufacturerEdit from "../ManufacturerComponent/ManufacturerEdit";
 import RetailerEdit from "../RetailerComponent/RetailerEdit";
+import GodownEdit from "../GodownComponent/GodownEdit";
+import SchemeEdit from "../SchemeComponent/SchemeEdit";
 import EventLogDock from "../EventLogComponent/EventLogDock";
 
 export default function EditModal({ isOpen, onClose, moduleName, uKey, onSubmit }) {
@@ -28,6 +30,8 @@ export default function EditModal({ isOpen, onClose, moduleName, uKey, onSubmit 
     case "Purchase":     content = <PurchaseEdit    uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
     case "Manufacturer": content = <ManufacturerEdit uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
     case "Retailer":     content = <RetailerEdit    uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
+    case "Godown":       content = <GodownEdit      uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
+    case "Scheme":       content = <SchemeEdit      uKey={uKey} onClose={onClose} onSubmit={onSubmit} />; break;
     default:             return null;
   }
 

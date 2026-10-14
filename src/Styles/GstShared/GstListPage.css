@@ -44,6 +44,42 @@
   color: var(--dg-text-3);
 }
 
+/* ── Info / "what is this" disclosure ─────────────────────────────── */
+.gst-info {
+  margin-bottom: 16px;
+  border: 1px solid var(--dg-border);
+  border-radius: 10px;
+  background: var(--dg-surface-raised);
+}
+.gst-info summary {
+  cursor: pointer;
+  user-select: none;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dg-accent-strong);
+}
+.gst-info-body {
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--dg-border-soft);
+}
+.gst-info-body p {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--dg-text-2);
+}
+.gst-info-note {
+  color: var(--dg-text-3) !important;
+  font-style: italic;
+}
+.gst-sample-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .gst-count {
   font-family: var(--dg-font-mono);
   font-size: 11px;

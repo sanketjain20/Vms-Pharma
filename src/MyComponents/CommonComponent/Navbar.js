@@ -12,7 +12,7 @@ export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
   const navigate = useNavigate();
   const profileRef = useRef(null);
 
-  const user = JSON.parse(localStorage.getItem("vmsUser")) || {};
+  const user = (() => { try { return JSON.parse(localStorage.getItem("vmsUser")) || {}; } catch { return {}; } })();
   const vendorName = user?.data?.name || "Vendor";
   const vendorShop = user?.data?.shopName || "";
   const profileImage = user?.data?.profilePhoto || null;
@@ -63,7 +63,7 @@ export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
     <header className={`topbar ${sidebarOpen ? "shifted" : ""} ${scrolled ? "scrolled" : ""}`}>
 
       <div className="topbar-left">
-        <img src={udyorawingslogo} alt="Udoyra" className="brand-logo" />
+        <img src={udyorawingslogo} alt="Udyora" className="brand-logo" />
 
         {vendorShop && (
           <div className="shop-badge">

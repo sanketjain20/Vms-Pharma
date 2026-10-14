@@ -22,7 +22,7 @@ const productLabel = (item) => {
   return v;
 };
 
-export default function PurchaseView({ uKey, onClose, onEdit }) {
+export default function PurchaseView({ uKey, onClose, onEdit, documentMode = false }) {
   const [purchase, setPurchase] = useState(null);
   const [error, setError]       = useState("");
   const [ewayBill, setEwayBill] = useState(null);
@@ -31,20 +31,25 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
 
   useEffect(() => {
     if (!uKey) return;
-    apiClient(`${API_BASE_URL}/api/Purchase/GetPurchaseByUKey/${uKey}`, {
+    apiClient(`${API_BASE_URL}/api/${documentMode ? "PurchaseOrder/GetPurchaseOrderByUKey" : "Purchase/GetPurchaseByUKey"}/${uKey}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then(async r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(data => {
-        if (data.status === 200) setPurchase(data.data);
+        if (data.status === 200) setPurchase(documentMode ? {
+          ...data.data,
+          purchaseNumber: data.data.orderNumber,
+          invoiceDate: data.data.orderDate,
+          items: (data.data.items || []).map(item => ({ ...item, costPrice: item.unitCost, mrp: item.unitCost })),
+        } : data.data);
         else setError(data.message || "Failed to fetch purchase");
       })
       .catch(err => setError(err.message));
   }, [uKey]);
 
   useEffect(() => {
-    if (!uKey || !purchase) return;
+    if (documentMode || !uKey || !purchase) return;
     // Purchase itself carries the e-way status summary — no separate
     // status endpoint needed, unlike Sales which currently doesn't expose
     // it on GetSalesByUkey.
@@ -251,6 +256,19 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
                 <div className="afx-totals-row"><span>Total GST</span><span>₹{fmt(totalGst)}</span></div>
                 <div className="afx-totals-divider" />
                 <div className="afx-totals-row afx-totals-grand"><span>Grand Total</span><span>₹{fmt(grandTotal)}</span></div>
+                {parseFloat(purchase.tdsAmount || 0) > 0 && (
+                  <>
+                    <div className="afx-totals-row">
+                      <span>TDS{purchase.tdsSectionCode ? ` (${purchase.tdsSectionCode})` : ""} @ {purchase.tdsRate}%</span>
+                      <span className="afx-text-danger">−₹{fmt(purchase.tdsAmount)}</span>
+                    </div>
+                    <div className="afx-totals-divider" />
+                    <div className="afx-totals-row afx-totals-grand">
+                      <span>Net Payable</span>
+                      <span>₹{fmt(grandTotal - parseFloat(purchase.tdsAmount || 0))}</span>
+                    </div>
+                  </>
+                )}
                 {parseFloat(purchase.remainingAmount || 0) > 0 && (
                   <div className="afx-totals-row"><span>Amount Due</span><span className="afx-text-danger">₹{fmt(purchase.remainingAmount)}</span></div>
                 )}
@@ -262,7 +280,7 @@ export default function PurchaseView({ uKey, onClose, onEdit }) {
         {purchase && (
           <div className="afx-footer">
             <button type="button" className="afx-btn" onClick={onClose}>Close</button>
-            {(!ewayBill || ewayBill.status === "FAILED") && (
+            {!documentMode && (!ewayBill || ewayBill.status === "FAILED") && (
               <button type="button" className="afx-btn" disabled={ewayBusy} onClick={handleGenerateEwayBill}>
                 {ewayBusy ? "Generating…" : "Generate E-Way Bill"}
               </button>

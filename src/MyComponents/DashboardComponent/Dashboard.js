@@ -429,14 +429,14 @@ const VIEW_ICONS = {
 };
 
 const VIEWS = [
-  { id: "today",       label: "Today",       color: "#6366f1" },
-  { id: "month",       label: "This month",  color: "#8b5cf6" },
-  { id: "outstanding", label: "Outstanding", color: "#ef4444" },
-  { id: "pnl",         label: "P&L",         color: "#22c55e" },
-  { id: "inventory",   label: "Inventory",   color: "#10b981" },
-  { id: "analytics",   label: "Analytics",   color: "#3b82f6" },
-  { id: "toplists",    label: "Top lists",   color: "#f59e0b" },
-  { id: "alerts",      label: "Alerts",      color: "#f87171" },
+  { id: "today",       label: "Today's Snapshot",   color: "#6366f1" },
+  { id: "month",       label: "Monthly Summary",    color: "#8b5cf6" },
+  { id: "outstanding", label: "Outstanding Dues",   color: "#ef4444" },
+  { id: "pnl",         label: "Profit & Loss",      color: "#22c55e" },
+  { id: "inventory",   label: "Inventory & Expiry", color: "#10b981" },
+  { id: "analytics",   label: "Charts & Trends",    color: "#3b82f6" },
+  { id: "toplists",    label: "Top Performers",     color: "#f59e0b" },
+  { id: "alerts",      label: "Alerts & Warnings",  color: "#f87171" },
 ];
 
 const ViewSwitcher = ({ active, onChange }) => {
@@ -480,6 +480,37 @@ const ViewSwitcher = ({ active, onChange }) => {
 };
 
 /* ════════════════════════════════════════════
+   SHOW-ALL TOGGLE — sliding switch next to the tab bar; flips between
+   "one section at a time" (tabs) and "every section stacked" so a user
+   who wants the full picture doesn't have to click through each tab.
+════════════════════════════════════════════ */
+const ShowAllToggle = ({ checked, onChange }) => (
+  <label className="db-showall">
+    <span className="db-showall-label">Show all sections</span>
+    <span className={`db-switch ${checked ? "db-switch--on" : ""}`}>
+      <input
+        type="checkbox"
+        role="switch"
+        aria-checked={checked}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span className="db-switch-knob" />
+    </span>
+  </label>
+);
+
+/* ════════════════════════════════════════════
+   SECTION HEADING — divider between stacked sections in "show all" mode
+════════════════════════════════════════════ */
+const SectionHeading = ({ label, color }) => (
+  <div className="db-section-heading">
+    <span className="db-section-dot" style={{ background: color }} />
+    <h2>{label}</h2>
+  </div>
+);
+
+/* ════════════════════════════════════════════
    ICONS for hero/tile metrics
 ════════════════════════════════════════════ */
 const ICN = {
@@ -510,6 +541,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState("today");
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     apiClient(API)
@@ -573,8 +605,8 @@ export default function Dashboard() {
   );
 
   /* ── per-view content ── */
-  const renderView = () => {
-    switch (activeView) {
+  const renderView = (viewId) => {
+    switch (viewId) {
 
       case "today": return (
         <div className="db-metricview">
@@ -795,9 +827,10 @@ export default function Dashboard() {
             <div className="db-badge"><span className="db-badge-dot" />Live analytics</div>
             <h1 className="db-title">Dashboard</h1>
           </div>
+          {!loading && <ShowAllToggle checked={showAll} onChange={setShowAll} />}
         </div>
 
-        {!loading && <ViewSwitcher active={activeView} onChange={setActiveView} />}
+        {!loading && !showAll && <ViewSwitcher active={activeView} onChange={setActiveView} />}
 
         {loading && (
           <div className="db-loading">
@@ -806,7 +839,18 @@ export default function Dashboard() {
           </div>
         )}
 
-        {!loading && <div className="db-view" key={activeView}>{renderView()}</div>}
+        {!loading && !showAll && <div className="db-view" key={activeView}>{renderView(activeView)}</div>}
+
+        {!loading && showAll && (
+          <div className="db-view db-view--all">
+            {VIEWS.map((v) => (
+              <div className="db-section" key={v.id}>
+                <SectionHeading label={v.label} color={v.color} />
+                {renderView(v.id)}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

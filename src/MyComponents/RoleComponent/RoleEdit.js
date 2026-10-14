@@ -111,7 +111,7 @@ export default function RoleEdit({ uKey, onClose, onSubmit }) {
     if (Object.keys(validation).length > 0) { setErrors(validation); return; }
 
     try {
-      const response = await apiClient(`${API_BASE_URL}/api/Roles/Update/${formData.id}`, {
+      const response = await apiClient(`${API_BASE_URL}/api/Roles/Update/${uKey}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roleName: formData.roleName, permissionIds: formData.permissionIds }),

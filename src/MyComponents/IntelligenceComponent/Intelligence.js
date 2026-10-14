@@ -260,13 +260,13 @@ function RankedList({ items = [], emptyText = "No data available" }) {
    VIEW SWITCHER — sliding-pill segmented control, same motif as Dashboard
 ════════════════════════════════════════════ */
 const VIEWS = [
-  { id: "overview", label: "Overview", color: "#6366f1" },
-  { id: "restock", label: "Restock", color: "#10b981" },
-  { id: "clearance", label: "Slow-moving & Expiry", color: "#f59e0b" },
-  { id: "collections", label: "Collections", color: "#ef4444" },
-  { id: "suppliers", label: "Suppliers", color: "#06b6d4" },
-  { id: "profit", label: "Profit", color: "#22c55e" },
-  { id: "forecast", label: "Forecast", color: "#a78bfa" },
+  { id: "overview", label: "Business Overview", color: "#6366f1" },
+  { id: "restock", label: "Restock Recommendations", color: "#10b981" },
+  { id: "clearance", label: "Slow-Moving & Expiring Stock", color: "#f59e0b" },
+  { id: "collections", label: "Retailer Collections", color: "#ef4444" },
+  { id: "suppliers", label: "Supplier Cost Trends", color: "#06b6d4" },
+  { id: "profit", label: "Profit Insights", color: "#22c55e" },
+  { id: "forecast", label: "Demand Forecast", color: "#a78bfa" },
 ];
 
 const VIEW_ICONS = {
@@ -327,6 +327,34 @@ function ViewSwitcher({ active, onChange }) {
 }
 
 /* ════════════════════════════════════════════
+   SHOW-ALL TOGGLE — same sliding switch as the main Dashboard, so a user
+   who wants the full picture can see every section stacked instead of
+   clicking through each tab one at a time.
+════════════════════════════════════════════ */
+const ShowAllToggle = ({ checked, onChange }) => (
+  <label className="vint-showall">
+    <span className="vint-showall-label">Show all sections</span>
+    <span className={`vint-switch ${checked ? "vint-switch-on" : ""}`}>
+      <input
+        type="checkbox"
+        role="switch"
+        aria-checked={checked}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span className="vint-switch-knob" />
+    </span>
+  </label>
+);
+
+const SectionHeading = ({ label, color }) => (
+  <div className="vint-section-heading">
+    <span className="vint-section-dot" style={{ background: color }} />
+    <h2>{label}</h2>
+  </div>
+);
+
+/* ════════════════════════════════════════════
    SETTINGS BAR — page-wide, since Phase 4's threshold overrides now affect
    Restock, Clearance, Collections and Profit, not just Smart Purchase.
    Advanced thresholds are tucked behind a collapsible <details> so the
@@ -381,6 +409,7 @@ export default function Intelligence() {
   const [error, setError] = useState("");
   const [data, setData] = useState(null);
   const [activeView, setActiveView] = useState("overview");
+  const [showAll, setShowAll] = useState(false);
   const [expandedKey, setExpandedKey] = useState(null);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [appliedSettings, setAppliedSettings] = useState(DEFAULT_SETTINGS);
@@ -959,8 +988,8 @@ export default function Intelligence() {
     </>
   );
 
-  const renderView = () => {
-    switch (activeView) {
+  const renderView = (viewId) => {
+    switch (viewId) {
       case "overview":
         return renderOverview();
       case "restock":
@@ -980,6 +1009,8 @@ export default function Intelligence() {
     }
   };
 
+  const showsSettings = showAll || (activeView !== "overview" && activeView !== "suppliers" && activeView !== "forecast");
+
   return (
     <div className="vint-root">
       <div className="vint-header">
@@ -987,14 +1018,17 @@ export default function Intelligence() {
           <h1 className="vint-title">VMS Intelligence</h1>
           <p className="vint-subtitle">Your Business Decision Center — know what to buy, what to sell, what to collect and what to avoid.</p>
         </div>
-        <button className="vint-refresh" onClick={() => load(appliedSettings)} disabled={loading}>
-          {loading ? "Refreshing…" : "Refresh"}
-        </button>
+        <div className="vint-header-actions">
+          {!loading && <ShowAllToggle checked={showAll} onChange={setShowAll} />}
+          <button className="vint-refresh" onClick={() => load(appliedSettings)} disabled={loading}>
+            {loading ? "Refreshing…" : "Refresh"}
+          </button>
+        </div>
       </div>
 
-      {!loading && <ViewSwitcher active={activeView} onChange={setActiveView} />}
+      {!loading && !showAll && <ViewSwitcher active={activeView} onChange={setActiveView} />}
 
-      {!loading && activeView !== "overview" && activeView !== "suppliers" && activeView !== "forecast" && (
+      {!loading && showsSettings && (
         <SettingsBar settings={settings} onChange={handleSettingChange} onApply={handleApply} onReset={handleReset} disabled={loading} />
       )}
 
@@ -1011,7 +1045,18 @@ export default function Intelligence() {
           Loading VMS Intelligence…
         </div>
       ) : (
-        !error && <div className="vint-view" key={activeView}>{renderView()}</div>
+        !error && !showAll && <div className="vint-view" key={activeView}>{renderView(activeView)}</div>
+      )}
+
+      {!loading && !error && showAll && (
+        <div className="vint-view vint-view-all">
+          {VIEWS.map((v) => (
+            <div className="vint-section" key={v.id}>
+              <SectionHeading label={v.label} color={v.color} />
+              {renderView(v.id)}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

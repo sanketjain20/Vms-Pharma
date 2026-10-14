@@ -1,0 +1,239 @@
+/* Marg import page. Layout, buttons, tables and the dropzone come from BulkUpload.css (bulkup-*). */
+
+.marg-steps {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.marg-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border: 1px solid var(--inv-border-mid, rgba(255, 255, 255, 0.07));
+  border-radius: 10px;
+  background: transparent;
+  color: var(--inv-text-2, #9ca3af);
+  font-family: var(--inv-font-m, monospace);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.marg-step:hover {
+  border-color: rgba(59, 130, 246, 0.45);
+  color: var(--inv-text-1, #e4e6f0);
+}
+
+.marg-step-active {
+  border-color: rgba(59, 130, 246, 0.8);
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--inv-text-1, #e4e6f0);
+}
+
+.marg-step-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  font-size: 11px;
+}
+
+.marg-panel {
+  margin-bottom: 18px;
+  padding: 20px;
+}
+
+.marg-desc {
+  margin: 0 0 14px;
+  max-width: 820px;
+  line-height: 1.55;
+  color: var(--inv-text-2, #9ca3af);
+}
+
+.marg-h {
+  margin: 0 0 14px;
+  font-family: var(--inv-font-d, "Oxanium", sans-serif);
+  font-size: 18px;
+}
+
+.marg-kind {
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.marg-kind-btn,
+.marg-filter {
+  padding: 7px 14px;
+  border: 1px solid var(--inv-border-mid, rgba(255, 255, 255, 0.07));
+  border-radius: 999px;
+  background: transparent;
+  color: var(--inv-text-2, #9ca3af);
+  font-family: var(--inv-font-m, monospace);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.marg-kind-active,
+.marg-filter-active {
+  border-color: rgba(59, 130, 246, 0.8);
+  background: rgba(59, 130, 246, 0.14);
+  color: var(--inv-text-1, #e4e6f0);
+}
+
+.marg-columns {
+  margin: 0 0 16px;
+  color: var(--inv-text-2, #9ca3af);
+  font-size: 13px;
+}
+
+.marg-columns summary {
+  cursor: pointer;
+  font-family: var(--inv-font-m, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.marg-columns ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  line-height: 1.7;
+}
+
+.marg-columns code {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.marg-req {
+  color: #fca5a5;
+  font-size: 11px;
+}
+
+.marg-alias {
+  color: var(--inv-text-2, #9ca3af);
+}
+
+.marg-upload {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.marg-upload .bulkup-dropzone {
+  flex: 1 1 320px;
+}
+
+.marg-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.marg-stat {
+  min-width: 110px;
+  padding: 12px 16px;
+  border: 1px solid var(--inv-border-mid, rgba(255, 255, 255, 0.07));
+  border-radius: 10px;
+}
+
+.marg-stat-value {
+  font-family: var(--inv-font-d, "Oxanium", sans-serif);
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.marg-stat-label {
+  margin-top: 4px;
+  color: var(--inv-text-2, #9ca3af);
+  font-family: var(--inv-font-m, monospace);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.marg-stat-good .marg-stat-value { color: #4ade80; }
+.marg-stat-info .marg-stat-value { color: #60a5fa; }
+.marg-stat-bad .marg-stat-value { color: #f87171; }
+
+.marg-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.marg-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-family: var(--inv-font-m, monospace);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.marg-badge-create { background: rgba(74, 222, 128, 0.14); color: #4ade80; }
+.marg-badge-update { background: rgba(96, 165, 250, 0.14); color: #60a5fa; }
+.marg-badge-skip { background: rgba(156, 163, 175, 0.16); color: #9ca3af; }
+.marg-badge-error { background: rgba(248, 113, 113, 0.16); color: #f87171; }
+
+.marg-warning {
+  margin-top: 3px;
+  color: #fbbf24;
+  font-size: 12px;
+}
+
+.marg-note {
+  margin: 10px 0 0;
+  color: var(--inv-text-2, #9ca3af);
+  font-size: 12px;
+}
+
+.marg-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .marg-panel {
+    padding: 14px;
+  }
+}
+
+.marg-sample-btn {
+  margin-bottom: 14px;
+}
+
+.marg-views {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.marg-history-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--inv-text-2, #9ca3af);
+}
+
+.marg-history-failed {
+  color: #f87171;
+}

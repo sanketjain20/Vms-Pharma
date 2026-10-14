@@ -252,7 +252,7 @@ function StatCards({ Module, total, breakdown }) {
  * have to add another `Module === "X"` branch in here — pass a render prop
  * `(row) => <>...buttons...</>` from the screen that needs them via
  * <DynamicGrid extraActions={...} />. */
-function RowActions({ row, selectedStatus, can, Module, isReadOnlyModule, hideActiveInactiveTabs, onEdit, onView, onDisable, onActivate, onDownload, onPaymentCollection, extraActions }) {
+function RowActions({ row, selectedStatus, can, Module, isReadOnlyModule, hideActiveInactiveTabs, onEdit, onView, onDisable, onActivate, onDownload, onPaymentCollection, extraActions, customActionsOnly }) {
   const canCollectPayment = Module === "Retailer Outstanding" || Module === "Supplier Outstanding";
   const paymentTitle = Module === "Supplier Outstanding" ? "Pay Supplier" : "Payment Collection";
 
@@ -265,20 +265,25 @@ function RowActions({ row, selectedStatus, can, Module, isReadOnlyModule, hideAc
   if (isRowInactive) {
     return (
       <>
+        {typeof extraActions === "function" && extraActions(row, { can, onView, ActionIcon })}
+        {!customActionsOnly &&
         <button className="dg-icon-btn dg-icon-btn--view" title="View" onClick={() => onView(row)}><ActionIcon.View /></button>
-        {can("Disable") && <button className="dg-icon-btn dg-icon-btn--activate" title="Activate" onClick={() => onActivate(row)}><ActionIcon.Activate /></button>}
+        }
+        {!customActionsOnly && can("Disable") && <button className="dg-icon-btn dg-icon-btn--activate" title="Activate" onClick={() => onActivate(row)}><ActionIcon.Activate /></button>}
       </>
     );
   }
 
   return (
     <>
+      {typeof extraActions === "function" && extraActions(row, { can, onView, ActionIcon })}
+      {!customActionsOnly && <>
       {can("Edit") && !isReadOnlyModule && <button className="dg-icon-btn dg-icon-btn--edit" title="Edit" onClick={() => onEdit(row)}><ActionIcon.Edit /></button>}
       <button className="dg-icon-btn dg-icon-btn--view" title="View" onClick={() => onView(row)}><ActionIcon.View /></button>
       {canCollectPayment && <button className="dg-icon-btn dg-icon-btn--payment" title={paymentTitle} onClick={() => onPaymentCollection(row)}><ActionIcon.Payment /></button>}
       {Module === "Sales" && can("Download") && <button className="dg-icon-btn dg-icon-btn--download" title="Download" onClick={() => onDownload(row)}><ActionIcon.Download /></button>}
       {Module !== "Sales" && can("Disable") && !isReadOnlyModule && <button className="dg-icon-btn dg-icon-btn--disable" title="Disable" onClick={() => onDisable(row)}><ActionIcon.Disable /></button>}
-      {typeof extraActions === "function" && extraActions(row)}
+      </>}
     </>
   );
 }
@@ -387,7 +392,7 @@ function GridItem({ row, columns, index, ...actionProps }) {
 }
 
 /* ── MAIN COMPONENT ── */
-export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, noPagination = false, extraActions }) {
+export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, noPagination = false, extraActions, customActionsOnly = false, customAddAction, customAddLabel }) {
   const [allData, setAllData] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -428,6 +433,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
     "purchase", "paymentcollection", "supplierpayment", "supplierpaymnet",
     "salesreturn", "purchasereturn", "stockadjustment",
     "retaileroutstanding", "supplieroutstanding", "batch",
+    "purchaseorders", "salesorders", "deliverychallans", "stocktransfers",
   ].includes(moduleKey);
 
   useEffect(() => {
@@ -465,7 +471,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
         // just falls back to no extra per-row access (buttons stay hidden
         // rather than crashing with an unhandled rejection).
       });
-  }, [Module]);
+  }, [Module, ModuleId, roleId]);
 
   const refreshGrid = React.useCallback(() => {
     const query = new URLSearchParams({
@@ -505,6 +511,12 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   }, [apiUrl, noPagination, page, size, searchText, selectedStatus]);
 
   useEffect(() => { refreshGrid(); }, [refreshGrid]);
+
+  useEffect(() => {
+    const refresh = () => refreshGrid();
+    window.addEventListener("document-grid-refresh", refresh);
+    return () => window.removeEventListener("document-grid-refresh", refresh);
+  }, [refreshGrid]);
 
   const counts = React.useMemo(() => {
     const all = allData.length;
@@ -553,7 +565,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   useEffect(() => {
     if (columns.length > 0)
       setColWidths(columns.map(c => c.width || `${Math.floor(100 / columns.length)}%`));
-  }, []);
+  }, [columns]);
 
   const handleEdit = (row) => { setEditUkey(row.uKey); setIsEditOpen(true); };
   const handleView = (row) => { setViewUkey(row.uKey || row.ukey || row.batchUKey || row.batchId || row.id); setIsViewOpen(true); };
@@ -583,6 +595,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
     onEdit: handleEdit, onView: handleView, onDisable: handleDisable,
     onActivate: handleActivate, onDownload: handleDownload, onPaymentCollection: handlePaymentCollection,
     extraActions,
+    customActionsOnly,
   };
 
   const handleSizeChange = (s) => { setSize(s); setPage(0); };
@@ -637,9 +650,9 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
             <ViewToggle view={viewMode} onChange={handleViewChange} />
 
             {can("Add") && !isReadOnlyModule && (
-              <button className="dg-btn-add" onClick={() => setIsModalOpen(true)}>
+              <button className="dg-btn-add" onClick={customAddAction || (() => setIsModalOpen(true))}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                Add {Module}
+                {customAddLabel || `Add ${Module}`}
               </button>
             )}
           </div>

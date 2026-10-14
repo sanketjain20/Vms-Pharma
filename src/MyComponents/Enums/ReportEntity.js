@@ -17,4 +17,5 @@ export const ReportEntity={
     GSTR1:16,
     ProfitLoss:17,
     AuditLog:18,
+    NarcoticRegister:19,
 }

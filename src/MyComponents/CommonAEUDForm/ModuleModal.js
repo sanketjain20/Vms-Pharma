@@ -16,6 +16,8 @@ import SupplierPayment from "../SupplierPaymentComponent/SupplierPaymentAdd";
 import SalesReturnAdd from "../SalesReturnComponent/SalesReturnAdd";
 import PurchaseReturnAdd from "../PurchaseReturnComponent/PurchaseReturnAdd";
 import StockAdjustmentAdd from "../StockAdjustmentComponent/StockAdjustmentAdd";
+import GodownAdd from "../GodownComponent/GodownAdd";
+import SchemeAdd from "../SchemeComponent/SchemeAdd";
 
 export default function ModuleModal({ isOpen, onClose, moduleName, onSubmit }) {
   if (!isOpen) return null;
@@ -37,6 +39,8 @@ export default function ModuleModal({ isOpen, onClose, moduleName, onSubmit }) {
     case "Sales Return": content = <SalesReturnAdd onSubmit={onSubmit} onClose={onClose} />; break;
     case "Purchase Return": content = <PurchaseReturnAdd onSubmit={onSubmit} onClose={onClose} />; break;
     case "Stock Adjustment": content = <StockAdjustmentAdd onSubmit={onSubmit} onClose={onClose} />; break;
+    case "Godown":       content = <GodownAdd      onSubmit={onSubmit} onClose={onClose} />; break;
+    case "Scheme":       content = <SchemeAdd      onSubmit={onSubmit} onClose={onClose} />; break;
     default:             return null;
   }
 

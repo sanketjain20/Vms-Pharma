@@ -20,7 +20,7 @@ function Footer() {
         
         <div className="footer-copy">
           <span className="footer-dot" />
-          <span>© {currentYear} Udoyra. All rights reserved.</span>
+          <span>© {currentYear} Udyora. All rights reserved.</span>
           <span className="footer-dot" />
         </div>
 

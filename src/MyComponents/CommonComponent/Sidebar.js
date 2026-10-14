@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/Sidebar.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { buildMenu, searchMenu } from "./sidebarMenu";
 
 /* ── Icon primitives ──────────────────────────────────────────
    Clean stroke-based glyphs (no filled Material Symbols) so every
@@ -33,6 +34,8 @@ const iconMap = {
   ewaybill: <S><rect x="2" y="6.2" width="9" height="6.8" rx="1" /><path d="M11 8.7h3.2L17 11.2v1.8h-6" /><circle cx="6" cy="15.3" r="1.6" /><circle cx="14" cy="15.3" r="1.6" /></S>,
   // Document with a checkmark — portal data matched/reconciled against books.
   gstr2recon: <S><path d="M4 3.5h6.5l3.5 3.5v9.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-12a1 1 0 011-1z" /><path d="M10.5 3.5V7H14" /><path d="M6.3 11.8l1.8 1.8 3.8-4" /></S>,
+  // Person with a route pin — a salesman out on a beat.
+  fieldsales: <S><circle cx="8" cy="6.5" r="2.6" /><path d="M3 16.5a5 5 0 0110 0" /><path d="M15.5 8.2c1.3 0 2.3 1 2.3 2.3 0 1.6-2.3 3.7-2.3 3.7s-2.3-2.1-2.3-3.7c0-1.3 1-2.3 2.3-2.3z" /></S>,
   default: <S><rect x="3" y="3" width="6" height="6" rx="1.5" /><rect x="11" y="3" width="6" height="6" rx="1.5" /><rect x="3" y="11" width="6" height="6" rx="1.5" /><rect x="11" y="11" width="6" height="6" rx="1.5" /></S>,
 };
 
@@ -52,6 +55,7 @@ const colorMap = {
   einvoice: "#14b8a6",
   ewaybill: "#f43f5e",
   gstr2recon: "#84cc16",
+  fieldsales: "#f97316",
   default: "#6b7280",
 };
 
@@ -76,6 +80,10 @@ const subIconMap = {
   einvoice:  <Ss><path d="M5 1.8h4.2L12 4.6v8.6a.9.9 0 01-.9.9H5a.9.9 0 01-.9-.9V2.7A.9.9 0 015 1.8z" /><path d="M9.2 1.8v2.8H12" /><path d="M9 6.6l-2 2.9h1.9l-1.6 2.7" /></Ss>,
   ewaybill:  <Ss><rect x="1.6" y="5" width="7.2" height="5.4" rx="0.8" /><path d="M8.8 7h2.6l2.2 2v1.4H8.8" /><circle cx="4.8" cy="12.2" r="1.3" /><circle cx="11.6" cy="12.2" r="1.3" /></Ss>,
   gstr2recon: <Ss><path d="M3.2 1.8h5.2l2.8 2.8v7.7a.8.8 0 01-.8.8H3.2a.8.8 0 01-.8-.8V2.6a.8.8 0 01.8-.8z" /><path d="M8.4 1.8v2.8h2.8" /><path d="M5 9.4l1.4 1.4 3-3.3" /></Ss>,
+  warehouse: <Ss><path d="M1.5 6.4L8 2l6.5 4.4V14H1.5V6.4z" /><path d="M6 14V9.5h4V14" /></Ss>,
+  fieldrep:  <Ss><circle cx="6.5" cy="5" r="2.2" /><path d="M2.2 13.5a4.3 4.3 0 018.6 0" /><path d="M12.5 6.5c1 0 1.8.8 1.8 1.8 0 1.3-1.8 3-1.8 3s-1.8-1.7-1.8-3c0-1 .8-1.8 1.8-1.8z" /></Ss>,
+  fieldcollection: <Ss><rect x="2" y="4" width="12" height="8" rx="1.4" /><circle cx="8" cy="8" r="1.8" /><path d="M4.2 6.2v.01M11.8 9.8v.01" /></Ss>,
+  fieldorder: <Ss><path d="M4 2h6l3 3v8.5a.8.8 0 01-.8.8H4a.8.8 0 01-.8-.8V2.8A.8.8 0 014 2z" /><path d="M10 2v3h3" /><path d="M5.6 9l1.6 1.6 3-3.2" /></Ss>,
 };
 
 const subColorMap = {
@@ -99,44 +107,103 @@ const subColorMap = {
   einvoice: "#14b8a6",
   ewaybill: "#f43f5e",
   gstr2recon: "#84cc16",
+  warehouse: "#06b6d4",
+  fieldrep: "#f97316",
+  fieldorder: "#fb923c",
+  fieldcollection: "#fbbf24",
 };
 
-const normalize = (s = "") => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
-const formatName = (name) =>
-  name.toString().toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+/* Icons for the pages and sub menus that have no dedicated glyph above. */
+const SUB_ICONS = {
+  ...subIconMap,
+  home: <Ss><path d="M2 7.6L8 2.4l6 5.2" /><path d="M3.6 6.6V13a.8.8 0 00.8.8H6.6V10h2.8v3.8h2.2a.8.8 0 00.8-.8V6.6" /></Ss>,
+  reports: <Ss><path d="M3 13.5V9M7 13.5V3.5M11 13.5V7M14.5 13.5V10" /></Ss>,
+  scheduler: <Ss><circle cx="8" cy="8.4" r="5.6" /><path d="M8 5.4v3.2l2.4 1.6" /></Ss>,
+  bulkupload: <Ss><path d="M8 10.5V3M8 3L5.4 5.6M8 3l2.6 2.6" /><path d="M3 10.8V12a.8.8 0 00.8.8h8.4a.8.8 0 00.8-.8v-1.2" /></Ss>,
+  default: <Ss><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="9" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="2.5" y="9" width="4.5" height="4.5" rx="1" /><rect x="9" y="9" width="4.5" height="4.5" rx="1" /></Ss>,
+};
+const SUB_COLORS = {
+  ...subColorMap,
+  home: "#6366f1",
+  reports: "#0ea5e9",
+  scheduler: "#a78bfa",
+  bulkupload: "#fb923c",
+  default: "#6b7280",
+};
+const subIcon = (key) => SUB_ICONS[key] || SUB_ICONS.default;
+const subColor = (key) => SUB_COLORS[key] || SUB_COLORS.default;
 
-/* ── SubMenu panel ────────────────────────────────────────── */
-function SubMenu({ items, sidebarOpen, onNavigate }) {
-  const sortedItems = [...items]
-    .map((item) => item.children
-      ? { ...item, children: [...item.children].sort((a, b) => a.label.localeCompare(b.label)) }
-      : item)
-    .sort((a, b) => a.label.localeCompare(b.label));
+/* ── SubMenu panels (cascading) ───────────────────────────────
+   Level 2 lists the sub menus and pages directly under a main menu; a sub menu shows a caret and opens
+   level 3 (its pages) in a second panel beside it — hover, tap, Enter or the right arrow. Only one level-3
+   panel is open at a time, so nothing is ever listed all at once. Order is the menu's own, not alphabetical. */
+function SubMenu({ items, sidebarOpen, onSelect }) {
+  const [openGroup, setOpenGroup] = useState(null);
+  const group = items.find((i) => i.type === "group" && i.label === openGroup) || null;
 
-  const renderItem = ({ label, key, icon, color, nested }) => (
-    <div key={key} className={`sb-submenu-item ${nested ? "nested" : ""}`} onClick={() => onNavigate(key)}>
-      <span className="sb-sub-chip" style={{ "--ssc-color": color || subColorMap.product }}>{icon || subIconMap.product}</span>
-      <span>{label}</span>
+  const renderLeaf = (leaf, inGroup) => (
+    <div
+      key={leaf.route || leaf.navKey}
+      className="sb-submenu-item"
+      role="menuitem"
+      tabIndex={0}
+      onMouseEnter={() => { if (!inGroup) setOpenGroup(null); }}
+      onClick={(e) => { e.stopPropagation(); onSelect(leaf); }}
+      onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onSelect(leaf); } }}
+    >
+      <span className="sb-sub-chip" style={{ "--ssc-color": subColor(leaf.icon) }}>{subIcon(leaf.icon)}</span>
+      <span className="sb-submenu-label">{leaf.label}</span>
     </div>
   );
 
+  const baseLeft = sidebarOpen ? "var(--sb-w-open)" : "var(--sb-w-col)";
+
   return (
-    <div className="sb-submenu" style={{ left: sidebarOpen ? "var(--sb-w-open)" : "var(--sb-w-col)" }}>
-      <div className="sb-submenu-glow-line" />
-      {sortedItems.map((item) =>
-        item.children ? (
-          <div key={item.label} className="sb-sub-group">
-            <div className="sb-subgroup-header">
-              <span className="sb-sub-chip" style={{ "--ssc-color": item.color || subColorMap.product }}>{item.icon || subIconMap.product}</span>
-              <span>{item.label}</span>
+    <>
+      <div className="sb-submenu" role="menu" style={{ left: baseLeft }}>
+        <div className="sb-submenu-glow-line" />
+        {items.map((item) =>
+          item.type === "group" ? (
+            <div
+              key={item.label}
+              className={`sb-submenu-item has-children ${openGroup === item.label ? "is-open" : ""}`}
+              role="menuitem"
+              aria-haspopup="true"
+              aria-expanded={openGroup === item.label}
+              tabIndex={0}
+              onMouseEnter={() => setOpenGroup(item.label)}
+              onClick={(e) => { e.stopPropagation(); setOpenGroup((cur) => (cur === item.label ? null : item.label)); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === "ArrowRight") { e.stopPropagation(); setOpenGroup(item.label); }
+                if (e.key === "Escape" || e.key === "ArrowLeft") { e.stopPropagation(); setOpenGroup(null); }
+              }}
+            >
+              <span className="sb-sub-chip" style={{ "--ssc-color": subColor(item.icon) }}>{subIcon(item.icon)}</span>
+              <span className="sb-submenu-label">{item.label}</span>
+              <span className="sb-sub-caret" aria-hidden="true">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1.5L7 5l-4 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </span>
             </div>
-            <div className="sb-subgroup-items">
-              {item.children.map((child) => renderItem({ ...child, nested: true }))}
-            </div>
+          ) : renderLeaf(item, false)
+        )}
+      </div>
+
+      {group && (
+        <div
+          className="sb-submenu sb-submenu--l3"
+          role="menu"
+          aria-label={group.label}
+          style={{ "--sb-l2-left": baseLeft }}
+        >
+          <div className="sb-submenu-glow-line" />
+          <div className="sb-l3-head">
+            <button type="button" className="sb-l3-back" aria-label={`Back from ${group.label}`} onClick={(e) => { e.stopPropagation(); setOpenGroup(null); }}>‹</button>
+            <span>{group.label}</span>
           </div>
-        ) : renderItem(item)
+          {group.children.map((c) => renderLeaf(c, true))}
+        </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -158,14 +225,16 @@ function SidebarItem({ icon, color, label, open, onClick, hasSubmenu, isHovered,
   );
 }
 
-/* ── Divider ──────────────────────────────────────────────── */
-function SidebarDivider() {
-  return (
-    <div className="sb-divider">
-      <div className="sb-divider-line" />
-    </div>
-  );
-}
+/* Main menu -> rail icon + accent colour (reusing the existing rail glyphs). */
+const MAIN_LOOK = {
+  home: { icon: iconMap.home, color: colorMap.home },
+  overview: { icon: iconMap.dashboard, color: colorMap.dashboard },
+  masters: { icon: iconMap.product, color: colorMap.product },
+  inventory: { icon: iconMap.inventory, color: colorMap.inventory },
+  billing: { icon: iconMap.sales, color: colorMap.sales },
+  field: { icon: iconMap.fieldsales, color: colorMap.fieldsales },
+  admin: { icon: iconMap.vendor, color: colorMap.vendor },
+};
 
 /* ── Main Sidebar ─────────────────────────────────────────── */
 export default function Sidebar() {
@@ -177,6 +246,14 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
   const toggleRef = useRef(null);
+  const closeTimer = useRef(null);
+
+  const openMenu = (id) => { clearTimeout(closeTimer.current); setHoveredMenu(id); };
+  const scheduleClose = () => {
+    clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setHoveredMenu(null), 140);
+  };
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
 
   useEffect(() => {
     apiClient(`${API_BASE_URL}/api/Access/GetModules`, {
@@ -208,107 +285,23 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleNavigation = (moduleName) => {
-    const path = String(moduleName)
-      .replace(/([a-z])([A-Z])/g, "$1-$2")
-      .toLowerCase()
-      .replace(/_/g, "-")
-      .replace(/\s+/g, "-");
-    navigate(`/master/${path}`);
+  /* A page with an explicit route goes there; a module the menu doesn't know about falls back to its generated path. */
+  const goTo = (leaf) => {
+    if (leaf.route) {
+      navigate(leaf.route);
+    } else {
+      const path = String(leaf.navKey)
+        .replace(/([a-z])([A-Z])/g, "$1-$2")
+        .toLowerCase()
+        .replace(/_/g, "-")
+        .replace(/\s+/g, "-");
+      navigate(`/master/${path}`);
+    }
     setHoveredMenu(null);
   };
 
-  const normalizedSet = new Set(modules.map((m) => normalize(m)));
-  const find = (k) => modules.find((m) => normalize(m) === k) || null;
-  const has = (k) => normalizedSet.has(normalize(k));
-
-  /* ── Group: Masters ── */
-  const hasProduct = has("product");
-  const hasProductType = has("producttype");
-  const hasRetailer = has("retailer");
-  const hasSupplier = has("supplier");
-  const hasManufacturer = has("manufacturer");
-  const hasMasters = hasProduct || hasProductType || hasRetailer || hasSupplier || hasManufacturer;
-
-  /* ── Group: Billing / Transactions ── */
-  const hasSales = has("sales");
-  const hasPurchase = has("purchase");
-  const hasPayment = has("paymentcollection");
-  const hasSupplierPayment = has("supplierpayment");
-  const hasSalesReturn = has("salesreturn");
-  const hasPurchaseReturn = has("purchasereturn");
-  const hasRetailerOutstanding = has("retaileroutstanding");
-  const hasSupplierOutstanding = has("supplieroutstanding");
-  const hasBilling = hasSales || hasPurchase || hasPayment || hasSupplierPayment || hasSalesReturn || hasPurchaseReturn || hasRetailerOutstanding || hasSupplierOutstanding;
-
-  /* ── Standalone items ── */
-  const hasInventory = has("inventory");
-  const hasBatch =   has("batch") || has("batches");
-  const hasStockAdjustment = has("stockadjustment") || has("stockadjustments") || has("stock adjustment") || has("stock_adjustment");
-  const hasExpiryAlerts = has("expiryalerts") || has("expiryalert") || has("alerts");
-  const hasReorderAlerts = has("reorderalerts") || has("reorderalert") || has("lowstockalerts") || has("lowstockalert") || has("alerts");
-  const hasDashboard = has("dashboard");
-  const hasIntelligence = has("intelligence");
-  const hasReports = has("reports") || has("report");
-  const hasScheduler = has("scheduler");
-  const hasBulkUpload = has("bulkuploadmanagement") || has("bulk upload") || has("bulk_upload");
-
-  /* ── Group: Vendor & Roles ── */
-  const hasVendor = has("vendor");
-  const hasRoles = has("roles");
-  const hasVendorGroup = hasVendor || hasRoles;
-
-  /* ── Group: GST Compliance ── */
-  const hasEinvoice = has("einvoice");
-  const hasEwaybill = has("ewaybill");
-  const hasGstr2Recon = has("gstr2recon");
-  const hasGstGroup = hasEinvoice || hasEwaybill || hasGstr2Recon;
-
-  /* ── Unknown/other modules ── */
-  const knownKeys = [
-    "product", "producttype", "retailer", "supplier", "manufacturer",
-    "sales", "purchase", "paymentcollection",
-    "inventory", "batch", "batches", "stockadjustment", "stockadjustments", "expiryalerts", "expiryalert", "reorderalerts", "reorderalert", "lowstockalerts", "lowstockalert", "alerts", "dashboard", "intelligence", "reports", "report", "scheduler",
-    "bulkuploadmanagement", "bulk upload", "bulk_upload",
-    "vendor", "roles", "supplierpayment", "salesreturn", "purchasereturn", "retaileroutstanding", "supplieroutstanding",
-    "einvoice", "ewaybill", "gstr2recon",
-  ];
-  const otherModules = modules.filter(m => !knownKeys.includes(normalize(m)));
-
-  const searchResults = [
-    { label: "Home", route: "/home" },
-    hasDashboard && { label: "Dashboard", route: "/master/dashboard" },
-    hasIntelligence && { label: "VMS Intelligence", route: "/master/intelligence" },
-    hasManufacturer && { label: "Manufacturer", route: "/master/manufacturer" },
-    hasProduct && { label: "Product", route: "/master/product" },
-    hasProductType && { label: "Product Type", route: "/master/product-type" },
-    hasRetailer && { label: "Retailer", route: "/master/retailer" },
-    hasSupplier && { label: "Supplier", route: "/master/supplier" },
-    hasBatch && { label: "Batches", route: "/master/batch" },
-    hasExpiryAlerts && { label: "Expiry Alerts", route: "/master/alerts" },
-    hasInventory && { label: "Inventory", route: "/master/inventory" },
-    hasReorderAlerts && { label: "Reorder Alerts", route: "/master/reorder-alerts" },
-    hasStockAdjustment && { label: "Stock Adjustment", route: "/master/stock-adjustment" },
-    hasPayment && { label: "Payment Collection", route: "/master/payment-collection" },
-    hasPurchase && { label: "Purchase", route: "/master/purchase" },
-    hasPurchaseReturn && { label: "Purchase Return", route: "/master/purchase-return" },
-    hasRetailerOutstanding && { label: "Retailer Outstanding", route: "/master/retailer-outstanding" },
-    hasSales && { label: "Sales", route: "/master/sales" },
-    hasSalesReturn && { label: "Sales Return", route: "/master/sales-return" },
-    hasSupplierOutstanding && { label: "Supplier Outstanding", route: "/master/supplier-outstanding" },
-    hasSupplierPayment && { label: "Supplier Payment", route: "/master/supplier-payment" },
-    hasBulkUpload && { label: "Bulk Data Upload", route: "/master/bulk-upload" },
-    hasReports && { label: "Reports", route: "/master/reports" },
-    hasScheduler && { label: "Job Scheduler", route: "/master/job-scheduler" },
-    hasRoles && { label: "Roles", route: "/master/roles" },
-    hasVendor && { label: "Vendor", route: "/master/vendor" },
-    hasEinvoice && { label: "E-Invoices", route: "/master/e-invoice" },
-    hasEwaybill && { label: "E-Way Bills", route: "/master/e-way-bill" },
-    hasGstr2Recon && { label: "GSTR-2 Reconciliation", route: "/master/gstr2-recon" },
-    ...otherModules.map((module) => ({ label: formatName(module), key: module })),
-  ].filter(Boolean)
-    .filter((item) => item.label.toLowerCase().includes(searchQuery.trim().toLowerCase()))
-    .sort((a, b) => a.label.localeCompare(b.label));
+  const menu = useMemo(() => buildMenu(modules), [modules]);
+  const searchResults = searchMenu(menu, searchQuery);
 
   return (
     <>
@@ -340,288 +333,35 @@ export default function Sidebar() {
           {searchQuery && (
             <div className="sb-search-results">
               {searchResults.length ? searchResults.map((item) => (
-                <button key={item.label} onClick={() => {
-                  if (item.route) navigate(item.route);
-                  else handleNavigation(item.key);
-                  setSearchQuery("");
-                }}>
-                  {item.label}
+                <button key={`${item.path}/${item.label}`} onClick={() => { goTo(item); setSearchQuery(""); }}>
+                  <span className="sb-sr-label">{item.label}</span>
+                  <span className="sb-sr-path">{item.path}</span>
                 </button>
               )) : <span>No matching module</span>}
             </div>
           )}
 
-          <SidebarItem
-            icon={iconMap.home}
-            color={colorMap.home}
-            label="Home"
-            open={open}
-            onClick={() => navigate("/home")}
-          />
-
-          {(hasDashboard || hasIntelligence) && (
-            <SidebarItem
-              icon={iconMap.dashboard}
-              color={colorMap.dashboard}
-              label="Dashboard"
-              open={open}
-              hasSubmenu={hasDashboard && hasIntelligence}
-              isHovered={hoveredMenu === "dashboard"}
-              onMouseEnter={() => setHoveredMenu("dashboard")}
-              onMouseLeave={() => setHoveredMenu(null)}
-              onClick={() =>
-                !(hasDashboard && hasIntelligence) &&
-                handleNavigation((hasDashboard ? find("dashboard") : find("intelligence")) || (hasDashboard ? "dashboard" : "intelligence"))
-              }
-            >
-              {hasDashboard && hasIntelligence && (
-                <SubMenu
-                  sidebarOpen={open}
-                  onNavigate={handleNavigation}
-                  items={[
-                    { label: "Dashboard", key: find("dashboard") || "Dashboard", icon: subIconMap.dashboard, color: subColorMap.dashboard },
-                    { label: "VMS Intelligence", key: find("intelligence") || "Intelligence", icon: subIconMap.intelligence, color: subColorMap.intelligence },
-                  ]}
-                />
-              )}
-            </SidebarItem>
-          )}
-
-          <SidebarDivider />
-
-          {hasMasters && (
-            <SidebarItem
-              icon={iconMap.product}
-              color={colorMap.product}
-              label="Masters"
-              open={open}
-              hasSubmenu
-              isHovered={hoveredMenu === "masters"}
-              onMouseEnter={() => setHoveredMenu("masters")}
-              onMouseLeave={() => setHoveredMenu(null)}
-            >
-              <SubMenu
-                sidebarOpen={open}
-                onNavigate={handleNavigation}
-                items={[
-                  hasManufacturer && { label: "Manufacturer", key: find("manufacturer") || "Manufacturer", icon: subIconMap.factory, color: subColorMap.factory },
-                  hasSupplier && { label: "Supplier", key: find("supplier") || "Supplier", icon: subIconMap.supplier, color: subColorMap.supplier },
-                  hasRetailer && { label: "Retailer", key: find("retailer") || "Retailer", icon: subIconMap.user, color: subColorMap.user },
-                  hasProductType && { label: "Product Type", key: find("producttype") || "ProductType", icon: subIconMap.type, color: subColorMap.type },
-                  hasProduct && { label: "Product", key: find("product") || "Product", icon: subIconMap.product, color: subColorMap.product },
-                ].filter(Boolean)}
-              />
-            </SidebarItem>
-          )}
-
-          {(hasInventory || hasBatch || hasStockAdjustment || hasExpiryAlerts || hasReorderAlerts) && (
-            <SidebarItem
-              icon={iconMap.inventory}
-              color={colorMap.inventory}
-              label="Inventory"
-              open={open}
-              hasSubmenu={hasInventory || hasBatch || hasStockAdjustment || hasExpiryAlerts || hasReorderAlerts}
-              isHovered={hoveredMenu === "inventory"}
-              onMouseEnter={() => setHoveredMenu("inventory")}
-              onMouseLeave={() => setHoveredMenu(null)}
-              onClick={() =>
-                !(hasInventory || hasBatch || hasStockAdjustment || hasExpiryAlerts || hasReorderAlerts) &&
-                handleNavigation(find("inventory") || "inventory")
-              }
-            >
-              {(hasInventory || hasBatch || hasStockAdjustment || hasExpiryAlerts || hasReorderAlerts) && (
-                <SubMenu
-                  sidebarOpen={open}
-                  onNavigate={handleNavigation}
-                  items={[
-                    hasInventory && {
-                      label: "Inventory",
-                      key: find("inventory") || "Inventory",
-                      icon: subIconMap.inventory,
-                      color: subColorMap.inventory,
-                    },
-                    hasBatch && {
-                      label: "Batches",
-                      key: find("batch") || find("batches") || "Batch",
-                      icon: subIconMap.batch,
-                      color: subColorMap.batch,
-                    },
-                    hasStockAdjustment && {
-                      label: "Stock Adjustment",
-                      key: find("stockadjustment") || find("stockadjustments") || find("stock adjustment") || find("stock_adjustment") || "StockAdjustment",
-                      icon: subIconMap.reorder,
-                      color: subColorMap.reorder,
-                    },
-                    hasExpiryAlerts && {
-                      label: "Expiry Alerts",
-                      key:
-                        find("expiryalerts") ||
-                        find("expiryalert") ||
-                        find("alerts")||
-                        "Alerts",
-                      icon: subIconMap.alert,
-                      color: subColorMap.alert,
-                    },
-                    hasReorderAlerts && {
-                      label: "Reorder Alerts",
-                      key: "ReorderAlerts",
-                      icon: subIconMap.reorder,
-                      color: subColorMap.reorder,
-                    },
-                  ].filter(Boolean)}
-                />
-              )}
-            </SidebarItem>
-          )}
-
-          <SidebarDivider />
-
-          {hasBilling && (
-            <SidebarItem
-              icon={iconMap.sales}
-              color={colorMap.sales}
-              label="Billing"
-              open={open}
-              hasSubmenu
-              isHovered={hoveredMenu === "billing"}
-              onMouseEnter={() => setHoveredMenu("billing")}
-              onMouseLeave={() => setHoveredMenu(null)}
-            >
-              <SubMenu
-                sidebarOpen={open}
-                onNavigate={handleNavigation}
-                items={[
-                  (hasSales || hasSalesReturn) && {
-                    label: "Sales",
-                    icon: subIconMap.sales,
-                    color: subColorMap.sales,
-                    children: [
-                      hasSales && { label: "Sales", key: find("sales") || "Sales", icon: subIconMap.sales, color: subColorMap.sales },
-                      hasSalesReturn && { label: "Sales Return", key: find("salesreturn") || "SalesReturn", icon: subIconMap.return, color: subColorMap.return },
-                    ].filter(Boolean),
-                  },
-                  (hasPurchase || hasPurchaseReturn) && {
-                    label: "Purchase",
-                    icon: subIconMap.purchase,
-                    color: subColorMap.purchase,
-                    children: [
-                      hasPurchase && { label: "Purchase", key: find("purchase") || "Purchase", icon: subIconMap.purchase, color: subColorMap.purchase },
-                      hasPurchaseReturn && { label: "Purchase Return", key: find("purchasereturn") || "PurchaseReturn", icon: subIconMap.return, color: subColorMap.return },
-                    ].filter(Boolean),
-                  },
-                  (hasPayment || hasSupplierPayment) && {
-                    label: "Payments",
-                    icon: subIconMap.payment,
-                    color: subColorMap.payment,
-                    children: [
-                      hasPayment && { label: "Payment Collection", key: find("paymentcollection") || "PaymentCollection", icon: subIconMap.payment, color: subColorMap.payment },
-                      hasSupplierPayment && { label: "Supplier Payment", key: find("supplierpayment") || "SupplierPayment", icon: subIconMap.payment, color: subColorMap.payment },
-                    ].filter(Boolean),
-                  },
-                  (hasRetailerOutstanding || hasSupplierOutstanding) && {
-                    label: "Outstanding",
-                    icon: subIconMap.ledger,
-                    color: subColorMap.ledger,
-                    children: [
-                      hasRetailerOutstanding && { label: "Retailer Outstanding", key: find("retaileroutstanding") || "RetailerOutstanding", icon: subIconMap.ledger, color: subColorMap.ledger },
-                      hasSupplierOutstanding && { label: "Supplier Outstanding", key: find("supplieroutstanding") || "SupplierOutstanding", icon: subIconMap.ledger, color: subColorMap.ledger },
-                    ].filter(Boolean),
-                  },
-                ].filter(Boolean)}
-              />
-            </SidebarItem>
-          )}
-
-          <SidebarDivider />
-
-          {hasReports && (
-            <SidebarItem
-              icon={iconMap.reports}
-              color={colorMap.reports}
-              label="Reports"
-              open={open}
-              onClick={() => handleNavigation(find("reports") || find("report") || "reports")}
-            />
-          )}
-
-          {hasScheduler && (
-            <SidebarItem
-              icon={iconMap.scheduler}
-              color={colorMap.scheduler}
-              label="Scheduler"
-              open={open}
-              onClick={() => handleNavigation(find("scheduler") || "scheduler")}
-            />
-          )}
-
-          {hasBulkUpload && (
-            <SidebarItem
-              icon={iconMap.bulkupload}
-              color={colorMap.bulkupload}
-              label="Bulk Data Upload"
-              open={open}
-              onClick={() => handleNavigation(find("bulkupload") || find("bulk upload management") || find("BULK_UPLOAD_MANAGEMENT") || "BulkUpload")}
-            />
-          )}
-
-          {hasGstGroup && (
-            <SidebarItem
-              icon={iconMap.einvoice}
-              color={colorMap.einvoice}
-              label="GST Compliance"
-              open={open}
-              hasSubmenu
-              isHovered={hoveredMenu === "gst"}
-              onMouseEnter={() => setHoveredMenu("gst")}
-              onMouseLeave={() => setHoveredMenu(null)}
-            >
-              <SubMenu
-                sidebarOpen={open}
-                onNavigate={handleNavigation}
-                items={[
-                  hasEinvoice && { label: "E-Invoices", key: find("einvoice") || "EInvoice", icon: subIconMap.einvoice, color: subColorMap.einvoice },
-                  hasEwaybill && { label: "E-Way Bills", key: find("ewaybill") || "EWayBill", icon: subIconMap.ewaybill, color: subColorMap.ewaybill },
-                  hasGstr2Recon && { label: "GSTR-2 Reconciliation", key: find("gstr2recon") || "Gstr2Recon", icon: subIconMap.gstr2recon, color: subColorMap.gstr2recon },
-                ].filter(Boolean)}
-              />
-            </SidebarItem>
-          )}
-
-          <SidebarDivider />
-
-          {hasVendorGroup && (
-            <SidebarItem
-              icon={iconMap.vendor}
-              color={colorMap.vendor}
-              label="Vendor & Roles"
-              open={open}
-              hasSubmenu
-              isHovered={hoveredMenu === "vendor"}
-              onMouseEnter={() => setHoveredMenu("vendor")}
-              onMouseLeave={() => setHoveredMenu(null)}
-            >
-              <SubMenu
-                sidebarOpen={open}
-                onNavigate={handleNavigation}
-                items={[
-                  hasVendor && { label: "Vendor", key: find("vendor") || "Vendor", icon: subIconMap.user, color: subColorMap.user },
-                  hasRoles && { label: "Roles", key: find("roles") || "Roles", icon: subIconMap.role, color: subColorMap.role },
-                ].filter(Boolean)}
-              />
-            </SidebarItem>
-          )}
-
-          {otherModules.map((mod) => (
-            <SidebarItem
-              key={mod}
-              icon={iconMap[normalize(mod)] || iconMap.default}
-              color={colorMap[normalize(mod)] || colorMap.default}
-              label={formatName(mod)}
-              open={open}
-              onClick={() => handleNavigation(mod)}
-            />
-          ))}
-
+          {menu.map((main) => {
+            const look = MAIN_LOOK[main.id] || { icon: iconMap.default, color: colorMap.default };
+            const hasSubmenu = !main.direct;
+            return (
+              <SidebarItem
+                key={main.id}
+                icon={look.icon}
+                color={look.color}
+                label={main.label}
+                open={open}
+                hasSubmenu={hasSubmenu}
+                isHovered={hoveredMenu === main.id}
+                onMouseEnter={() => hasSubmenu && openMenu(main.id)}
+                onMouseLeave={scheduleClose}
+                /* tap/click also opens it, for touch screens that have no hover */
+                onClick={() => (main.direct ? goTo(main.direct) : (clearTimeout(closeTimer.current), setHoveredMenu((cur) => (cur === main.id ? null : main.id))))}
+              >
+                {hasSubmenu && <SubMenu sidebarOpen={open} onSelect={goTo} items={main.items} />}
+              </SidebarItem>
+            );
+          })}
         </nav>
       </aside>
     </>

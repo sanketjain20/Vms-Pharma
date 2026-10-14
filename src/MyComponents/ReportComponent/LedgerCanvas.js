@@ -54,9 +54,9 @@ export default function LedgerCanvas({ variant = "shelf" }) {
     const si = reduced ? null : setInterval(spawnBloom, bloomInterval);
 
     const base = () => (light ? "#f4f7fb" : "#000000");
-    const ruleColor = () => (light ? "rgba(37,99,235,0.07)" : "rgba(212,175,55,0.055)");
+    const ruleColor = () => (light ? "rgba(36,80,168,0.07)" : "rgba(91,139,239,0.055)");
     const fiberColor = () => (light ? "20,19,15" : "245,245,247");
-    const bloomHue = () => (light ? "37,99,235" : "212,175,55");
+    const bloomHue = () => (light ? "36,80,168" : "91,139,239");
 
     const drawRules = (t) => {
       const horizon = H * (variant === "shelf" ? 0.16 : 0.5);
