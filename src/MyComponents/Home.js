@@ -1,9 +1,12 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Home.css";
 import API_BASE_URL from "../Config/api.config";
 import apiClient from "../Config/apiClient";
-import AuroraBackground from "./CommonComponent/AuroraBackground";
+
+/* The 3D scenes pull in three.js — lazy, so it is only downloaded for this page. */
+const StockFlowScene = lazy(() => import("./HomeScenes/StockFlowScene"));
+const RobotScene = lazy(() => import("./HomeScenes/RobotScene"));
 
 /* ── Ray band — Stripe-style radiating fan, contained in one panel ──────
    A single <canvas> sized to its own section, not the viewport. Sky
@@ -490,51 +493,70 @@ function LiveClock() {
   return <span className="hc-watch-time">{time}</span>;
 }
 
+/* ── Scroll reveal ──
+   Fades + slides its children in the first time they come within 100px of
+   the viewport's bottom edge, then stays put. `from`: up | left | right.
+   No IntersectionObserver (old browser, jsdom) → shown straight away. */
+export function Reveal({ as: Tag = "div", from = "up", delay = 0, duration = 0.8, distance, className = "", style, children, ...rest }) {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(() => typeof IntersectionObserver === "undefined");
+
+  useEffect(() => {
+    if (shown || !ref.current) return undefined;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) { setShown(true); io.disconnect(); }
+      },
+      { rootMargin: "0px 0px -100px 0px" }
+    );
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [shown]);
+
+  return (
+    <Tag
+      ref={ref}
+      className={`hc-reveal hc-reveal--${from}${shown ? " is-in" : ""}${className ? ` ${className}` : ""}`}
+      style={{
+        "--rv-delay": `${delay}s`,
+        "--rv-dur": `${duration}s`,
+        ...(distance != null ? { "--rv-dist": `${distance}px` } : null),
+        ...style,
+      }}
+      {...rest}
+    >
+      {children}
+    </Tag>
+  );
+}
+
 const ICONS = {
-  purchase: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M2 9h14M2 5h14M2 13h8"/><circle cx="14" cy="13" r="3"/><path d="M14 11.5v1.5l1 1"/></svg>,
-  sales: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M3 3h12l-1.5 9H4.5z"/><circle cx="7" cy="16" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>,
-  inventory: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="2" y="2" width="14" height="4" rx="1"/><rect x="2" y="8" width="14" height="4" rx="1"/><rect x="2" y="14" width="8" height="2" rx="1"/></svg>,
-  retailer: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16a6 6 0 0112 0"/></svg>,
-  payment: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="2" y="5" width="14" height="10" rx="2"/><path d="M2 9h14M6 9v6"/></svg>,
-  reports: <svg width="22" height="22" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M2 14l4-5 4 3 4-7"/><circle cx="14" cy="5" r="1" fill="currentColor"/></svg>,
+  purchase: <svg width="26" height="26" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M2 9h14M2 5h14M2 13h8"/><circle cx="14" cy="13" r="3"/><path d="M14 11.5v1.5l1 1"/></svg>,
+  sales: <svg width="26" height="26" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M3 3h12l-1.5 9H4.5z"/><circle cx="7" cy="16" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>,
+  inventory: <svg width="26" height="26" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="2" y="2" width="14" height="4" rx="1"/><rect x="2" y="8" width="14" height="4" rx="1"/><rect x="2" y="14" width="8" height="2" rx="1"/></svg>,
+  retailer: <svg width="26" height="26" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16a6 6 0 0112 0"/></svg>,
+  payment: <svg width="26" height="26" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="2" y="5" width="14" height="10" rx="2"/><path d="M2 9h14M6 9v6"/></svg>,
+  reports: <svg width="26" height="26" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M2 14l4-5 4 3 4-7"/><circle cx="14" cy="5" r="1" fill="currentColor"/></svg>,
 };
 
+const ARROW_RIGHT = <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h12M11 5l5 5-5 5"/></svg>;
+const ARROW_UP_RIGHT = <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11l6-6M6 5h5v5"/></svg>;
+
 const MODULES = [
-  { key: "purchase",  label: "Purchase",  hint: "Stock in · supplier dues",   from: "#7c3aed", to: "#ec4899", path: "/master/purchase" },
-  { key: "sales",     label: "Sales",     hint: "FIFO billing · invoices",    from: "#06b6d4", to: "#3b82f6", path: "/master/salesshrt" },
-  { key: "inventory", label: "Inventory", hint: "Live stock · expiry",        from: "#a3e635", to: "#16a34a", path: "/master/inventory" },
-  { key: "retailer",  label: "Retailers", hint: "Credit · outstanding",       from: "#fb923c", to: "#ef4444", path: "/master/retailer" },
-  { key: "payment",   label: "Payments",  hint: "Collect · due tracking",     from: "#facc15", to: "#f97316", path: "/master/payment-collection" },
-  { key: "reports",   label: "Reports",   hint: "GSTR-1 · recall trace",      from: "#818cf8", to: "#c084fc", path: "/master/reports" },
+  { key: "purchase",  label: "Purchase",  tag: "Stock in",    hint: "Stock in · supplier dues",   from: "#7c3aed", to: "#ec4899", path: "/master/purchase" },
+  { key: "sales",     label: "Sales",     tag: "Billing",     hint: "FIFO billing · invoices",    from: "#06b6d4", to: "#3b82f6", path: "/master/salesshrt" },
+  { key: "inventory", label: "Inventory", tag: "Stock",       hint: "Live stock · expiry",        from: "#a3e635", to: "#16a34a", path: "/master/inventory" },
+  { key: "retailer",  label: "Retailers", tag: "Customers",   hint: "Credit · outstanding",       from: "#fb923c", to: "#ef4444", path: "/master/retailer" },
+  { key: "payment",   label: "Payments",  tag: "Collections", hint: "Collect · due tracking",     from: "#facc15", to: "#f97316", path: "/master/payment-collection" },
+  { key: "reports",   label: "Reports",   tag: "Insight",     hint: "GSTR-1 · recall trace",      from: "#818cf8", to: "#c084fc", path: "/master/reports" },
 ];
 
-/* Moved out of the component body: these JSX icons were being rebuilt on
-   every render (and every 45s ticker poll) for no reason. */
+/* Moved out of the component body: these were being rebuilt on every
+   render (and every 45s ticker poll) for no reason. */
 const QUICK_ACTIONS = [
-  {
-    key: "billing",
-    label: "Start billing",
-    sub: "FIFO · invoice now",
-    path: "/master/salesshrt",
-    color: "#22d3ee",
-    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 3h12l-1.5 9H4.5z"/><circle cx="7" cy="16" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>,
-  },
-  {
-    key: "dashboard",
-    label: "Dashboard",
-    sub: "Live metrics · trends",
-    path: "/master/dashboard",
-    color: "#a3e635",
-    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 14l4-5 4 3 4-7"/><circle cx="14" cy="5" r="1" fill="currentColor"/></svg>,
-  },
-  {
-    key: "onboarding",
-    label: "How it works",
-    sub: "Flow guide · setup",
-    path: "/onboarding",
-    color: "#fb923c",
-    icon: <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="5" r="2.5"/><path d="M4 15a5 5 0 0110 0"/><path d="M9 10v3M7.5 12h3"/></svg>,
-  },
+  { key: "billing",    label: "Quick Sale",   sub: "FIFO · invoice now",     path: "/master/salesshrt" },
+  { key: "dashboard",  label: "Dashboard",    sub: "Live metrics · trends",  path: "/master/dashboard" },
+  { key: "onboarding", label: "How it works", sub: "Flow guide · setup",     path: "/onboarding" },
 ];
 
 const [PRIMARY_ACTION, ...SECONDARY_ACTIONS] = QUICK_ACTIONS;
@@ -562,6 +584,12 @@ const STAT_COLOR_BY_KEY = {
   outstandingDues: "#ec4899",
 };
 
+function greetingFor(hour) {
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const user = (() => { try { return JSON.parse(localStorage.getItem("vmsUser")) || {}; } catch { return {}; } })();
@@ -569,8 +597,9 @@ export default function Home() {
 
   const [stats, setStats] = useState(FALLBACK_STATS);
   const [ticker, setTicker] = useState([]);
-  const [checklist, setChecklist] = useState(FALLBACK_CHECKLIST);
+  const [checklist] = useState(FALLBACK_CHECKLIST);
   const [loadingStats, setLoadingStats] = useState(true);
+
 
   /* Ray palette, remembered per browser. */
   const [rayPreset, setRayPreset] = useState(() => {
@@ -653,126 +682,220 @@ export default function Home() {
     "Live activity will appear here once today's first action is logged",
   ];
 
+  const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
   return (
-    <>
-      <AuroraBackground />
-      <div className="hc-page">
+    <div className="hc-page" id="hc-home">
+
+      {/* ══ HERO — 3D stock flow, glass nav, greeting, quick actions, live pulse ══ */}
+      <section className="hc-hero">
+        <div className="hc-hero-glow" aria-hidden="true" />
+        <Suspense fallback={null}>
+          <StockFlowScene className="hc-hero-scene" />
+        </Suspense>
+        <div className="hc-hero-shade" aria-hidden="true" />
 
         <header className="hc-nav">
-          <span className="hc-nav-mark">VMS</span>
-          <div className="hc-nav-right">
-            <span className="hc-live"><span className="hc-live-dot" />Live</span>
-            <span className="hc-clock">
-              <AnalogWatch />
-              <LiveClock />
-            </span>
+          <div className="hc-nav-pill hc-glass hc-rise" style={{ "--i": 0 }}>
+            <div className="hc-nav-left">
+              <span className="hc-nav-mark">VMS</span>
+              <nav className="hc-nav-links" aria-label="On this page">
+                <button type="button" className="hc-nav-link" onClick={() => scrollTo("hc-modules")}>Modules</button>
+                <button type="button" className="hc-nav-link" onClick={() => scrollTo("hc-flow")}>Flow</button>
+                <button type="button" className="hc-nav-link" onClick={() => scrollTo("hc-why")}>Why VMS</button>
+              </nav>
+            </div>
+            <div className="hc-nav-right">
+              <span className="hc-live"><span className="hc-live-dot" />Live</span>
+              <span className="hc-clock hc-glass">
+                <AnalogWatch />
+                <LiveClock />
+              </span>
+            </div>
           </div>
         </header>
 
-        <section className="hc-hero">
-          <h1 className="hc-hero-title">
-            Namaste, {name}.
+        <div className="hc-hero-body">
+          <span className="hc-eyebrow hc-rise" style={{ "--i": 1 }}>{greetingFor(new Date().getHours())}</span>
+          <h1 className="hc-hero-title hc-rise" style={{ "--i": 2 }}>
+            Namaste, <em>{name}</em>.
           </h1>
-          <p className="hc-hero-sub">Here's your pulse today.</p>
+          <p className="hc-hero-sub hc-rise" style={{ "--i": 3 }}>
+            Here's your pulse today — every bill, batch and balance, kept current while you work.
+          </p>
 
-          <div className="hc-hero-actions">
-            <button className="hc-btn-primary" onClick={() => navigate(PRIMARY_ACTION.path)}>
-              {PRIMARY_ACTION.label}
-            </button>
+          <button
+            type="button"
+            className="hc-quick hc-glass hc-rise"
+            style={{ "--i": 4 }}
+            onClick={() => navigate(PRIMARY_ACTION.path)}
+          >
+            <span className="hc-quick-text">
+              <span className="hc-quick-label">{PRIMARY_ACTION.label}</span>
+              <span className="hc-quick-sub">{PRIMARY_ACTION.sub}</span>
+            </span>
+            <span className="hc-quick-go" aria-hidden="true">{ARROW_RIGHT}</span>
+          </button>
+
+          <div className="hc-hero-actions hc-rise" style={{ "--i": 5 }}>
             {SECONDARY_ACTIONS.map(a => (
-              <button key={a.key} className="hc-btn-link" onClick={() => navigate(a.path)}>
+              <button key={a.key} type="button" className="hc-btn-glass hc-glass" onClick={() => navigate(a.path)} title={a.sub}>
                 {a.label}
               </button>
             ))}
           </div>
-        </section>
+        </div>
 
         <section className="hc-stats" aria-label="Today's summary">
-          {stats.map((s) => (
-            <div key={s.key} className="hc-stat" style={{ "--stat-color": s.color }}>
+          {stats.map((s, i) => (
+            <div key={s.key} className="hc-stat hc-glass hc-rise" style={{ "--stat-color": s.color, "--i": 6 + i * 0.5 }} data-testid={`stat-${s.key}`}>
+              <span className="hc-stat-top">
+                <span className="hc-stat-dot" aria-hidden="true" />
+                <span className="hc-stat-lbl">{s.label}</span>
+              </span>
               <span className="hc-stat-val">
                 {loadingStats ? "—" : <CountUp target={s.value} prefix={s.prefix} />}
               </span>
-              <span className="hc-stat-lbl">{s.label}</span>
             </div>
           ))}
         </section>
 
-        <div className="hc-ticker">
-          <div className="hc-ticker-track">
-            {[...tickerItems, ...tickerItems].map((t, i) => (
-              <span key={i} className="hc-ticker-item">{t}</span>
+        <div className="hc-ticker-wrap hc-rise" style={{ "--i": 8 }}>
+          <div className="hc-ticker hc-glass" aria-label="Logged activity">
+            <span className="hc-ticker-tag"><span className="hc-live-dot" />Activity</span>
+            <div className="hc-ticker-window">
+              <div className="hc-ticker-track">
+                {[...tickerItems, ...tickerItems].map((t, i) => (
+                  <span key={i} className="hc-ticker-item" aria-hidden={i >= tickerItems.length || undefined}>{t}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ STATEMENT — "About us" style headline reveal ══ */}
+      <section className="hc-section hc-section--glow">
+        <div className="hc-container">
+          <Reveal as="span" className="hc-label" duration={0.6} distance={20}>Your workspace</Reveal>
+          <Reveal as="h2" className="hc-statement" delay={0.1}>
+            Billing, stock and dues <em>for</em>
+            <br className="hc-br-desktop" />
+            {" "}<em>businesses that run on trust, speed, and books that balance.</em>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ══ MODULES — glass cards, staggered ══ */}
+      <section className="hc-section" id="hc-modules">
+        <div className="hc-container">
+          <Reveal className="hc-head-line" duration={0.7} distance={30}>
+            <h2 className="hc-h2">Open a module</h2>
+            <span className="hc-head-aside">Everything, one tap away</span>
+          </Reveal>
+          <div className="hc-module-grid">
+            {MODULES.map((m, i) => (
+              <Reveal
+                key={m.key}
+                as="button"
+                type="button"
+                className="hc-module hc-glass"
+                delay={(i % 3) * 0.15}
+                distance={50}
+                style={{ "--tint-a": m.from, "--tint-b": m.to }}
+                onClick={() => navigate(m.path)}
+              >
+                <span className="hc-module-art" aria-hidden="true">
+                  <span className="hc-module-art-fill" />
+                  <span className="hc-module-icon">{ICONS[m.key]}</span>
+                </span>
+                <span className="hc-module-body">
+                  <span className="hc-module-meta">
+                    <span className="hc-module-tag">{m.tag}</span>
+                    <span className="hc-module-arrow hc-glass" aria-hidden="true">{ARROW_UP_RIGHT}</span>
+                  </span>
+                  <span className="hc-module-label">{m.label}</span>
+                  <span className="hc-module-hint">{m.hint}</span>
+                </span>
+              </Reveal>
             ))}
           </div>
         </div>
+      </section>
 
-        <section className="hc-section">
-          <h2 className="hc-section-title">Open a module</h2>
-          <div className="hc-module-grid">
-            {MODULES.map(m => (
-              <div
-                key={m.key}
-                className="hc-module-tile"
-                style={{ "--tint": m.to }}
-                onClick={() => navigate(m.path)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={e => e.key === "Enter" && navigate(m.path)}
-              >
-                <span className="hc-module-icon">{ICONS[m.key]}</span>
-                <span className="hc-module-label">{m.label}</span>
-                <span className="hc-module-hint">{m.hint}</span>
+      {/* ══ FEATURED — the ray band as the feature still, glass card + action on top ══ */}
+      <section className="hc-section" id="hc-flow">
+        <div className="hc-container">
+          <Reveal className="hc-featured" distance={60} duration={0.9}>
+            {/* Colour is picked in-panel and remembered in localStorage.
+                density: 0.6 on low-end phones, 1.4 for a denser fan. */}
+            <RayField preset={rayPreset} presets={RAY_PRESETS} onPresetChange={setRayPreset} density={1}>
+              <span className="hc-rayband-eyebrow">Move your cursor across it</span>
+            </RayField>
+            <div className="hc-featured-shade" aria-hidden="true" />
+            <div className="hc-featured-foot">
+              <div className="hc-featured-card hc-glass">
+                <span className="hc-label">One entry, every trail</span>
+                <p>
+                  A single bill fans out — batch, retailer ledger, outstanding, GSTR-1 —
+                  in one pass, with nothing to re-enter.
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
+              <button type="button" className="hc-btn-glass hc-glass" onClick={() => navigate("/master/dashboard")}>
+                Explore the dashboard
+              </button>
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
-        {/* ── Ray band ──
-            Colour is picked in-panel and remembered in localStorage.
-            density: 0.6 on low-end phones, 1.4 for a denser fan.
-            Move this <section> anywhere in the page; it owns its own box. */}
-        <section className="hc-section">
-          <h2 className="hc-section-title">One entry, every trail</h2>
-          <RayField
-            preset={rayPreset}
-            presets={RAY_PRESETS}
-            onPresetChange={setRayPreset}
-            density={1}
-          >
-            <span className="hc-rayband-eyebrow">Move your cursor across it</span>
-            <p className="hc-rayband-line">
-              A single bill fans out — batch, retailer ledger, outstanding, GSTR-1 —
-              in one pass, with nothing to re-enter.
-            </p>
-          </RayField>
-        </section>
-
-        <section className="hc-section">
-          <h2 className="hc-section-title">Why it runs itself</h2>
-          <div className="hc-feature-list">
-            {checklist.map((f, i) => (
-              <div key={i} className="hc-feature-row">
-                <span className="hc-feature-check" style={{ "--check-color": f.color }}>
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.2l2.6 2.6L10 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </span>
-                <div>
-                  <span className="hc-feature-label">{f.label}</span>
-                  <span className="hc-feature-sub">{f.sub}</span>
+      {/* ══ WHY — the juggling robot beside what VMS keeps in balance ══ */}
+      <section className="hc-section" id="hc-why">
+        <div className="hc-container">
+          <Reveal as="h2" className="hc-big">
+            Every box, <em>in</em> balance
+          </Reveal>
+          <Reveal as="p" className="hc-why-line" delay={0.1}>
+            Stock, sales, GST, dues and cash — when business gets busy, VMS keeps every box in the air
+            and none of them on the floor.
+          </Reveal>
+          <div className="hc-split">
+            <Reveal from="left" className="hc-split-media hc-split-media--robot">
+              <Suspense fallback={null}>
+                <RobotScene />
+              </Suspense>
+              <span className="hc-scene-tag hc-glass">Move your cursor to look around</span>
+            </Reveal>
+            <Reveal from="right" className="hc-feature-list">
+              {checklist.map((f, i) => (
+                <div key={i} className="hc-feature">
+                  <span className="hc-feature-dot" style={{ "--check-color": f.color }} aria-hidden="true" />
+                  <div>
+                    <span className="hc-feature-label">{f.label}</span>
+                    <span className="hc-feature-sub">{f.sub}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </Reveal>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="hc-closing">
-          <h2>Ready to close today's register?</h2>
-          <p>First bill in under 30 minutes. One owner, zero complexity.</p>
-          <button className="hc-btn-primary hc-btn-large" onClick={() => navigate(PRIMARY_ACTION.path)}>
-            Start billing
+      {/* ══ CLOSING ══ */}
+      <section className="hc-closing">
+        <Reveal as="h2" className="hc-h2">Ready to close <em className="hc-serif-i">today's</em> register?</Reveal>
+        <Reveal as="p" delay={0.1}>First bill in under 30 minutes. One owner, zero complexity.</Reveal>
+        <Reveal delay={0.2}>
+          <button type="button" className="hc-quick hc-glass" onClick={() => navigate(PRIMARY_ACTION.path)}>
+            <span className="hc-quick-text">
+              <span className="hc-quick-label">Start billing</span>
+              <span className="hc-quick-sub">{PRIMARY_ACTION.sub}</span>
+            </span>
+            <span className="hc-quick-go" aria-hidden="true">{ARROW_RIGHT}</span>
           </button>
-        </section>
+        </Reveal>
+      </section>
 
-      </div>
-    </>
+    </div>
   );
 }

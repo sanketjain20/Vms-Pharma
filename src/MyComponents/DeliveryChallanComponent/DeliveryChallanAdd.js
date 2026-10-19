@@ -51,7 +51,11 @@ const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setO
   );
 };
 
-const EMPTY_ITEM = { productId: "", productName: "", quantity: 1, unitPrice: "" };
+const EMPTY_ITEM = { productId: "", productName: "", quantity: 1, unitPrice: "", gstRate: 18, schemeId: "" };
+const GST_RATES = [0, 5, 12, 18, 28];
+
+/* Default credit period for the invoice the challan becomes (same 30 days the backend falls back on). */
+const inThirtyDays = () => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().slice(0, 10); };
 
 function extractList(json) {
   const data = json?.data;
@@ -85,6 +89,13 @@ export default function DeliveryChallanAdd({ onSubmit, onClose }) {
     vehicleNumber: "",
     transporter: "",
     notes: "",
+    // what the sales invoice will be raised with when this challan is converted
+    billingMode: "CASH",
+    paymentType: "CREDIT",
+    dueDate: inThirtyDays(),
+    amountPaid: "",
+    totalDiscount: "",
+    autoApplySchemes: true,
     items: [{ ...EMPTY_ITEM }],
   });
 
@@ -134,6 +145,10 @@ export default function DeliveryChallanAdd({ onSubmit, onClose }) {
     if (!form.retailerId) e.retailerId = "Retailer is required";
     if (!form.godownId) e.godownId = "Godown is required";
     if (!form.date) e.date = "Challan date is required";
+    if ((form.paymentType === "CREDIT" || form.paymentType === "PARTIAL") && !form.dueDate) e.dueDate = "Due date is required for credit / partial payment";
+    if (Number(form.amountPaid || 0) < 0) e.amountPaid = "Amount paid cannot be negative";
+    else if (form.paymentType === "CREDIT" && Number(form.amountPaid || 0) !== 0) e.amountPaid = "Amount paid must be 0 for credit";
+    if (Number(form.totalDiscount || 0) < 0) e.totalDiscount = "Discount cannot be negative";
     if (form.items.length === 0) e.items_empty = "Add at least one item";
     const itemErrors = {};
     form.items.forEach((item, i) => {
@@ -163,10 +178,18 @@ export default function DeliveryChallanAdd({ onSubmit, onClose }) {
         vehicleNumber: form.vehicleNumber || null,
         transporter: form.transporter || null,
         notes: form.notes,
+        billingMode: form.billingMode,
+        paymentType: form.paymentType,
+        dueDate: form.paymentType === "PAID" ? null : (form.dueDate || null),
+        amountPaid: Number(form.amountPaid || 0),
+        totalDiscount: Number(form.totalDiscount || 0),
+        autoApplySchemes: form.autoApplySchemes !== false,
         items: form.items.map(it => ({
           productId: Number(it.productId),
           quantity: Number(it.quantity),
           unitPrice: it.unitPrice === "" || it.unitPrice == null ? null : Number(it.unitPrice),
+          gstRate: Number(it.gstRate ?? 18),
+          schemeId: it.schemeId === "" || it.schemeId == null ? null : Number(it.schemeId),
         })),
       };
       const res = await apiClient(`${API_BASE_URL}/api/DeliveryChallan/AddDeliveryChallan`, {
@@ -194,7 +217,7 @@ export default function DeliveryChallanAdd({ onSubmit, onClose }) {
   const productName = p => p.name || p.productName || `Product #${p.id}`;
   const totalValue = form.items.reduce((s, i) => s + (Number(i.quantity || 0) * Number(i.unitPrice || 0)), 0);
 
-  const hasDetailErrors = errors.retailerId || errors.godownId || errors.date;
+  const hasDetailErrors = errors.retailerId || errors.godownId || errors.date || errors.dueDate || errors.amountPaid || errors.totalDiscount;
   const hasItemErrors = errors.items_empty || errors.items;
 
   return (
@@ -313,6 +336,91 @@ export default function DeliveryChallanAdd({ onSubmit, onClose }) {
                     />
                   </div>
 
+                  <div className="afx-section-title afx-field--full">Invoice settings (used when converted to a sale)</div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Billing mode</label>
+                    <select className="afx-select" aria-label="Billing mode" value={form.billingMode} onChange={e => setField("billingMode", e.target.value)}>
+                      <option value="CASH">Cash</option>
+                      <option value="ONLINE">Online / UPI</option>
+                      <option value="CARD">Card</option>
+                    </select>
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Payment type</label>
+                    <select
+                      className="afx-select"
+                      aria-label="Payment type"
+                      value={form.paymentType}
+                      onChange={e => {
+                        const v = e.target.value;
+                        setField("paymentType", v);
+                        if (v === "CREDIT") setField("amountPaid", "");
+                      }}
+                    >
+                      <option value="PAID">Paid</option>
+                      <option value="CREDIT">Credit</option>
+                      <option value="PARTIAL">Partial</option>
+                    </select>
+                  </div>
+
+                  {form.paymentType !== "PAID" && (
+                    <div className="afx-field">
+                      <label className="afx-label">Due date<span className="afx-req">*</span></label>
+                      <input
+                        className={`afx-input ${errors.dueDate ? "afx-input--err" : ""}`}
+                        type="date"
+                        aria-label="Due date"
+                        value={form.dueDate}
+                        onChange={e => setField("dueDate", e.target.value)}
+                      />
+                      {errors.dueDate && <span className="afx-error">{errors.dueDate}</span>}
+                    </div>
+                  )}
+
+                  {form.paymentType !== "CREDIT" && (
+                    <div className="afx-field">
+                      <label className="afx-label">Amount paid (₹)</label>
+                      <input
+                        className={`afx-input ${errors.amountPaid ? "afx-input--err" : ""}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        aria-label="Amount paid"
+                        value={form.amountPaid}
+                        onChange={e => setField("amountPaid", e.target.value)}
+                      />
+                      {errors.amountPaid && <span className="afx-error">{errors.amountPaid}</span>}
+                    </div>
+                  )}
+
+                  <div className="afx-field">
+                    <label className="afx-label">Invoice discount (₹)</label>
+                    <input
+                      className={`afx-input ${errors.totalDiscount ? "afx-input--err" : ""}`}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      aria-label="Invoice discount"
+                      value={form.totalDiscount}
+                      onChange={e => setField("totalDiscount", e.target.value)}
+                    />
+                    {errors.totalDiscount && <span className="afx-error">{errors.totalDiscount}</span>}
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">
+                      <input
+                        type="checkbox"
+                        aria-label="Apply schemes automatically"
+                        checked={form.autoApplySchemes}
+                        onChange={e => setField("autoApplySchemes", e.target.checked)}
+                      />{" "}
+                      Apply schemes automatically
+                    </label>
+                  </div>
+
                   <div className="afx-field">
                     <label className="afx-label">Sales order key (optional)</label>
                     <input
@@ -397,6 +505,29 @@ export default function DeliveryChallanAdd({ onSubmit, onClose }) {
                                   value={item.unitPrice}
                                   onChange={e => updateItem(i, "unitPrice", e.target.value)}
                                   placeholder="Leave blank for godown price"
+                                />
+                              </div>
+                              <div className="afx-item-field">
+                                <label className="afx-item-field-label">GST %</label>
+                                <select
+                                  className="afx-cell-input"
+                                  aria-label={`GST rate item ${i + 1}`}
+                                  value={item.gstRate}
+                                  onChange={e => updateItem(i, "gstRate", e.target.value)}
+                                >
+                                  {GST_RATES.map(rate => <option key={rate} value={rate}>{rate}%</option>)}
+                                </select>
+                              </div>
+                              <div className="afx-item-field">
+                                <label className="afx-item-field-label">Scheme ID</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  className="afx-cell-input"
+                                  aria-label={`Scheme ID item ${i + 1}`}
+                                  value={item.schemeId}
+                                  onChange={e => updateItem(i, "schemeId", e.target.value)}
+                                  placeholder="Optional"
                                 />
                               </div>
                             </div>

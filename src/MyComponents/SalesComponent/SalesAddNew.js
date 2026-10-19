@@ -7,6 +7,9 @@ import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import CoinField from "../CommonComponent/CoinField";
 import { calculateTcsPreview, partyHasPan } from "../../utils/taxPreview";
+import {
+  computeTotals, toItemPayload, fetchApplicable, withScheme, removeScheme, freeText, round2,
+} from "../../utils/salesSchemes";
 
 /* ─────────────────────────────────────────
    PRODUCT AVATAR — deterministic color + initials, no image needed
@@ -152,11 +155,16 @@ export default function SalesAddNew({ onClose, onSubmit }) {
   /* ── GST ── */
   const [taxMode, setTaxMode]     = useState("COMMON");   // COMMON | PRODUCT
   const [commonTax, setCommonTax] = useState("18");
-  const [taxType, setTaxType]     = useState("PERCENT");  // PERCENT | FLAT
+  const [taxType, setTaxType]     = useState("PERCENT");  // PERCENT | FLAT — Product-wise mode only
 
   /* ── Cart / items ── */
   const [items, setItems]         = useState([]);
   const [editingIdx, setEditingIdx] = useState(null);
+
+  /* ── Schemes: each line gets the best matching scheme suggested; the clerk can remove it (same as SalesAdd) ── */
+  const lineKeyRef = useRef(0);
+  const itemsRef   = useRef([]);
+  const [schemePending, setSchemePending] = useState(0);
 
   /* ── Right-panel: billing ── */
   const [selectedRetailer, setSelectedRetailer] = useState("");
@@ -287,6 +295,47 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     return product?.stock ?? null;
   };
 
+  /* ══════════ SCHEME SUGGESTION ══════════
+     Asks the server which scheme fits a line and attaches it. Runs after the line is already on screen, so changing
+     the cart never waits on it; a result is dropped if the line was changed or removed in the meantime. The server
+     checks the scheme again on save, so a missed suggestion is harmless. Same flow as SalesAdd. */
+  const suggestScheme = async (line, retailerId) => {
+    setSchemePending(n => n + 1);
+    const applicable = await fetchApplicable({
+      productId: line.productId, retailerId, quantity: line.quantity, unitPrice: line.sellingPrice,
+    });
+    setSchemePending(n => n - 1);
+    setItems(prev => prev.map(l =>
+      l.lineKey === line.lineKey && !l.schemeOff && l.quantity === line.quantity && l.sellingPrice === line.sellingPrice
+        ? withScheme(l, applicable)
+        : l
+    ));
+  };
+
+  useEffect(() => { itemsRef.current = items; }, [items]);
+
+  /* A different retailer can mean a different scheme (retailer-specific ones), so look again for every line. */
+  useEffect(() => {
+    itemsRef.current.filter(l => !l.schemeOff).forEach(l => suggestScheme(l, selectedRetailer || null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRetailer]);
+
+  /* Replaces line i and, when its quantity or price changed, asks for a scheme for it again. */
+  const updateLine = (i, patch) => {
+    const before = items[i];
+    const line = { ...before, ...patch };
+    setItems(prev => prev.map((l, idx) => (idx === i ? line : l)));
+    const changed = line.quantity !== before.quantity || line.sellingPrice !== before.sellingPrice;
+    if (changed && !line.schemeOff) suggestScheme(line, selectedRetailer || null);
+  };
+
+  const dropScheme  = (i) => setItems(prev => prev.map((l, idx) => (idx === i ? removeScheme(l) : l)));
+  const retryScheme = (i) => {
+    const l = { ...items[i], schemeOff: false };
+    setItems(prev => prev.map((x, idx) => (idx === i ? l : x)));
+    suggestScheme(l, selectedRetailer || null);
+  };
+
   /* ══════════ ADD / ADJUST CART FROM CATALOG ══════════ */
   const adjustCart = (product, delta) => {
     const stock = stockFor(product.id);
@@ -301,41 +350,40 @@ export default function SalesAddNew({ onClose, onSubmit }) {
       return;
     }
 
-    setItems(prev => {
-      const idx = prev.findIndex(i => i.productId === product.id);
+    const idx = items.findIndex(i => i.productId === product.id);
 
-      if (idx === -1) {
-        if (delta <= 0) return prev;
-        if (stock !== null && delta > stock) {
-          toast.error("Exceeds available stock");
-          return prev;
-        }
-        return [
-          ...prev,
-          {
-            productId:    product.id,
-            productName:  product.name,
-            quantity:     delta,
-            sellingPrice: price,
-            gstRate:      parseFloat(commonTax || 0),
-            taxAmount:    0,
-            batchId:      null,
-            batchNumber:  "AUTO",
-            expiryDate:   "",
-          },
-        ];
-      }
-
-      const newQty = prev[idx].quantity + delta;
-      if (newQty <= 0) return prev.filter((_, i) => i !== idx);
-      if (stock !== null && newQty > stock) {
+    if (idx === -1) {
+      if (delta <= 0) return;
+      if (stock !== null && delta > stock) {
         toast.error("Exceeds available stock");
-        return prev;
+        return;
       }
-      const updated = [...prev];
-      updated[idx] = { ...updated[idx], quantity: newQty };
-      return updated;
-    });
+      const line = {
+        lineKey:      ++lineKeyRef.current,
+        schemeOff:    false,
+        schemeId: null, schemeName: "", schemeDescription: "", freeQuantity: 0, schemeDiscount: 0,
+        productId:    product.id,
+        productName:  product.name,
+        quantity:     delta,
+        sellingPrice: price,
+        gstRate:      parseFloat(commonTax || 0),
+        taxAmount:    0,
+        batchId:      null,
+        batchNumber:  "AUTO",
+        expiryDate:   "",
+      };
+      setItems(prev => [...prev, line]);
+      suggestScheme(line, selectedRetailer || null);
+      return;
+    }
+
+    const newQty = items[idx].quantity + delta;
+    if (newQty <= 0) { deleteItem(idx); return; }
+    if (stock !== null && newQty > stock) {
+      toast.error("Exceeds available stock");
+      return;
+    }
+    updateLine(idx, { quantity: newQty });
   };
 
   /* ══════════ BARCODE SCAN-TO-SELECT ══════════
@@ -381,46 +429,35 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     const it = items[i];
     const stock = stockFor(it.productId);
     if (stock !== null && it.quantity + 1 > stock) { toast.error("Exceeds available stock"); return; }
-    const u = [...items]; u[i].quantity++; setItems(u);
+    updateLine(i, { quantity: it.quantity + 1 });
   };
-  const decreaseQty = (i) => { const u = [...items]; if (u[i].quantity > 1) { u[i].quantity--; setItems(u); } };
-  const deleteItem  = (i) => { const u = [...items]; u.splice(i, 1); setItems(u); };
+  const decreaseQty = (i) => { if (items[i].quantity > 1) updateLine(i, { quantity: items[i].quantity - 1 }); };
+  const deleteItem  = (i) => setItems(prev => prev.filter((_, idx) => idx !== i));
 
   const openEdit  = (i) => { ensureBatches(items[i].productId); setEditingIdx(i); };
   const closeEdit = () => setEditingIdx(null);
 
   const saveEdit = (patch) => {
-    setItems(prev => {
-      const u = [...prev];
-      u[editingIdx] = { ...u[editingIdx], ...patch };
-      return u;
-    });
+    updateLine(editingIdx, patch);
     closeEdit();
   };
 
-  /* ══════════ COMPUTED TOTALS ══════════ */
-  const subTotal = items.reduce((s, i) => s + i.sellingPrice * i.quantity, 0);
-
-  const lineTaxTotal = items.reduce((s, i) => {
-    if (taxMode !== "PRODUCT") return s;
+  /* ══════════ COMPUTED TOTALS ══════════
+     One calculation (utils/salesSchemes.js) shared with SalesAdd that mirrors the server: scheme discount first, then
+     the invoice discount on what is left, GST on the discounted value. In Product-wise mode a line's tax on its full
+     value is worked out from its own GST % (or flat ₹); in Common mode every line takes the common %. */
+  const taxLines = items.map(i => {
     const rate = parseFloat(i.gstRate || 0);
-    const amt = taxType === "PERCENT" ? (i.sellingPrice * i.quantity * rate) / 100 : rate;
-    return s + amt;
-  }, 0);
-
-  const discAmt = discountInput > 0
-    ? (discountType === "PERCENT"
-      ? (subTotal * parseFloat(discountInput)) / 100
-      : parseFloat(discountInput))
-    : 0;
-  const discountedSub   = subTotal - discAmt;   // Taxable Value
-  const commonTaxAmount = taxMode === "COMMON" && parseFloat(commonTax) > 0
-    ? (taxType === "PERCENT"
-      ? (discountedSub * parseFloat(commonTax)) / 100
-      : parseFloat(commonTax))
-    : 0;
-  const gstAmount = taxMode === "PRODUCT" ? lineTaxTotal : commonTaxAmount;
-  const netAmount = discountedSub + gstAmount;
+    return { ...i, taxAmount: taxType === "PERCENT" ? (i.sellingPrice * i.quantity * rate) / 100 : rate };
+  });
+  const totals = computeTotals({
+    lines: taxLines,
+    manualDiscount: discountInput,
+    discountType,
+    commonRate: taxMode === "COMMON" ? parseFloat(commonTax || 0) : null,
+  });
+  const subTotal  = totals.gross;
+  const netAmount = totals.net;
 
   // Retailer-TDS estimate only ever applies against a retailer who has
   // self-declared they deduct 194Q (SalesCommonRepository requires
@@ -471,8 +508,10 @@ export default function SalesAddNew({ onClose, onSubmit }) {
     if (items.length === 0)  tempErrors.items = "Add at least one item";
     if (creditPaymentType !== "CREDIT" && !billingMode) tempErrors.billingMode = "Select billing mode";
     if (discountInput < 0)   tempErrors.discountInput = "Discount cannot be negative";
+    if (totals.discountTooLarge) tempErrors.discountInput = "Discount cannot be more than the value of the goods after schemes";
 
-    if (creditPaymentType === "PAID" && parseFloat(amountPaid) !== payableAmount)
+    // compared to the paisa: the box shows the payable rounded to 2 places, so an exact match on the raw figure can fail
+    if (creditPaymentType === "PAID" && Math.abs(round2(parseFloat(amountPaid) || 0) - round2(payableAmount)) > 0.005)
       tempErrors.amountPaid = "Amount must equal the payable amount";
     if (creditPaymentType === "PARTIAL") {
       if (!amountPaid || amountPaid <= 0) tempErrors.amountPaid = "Enter valid amount paid";
@@ -489,40 +528,20 @@ export default function SalesAddNew({ onClose, onSubmit }) {
       return;
     }
 
-    const finalDiscount = discountType === "PERCENT"
-      ? (subTotal * (parseFloat(discountInput) || 0)) / 100
-      : parseFloat(discountInput || 0);
-
-    const totalBeforeTax = items.reduce((s, i) => s + i.sellingPrice * i.quantity, 0);
+    if (schemePending > 0) {
+      toast.info("Still checking schemes — try again in a moment");
+      return;
+    }
 
     const payload = {
       billingMode,
-      totalDiscount: finalDiscount,
+      totalDiscount: totals.manualDiscount, // what the clerk gave; the server adds the schemes' discount itself
       amountPaid: parseFloat(amountPaid),
-      remainingAmount: parseFloat((payableAmount - parseFloat(amountPaid)).toFixed(2)),
+      remainingAmount: round2(payableAmount - parseFloat(amountPaid)),
       retailerId: selectedRetailer ? parseInt(selectedRetailer) : null,
       paymentType: creditPaymentType,
       dueDate: dueDate || null,
-
-      items: items.map(it => {
-        const itemTotal = it.sellingPrice * it.quantity;
-
-        let taxAmount;
-        if (taxMode === "COMMON") {
-          taxAmount = totalBeforeTax > 0 ? (itemTotal / totalBeforeTax) * commonTaxAmount : 0;
-        } else {
-          const rate = parseFloat(it.gstRate || 0);
-          taxAmount = taxType === "PERCENT" ? (itemTotal * rate) / 100 : rate;
-        }
-
-        return {
-          productId: it.productId,
-          quantity: it.quantity,
-          sellingPrice: it.sellingPrice,
-          taxAmount: parseFloat(taxAmount.toFixed(2)),
-          batchId: it.batchId || null,
-        };
-      }),
+      items: toItemPayload(items, totals),
     };
 
     setSubmitting(true);
@@ -537,7 +556,7 @@ export default function SalesAddNew({ onClose, onSubmit }) {
         toastApiError(data, "Failed to add sale");
         return;
       }
-      toast.success("Sale added successfully");
+      toast.success(data?.message || "Sale added successfully");
       setBurstToken(t => t + 1);
       if (onSubmit) onSubmit();
       setViewUkey(data.data?.uKey || null);
@@ -609,16 +628,14 @@ export default function SalesAddNew({ onClose, onSubmit }) {
             decreaseQty={decreaseQty}
             deleteItem={deleteItem}
             openEdit={openEdit}
+            dropScheme={dropScheme}
+            retryScheme={retryScheme}
             taxMode={taxMode} setTaxMode={setTaxMode}
             commonTax={commonTax} setCommonTax={setCommonTax}
             taxType={taxType} setTaxType={setTaxType}
             discountInput={discountInput} setDiscountInput={setDiscountInput}
             discountType={discountType} setDiscountType={setDiscountType}
-            subTotal={subTotal}
-            discAmt={discAmt}
-            taxableValue={discountedSub}
-            gstAmount={gstAmount}
-            netAmount={netAmount}
+            totals={totals}
             retailerTdsPreview={retailerTdsPreview}
             tcsSetting={tcsSetting}
             payableAmount={payableAmount}
@@ -844,10 +861,10 @@ function CatalogStep({
    STEP 2 — CHECKOUT  (Apple Store checkout reference)
 ───────────────────────────────────────── */
 function CheckoutStep({
-  items, increaseQty, decreaseQty, deleteItem, openEdit,
+  items, increaseQty, decreaseQty, deleteItem, openEdit, dropScheme, retryScheme,
   taxMode, setTaxMode, commonTax, setCommonTax, taxType, setTaxType,
   discountInput, setDiscountInput, discountType, setDiscountType,
-  subTotal, discAmt, taxableValue, gstAmount, netAmount, retailerTdsPreview, tcsSetting, payableAmount, errors,
+  totals, retailerTdsPreview, tcsSetting, payableAmount, errors,
   retailers, selectedRetailer, setSelectedRetailer,
   billingMode, setBillingMode,
   creditPaymentType, setCreditPaymentType,
@@ -880,8 +897,11 @@ function CheckoutStep({
           <div className="san-block-body san-block-body-right">
 
             <div className="san-items-list">
-              {items.map((item, idx) => (
-                <div key={idx} className="san-item-row" style={{ animationDelay: `${idx * 0.04}s` }}>
+              {items.map((item, idx) => {
+                // per product: value before GST (after any scheme) and the GST % on it — same figures as SalesAdd's line table
+                const row = totals.lines[idx] || { gross: 0, post: 0, rate: 0 };
+                return (
+                <div key={item.lineKey ?? idx} className="san-item-row" data-testid="sale-line" style={{ animationDelay: `${idx * 0.04}s` }}>
                   <div className="san-item-avatar" style={{ "--hue": productHue(item.productName) }}>
                     {productInitials(item.productName)}
                   </div>
@@ -889,11 +909,24 @@ function CheckoutStep({
                     <span className="san-item-name">{item.productName}</span>
                     <span className="san-item-unit">
                       ₹{item.sellingPrice} × {item.quantity}
+                      {item.freeQuantity > 0 && <> <span className="san-item-free">{freeText(item)}</span></>}
+                      {" "}· GST {Number((row.rate * 100).toFixed(2))}%
                       {item.batchNumber && item.batchNumber !== "AUTO" && (
                         <> · <span className="san-batch-tag">Batch {item.batchNumber}</span></>
                       )}
                       {item.expiryDate && <> · Exp {item.expiryDate}</>}
                     </span>
+                    {item.schemeId && (
+                      <span className="san-item-scheme" data-testid="line-scheme">
+                        Scheme: {item.schemeName}{item.schemeDiscount > 0 && ` · −₹${item.schemeDiscount.toFixed(2)}`}
+                        {" "}<button type="button" className="san-link-btn" onClick={() => dropScheme(idx)}>Remove</button>
+                      </span>
+                    )}
+                    {!item.schemeId && item.schemeOff && (
+                      <span className="san-item-scheme">
+                        No scheme <button type="button" className="san-link-btn" onClick={() => retryScheme(idx)}>Apply scheme</button>
+                      </span>
+                    )}
                   </div>
                   <div className="san-item-controls">
                     <div className="san-qty-ctrl">
@@ -901,7 +934,10 @@ function CheckoutStep({
                       <span>{item.quantity}</span>
                       <button onClick={() => increaseQty(idx)} aria-label="Increase quantity">+</button>
                     </div>
-                    <span className="san-item-total">₹{(item.sellingPrice * item.quantity).toFixed(2)}</span>
+                    <span className="san-item-total" data-testid="line-excl">
+                      {row.scheme > 0 && <span className="san-item-total-was">₹{row.gross.toFixed(2)}</span>}
+                      ₹{row.post.toFixed(2)}
+                    </span>
 
                     <button
                       onClick={() => openEdit(idx)}
@@ -921,7 +957,8 @@ function CheckoutStep({
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
             {errors.items && <span className="san-err">{errors.items}</span>}
 
@@ -942,33 +979,38 @@ function CheckoutStep({
             {taxMode === "COMMON" ? (
               <div className="san-field">
                 <label>GST rate</label>
-                <div className="san-tax-row">
-                  <select value={commonTax} onChange={e => setCommonTax(e.target.value)} className="san-select">
-                    {GST_RATES.map(r => (
-                      <option key={r} value={r}>
-                        {r}%{r === 18 ? " (Standard)" : r === 0 ? " (Exempt)" : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <select value={taxType} onChange={e => setTaxType(e.target.value)} className="san-select san-select-sm">
-                    <option value="PERCENT">% Rate</option>
-                    <option value="FLAT">₹ Flat</option>
-                  </select>
-                </div>
+                <select value={commonTax} onChange={e => setCommonTax(e.target.value)} className="san-select">
+                  {GST_RATES.map(r => (
+                    <option key={r} value={r}>
+                      {r}%{r === 18 ? " (Standard)" : r === 0 ? " (Exempt)" : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
             ) : (
               <div className="san-field">
                 <label>Product-wise GST</label>
-                <span className="san-hint">Tap the pencil icon on each item to set its GST rate.</span>
+                <select value={taxType} onChange={e => setTaxType(e.target.value)} className="san-select san-select-sm">
+                  <option value="PERCENT">% GST Rate</option>
+                  <option value="FLAT">₹ Flat Amount</option>
+                </select>
+                <span className="san-hint">Tap the pencil icon on each item to set its GST {taxType === "PERCENT" ? "rate" : "amount"}.</span>
               </div>
             )}
 
-            {/* ── Totals: Subtotal → Discount → Taxable Value → GST → Net Amount ── */}
+            {/* ── Totals: Subtotal → Scheme discount → Discount → Taxable Value → GST → Net Amount ── */}
             <div className="san-totals">
               <div className="san-total-row">
                 <span>Subtotal</span>
-                <span>₹{subTotal.toFixed(2)}</span>
+                <span>₹{totals.gross.toFixed(2)}</span>
               </div>
+
+              {totals.schemeDiscount > 0 && (
+                <div className="san-total-row">
+                  <span>Scheme discount</span>
+                  <span className="san-total-negative">-₹{totals.schemeDiscount.toFixed(2)}</span>
+                </div>
+              )}
 
               <div className="san-total-row">
                 <span>Discount</span>
@@ -991,30 +1033,33 @@ function CheckoutStep({
                 </div>
               </div>
               {errors.discountInput && <span className="san-err">{errors.discountInput}</span>}
-              {discAmt > 0 && (
+              {totals.manualDiscount > 0 && (
                 <div className="san-total-row san-total-row-sub">
                   <span>&nbsp;</span>
-                  <span className="san-total-negative">-₹{discAmt.toFixed(2)}</span>
+                  <span className="san-total-negative">-₹{totals.manualDiscount.toFixed(2)}</span>
+                </div>
+              )}
+
+              {totals.freeUnits > 0 && (
+                <div className="san-total-row">
+                  <span>Free units (stock reduced, not charged)</span>
+                  <span className="san-item-free">{totals.freeUnits}</span>
                 </div>
               )}
 
               <div className="san-total-row">
                 <span>Taxable value</span>
-                <span>₹{taxableValue.toFixed(2)}</span>
+                <span>₹{totals.taxable.toFixed(2)}</span>
               </div>
 
               <div className="san-total-row">
-                <span>
-                  GST ({taxMode === "COMMON"
-                    ? `${commonTax}${taxType === "PERCENT" ? "%" : "₹"} common`
-                    : "product-wise"})
-                </span>
-                <span>₹{gstAmount.toFixed(2)}</span>
+                <span>GST ({taxMode === "COMMON" ? `${commonTax}% common` : "product-wise"})</span>
+                <span>₹{totals.tax.toFixed(2)}</span>
               </div>
 
               <div className="san-total-net">
                 <span>Net amount</span>
-                <span>₹{netAmount.toFixed(2)}</span>
+                <span>₹{totals.net.toFixed(2)}</span>
               </div>
 
               <div className="san-total-net">

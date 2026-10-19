@@ -50,6 +50,8 @@ const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setO
 const GST_RATES = [0, 5, 12, 18, 28];
 
 export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = false }) {
+  // document mode: the order as loaded, so a save keeps what this form does not edit (order date, godown, terms)
+  const loadedOrder = useRef(null);
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts]   = useState([]);
   const [activeTab, setActiveTab] = useState("DETAILS");
@@ -91,6 +93,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
       .then(json => {
         if (json?.status === 200 && json.data) {
           const d = json.data;
+          if (documentMode) loadedOrder.current = d;
           setPurchaseId(d.id);
           setForm({
             supplierId:            d.supplierId            || "",
@@ -208,11 +211,15 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
     setLoading(true);
     try {
       const payload = documentMode ? {
-        supplierId: Number(form.supplierId), godownId: Number(localStorage.getItem("activeGodownId") || 0) || null,
-        orderDate: form.invoiceDate || new Date().toISOString().slice(0, 10), expectedDate: null, terms: "", notes: form.notes,
+        supplierId: Number(form.supplierId),
+        godownId: loadedOrder.current?.godownId ?? (Number(localStorage.getItem("activeGodownId") || 0) || null),
+        orderDate: loadedOrder.current?.orderDate || new Date().toISOString().slice(0, 10),
+        expectedDate: loadedOrder.current?.expectedDate || null, terms: loadedOrder.current?.terms || "", notes: form.notes,
         supplierInvoiceNumber: form.supplierInvoiceNumber || null, invoiceDate: form.invoiceDate || null,
         paymentStatus: form.paymentStatus, dueDate: form.dueDate || null, amountPaid: parseFloat(form.amountPaid || 0),
-        items: form.items.map(it => ({ productId: it.productId, quantity: parseInt(it.quantity), unitCost: parseFloat(it.costPrice), gstRate: parseFloat(it.gstRate || 0) })),
+        items: form.items.map(it => ({ productId: it.productId, quantity: parseInt(it.quantity), unitCost: parseFloat(it.costPrice), gstRate: parseFloat(it.gstRate || 0),
+          batchNumber: it.batchNumber || null, manufacturingDate: it.manufacturingDate || null,
+          expiryDate: it.expiryDate || null, mrp: it.mrp === "" || it.mrp == null ? null : parseFloat(it.mrp) })),
       } : {
         supplierId:            form.supplierId,
         supplierInvoiceNumber: form.supplierInvoiceNumber,

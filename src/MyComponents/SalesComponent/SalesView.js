@@ -28,7 +28,10 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
           ...data.data,
           invoiceNumber: data.data.orderNumber,
           createdAt: data.data.orderDate,
-          items: (data.data.items || []).map(item => ({ ...item, sellingPrice: item.unitPrice, price: item.unitPrice })),
+          items: (data.data.items || []).map(item => ({
+            ...item, sellingPrice: item.unitPrice, price: item.unitPrice,
+            batchNumberSnapshot: item.batchNumber, expiryDateSnapshot: item.expiryDate, hsnCodeSnapshot: item.hsnCode,
+          })),
         } : data.data);
         else setError(data.message || "Failed to fetch sales");
       })
@@ -137,10 +140,28 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
     }
   };
 
+  // A rejected request can come back with an empty body; read it as text first so that shows a real message
+  // instead of "Failed to execute 'json' on 'Response': Unexpected end of JSON input".
+  const readBody = async (res) => {
+    let text = "";
+    try {
+      text = typeof res.text === "function" ? await res.text() : JSON.stringify(await res.json());
+    } catch { text = ""; }
+    if (text && text.trim()) {
+      try { return JSON.parse(text); } catch { return { status: res.status, message: text.trim().slice(0, 200) }; }
+    }
+    return {
+      status: res.status,
+      message: res.status === 401 || res.status === 403
+        ? "Your session has expired. Please log in again."
+        : `The server returned no details (HTTP ${res.status}).`,
+    };
+  };
+
   const prepareNotification = async (type) => {
     setNotificationMessage("");
     const result = await apiClient(`${API_BASE_URL}/api/CustomerNotification/${type === "INVOICE" ? "Invoice" : "PaymentReminder"}/${uKey}`, { method: "GET" });
-    const json = await result.json();
+    const json = await readBody(result);
     if (json.status !== 200) throw new Error(json.message || "Could not prepare notification");
     return json.data;
   };
@@ -163,7 +184,7 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
       const res = await apiClient(`${API_BASE_URL}/api/CustomerNotification/Sms`, {
         method: "POST", body: JSON.stringify({ saleUKey: uKey, type }),
       });
-      const json = await res.json();
+      const json = await readBody(res);
       setNotificationMessage(json.message || (json.status === 200 ? "SMS sent." : "SMS could not be sent."));
     } catch { setNotificationMessage("SMS could not be sent."); }
   };
@@ -181,6 +202,19 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
   // Schemes: a Disc column only when some row carries a discount, and the free units counted (they are not charged).
   const lineDiscount = (item) => Number(item?.discountAmount) || 0;
   const hasDiscount = (sales?.items || []).some((i) => lineDiscount(i) > 0);
+  // one row per line: amount before GST (after any discount), the GST on it, and the two together
+  const lineMoney = (item) => {
+    const amount = (Number(item?.quantity) || 0) * (Number(item?.sellingPrice) || 0) - lineDiscount(item);
+    const tax = Number(item?.taxAmount) || 0;
+    // the order line carries its rate; on a sale it is the tax over the taxed value
+    const rate = item?.gstRate != null ? Number(item.gstRate) : amount > 0 ? (tax / amount) * 100 : 0;
+    return { amount, tax, total: amount + tax, rate };
+  };
+  const lineTotals = (sales?.items || []).reduce((t, i) => {
+    if (!i) return t;
+    const m = lineMoney(i);
+    return { amount: t.amount + m.amount, tax: t.tax + m.tax, total: t.total + m.total };
+  }, { amount: 0, tax: 0, total: 0 });
   const freeUnits = (sales?.items || []).reduce((s, i) => s + (i?.freeItem ? Number(i.quantity) || 0 : 0), 0);
 
   if (!uKey) return null;
@@ -310,6 +344,31 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
               {eInvoiceMessage && <div className="afx-alert" style={{ marginTop: 8 }}>{eInvoiceMessage}</div>}
               {ewayMessage && <div className="afx-alert" style={{ marginTop: 8 }}>{ewayMessage}</div>}
 
+              {documentMode && (
+                <>
+                  <div className="afx-section-title">Sales Invoices From This Order ({sales.sales?.length || 0})</div>
+                  {!sales.sales?.length ? (
+                    <div className="afx-view-value--muted" style={{ fontSize: 12, marginBottom: 10 }} data-testid="linked-sales-empty">
+                      Not converted to a sale yet.
+                    </div>
+                  ) : (
+                    <div className="afx-line-table" data-testid="linked-sales">
+                      <table>
+                        <thead><tr><th>Sales Invoice No</th><th>Created On</th></tr></thead>
+                        <tbody>
+                          {sales.sales.map((link, idx) => (
+                            <tr key={link.documentId || idx}>
+                              <td style={{ fontFamily: "var(--afx-font-mono)", fontWeight: 600 }}>{link.documentNumber}</td>
+                              <td>{link.createdAt ? new Date(link.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+
               <div className="afx-section-title">Line Items ({sales.items?.length || 0})</div>
               {!sales.items?.length ? (
                 <div className="afx-items-empty">
@@ -325,8 +384,10 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
                       <th>Expiry</th>
                       <th>HSN</th>
                       <th>Qty</th>
-                      <th>Price (₹)</th>
+                      <th>Rate excl. GST (₹)</th>
                       {hasDiscount && <th>Disc (₹)</th>}
+                      <th>Amount excl. GST (₹)</th>
+                      <th>GST %</th>
                       <th>GST (₹)</th>
                       <th>Total (₹)</th>
                     </tr>
@@ -336,9 +397,7 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
                       try {
                         return (sales.items || []).map((item, idx) => {
                           if (!item) return null;
-                          const qty = Number(item.quantity) || 0;
-                          const price = Number(item.sellingPrice) || 0;
-                          const tax = Number(item.taxAmount) || 0;
+                          const { amount, tax, total, rate } = lineMoney(item);
                           return (
                             <tr key={idx}>
                               <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>
@@ -350,23 +409,34 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
                               <td style={{ fontSize: 11 }}>{item.expiryDateSnapshot || "—"}</td>
                               <td style={{ fontSize: 11 }}>{item.hsnCodeSnapshot || "—"}</td>
                               <td>{item.quantity ?? "—"}</td>
-                              <td>{item.sellingPrice ?? "—"}</td>
+                              <td>{item.sellingPrice != null ? Number(item.sellingPrice).toFixed(2) : "—"}</td>
                               {hasDiscount && <td>{lineDiscount(item) > 0 ? lineDiscount(item).toFixed(2) : "—"}</td>}
-                              <td>{tax.toFixed(2)}</td>
-                              <td style={{ fontWeight: 700, color: "var(--afx-text-1)" }}>{(Number(item.subtotal ?? qty * price + tax) - lineDiscount(item)).toFixed(2)}</td>
+                              <td data-testid="line-amount">{amount.toFixed(2)}</td>
+                              <td data-testid="line-rate">{Number(rate.toFixed(2))}%</td>
+                              <td data-testid="line-tax">{tax.toFixed(2)}</td>
+                              <td data-testid="line-total" style={{ fontWeight: 700, color: "var(--afx-text-1)" }}>{total.toFixed(2)}</td>
                             </tr>
                           );
                         });
                       } catch (e) {
                         console.error("Failed to render sale line items:", e, sales.items);
                         return (
-                          <tr><td colSpan={9} className="afx-alert" style={{ display: "table-cell" }}>
+                          <tr><td colSpan={hasDiscount ? 11 : 10} className="afx-alert" style={{ display: "table-cell" }}>
                             Couldn't display line items — unexpected data shape. Check the console for details.
                           </td></tr>
                         );
                       }
                     })()}
                   </tbody>
+                  <tfoot>
+                    <tr style={{ fontWeight: 700 }}>
+                      <td colSpan={hasDiscount ? 7 : 6} style={{ textAlign: "right" }}>Total</td>
+                      <td data-testid="sum-amount">{lineTotals.amount.toFixed(2)}</td>
+                      <td></td>
+                      <td data-testid="sum-tax">{lineTotals.tax.toFixed(2)}</td>
+                      <td data-testid="sum-total" style={{ color: "var(--afx-text-1)" }}>{lineTotals.total.toFixed(2)}</td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
               )}
@@ -433,9 +503,10 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
               </svg>
               Print Invoice
             </button>
-            <button className="afx-btn" onClick={() => handleWhatsApp("INVOICE")}>WhatsApp Invoice</button>
-            {Number(sales.remainingAmount) > 0 && <button className="afx-btn" onClick={() => handleWhatsApp("PAYMENT_REMINDER")}>WhatsApp Reminder</button>}
-            <button className="afx-btn" onClick={() => handleSms(Number(sales.remainingAmount) > 0 ? "PAYMENT_REMINDER" : "INVOICE")}>Send SMS</button>
+            {/* a sales order is not an invoice yet: WhatsApp / SMS work on the sale it is converted into */}
+            {!documentMode && <button className="afx-btn" onClick={() => handleWhatsApp("INVOICE")}>WhatsApp Invoice</button>}
+            {!documentMode && Number(sales.remainingAmount) > 0 && <button className="afx-btn" onClick={() => handleWhatsApp("PAYMENT_REMINDER")}>WhatsApp Reminder</button>}
+            {!documentMode && <button className="afx-btn" onClick={() => handleSms(Number(sales.remainingAmount) > 0 ? "PAYMENT_REMINDER" : "INVOICE")}>Send SMS</button>}
           </div>
         )}
       </div>

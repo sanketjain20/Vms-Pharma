@@ -192,7 +192,7 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
       const payload = documentMode ? {
         supplierId: Number(form.supplierId),
         godownId: Number(localStorage.getItem("activeGodownId") || 0) || null,
-        orderDate: form.invoiceDate || new Date().toISOString().slice(0, 10),
+        orderDate: new Date().toISOString().slice(0, 10), // the order is placed today; invoiceDate below is the supplier's
         expectedDate: null,
         terms: "",
         notes: form.notes,
@@ -202,7 +202,9 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
         dueDate: form.dueDate || null,
         amountPaid: parseFloat(form.amountPaid || 0),
         items: form.items.map(it => ({ productId: it.productId, quantity: parseInt(it.quantity),
-          unitCost: parseFloat(it.costPrice), gstRate: parseFloat(it.gstRate || 0) })),
+          unitCost: parseFloat(it.costPrice), gstRate: parseFloat(it.gstRate || 0),
+          batchNumber: it.batchNumber || null, manufacturingDate: it.manufacturingDate || null,
+          expiryDate: it.expiryDate || null, mrp: it.mrp === "" || it.mrp == null ? null : parseFloat(it.mrp) })),
       } : {
         supplierId:            form.supplierId,
         supplierInvoiceNumber: form.supplierInvoiceNumber,

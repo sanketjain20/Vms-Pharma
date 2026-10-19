@@ -77,7 +77,7 @@ export default function StockTransferEdit({ uKey, onSubmit, onClose }) {
 
   const [form, setForm] = useState({
     fromGodownId: "", toGodownId: "", date: "",
-    vehicleNumber: "", notes: "", items: [],
+    vehicleNumber: "", transporter: "", expectedDate: "", notes: "", items: [],
   });
 
   /* ── FETCH ONLY THE DROPDOWNS STOCK TRANSFER NEEDS (godowns + products). ── */
@@ -114,6 +114,8 @@ export default function StockTransferEdit({ uKey, onSubmit, onClose }) {
             toGodownId:    String(d.toGodownId ?? ""),
             date:          d.transferDate || "",
             vehicleNumber: d.vehicleNumber || "",
+            transporter:   d.transporter || "",
+            expectedDate:  d.expectedDate || "",
             notes:         d.notes || "",
             items: (d.items || []).map(it => ({
               productId:   String(it.productId || ""),
@@ -156,6 +158,7 @@ export default function StockTransferEdit({ uKey, onSubmit, onClose }) {
       e.toGodownId = "Source and destination godowns must differ";
     }
     if (!form.date) e.date = "Transfer date is required";
+    if (form.expectedDate && form.date && form.expectedDate < form.date) e.expectedDate = "Expected arrival cannot be before the transfer date";
     if (form.items.length === 0) e.items_empty = "Add at least one item";
     const itemErrors = {};
     form.items.forEach((item, i) => {
@@ -180,7 +183,9 @@ export default function StockTransferEdit({ uKey, onSubmit, onClose }) {
         fromGodownId: Number(form.fromGodownId),
         toGodownId: Number(form.toGodownId),
         transferDate: form.date,
+        expectedDate: form.expectedDate || null,
         vehicleNumber: form.vehicleNumber || null,
+        transporter: form.transporter || null,
         notes: form.notes,
         items: form.items.map(it => ({ productId: Number(it.productId), quantity: Number(it.quantity) })),
       };
@@ -208,7 +213,7 @@ export default function StockTransferEdit({ uKey, onSubmit, onClose }) {
   const productName = p => p.name || p.productName || `Product #${p.id}`;
   const totalUnits = form.items.reduce((s, i) => s + Number(i.quantity || 0), 0);
 
-  const hasDetailErrors = errors.fromGodownId || errors.toGodownId || errors.date;
+  const hasDetailErrors = errors.fromGodownId || errors.toGodownId || errors.date || errors.expectedDate;
   const hasItemErrors = errors.items_empty || errors.items;
 
   /* While the transfer record OR the dropdowns are loading, show a spinner
@@ -307,6 +312,29 @@ export default function StockTransferEdit({ uKey, onSubmit, onClose }) {
                       onChange={e => setField("vehicleNumber", e.target.value)}
                       placeholder="e.g. MH12AB1234"
                     />
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Transporter</label>
+                    <input
+                      className="afx-input"
+                      aria-label="Transporter"
+                      value={form.transporter}
+                      onChange={e => setField("transporter", e.target.value)}
+                      placeholder="Transporter name"
+                    />
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Expected arrival</label>
+                    <input
+                      className={`afx-input ${errors.expectedDate ? "afx-input--err" : ""}`}
+                      type="date"
+                      aria-label="Expected arrival"
+                      value={form.expectedDate}
+                      onChange={e => setField("expectedDate", e.target.value)}
+                    />
+                    {errors.expectedDate && <span className="afx-error">{errors.expectedDate}</span>}
                   </div>
 
                   <div className="afx-field afx-field--full">

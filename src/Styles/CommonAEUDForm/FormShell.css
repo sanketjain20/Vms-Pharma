@@ -918,6 +918,14 @@ body[data-theme="light"] .afx-backdrop--full.afx-backdrop {
 
 .afx-line-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
+/* Sales Add/Edit line items as a table (product, price, qty, excl. GST, GST %, GST, incl. GST):
+   the list/row classes stay on tbody/tr for behaviour, but lay out as a normal table here. */
+.afx-sale-lines tbody.afx-line-list { display: table-row-group; }
+.afx-sale-lines tr.afx-line-row { display: table-row; padding: 0; border: none; border-radius: 0; background: none; }
+.afx-sale-lines td, .afx-sale-lines th { white-space: nowrap; }
+.afx-sale-lines td:nth-child(2) { white-space: normal; min-width: 160px; }
+.afx-sale-lines tfoot td { border-top: 1px solid var(--afx-border); }
+
 /* Product-type filter chips — an optional narrower-down, not a forced
    first step before a product can be searched. */
 .afx-chip-row {

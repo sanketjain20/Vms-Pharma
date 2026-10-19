@@ -108,7 +108,7 @@ body[data-theme="light"] .ra-root {
   border-bottom: 1px solid var(--ra-border);
 }
 .ra-brand { grid-area: brand; display: flex; align-items: center; gap: 12px; min-width: 0; }
-.ra-logo { height: 30px; width: auto; border-radius: 7px; object-fit: contain; }
+.ra-logo { height: 32px; width: 32px; border-radius: 50%; object-fit: contain; display: block; flex-shrink: 0; }
 .ra-brand-text { min-width: 0; }
 .ra-brand-text { flex: 1 1 auto; }
 .ra-title { white-space: nowrap; font-family: var(--ra-font-head); font-size: 17px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; }

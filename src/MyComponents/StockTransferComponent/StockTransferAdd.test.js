@@ -124,14 +124,18 @@ describe("StockTransferAdd — dropdown latency fix", () => {
     await waitForCatalogs();
 
     // Select from godown — the placeholder text appears on the SearchDrop face.
-    fireEvent.click(screen.getByText("Search godowns…"));
+    fireEvent.click(screen.getAllByText("Search godowns…")[0]);
     await screen.findByText("Main Warehouse");
     fireEvent.mouseDown(screen.getByText("Main Warehouse"));
 
-    // Select to godown — second occurrence of the placeholder.
+    // Select to godown — after From is chosen, only the To SearchDrop still shows the placeholder.
+    await screen.findByText("Search godowns…");
     fireEvent.click(screen.getAllByText("Search godowns…")[0]);
     await screen.findByText("Regional Store");
     fireEvent.mouseDown(screen.getByText("Regional Store"));
+
+    // Switch to Items tab to reveal the product SearchDrop.
+    fireEvent.click(screen.getByText(/Items/));
 
     // Select product.
     fireEvent.click(screen.getByText("Select product"));

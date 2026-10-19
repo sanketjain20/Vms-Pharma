@@ -410,6 +410,13 @@ input:disabled, .san-field input:disabled { opacity: 0.45 !important; cursor: no
 .san-qty-ctrl span { font-family: var(--san-font-m); font-size: 11px; font-weight: 600; color: var(--san-text-1); min-width: 18px; text-align: center; }
 
 .san-item-total { font-family: var(--san-font-b); font-size: 12.5px; font-weight: 600; color: #6ee7b7; min-width: 58px; text-align: right; }
+.san-item-total-was { display: block; font-size: 10px; font-weight: 400; color: var(--san-text-3); text-decoration: line-through; }
+
+/* Scheme on a cart line — same Remove / Apply scheme controls as SalesAdd */
+.san-item-free { color: var(--san-success); font-weight: 600; }
+.san-item-scheme { font-family: var(--san-font-m); font-size: 9px; color: var(--san-text-2); letter-spacing: 0.05em; }
+.san-link-btn { background: none; border: none; padding: 0; color: var(--san-accent); font: inherit; text-decoration: underline; cursor: pointer; }
+.san-link-btn:hover { color: var(--san-text-1); }
 
 .san-edit-btn { width: 26px; height: 26px; background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.18); border-radius: 6px; color: #93c5fd; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--san-tr); padding: 0; flex-shrink: 0; }
 .san-edit-btn:hover { background: rgba(59,130,246,0.14); border-color: rgba(59,130,246,0.35); }

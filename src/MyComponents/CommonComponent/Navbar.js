@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/Navbar.css";
-import udyorawingslogo from "../../Images/udyora_wings.svg";
+import BrandMark from "./BrandMark";
 import ThemeToggle from "./ThemeToggle";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
@@ -63,7 +63,7 @@ export default function Navbar({ sidebarOpen, theme, onToggleTheme }) {
     <header className={`topbar ${sidebarOpen ? "shifted" : ""} ${scrolled ? "scrolled" : ""}`}>
 
       <div className="topbar-left">
-        <img src={udyorawingslogo} alt="Udyora" className="brand-logo" />
+        <BrandMark theme={theme} className="brand-logo" />
 
         {vendorShop && (
           <div className="shop-badge">

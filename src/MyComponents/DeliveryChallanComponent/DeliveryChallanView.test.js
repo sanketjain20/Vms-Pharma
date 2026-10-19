@@ -94,14 +94,13 @@ describe("DeliveryChallanView — detail display", () => {
     // Qty 3 in the table, and 5
     expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByText("₹25.00")).toBeInTheDocument();
-    expect(screen.getByText("₹75.00")).toBeInTheDocument(); // 3 * 25
+    // 3 * 25 = 75 and 5 * 15 = 75 (both show ₹75.00)
+    const lineTotals = screen.getAllByText("₹75.00");
+    expect(lineTotals.length).toBeGreaterThanOrEqual(2);
 
     expect(screen.getByText("Ibuprofen 200mg")).toBeInTheDocument();
     expect(screen.getByText("BCH0002")).toBeInTheDocument();
     expect(screen.getByText("₹15.00")).toBeInTheDocument();
-    // Second 75.00 is 5 * 15
-    const lineTotals = screen.getAllByText("₹75.00");
-    expect(lineTotals.length).toBeGreaterThanOrEqual(2);
   });
 
   it("renders Notes when present", async () => {

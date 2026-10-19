@@ -8,6 +8,7 @@ import apiClient from "../../Config/apiClient";
    endpoint and starts at ISSUED). */
 
 const fmt = n => (n == null || n === "" ? "—" : n);
+const BILLING_LABELS = { CASH: "Cash", ONLINE: "Online / UPI", CARD: "Card" };
 
 const statusBadge = s => {
   let style = { color: "var(--afx-accent)", background: "var(--afx-accent-soft)" };
@@ -112,6 +113,38 @@ export default function DeliveryChallanView({ uKey, onClose }) {
                       <span className="afx-meta-card-label">Total value</span>
                       <span className="afx-meta-card-val">₹{(grandTotal || 0).toFixed(2)}</span>
                     </div>
+                    <div className="afx-meta-card">
+                      <span className="afx-meta-card-label">Sales invoice</span>
+                      <span className="afx-meta-card-val" data-testid="challan-sales-invoice">{challan.salesInvoiceNumber || "Not invoiced yet"}</span>
+                    </div>
+                  </div>
+
+                  <div className="afx-section-title">Invoice settings</div>
+                  <div className="afx-meta-cards" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+                    <div className="afx-meta-card">
+                      <span className="afx-meta-card-label">Billing mode</span>
+                      <span className="afx-meta-card-val">{BILLING_LABELS[challan.billingMode] || fmt(challan.billingMode)}</span>
+                    </div>
+                    <div className="afx-meta-card">
+                      <span className="afx-meta-card-label">Payment type</span>
+                      <span className="afx-meta-card-val">{fmt(challan.paymentType)}</span>
+                    </div>
+                    <div className="afx-meta-card">
+                      <span className="afx-meta-card-label">Due date</span>
+                      <span className="afx-meta-card-val">{fmt(challan.dueDate)}</span>
+                    </div>
+                    <div className="afx-meta-card">
+                      <span className="afx-meta-card-label">Amount paid</span>
+                      <span className="afx-meta-card-val">₹{Number(challan.amountPaid || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="afx-meta-card">
+                      <span className="afx-meta-card-label">Invoice discount</span>
+                      <span className="afx-meta-card-val">₹{Number(challan.totalDiscount || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="afx-meta-card">
+                      <span className="afx-meta-card-label">Auto-apply schemes</span>
+                      <span className="afx-meta-card-val">{challan.autoApplySchemes === false ? "No" : "Yes"}</span>
+                    </div>
                   </div>
 
                   {challan.notes && (
@@ -136,6 +169,7 @@ export default function DeliveryChallanView({ uKey, onClose }) {
                             <th>Expiry</th>
                             <th>Qty</th>
                             <th>Unit Price (₹)</th>
+                            <th>GST %</th>
                             <th>Line Total (₹)</th>
                           </tr>
                         </thead>
@@ -147,6 +181,7 @@ export default function DeliveryChallanView({ uKey, onClose }) {
                               <td style={{ fontSize: 11 }}>{fmt(item.expiryDate)}</td>
                               <td>{item.quantity ?? "—"}</td>
                               <td>₹{(Number(item.unitPrice || 0)).toFixed(2)}</td>
+                              <td>{item.gstRate != null ? `${Number(item.gstRate)}%` : "—"}</td>
                               <td style={{ fontWeight: 700 }}>₹{lineTotal(item)}</td>
                             </tr>
                           ))}

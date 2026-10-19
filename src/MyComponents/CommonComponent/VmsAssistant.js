@@ -6,6 +6,7 @@ import apiClient from "../../Config/apiClient";
 
 const CHAT_API = `${API_BASE_URL}/api/Chat/SendMessage`;
 const STORAGE_KEY = "vmsAssistantHistory";
+const SIZE_STORAGE_KEY = "vmsAssistantExpanded";
 const MAX_STORED_MESSAGES = 60;
 const MAX_HISTORY_SENT = 16;
 
@@ -78,6 +79,14 @@ function loadStoredMessages() {
     return parsed;
   } catch {
     return null;
+  }
+}
+
+function loadStoredExpanded() {
+  try {
+    return window.localStorage.getItem(SIZE_STORAGE_KEY) === "1";
+  } catch {
+    return false;
   }
 }
 
@@ -193,13 +202,27 @@ function RichText({ text }) {
 
 /* ══════════════════════════════════════════════════════════════ */
 
+/* VMS Assistant mark — a friendly face wearing a support headset, with big
+   blinking eyes, a smile, rosy cheeks and a twinkling spark. Original
+   artwork: reads as "an AI that's here to help you". */
 const IconBot = (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2v3" />
-    <rect x="5" y="7" width="14" height="12" rx="4" />
-    <path d="M9 13v.01M15 13v.01" />
-    <path d="M9.5 16.5c.7.6 1.6.9 2.5.9s1.8-.3 2.5-.9" />
-    <path d="M3 12h2M19 12h2" />
+  <svg className="vmsa-face" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    {/* headset band + ear cups */}
+    <path d="M4.2 12V11a7.8 7.8 0 0115.6 0v1" />
+    <rect x="2.5" y="11" width="2.4" height="4.4" rx="1.2" fill="currentColor" stroke="none" />
+    <rect x="19.1" y="11" width="2.4" height="4.4" rx="1.2" fill="currentColor" stroke="none" />
+    {/* head */}
+    <rect x="5.2" y="6.8" width="13.6" height="12" rx="5.2" />
+    {/* eyes */}
+    <ellipse className="vmsa-eye" cx="9.4" cy="12.2" rx="1.05" ry="1.5" fill="currentColor" stroke="none" />
+    <ellipse className="vmsa-eye" cx="14.6" cy="12.2" rx="1.05" ry="1.5" fill="currentColor" stroke="none" />
+    {/* cheeks */}
+    <circle cx="7.6" cy="15" r=".7" fill="currentColor" stroke="none" opacity=".45" />
+    <circle cx="16.4" cy="15" r=".7" fill="currentColor" stroke="none" opacity=".45" />
+    {/* smile */}
+    <path d="M9.8 15.4c.6.7 1.4 1.1 2.2 1.1s1.6-.4 2.2-1.1" />
+    {/* spark */}
+    <path className="vmsa-spark" d="M20.6 1.6v3.4M18.9 3.3h3.4" strokeWidth="1.4" />
   </svg>
 );
 const IconClose = (
@@ -207,6 +230,14 @@ const IconClose = (
 );
 const IconReset = (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13 3v4h-4M3 13v-4h4M3.5 8a4.5 4.5 0 018-2.8M12.5 8a4.5 4.5 0 01-8 2.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
+/* Maximize: arrows pointing outward to opposite corners */
+const IconMaximize = (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5 9 7M2.5 13.5 7 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
+/* Minimize: arrows pointing inward */
+const IconMinimize = (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13.5 6.5h-4v-4M2.5 9.5h4v4M9.5 6.5 14 2M6.5 9.5 2 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
 );
 const IconSend = (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -268,11 +299,13 @@ function VmsAssistant() {
     location.pathname === "/" || location.pathname === "/forgotpassword" || location.pathname.includes("/login");
 
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(loadStoredExpanded);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState(() => loadStoredMessages() || [welcomeMessage]);
   const [sending, setSending] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const listRef = useRef(null);
+  const inputRef = useRef(null);
   const copyTimerRef = useRef(null);
 
   const currentModuleTitle = useMemo(() => {
@@ -284,6 +317,34 @@ function VmsAssistant() {
     persistMessages(messages);
   }, [messages]);
 
+  // Remember the chosen size across reloads.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SIZE_STORAGE_KEY, expanded ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [expanded]);
+
+  // Esc steps back out of the maximized view (and does nothing otherwise).
+  useEffect(() => {
+    if (!open || !expanded) return undefined;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, expanded]);
+
+  // Keep the latest message in view after the panel resizes.
+  useEffect(() => {
+    if (!open) return undefined;
+    const t = window.setTimeout(() => {
+      if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+    }, 320);
+    return () => window.clearTimeout(t);
+  }, [expanded, open]);
+
   useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
 
   const scrollToEnd = () => {
@@ -293,6 +354,11 @@ function VmsAssistant() {
   };
 
   if (shouldHideAssistant) return null;
+
+  const toggleExpanded = () => {
+    setExpanded((value) => !value);
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  };
 
   const requestReply = async (historyForRequest) => {
     setSending(true);
@@ -360,6 +426,7 @@ function VmsAssistant() {
     try {
       await navigator.clipboard.writeText(message.text);
       setCopiedId(message.id);
+      window.clearTimeout(copyTimerRef.current);
       copyTimerRef.current = window.setTimeout(() => setCopiedId(null), 1500);
     } catch {
       /* clipboard unavailable — silently ignore */
@@ -378,7 +445,9 @@ function VmsAssistant() {
   };
 
   return (
-    <div className={`vmsa-root ${open ? "is-open" : ""}`}>
+    <div className={`vmsa-root ${open ? "is-open" : ""} ${open && expanded ? "is-expanded" : ""}`}>
+      {open && expanded && <div className="vmsa-backdrop" onClick={() => setExpanded(false)} aria-hidden="true" />}
+
       {!open && (
         <button className="vmsa-launcher vmsa-launcher-primary" type="button" onClick={() => setOpen(true)} title="VMS Assistant">
           <span className="vmsa-launcher-pulse" />
@@ -387,7 +456,7 @@ function VmsAssistant() {
       )}
 
       {open && (
-        <aside className="vmsa-frame" aria-label="VMS Assistant">
+        <aside className={`vmsa-frame ${expanded ? "is-expanded" : ""}`} aria-label="VMS Assistant">
           <div className="vmsa-head">
             <div className="vmsa-avatar">{IconBot}</div>
             <div className="vmsa-head-text">
@@ -398,6 +467,16 @@ function VmsAssistant() {
               </button>
             </div>
             <button className="vmsa-icon-btn" type="button" onClick={resetChat} title="Reset chat">{IconReset}</button>
+            <button
+              className="vmsa-icon-btn vmsa-icon-btn-size"
+              type="button"
+              onClick={toggleExpanded}
+              title={expanded ? "Minimize (Esc)" : "Maximize"}
+              aria-label={expanded ? "Minimize assistant" : "Maximize assistant"}
+              aria-pressed={expanded}
+            >
+              {expanded ? IconMinimize : IconMaximize}
+            </button>
             <button className="vmsa-icon-btn" type="button" onClick={() => setOpen(false)} title="Close assistant">{IconClose}</button>
           </div>
 
@@ -438,6 +517,7 @@ function VmsAssistant() {
             }}
           >
             <input
+              ref={inputRef}
               value={input}
               onChange={(event) => setInput(event.target.value)}
               placeholder="Ask about sales, inventory, reports…"

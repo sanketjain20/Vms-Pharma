@@ -73,22 +73,14 @@ body[data-theme="light"] {
   z-index: 1;
 }
 
-.nbm-logo-wrap {
-  display: flex;
-  align-items: center;
-  height: 32px;
-  padding: 0 10px;
-  border-radius: 8px;
-  /* the source mark is dark-navy text on an opaque white background
-     (no alpha channel) — a filter can't safely recolor it, so it
-     always sits on its own light card instead of the dark navbar. */
-  background: #ffffff;
-}
+/* the Udyora mark (BrandMark): a round badge, white-on-black in dark mode, black-on-white in light */
 .nbm-logo {
-  height: 18px;
-  width: auto;
+  height: 34px;
+  width: 34px;
   object-fit: contain;
+  border-radius: 50%;
   display: block;
+  flex-shrink: 0;
 }
 
 /* Workspace mark — plain text, no chip/pill background. A hairline
@@ -405,8 +397,7 @@ body[data-theme="light"] {
 
 @media (max-width: 480px) {
   .nbm-bar    { padding: 0 12px; height: 54px; }
-  .nbm-logo-wrap { height: 26px; padding: 0 8px; }
-  .nbm-logo   { height: 14px; }
+  .nbm-logo   { height: 28px; width: 28px; }
   .nbm-shop-badge { display: none; }
   .nbm-avatar { width: 34px; height: 34px; }
   .nbm-avatar-img { width: 34px; height: 34px; }

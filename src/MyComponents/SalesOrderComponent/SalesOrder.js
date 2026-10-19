@@ -1,9 +1,9 @@
 import React, { useState } from "react";
+import ReactDOM from "react-dom";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import { toast } from "react-toastify";
-import { toastApiError } from "../../utils/toastMessage";
 import SalesAdd from "../SalesComponent/SalesAdd";
 import SalesEdit from "../SalesComponent/SalesEdit";
 import SalesView from "../SalesComponent/SalesView";
@@ -39,11 +39,26 @@ export default function SalesOrder() {
   const perform = async (row, action) => {
     try {
       setBusy(true); setError("");
-      await api(`${baseUrl}/${action}/${row.uKey}`, { method: "POST", body: JSON.stringify({}) });
+      let body = "{}";
+      if (action === "ConvertToSale") {
+        // The convert/invoice endpoint accepts an explicit items list, but an
+        // empty body also works (backend defaults to all pending lines). We send
+        // the order's godown so the invoice lands in the right place.
+        const order = await api(`${baseUrl}/${config.detail}/${row.uKey}`);
+        body = JSON.stringify({
+          godownId: order.godownId || null,
+          paymentType: order.paymentType || null,
+          amountPaid: order.amountPaid ?? null,
+          dueDate: order.dueDate || null,
+          billingMode: order.billingMode || null,
+          autoApplySchemes: order.autoApplySchemes != null ? order.autoApplySchemes : null,
+        });
+      }
+      await api(`${baseUrl}/${action}/${row.uKey}`, { method: "POST", body });
       window.dispatchEvent(new Event("document-grid-refresh"));
       setDetail(null);
       toast.success(`${config.singular} updated successfully.`);
-    } catch (e) { setError(e.message || "Action failed"); toastApiError(e.message, "Action failed"); }
+    } catch (e) { setError(e.message || "Action failed"); }
     finally { setBusy(false); }
   };
   const actions = (row, { can, ActionIcon }) => <>
@@ -54,14 +69,14 @@ export default function SalesOrder() {
   </>;
   return <div className="i-container">
     <h2 className="i-title">🧾 SALES ORDER</h2>
-    {detailState && <SalesView documentMode uKey={detailState.uKey} onClose={() => setDetail(null)} />}
+    {detailState && ReactDOM.createPortal(<SalesView documentMode uKey={detailState.uKey} onClose={() => setDetail(null)} />, document.body)}
     {error && <div className="ops-error" role="alert">{error}<button onClick={() => setError("")}>Dismiss</button></div>}
     <DynamicGrid Module={config.title} ModuleId={String(config.id)} apiUrl={`${baseUrl}/${config.list}`} columns={columns} customActionsOnly customAddAction={() => setForm({})} customAddLabel={`Add ${config.singular}`} extraActions={actions} />
-    {form && (form.uKey
+    {form && ReactDOM.createPortal(form.uKey
       ? <SalesEdit documentMode uKey={form.uKey} onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />
       : <SalesAdd documentMode onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />
-    )}
-    {detail && <div className="ops-backdrop" role="presentation" onMouseDown={e => e.target === e.currentTarget && setDetail(null)}><section className="ops-drawer" role="dialog" aria-modal="true"><header><div><span className="ops-eyebrow">DOCUMENT DETAILS</span><h2>{detail[config.number] || config.singular}</h2></div><button className="ops-close" onClick={() => setDetail(null)}>Ã—</button></header><div className="ops-detail-grid"><div><span>Party / source</span><strong>{detail[config.party] || detail.toGodownName || "â€”"}</strong></div><div><span>Status</span><strong>{detail.status || "â€”"}</strong></div><div><span>Date</span><strong>{detail[config.date] || "â€”"}</strong></div><div><span>Amount / units</span><strong>{detail.netAmount ?? detail.totalValue ?? detail.totalUnits ?? "â€”"}</strong></div></div><h3>Items</h3><div className="ops-item-list">{(detail.items || []).map((item, i) => <div key={item.id || i}><strong>{item.productName || `Product ${item.productId}`}</strong><span>{item.quantity} units</span></div>)}</div><footer><button className="ops-button ops-button-quiet" onClick={() => setDetail(null)}>Close</button></footer></section></div>}
+    , document.body)}
+    {detail && ReactDOM.createPortal(<div className="ops-backdrop" role="presentation" onMouseDown={e => e.target === e.currentTarget && setDetail(null)}><section className="ops-drawer" role="dialog" aria-modal="true"><header><div><span className="ops-eyebrow">DOCUMENT DETAILS</span><h2>{detail[config.number] || config.singular}</h2></div><button className="ops-close" onClick={() => setDetail(null)}>Ã—</button></header><div className="ops-detail-grid"><div><span>Party / source</span><strong>{detail[config.party] || detail.toGodownName || "â€”"}</strong></div><div><span>Status</span><strong>{detail.status || "â€”"}</strong></div><div><span>Date</span><strong>{detail[config.date] || "â€”"}</strong></div><div><span>Amount / units</span><strong>{detail.netAmount ?? detail.totalValue ?? detail.totalUnits ?? "â€”"}</strong></div></div><h3>Items</h3><div className="ops-item-list">{(detail.items || []).map((item, i) => <div key={item.id || i}><strong>{item.productName || `Product ${item.productId}`}</strong><span>{item.quantity} units</span></div>)}</div><footer><button className="ops-button ops-button-quiet" onClick={() => setDetail(null)}>Close</button></footer></section></div>, document.body)}
   </div>;
 }
 

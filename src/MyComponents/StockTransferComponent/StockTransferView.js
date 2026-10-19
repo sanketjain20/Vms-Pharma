@@ -104,6 +104,14 @@ export default function StockTransferView({ uKey, onClose, onEdit }) {
                       <span className="afx-meta-card-val">{fmt(transfer.vehicleNumber)}</span>
                     </div>
                     <div className="afx-meta-card">
+                      <span className="afx-meta-card-label">Transporter</span>
+                      <span className="afx-meta-card-val">{fmt(transfer.transporter)}</span>
+                    </div>
+                    <div className="afx-meta-card">
+                      <span className="afx-meta-card-label">Expected arrival</span>
+                      <span className="afx-meta-card-val">{fmt(transfer.expectedDate)}</span>
+                    </div>
+                    <div className="afx-meta-card">
                       <span className="afx-meta-card-label">Status</span>
                       <span className="afx-meta-card-val">{statusBadge(transfer.status)}</span>
                     </div>
@@ -133,6 +141,7 @@ export default function StockTransferView({ uKey, onClose, onEdit }) {
                             <th>Product</th>
                             <th>Quantity</th>
                             <th>Batch number</th>
+                            <th>Expiry</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -140,7 +149,13 @@ export default function StockTransferView({ uKey, onClose, onEdit }) {
                             <tr key={item.id || idx}>
                               <td style={{ fontWeight: 600, color: "var(--afx-text-1)" }}>{item.productName || `Product #${item.productId}`}</td>
                               <td>{item.quantity ?? "—"}</td>
-                              <td style={{ fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{fmt(item.batchNumber)}</td>
+                              <td style={{ fontFamily: "var(--afx-font-mono)", fontSize: 11 }} data-testid="transfer-batch">
+                                {fmt(item.batchNumber)}
+                                {item.batchPlanned && item.batchNumber && (
+                                  <span className="afx-view-value--muted" style={{ fontFamily: "inherit", marginLeft: 6 }} title="Taken at dispatch (FIFO); can change if stock moves before then">planned</span>
+                                )}
+                              </td>
+                              <td style={{ fontSize: 11 }}>{fmt(item.expiryDate)}</td>
                             </tr>
                           ))}
                         </tbody>

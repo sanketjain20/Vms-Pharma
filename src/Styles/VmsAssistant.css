@@ -40,6 +40,19 @@ body[data-theme="light"] .vmsa-root {
 
 .vmsa-root * { box-sizing: border-box; }
 
+/* ── Backdrop (maximized view only) ─────────────────────── */
+.vmsa-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(8, 6, 16, .55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: vmsaFade .25s ease both;
+}
+body[data-theme="light"] .vmsa-backdrop { background: rgba(28, 23, 48, .32); }
+@keyframes vmsaFade { from { opacity: 0; } to { opacity: 1; } }
+
 /* ── Launcher ───────────────────────────────────────────── */
 .vmsa-launcher {
   position: relative;
@@ -83,17 +96,31 @@ body[data-theme="light"] .vmsa-root {
   color: var(--vmsa-text);
   box-shadow: 0 36px 90px rgba(0, 0, 0, .5);
   animation: vmsaOpen .28s cubic-bezier(.16, 1, .3, 1) both;
+  transition:
+    width .3s cubic-bezier(.16, 1, .3, 1),
+    height .3s cubic-bezier(.16, 1, .3, 1),
+    border-radius .3s ease;
 }
 @keyframes vmsaOpen { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
 
+/* Maximized: a large workspace anchored to the same corner */
+.vmsa-frame.is-expanded {
+  width: min(980px, calc(100vw - 56px));
+  height: calc(100vh - 56px);
+  border-radius: 24px;
+}
+
 .vmsa-head {
   display: grid;
-  grid-template-columns: 40px 1fr 32px 32px;
+  grid-template-columns: 40px 1fr 32px 32px 32px;
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--vmsa-line);
   background: linear-gradient(180deg, var(--vmsa-panel-raise), var(--vmsa-panel));
+}
+.vmsa-frame.is-expanded .vmsa-head {
+  padding: 16px 24px;
 }
 .vmsa-avatar {
   display: grid; place-items: center;
@@ -110,6 +137,7 @@ body[data-theme="light"] .vmsa-root {
   font-size: 14.5px;
   letter-spacing: -.01em;
 }
+.vmsa-frame.is-expanded .vmsa-name { font-size: 16px; }
 .vmsa-status {
   display: flex; align-items: center; gap: 3px;
   max-width: 100%;
@@ -135,6 +163,18 @@ body[data-theme="light"] .vmsa-root {
   transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
 .vmsa-icon-btn:hover { background: var(--vmsa-accent-bg); color: var(--vmsa-accent); border-color: rgba(124, 58, 237, .35); }
+.vmsa-icon-btn:focus-visible,
+.vmsa-chip:focus-visible,
+.vmsa-msg-action:focus-visible,
+.vmsa-msg-retry:focus-visible {
+  outline: 2px solid var(--vmsa-accent);
+  outline-offset: 2px;
+}
+.vmsa-icon-btn-size[aria-pressed="true"] {
+  background: var(--vmsa-accent-bg);
+  color: var(--vmsa-accent);
+  border-color: rgba(124, 58, 237, .35);
+}
 
 /* ── Messages ───────────────────────────────────────────── */
 .vmsa-messages {
@@ -145,6 +185,11 @@ body[data-theme="light"] .vmsa-root {
   flex-direction: column;
   gap: 12px;
 }
+/* In the maximized view keep the conversation in a readable centered column */
+.vmsa-frame.is-expanded .vmsa-messages {
+  padding: 24px max(24px, calc((100% - 780px) / 2));
+  gap: 14px;
+}
 .vmsa-msg {
   position: relative;
   max-width: 88%;
@@ -153,6 +198,12 @@ body[data-theme="light"] .vmsa-root {
   font-size: 13.2px;
   line-height: 1.55;
   animation: vmsaMsgIn .25s cubic-bezier(.16, 1, .3, 1) both;
+}
+.vmsa-frame.is-expanded .vmsa-msg {
+  max-width: 80%;
+  padding: 13px 17px;
+  font-size: 14.2px;
+  line-height: 1.6;
 }
 @keyframes vmsaMsgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
@@ -164,6 +215,7 @@ body[data-theme="light"] .vmsa-root {
   color: var(--vmsa-text);
   padding-right: 34px;
 }
+.vmsa-frame.is-expanded .vmsa-msg-assistant { padding-right: 40px; }
 .vmsa-msg-user {
   align-self: flex-end;
   border-bottom-right-radius: 5px;
@@ -194,6 +246,7 @@ body[data-theme="light"] .vmsa-root {
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 12px;
 }
+.vmsa-frame.is-expanded .vmsa-code { font-size: 12.8px; }
 .vmsa-msg-user .vmsa-code { background: rgba(255, 255, 255, .2); }
 
 .vmsa-msg-action {
@@ -208,7 +261,8 @@ body[data-theme="light"] .vmsa-root {
   opacity: 0;
   transition: opacity .15s ease, background .15s ease, color .15s ease;
 }
-.vmsa-msg-assistant:hover .vmsa-msg-action { opacity: 1; }
+.vmsa-msg-assistant:hover .vmsa-msg-action,
+.vmsa-msg-action:focus-visible { opacity: 1; }
 .vmsa-msg-action:hover { background: var(--vmsa-accent-bg); color: var(--vmsa-accent); }
 
 .vmsa-msg-retry {
@@ -264,6 +318,7 @@ body[data-theme="light"] .vmsa-root {
   cursor: pointer;
   transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
+.vmsa-frame.is-expanded .vmsa-chip { padding: 8px 14px; font-size: 12.5px; }
 .vmsa-chip-ghost { color: var(--vmsa-muted); font-weight: 700; }
 .vmsa-chip:hover {
   background: var(--vmsa-accent-bg);
@@ -303,6 +358,10 @@ body[data-theme="light"] .vmsa-root {
   border-top: 1px solid var(--vmsa-line);
   background: var(--vmsa-panel-soft);
 }
+.vmsa-frame.is-expanded .vmsa-compose {
+  grid-template-columns: 1fr 46px;
+  padding: 16px max(24px, calc((100% - 780px) / 2));
+}
 .vmsa-compose input {
   width: 100%;
   min-width: 0;
@@ -316,6 +375,7 @@ body[data-theme="light"] .vmsa-root {
   font-size: 13px;
   transition: border-color .18s ease, box-shadow .18s ease;
 }
+.vmsa-frame.is-expanded .vmsa-compose input { padding: 13px 16px; font-size: 14px; }
 .vmsa-compose input::placeholder { color: var(--vmsa-faint); }
 .vmsa-compose input:focus { border-color: rgba(167, 139, 250, .6); box-shadow: 0 0 0 3px var(--vmsa-accent-bg); }
 .vmsa-compose input:disabled { opacity: .6; }
@@ -334,14 +394,56 @@ body[data-theme="light"] .vmsa-root {
 .vmsa-compose button:hover:not(:disabled) { transform: translateY(-1px); }
 .vmsa-compose button:disabled { opacity: .4; cursor: not-allowed; }
 
+/* ── Assistant face: blink, twinkle, gentle float ───────── */
+.vmsa-face { overflow: visible; }
+.vmsa-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vmsaBlink 4.8s ease-in-out infinite;
+}
+.vmsa-spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vmsaTwinkle 2.4s ease-in-out infinite;
+}
+.vmsa-launcher .vmsa-face { animation: vmsaFloat 3.6s ease-in-out infinite; }
+.vmsa-launcher:hover .vmsa-eye { animation-duration: 1.6s; }
+@keyframes vmsaBlink { 0%, 92%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(.1); } }
+@keyframes vmsaTwinkle { 0%, 100% { opacity: .45; transform: scale(.7) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(45deg); } }
+@keyframes vmsaFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.5px); } }
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 520px) {
   .vmsa-root { right: 14px; bottom: 14px; }
   .vmsa-frame { width: calc(100vw - 28px); height: min(610px, calc(100vh - 28px)); border-radius: 18px; }
+
+  /* The compact panel is already nearly full-screen on phones,
+     so the maximize toggle would do nothing useful. */
+  .vmsa-head { grid-template-columns: 40px 1fr 32px 32px; }
+  .vmsa-icon-btn-size { display: none; }
+  .vmsa-backdrop { display: none; }
+
+  .vmsa-frame.is-expanded {
+    width: calc(100vw - 28px);
+    height: min(610px, calc(100vh - 28px));
+    border-radius: 18px;
+  }
+  .vmsa-frame.is-expanded .vmsa-head { padding: 14px 16px; }
+  .vmsa-frame.is-expanded .vmsa-messages { padding: 16px; gap: 12px; }
+  .vmsa-frame.is-expanded .vmsa-msg { max-width: 88%; padding: 11px 14px; font-size: 13.2px; line-height: 1.55; }
+  .vmsa-frame.is-expanded .vmsa-compose { padding: 12px 14px; grid-template-columns: 1fr 42px; }
+}
+
+/* Medium screens: keep the maximized panel from feeling cramped */
+@media (min-width: 521px) and (max-width: 900px) {
+  .vmsa-frame.is-expanded { width: calc(100vw - 28px); height: calc(100vh - 28px); }
+  .vmsa-root.is-expanded { right: 14px; bottom: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vmsa-launcher, .vmsa-frame, .vmsa-msg { animation: none !important; }
+  .vmsa-launcher, .vmsa-frame, .vmsa-msg, .vmsa-backdrop { animation: none !important; }
+  .vmsa-frame { transition: none !important; }
   .vmsa-launcher-pulse { animation: none !important; display: none; }
   .vmsa-typing span { animation: none !important; opacity: .6; }
+  .vmsa-eye, .vmsa-spark, .vmsa-launcher .vmsa-face { animation: none !important; }
 }

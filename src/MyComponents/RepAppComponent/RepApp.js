@@ -30,7 +30,7 @@ import {
 import {
   CATALOG_SORTS, DEFAULT_CATALOG_FILTERS, activeCatalogFilters, catalogFacets, filterCatalog, orderAgain,
 } from "./repCatalog";
-import udyorawingslogo from "../../Images/udyora_wings.svg";
+import BrandMark from "../CommonComponent/BrandMark";
 import "../../Styles/RepApp/RepApp.css";
 
 const DAYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
@@ -368,7 +368,7 @@ export default function RepApp({ db: dbProp, api = repApi, getPosition = default
     <div className="ra-root" data-accent={accent}>
       <header className="ra-header">
         <div className="ra-brand">
-          <img className="ra-logo" src={udyorawingslogo} alt="Udyora" />
+          <BrandMark theme={theme} className="ra-logo" />
           <button type="button" className="ra-me" aria-label="Your profile" onClick={() => setTab("settings")}>
             <RepAvatar photo={photo} name={displayName} size={34} />
           </button>

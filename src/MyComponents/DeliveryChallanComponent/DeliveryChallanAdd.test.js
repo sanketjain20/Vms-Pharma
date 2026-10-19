@@ -141,6 +141,9 @@ describe("DeliveryChallanAdd — dropdown latency fix", () => {
     await screen.findByText("Main Warehouse");
     fireEvent.mouseDown(screen.getByText("Main Warehouse"));
 
+    // Switch to Items tab to reveal the product SearchDrop.
+    fireEvent.click(screen.getByText(/Items/));
+
     // Select product.
     fireEvent.click(screen.getByText("Select product"));
     await screen.findByText("Paracetamol 500mg");

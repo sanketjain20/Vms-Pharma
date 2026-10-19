@@ -75,11 +75,14 @@ body[data-theme="light"] {
   margin-left: 92px; /* clears the fixed sidebar rail + its floating toggle */
 }
 
+/* the Udyora mark (BrandMark): a round badge, white-on-black in dark mode, black-on-white in light */
 .brand-logo {
-  height: 32px;
-  width: auto;
+  height: 34px;
+  width: 34px;
   object-fit: contain;
-  border-radius: 7px; /* the mark ships with its own dark backdrop baked in */
+  border-radius: 50%;
+  display: block;
+  flex-shrink: 0;
 }
 
 /* Workspace mark — plain text, no chip/pill background. A hairline
@@ -330,7 +333,7 @@ body[data-theme="light"] {
 @media (max-width: 480px) {
   .topbar { padding: 0 12px; height: 56px; }
   .topbar-left { margin-left: 60px; }
-  .brand-logo { height: 26px; }
+  .brand-logo { height: 28px; width: 28px; }
   .shop-badge { display: none; }
   .profile-avatar { width: 34px; height: 34px; }
   .avatar-img { width: 34px; height: 34px; }

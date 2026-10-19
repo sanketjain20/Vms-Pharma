@@ -1,9 +1,9 @@
 import React, { useState } from "react";
+import ReactDOM from "react-dom";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import { toast } from "react-toastify";
-import { toastApiError } from "../../utils/toastMessage";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import "../../Styles/Inventory.css";
 import StockTransferAdd from "./StockTransferAdd";
@@ -50,7 +50,7 @@ export default function StockTransfer() {
       window.dispatchEvent(new Event("document-grid-refresh"));
       setDetailUKey(null);
       toast.success(`${config.singular} updated successfully.`);
-    } catch (e) { setError(e.message || "Action failed"); toastApiError(e.message, "Action failed"); }
+    } catch (e) { setError(e.message || "Action failed"); }
     finally { setBusy(false); }
   };
   const actions = (row, { can, ActionIcon }) => <>
@@ -60,11 +60,11 @@ export default function StockTransfer() {
     {row.status !== "CANCELLED" && can("Disable") && <button className="dg-icon-btn dg-icon-btn--disable" disabled={busy} title="Cancel" aria-label="Cancel" onClick={() => perform(row, config.cancel)}><ActionIcon.Disable /></button>}
   </>;
   return <main className="ops-page">
-    {detailUKey && <StockTransferView uKey={detailUKey} onClose={() => setDetailUKey(null)} onEdit={uKey => setForm({ uKey })} />}
+    {detailUKey && ReactDOM.createPortal(<StockTransferView uKey={detailUKey} onClose={() => setDetailUKey(null)} onEdit={uKey => setForm({ uKey })} />, document.body)}
     <header className="ops-header"><div><span className="ops-eyebrow">OPERATIONS / DOCUMENTS</span><h1>{config.title}</h1><p>Manage documents and their status.</p></div></header>
     {error && <div className="ops-error" role="alert">{error}<button onClick={() => setError("")}>Dismiss</button></div>}
     <DynamicGrid Module={config.title} ModuleId={String(config.id)} apiUrl={`${baseUrl}/${config.list}`} columns={columns} customActionsOnly customAddAction={() => setForm({})} customAddLabel={`Add ${config.singular}`} extraActions={actions} />
-    {form && !form.uKey && <StockTransferAdd onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />}
-    {form && form.uKey && <StockTransferEdit uKey={form.uKey} onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />}
+    {form && !form.uKey && ReactDOM.createPortal(<StockTransferAdd onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />, document.body)}
+    {form && form.uKey && ReactDOM.createPortal(<StockTransferEdit uKey={form.uKey} onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />, document.body)}
   </main>;
 }

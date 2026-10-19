@@ -41,7 +41,7 @@ export default function PurchaseView({ uKey, onClose, onEdit, documentMode = fal
           ...data.data,
           purchaseNumber: data.data.orderNumber,
           invoiceDate: data.data.orderDate,
-          items: (data.data.items || []).map(item => ({ ...item, costPrice: item.unitCost, mrp: item.unitCost })),
+          items: (data.data.items || []).map(item => ({ ...item, costPrice: item.unitCost, mrp: item.mrp })),
         } : data.data);
         else setError(data.message || "Failed to fetch purchase");
       })
@@ -191,6 +191,31 @@ export default function PurchaseView({ uKey, onClose, onEdit, documentMode = fal
                   </div>
                 )}
               </div>
+
+              {documentMode && (
+                <>
+                  <div className="afx-section-title">Purchases From This Order ({purchase.purchases?.length || 0})</div>
+                  {!purchase.purchases?.length ? (
+                    <div className="afx-view-value--muted" style={{ fontSize: 12, marginBottom: 10 }} data-testid="linked-purchases-empty">
+                      Not converted to a purchase yet.
+                    </div>
+                  ) : (
+                    <div className="afx-line-table" data-testid="linked-purchases">
+                      <table>
+                        <thead><tr><th>Purchase No</th><th>Created On</th></tr></thead>
+                        <tbody>
+                          {purchase.purchases.map((link, idx) => (
+                            <tr key={link.documentId || idx}>
+                              <td style={{ fontFamily: "var(--afx-font-mono)", fontWeight: 600 }}>{link.documentNumber}</td>
+                              <td>{link.createdAt ? new Date(link.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
 
               <div className="afx-section-title">Purchase Items ({purchase.items?.length || 0})</div>
               {!purchase.items?.length ? (

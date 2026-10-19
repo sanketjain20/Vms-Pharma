@@ -592,7 +592,8 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
     if (creditPaymentType !== "CREDIT" && !billingMode)  tempErrors.billingMode  = "Select billing mode";
     if (discountInput < 0)                               tempErrors.discountInput = "Discount cannot be negative";
     if (totals.discountTooLarge)                         tempErrors.discountInput = "Discount cannot be more than the value of the goods after schemes";
-    if (creditPaymentType === "PAID" && parseFloat(amountPaid) !== payableAmount)
+    // compared to the paisa: the box shows the payable rounded to 2 places, so an exact match on the raw figure can fail
+    if (creditPaymentType === "PAID" && Math.abs(round2(parseFloat(amountPaid) || 0) - round2(payableAmount)) > 0.005)
       tempErrors.amountPaid = "Amount must be equal to the payable amount";
     if (creditPaymentType === "PARTIAL") {
       if (!amountPaid || amountPaid <= 0)               tempErrors.amountPaid = "Enter valid amount paid";
@@ -619,7 +620,8 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
         amountPaid: parseFloat(amountPaid || 0), totalDiscount: totals.manualDiscount,
         autoApplySchemes: true,
         items: lineItems.map(item => ({ productId: item.productId, quantity: item.quantity,
-          unitPrice: Number(item.sellingPrice || 0), gstRate: Number(item.gstRate || 0), schemeId: item.schemeId || null })),
+          unitPrice: Number(item.sellingPrice || 0), gstRate: Number(item.gstRate || 0), schemeId: item.schemeId || null,
+          batchId: item.batchId || null })),
       };
       const response = await apiClient(`${API_BASE_URL}/api/${documentMode ? "SalesOrder/AddSalesOrder" : "Sales/AddSales"}`, {
         method: "POST",
@@ -871,47 +873,89 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
             <div className="afx-items-empty">No items added yet</div>
           ) : (
             <>
-              <div className="afx-line-list">
-                {lineItems.map((it, idx) => (
-                  <div key={idx} className="afx-line-row">
-                    <div className="afx-line-avatar" style={{ "--hue": productHue(it.productName) }}>
-                      {productInitials(it.productName)}
-                    </div>
-                    <div className="afx-line-info">
-                      <span className="afx-line-name">{it.productName}</span>
-                      <span className="afx-line-meta">
-                        ₹{it.sellingPrice} × {it.quantity}
-                        {it.freeQuantity > 0 && <strong className="afx-text-success"> {freeText(it)}</strong>}
-                        {it.batchNumber && it.batchNumber !== "AUTO" && ` · Batch ${it.batchNumber}`}
-                        {it.expiryDate && ` · Exp ${it.expiryDate}`}
-                      </span>
-                      {it.schemeId && (
-                        <span className="afx-line-meta" data-testid="line-scheme">
-                          Scheme: {it.schemeName}{it.schemeDiscount > 0 && ` · −₹${it.schemeDiscount.toFixed(2)}`}
-                          {" "}<button type="button" className="afx-link-btn" onClick={() => dropScheme(idx)}>Remove</button>
-                        </span>
-                      )}
-                      {!it.schemeId && it.schemeOff && (
-                        <span className="afx-line-meta">
-                          No scheme <button type="button" className="afx-link-btn" onClick={() => retryScheme(idx)}>Apply scheme</button>
-                        </span>
-                      )}
-                    </div>
-                    <span className="afx-line-total">₹{(totals.lines[idx].post * (1 + totals.lines[idx].rate)).toFixed(2)}</span>
-                    <div className="afx-line-actions">
-                      <button type="button" className="afx-icon-btn" onClick={() => editItem(idx)} title="Edit">
-                        <svg width="12" height="12" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z"/></svg>
-                      </button>
-                      <button type="button" className="afx-remove-btn" onClick={() => deleteItem(idx)} title="Delete">
-                        <svg width="12" height="12" viewBox="0 -960 960 960" fill="currentColor"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360Z"/></svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="afx-line-table afx-sale-lines">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Product</th>
+                      <th>Price (₹)</th>
+                      <th>Qty</th>
+                      <th>Amount excl. GST (₹)</th>
+                      <th>GST %</th>
+                      <th>GST (₹)</th>
+                      <th>Amount incl. GST (₹)</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody className="afx-line-list">
+                    {lineItems.map((it, idx) => {
+                      // per product: value before GST (after any scheme), the GST % and amount on it, and the two together
+                      const row = totals.lines[idx] || { post: 0, rate: 0 };
+                      const excl = row.post;
+                      const gst = row.post * row.rate;
+                      return (
+                        <tr key={idx} className="afx-line-row" data-testid="sale-line">
+                          <td>{idx + 1}</td>
+                          <td>
+                            <div className="afx-line-name">{it.productName}</div>
+                            <div className="afx-line-meta">
+                              {it.freeQuantity > 0 && <strong className="afx-text-success">{freeText(it)} </strong>}
+                              {it.batchNumber && it.batchNumber !== "AUTO" && `Batch ${it.batchNumber} `}
+                              {it.expiryDate && `· Exp ${it.expiryDate}`}
+                            </div>
+                            {it.schemeId && (
+                              <span className="afx-line-meta" data-testid="line-scheme">
+                                Scheme: {it.schemeName}{it.schemeDiscount > 0 && ` · −₹${it.schemeDiscount.toFixed(2)}`}
+                                {" "}<button type="button" className="afx-link-btn" onClick={() => dropScheme(idx)}>Remove</button>
+                              </span>
+                            )}
+                            {!it.schemeId && it.schemeOff && (
+                              <span className="afx-line-meta">
+                                No scheme <button type="button" className="afx-link-btn" onClick={() => retryScheme(idx)}>Apply scheme</button>
+                              </span>
+                            )}
+                          </td>
+                          <td data-testid="line-price">{Number(it.sellingPrice || 0).toFixed(2)}</td>
+                          <td data-testid="line-qty">{it.quantity}</td>
+                          <td data-testid="line-excl">{excl.toFixed(2)}</td>
+                          <td data-testid="line-rate">{Number((row.rate * 100).toFixed(2))}%</td>
+                          <td data-testid="line-gst">{gst.toFixed(2)}</td>
+                          <td data-testid="line-incl" style={{ fontWeight: 700, color: "var(--afx-text-1)" }}>{(excl + gst).toFixed(2)}</td>
+                          <td>
+                            <div className="afx-line-actions">
+                              <button type="button" className="afx-icon-btn" onClick={() => editItem(idx)} title="Edit">
+                                <svg width="12" height="12" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z"/></svg>
+                              </button>
+                              <button type="button" className="afx-remove-btn" onClick={() => deleteItem(idx)} title="Delete">
+                                <svg width="12" height="12" viewBox="0 -960 960 960" fill="currentColor"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360Z"/></svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ fontWeight: 700 }}>
+                      <td colSpan={4} style={{ textAlign: "right" }}>Total ({lineItems.length} item{lineItems.length === 1 ? "" : "s"})</td>
+                      <td data-testid="sum-excl">{lineItems.reduce((s, _, k) => s + (totals.lines[k]?.post || 0), 0).toFixed(2)}</td>
+                      <td></td>
+                      <td data-testid="sum-gst">{lineItems.reduce((s, _, k) => s + (totals.lines[k] ? totals.lines[k].post * totals.lines[k].rate : 0), 0).toFixed(2)}</td>
+                      <td data-testid="sum-incl" style={{ color: "var(--afx-text-1)" }}>{lineItems.reduce((s, _, k) => s + (totals.lines[k] ? totals.lines[k].post * (1 + totals.lines[k].rate) : 0), 0).toFixed(2)}</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
-              <div className="afx-totals" style={{ marginTop: 10 }}>
-                <div className="afx-totals-row afx-totals-grand"><span>Total (incl. GST)</span><span>₹{totalAmount.toFixed(2)}</span></div>
-              </div>
+              {totals.manualDiscount > 0 && (
+                <div className="afx-totals" style={{ marginTop: 10 }}>
+                  <div className="afx-totals-row"><span>Invoice discount</span><span className="afx-text-danger">−₹{totals.manualDiscount.toFixed(2)}</span></div>
+                  <div className="afx-totals-row"><span>Amount excl. GST after discount</span><span>₹{totals.taxable.toFixed(2)}</span></div>
+                  <div className="afx-totals-row"><span>GST after discount</span><span>₹{totals.tax.toFixed(2)}</span></div>
+                  <div className="afx-totals-row afx-totals-grand"><span>Net payable (incl. GST)</span><span data-testid="net-payable">₹{totals.net.toFixed(2)}</span></div>
+                </div>
+              )}
             </>
           )}
         </div>

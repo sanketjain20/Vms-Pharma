@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/NavBarModule.css";
-import udyoralogo from "../../Images/udyoraname.png";
+import BrandMark from "./BrandMark";
 import ThemeToggle from "./ThemeToggle";
 import GodownSwitcher from "./GodownSwitcher";
 import API_BASE_URL from "../../Config/api.config";
@@ -65,9 +65,7 @@ export default function NavBarModule({ sidebarOpen, theme, onToggleTheme, active
     <header className={`nbm-bar ${sidebarOpen ? "shifted" : ""} ${scrolled ? "scrolled" : ""}`}>
 
       <div className="nbm-left">
-        <span className="nbm-logo-wrap">
-          <img src={udyoralogo} alt="Udyora" className="nbm-logo" />
-        </span>
+        <BrandMark theme={theme} className="nbm-logo" />
 
         <GodownSwitcher
           godowns={godowns}

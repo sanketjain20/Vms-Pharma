@@ -59,7 +59,7 @@ describe("SalesView — schemes and discounts", () => {
 
     expect(screen.getByText("Disc (₹)")).toBeInTheDocument();
     expect(screen.getByText("150.00")).toBeInTheDocument();  // the row's discount
-    expect(screen.getByText("850.00")).toBeInTheDocument();  // the row's total: 1,000 - 150
+    expect(screen.getByTestId("line-total")).toHaveTextContent("850.00");  // the row's total: 1,000 - 150
     expect(screen.getByText("Scheme discount").nextSibling).toHaveTextContent("−₹100.00");
     expect(screen.getByText("Discount").nextSibling).toHaveTextContent("−₹50"); // the invoice discount alone, not 150 again
   });

@@ -79,7 +79,8 @@ describe("SalesEdit — schemes", () => {
 
     const lines = document.querySelectorAll(".afx-line-list .afx-line-row");
     expect(lines).toHaveLength(1);
-    expect(lines[0]).toHaveTextContent("₹100 × 10");
+    expect(lines[0].querySelector("[data-testid='line-price']")).toHaveTextContent("100.00");
+    expect(lines[0].querySelector("[data-testid='line-qty']")).toHaveTextContent("10");
     expect(lines[0]).toHaveTextContent("+ 1 free");
     expect(screen.getByTestId("line-scheme")).toHaveTextContent("Scheme: Buy 10 Get 1");
   });
@@ -88,7 +89,7 @@ describe("SalesEdit — schemes", () => {
     mockApi(FREE_SALE);
     await open();
 
-    const rows = document.querySelectorAll(".afx-line-list .afx-line-row");
+    const rows = screen.getAllByTestId("original-line");
     expect(rows).toHaveLength(3);
     expect(rows[2]).toHaveTextContent("FREE");
     expect(rows[2]).toHaveTextContent("Buy 10 Get 1");

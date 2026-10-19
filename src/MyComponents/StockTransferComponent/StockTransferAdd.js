@@ -82,6 +82,8 @@ export default function StockTransferAdd({ onSubmit, onClose, documentMode = fal
     toGodownId: "",
     date: new Date().toISOString().slice(0, 10),
     vehicleNumber: "",
+    transporter: "",
+    expectedDate: "",
     notes: "",
     items: [{ ...EMPTY_ITEM }],
   });
@@ -132,6 +134,7 @@ export default function StockTransferAdd({ onSubmit, onClose, documentMode = fal
       e.toGodownId = "Source and destination godowns must differ";
     }
     if (!form.date) e.date = "Transfer date is required";
+    if (form.expectedDate && form.date && form.expectedDate < form.date) e.expectedDate = "Expected arrival cannot be before the transfer date";
     if (form.items.length === 0) e.items_empty = "Add at least one item";
     const itemErrors = {};
     form.items.forEach((item, i) => {
@@ -156,7 +159,9 @@ export default function StockTransferAdd({ onSubmit, onClose, documentMode = fal
         fromGodownId: Number(form.fromGodownId),
         toGodownId: Number(form.toGodownId),
         transferDate: form.date,
+        expectedDate: form.expectedDate || null,
         vehicleNumber: form.vehicleNumber || null,
+        transporter: form.transporter || null,
         notes: form.notes,
         items: form.items.map(it => ({ productId: Number(it.productId), quantity: Number(it.quantity) })),
       };
@@ -184,7 +189,7 @@ export default function StockTransferAdd({ onSubmit, onClose, documentMode = fal
   const productName = p => p.name || p.productName || `Product #${p.id}`;
   const totalUnits = form.items.reduce((s, i) => s + Number(i.quantity || 0), 0);
 
-  const hasDetailErrors = errors.fromGodownId || errors.toGodownId || errors.date;
+  const hasDetailErrors = errors.fromGodownId || errors.toGodownId || errors.date || errors.expectedDate;
   const hasItemErrors = errors.items_empty || errors.items;
 
   return (
@@ -278,6 +283,29 @@ export default function StockTransferAdd({ onSubmit, onClose, documentMode = fal
                       onChange={e => setField("vehicleNumber", e.target.value)}
                       placeholder="e.g. MH12AB1234"
                     />
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Transporter</label>
+                    <input
+                      className="afx-input"
+                      aria-label="Transporter"
+                      value={form.transporter}
+                      onChange={e => setField("transporter", e.target.value)}
+                      placeholder="Transporter name"
+                    />
+                  </div>
+
+                  <div className="afx-field">
+                    <label className="afx-label">Expected arrival</label>
+                    <input
+                      className={`afx-input ${errors.expectedDate ? "afx-input--err" : ""}`}
+                      type="date"
+                      aria-label="Expected arrival"
+                      value={form.expectedDate}
+                      onChange={e => setField("expectedDate", e.target.value)}
+                    />
+                    {errors.expectedDate && <span className="afx-error">{errors.expectedDate}</span>}
                   </div>
 
                   <div className="afx-field afx-field--full">
