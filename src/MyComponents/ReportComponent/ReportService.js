@@ -2,6 +2,7 @@
 import { ReportEntity } from "../Enums/ReportEntity";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { RUN_TIME_REPORTS } from "./runTimeReports";
 
 
 // Each function constructs payload and calls the respective API
@@ -65,7 +66,8 @@ export const runReportByModule = async (moduleId, filters) => {
         apiUrl = `${API_BASE_URL}/api/Reports/NarcoticRegisterReport`;
         break;
     default:
-      throw new Error("Invalid module ID");
+      if (!RUN_TIME_REPORTS[moduleId]) throw new Error("Invalid module ID");
+      apiUrl = RUN_TIME_REPORTS[moduleId].download; // run-time reports (Phase 3)
   }
 
   // Convert empty string values to null

@@ -3,6 +3,7 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { businessTypeLabel } from "./BusinessTypeFields";
 
 export default function VendorView({ uKey, onClose }) {
   const [vendor, setVendor] = useState(null);
@@ -34,6 +35,8 @@ export default function VendorView({ uKey, onClose }) {
     { label: "Phone",                 value: vendor.phone },
     { label: "Role",                  value: vendor.roleName },
     { label: "Shop Name",             value: vendor.shopName },
+    { label: "Business Type",         value: businessTypeLabel(vendor.businessType) },
+    { label: "Expiry Dates",          value: vendor.trackExpiry === false ? "Not tracked" : "Tracked" },
     { label: "Vendor Code",           value: vendor.vendorCode },
     { label: "Account Validity Till", value: vendor.expiryDate || "N/A" },
     ...(isMasterVendor ? [{ label: "Vendor Prefix", value: vendor.vendorPrefix || "N/A" }] : []),

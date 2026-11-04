@@ -121,6 +121,11 @@ export default function InventoryAdd({ onSubmit, onClose }) {
     setErrors({ ...errors, [e.target.name]: "" });
   };
 
+  // the selling price is the product's own (set on the product); typed here only for a product without one
+  const chosenProduct = products.find((p) => String(p.id) === String(formData.product_id));
+  const productPrice = chosenProduct && Number(chosenProduct.price) > 0 ? Number(chosenProduct.price) : null;
+  const sellingPrice = productPrice ?? formData.unitSellingPrice;
+
   /** VALIDATION */
   const validate = () => {
     const e = {};
@@ -130,7 +135,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
       e.currentQuantity = "Current quantity is required";
     if (!formData.reorderLevel)
       e.reorderLevel = "Reorder level is required";
-    if (!formData.unitSellingPrice)
+    if (!sellingPrice)
       e.unitSellingPrice = "Unit selling price is required";
     return e;
   };
@@ -148,7 +153,7 @@ export default function InventoryAdd({ onSubmit, onClose }) {
       product_id: formData.product_id,
       currentQuantity: parseFloat(formData.currentQuantity),
       reorderLevel: parseFloat(formData.reorderLevel),
-      unitSellingPrice: parseFloat(formData.unitSellingPrice),
+      unitSellingPrice: parseFloat(sellingPrice),
     };
 
     try {
@@ -292,9 +297,12 @@ export default function InventoryAdd({ onSubmit, onClose }) {
                         type="number"
                         name="unitSellingPrice"
                         className={`afx-input ${errors.unitSellingPrice ? "afx-input--err" : ""}`}
-                        value={formData.unitSellingPrice}
+                        value={sellingPrice ?? ""}
                         onChange={handleChange}
+                        readOnly={productPrice != null}
+                        aria-label="Unit selling price"
                       />
+                      {productPrice != null && <div className="afx-hint">Set on the product — change it there.</div>}
                       {errors.unitSellingPrice && <div className="afx-error">{errors.unitSellingPrice}</div>}
                     </div>
                   </div>

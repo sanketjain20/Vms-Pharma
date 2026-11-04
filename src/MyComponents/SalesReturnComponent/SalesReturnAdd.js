@@ -5,10 +5,15 @@ import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import { returnValue } from "../../utils/salesSchemes";
+import { useRoundBillTotal, roundToRupee, roundOffText } from "../../utils/salePayments";
+import { SerialPicker } from "../CommonComponent/SerialWidgets";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 export default function SalesReturnAdd({ onClose, onSubmit }) {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   // ── Step state ────────────────────────────────────────────────────────────
   const [step, setStep] = useState(1); // 1 = find sale, 2 = pick items & submit
+  const roundBill = useRoundBillTotal(); // the shop rounds bills, and so their credit notes, to the rupee
 
   // ── Step 1: find sale by uKey or invoiceNumber ────────────────────────────
   const [salesInvoiceNumber, setSalesInvoiceNumber] = useState("");
@@ -42,11 +47,15 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
             productName:    item.product,
             sellingPrice:   item.sellingPrice,
             discountAmount: item.discountAmount || 0,   // what the units were sold off by: the refund is net of it
+            taxAmount:      item.taxAmount || 0,        // the line GST: the returned units take their share back
             free:           !!item.freeItem,
+            custom:         !!item.custom,             // a custom item: refunded, nothing goes back on a shelf
             max:            item.quantity,
             batchSnapshot:  item.batchNumberSnapshot,
             expirySnapshot: item.expiryDateSnapshot,
             hsnSnapshot:    item.hsnCodeSnapshot,
+            serials:        item.serials || [], // Phase 6: the units still sold on this line
+            returnSerials:  [],
             returnQuantity: 0,
           }))
         );
@@ -64,6 +73,13 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
     }
   };
 
+  /* Phase 6 — a serialised line returns the units picked */
+  const pickSerials = (idx, list) => {
+    const lines = [...returnLines];
+    lines[idx] = { ...lines[idx], returnSerials: list, returnQuantity: list.length };
+    setReturnLines(lines);
+  };
+
   const updateQty = (idx, val) => {
     const lines = [...returnLines];
     const parsed = parseInt(val) || 0;
@@ -75,6 +91,11 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
   const totalReturnAmt = returnLines.reduce(
     (s, l) => s + returnValue(l, l.returnQuantity), 0
   );
+  // the refund as the server works it out: the goods at their value, plus their share of the line GST, then rounded to
+  // the rupee like a bill (the shop setting)
+  const returnTax = returnLines.reduce((s, l) => s + (Number(l.max) > 0 ? (Number(l.taxAmount || 0) * Number(l.returnQuantity || 0)) / Number(l.max) : 0), 0);
+  const exactRefund = Math.round((totalReturnAmt + Math.round(returnTax * 100) / 100) * 100) / 100;
+  const refund = roundBill ? roundToRupee(exactRefund) : { net: exactRefund, roundOff: 0 };
   const anySelected = returnLines.some(l => l.returnQuantity > 0);
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -96,7 +117,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
         refundMode,
         items: returnLines
           .filter(l => l.returnQuantity > 0)
-          .map(l => ({ salesItemId: l.salesItemId, returnQuantity: l.returnQuantity })),
+          .map(l => ({ salesItemId: l.salesItemId, returnQuantity: l.returnQuantity, ...(l.serials.length ? { serials: l.returnSerials } : {}) })),
       };
       const res  = await apiClient(`${API_BASE_URL}/api/SalesReturn/AddSalesReturn`, {
         method: "POST",
@@ -249,7 +270,7 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
                       <tr>
                         <th>Product</th>
                         <th>Batch</th>
-                        <th>Expiry</th>
+                        {trackExpiry && <th>Expiry</th>}
                         <th>HSN</th>
                         <th>Sold</th>
                         <th>Price (₹)</th>
@@ -265,19 +286,26 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
                             <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>
                               {line.productName}
                               {line.free && <strong className="afx-text-success"> FREE</strong>}
+                              {line.custom && <div className="afx-line-meta" data-testid="return-custom">Custom item · refund only, no stock goes back</div>}
+                              {line.serials.length > 0 && (
+                                <div style={{ marginTop: 6, fontWeight: 400 }} data-testid="return-serials">
+                                  <SerialPicker options={line.serials.map(s => ({ serialNo: s }))} selected={line.returnSerials}
+                                    onChange={list => pickSerials(idx, list)} />
+                                </div>
+                              )}
                             </td>
                             <td style={{ fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{line.batchSnapshot || "—"}</td>
-                            <td>
+                            {trackExpiry && <td>
                               {line.expirySnapshot ? (
                                 <span style={{ color: expiryColor(line.expirySnapshot), fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{line.expirySnapshot}</span>
                               ) : "—"}
-                            </td>
+                            </td>}
                             <td style={{ fontSize: 11 }}>{line.hsnSnapshot || "—"}</td>
                             <td>{line.max}</td>
                             <td>₹{line.sellingPrice}</td>
                             <td>
                               <div className="afx-qty">
-                                <button className="afx-qty-btn" onClick={() => updateQty(idx, line.returnQuantity - 1)} disabled={line.returnQuantity <= 0}>−</button>
+                                <button className="afx-qty-btn" onClick={() => updateQty(idx, line.returnQuantity - 1)} disabled={line.returnQuantity <= 0 || line.serials.length > 0}>−</button>
                                 <input
                                   type="number"
                                   className="afx-qty-input"
@@ -285,8 +313,9 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
                                   min={0}
                                   max={line.max}
                                   onChange={e => updateQty(idx, e.target.value)}
+                                  disabled={line.serials.length > 0}
                                 />
-                                <button className="afx-qty-btn" onClick={() => updateQty(idx, line.returnQuantity + 1)} disabled={line.returnQuantity >= line.max}>+</button>
+                                <button className="afx-qty-btn" onClick={() => updateQty(idx, line.returnQuantity + 1)} disabled={line.returnQuantity >= line.max || line.serials.length > 0}>+</button>
                               </div>
                             </td>
                             <td style={{ fontWeight: 700, color: active ? "var(--afx-accent)" : "var(--afx-text-2)" }}>
@@ -301,9 +330,14 @@ export default function SalesReturnAdd({ onClose, onSubmit }) {
               </div>
 
               <div className="afx-totals">
+                <div className="afx-totals-row"><span>Value of goods</span><span>₹{totalReturnAmt.toFixed(2)}</span></div>
+                <div className="afx-totals-row" data-testid="return-gst"><span>GST</span><span>₹{(Math.round(returnTax * 100) / 100).toFixed(2)}</span></div>
+                {refund.roundOff !== 0 && (
+                  <div className="afx-totals-row" data-testid="return-round-off"><span>Round off</span><span>{roundOffText(refund.roundOff)}</span></div>
+                )}
                 <div className="afx-totals-row afx-totals-grand">
                   <span>Estimated Refund</span>
-                  <span>₹{totalReturnAmt.toFixed(2)}</span>
+                  <span data-testid="return-refund">₹{refund.net.toFixed(2)}</span>
                 </div>
               </div>
 

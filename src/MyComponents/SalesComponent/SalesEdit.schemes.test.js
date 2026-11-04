@@ -110,7 +110,8 @@ describe("SalesEdit — schemes", () => {
 
     const body = await save();
     expect(body.totalDiscount).toBe(0);
-    expect(body.items).toEqual([{ productId: 1, quantity: 10, sellingPrice: 100, taxAmount: 180, batchId: 1, schemeId: 7 }]);
+    // 7 from B1 + 3 from B2 merged into one line: no single batch holds all 10, so it is saved as Auto (oldest first)
+    expect(body.items).toEqual([{ productId: 1, quantity: 10, sellingPrice: 100, taxAmount: 180, batchId: null, schemeId: 7, gstRate: null, priceIncludesGst: false }]);
     expect(body.amountPaid).toBe(1180);
   });
 

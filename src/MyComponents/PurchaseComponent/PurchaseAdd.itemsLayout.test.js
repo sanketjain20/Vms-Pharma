@@ -9,7 +9,7 @@ function jsonResponse(body) {
 }
 
 const supplierDropdown = [{ id: 7, shopName: "Sunrise Distributors", supplierCode: "SUP0007" }];
-const productList = [{ id: 101, name: "Paracetamol 500mg", price: 12.5 }];
+const productList = [{ id: 101, name: "Paracetamol 500mg", price: 12.5, costPrice: 12.5 }];
 
 function mockApis() {
   apiClient.mockImplementation((url) => {
@@ -68,7 +68,7 @@ describe("PurchaseAdd — item row layout", () => {
     const expiryField = [...container.querySelectorAll(".afx-item-field")]
       .find(el => el.querySelector(".afx-item-field-label").textContent.startsWith("Expiry Date"));
     fireEvent.change(expiryField.querySelector("input"), { target: { value: "2027-01-01" } });
-    fireEvent.change(screen.getByPlaceholderText("Optional"), { target: { value: "BCH-0099" } });
+    fireEvent.change(screen.getByPlaceholderText("Blank = automatic"), { target: { value: "BCH-0099" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Save Purchase" }));
 

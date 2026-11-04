@@ -1,0 +1,14 @@
+/* Phase 7 — Styles page (sizes & colours): list on the left, the chosen style on the right. */
+.sty-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; align-items: start; }
+.sty-list { display: flex; flex-direction: column; gap: 6px; }
+.sty-primary-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 10px 12px;
+  border-radius: 10px; border: 1px solid var(--afx-border, rgba(148, 163, 184, 0.25)); background: var(--afx-surface, transparent);
+  color: var(--afx-text-1, inherit); cursor: pointer; }
+.sty-primary-item span { font-size: 11.5px; color: var(--afx-text-3, #94a3b8); }
+.sty-primary-item.is-active { border-color: var(--afx-accent, #3b82f6); box-shadow: 0 0 0 1px var(--afx-accent, #3b82f6) inset; }
+.sty-detail { min-width: 0; }
+.sty-card { margin-bottom: 14px; padding: 12px; border-radius: 12px; border: 1px solid var(--afx-border, rgba(148, 163, 184, 0.25)); }
+.sty-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.sty-price { font-size: 11px; margin-top: 2px; }
+.sty-primary-link { background: none; border: none; padding: 0; color: var(--afx-accent, #3b82f6); cursor: pointer; font-size: 11px; }
+@media (max-width: 760px) { .sty-layout { grid-template-columns: 1fr; } }

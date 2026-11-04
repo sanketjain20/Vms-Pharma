@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
+import ActionErrorBanner from "../CommonComponent/ActionErrorBanner";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import { toast } from "react-toastify";
@@ -10,7 +11,7 @@ import StockTransferAdd from "./StockTransferAdd";
 import StockTransferEdit from "./StockTransferEdit";
 import StockTransferView from "./StockTransferView";
 
-const config = { title: "Stock transfers", singular: "Stock transfer", base: "StockTransfer", list: "GetAllStockTransfersPaged", detail: "GetStockTransferByUKey", add: "AddStockTransfer", update: "UpdateStockTransfer", cancel: "CancelStockTransfer", id: 38, number: "transferNumber", party: "fromGodownName", date: "transferDate", actions: { DRAFT: ["DispatchStockTransfer", "Dispatch"], IN_TRANSIT: ["ReceiveStockTransfer", "Receive"] } };
+const config = { title: "Stock transfers", singular: "Stock transfer", base: "StockTransfer", list: "GetAllStockTransfersPaged", detail: "GetStockTransferByUKey", add: "AddStockTransfer", update: "UpdateStockTransfer", cancel: "CancelStockTransfer", id: 38, number: "transferNumber", party: "fromGodownName", date: "transferDate", actions: { DRAFT: ["DispatchStockTransfer", "Dispatch", "Dispatch", "download"], IN_TRANSIT: ["ReceiveStockTransfer", "Receive", "Receive", "activate"] } };
 
 function readResponse(response) {
   return response.text().then(text => {
@@ -56,13 +57,13 @@ export default function StockTransfer() {
   const actions = (row, { can, ActionIcon }) => <>
     <button className="dg-icon-btn dg-icon-btn--view" title="View" aria-label="View" onClick={() => setDetailUKey(row.uKey)}><ActionIcon.View /></button>
     {config.update && row.status === "DRAFT" && can("Edit") && <button className="dg-icon-btn dg-icon-btn--edit" title="Edit" aria-label="Edit" onClick={() => setForm({ uKey: row.uKey })}><ActionIcon.Edit /></button>}
-    {config.actions[row.status] && can("Edit") && <button className="dg-icon-btn dg-icon-btn--activate" title={config.actions[row.status][1]} aria-label={config.actions[row.status][1]} disabled={busy} onClick={() => perform(row, config.actions[row.status][0])}><ActionIcon.Activate /></button>}
-    {row.status !== "CANCELLED" && can("Disable") && <button className="dg-icon-btn dg-icon-btn--disable" disabled={busy} title="Cancel" aria-label="Cancel" onClick={() => perform(row, config.cancel)}><ActionIcon.Disable /></button>}
+    {config.actions[row.status] && can("Edit") && (() => { const [call, label, icon, tone] = config.actions[row.status]; const Icon = ActionIcon[icon] || ActionIcon.Activate; return <button className={`dg-icon-btn dg-icon-btn--${tone || "activate"}`} title={label} aria-label={label} disabled={busy} onClick={() => perform(row, call)}><Icon /></button>; })()}
+    {row.status !== "CANCELLED" && can("Disable") && <button className="dg-icon-btn dg-icon-btn--disable" disabled={busy} title="Cancel" aria-label="Cancel" onClick={() => perform(row, config.cancel)}><ActionIcon.Cancel /></button>}
   </>;
   return <main className="ops-page">
     {detailUKey && ReactDOM.createPortal(<StockTransferView uKey={detailUKey} onClose={() => setDetailUKey(null)} onEdit={uKey => setForm({ uKey })} />, document.body)}
     <header className="ops-header"><div><span className="ops-eyebrow">OPERATIONS / DOCUMENTS</span><h1>{config.title}</h1><p>Manage documents and their status.</p></div></header>
-    {error && <div className="ops-error" role="alert">{error}<button onClick={() => setError("")}>Dismiss</button></div>}
+    <ActionErrorBanner message={error} onDismiss={() => setError("")} />
     <DynamicGrid Module={config.title} ModuleId={String(config.id)} apiUrl={`${baseUrl}/${config.list}`} columns={columns} customActionsOnly customAddAction={() => setForm({})} customAddLabel={`Add ${config.singular}`} extraActions={actions} />
     {form && !form.uKey && ReactDOM.createPortal(<StockTransferAdd onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />, document.body)}
     {form && form.uKey && ReactDOM.createPortal(<StockTransferEdit uKey={form.uKey} onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />, document.body)}

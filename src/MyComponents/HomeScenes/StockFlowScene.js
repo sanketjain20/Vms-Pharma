@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import useThreeScene from "./useThreeScene";
 import { BELTS, BELT_SPAN, parcelX, parcelSize, scanPulse, coinState } from "./stockFlow";
+import { whenMenuReady } from "../../utils/menuReady";
 
 /* ── Hero background: VMS stock flow ──
    Stock rides in on the front belt, sales ride out on the back one, both
@@ -333,7 +334,11 @@ function buildStockFlow({ THREE, renderer, scene, camera, pointer }) {
 
 export default function StockFlowScene({ className = "" }) {
   const hostRef = useRef(null);
-  const status = useThreeScene(hostRef, buildStockFlow, { fov: 38 });
+  const status = useThreeScene(hostRef, buildStockFlow, {
+    fov: 38,
+    cacheKey: "home-stock-flow", // built once; coming back to Home re-attaches it
+    deferUntil: whenMenuReady,   // the sidebar's menu is drawn before this is built
+  });
   return (
     <div
       ref={hostRef}

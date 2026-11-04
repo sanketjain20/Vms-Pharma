@@ -1,0 +1,20 @@
+/* Split payment rows (Cash / UPI / Card): used on Sales, Quick Sale and Sales Edit. Follows the page's own colours. */
+.pay-split { display: flex; flex-direction: column; gap: 8px; }
+.pay-split-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pay-split-line select { flex: 0 0 96px; min-width: 0; }
+.pay-split-line input[type="number"] { flex: 1 1 110px; min-width: 0; }
+.pay-split-line input[type="text"] { flex: 1 1 140px; min-width: 0; }
+.pay-split-line input[readonly] { opacity: 0.85; }
+.pay-split-remove {
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: 7px; cursor: pointer;
+  border: 1px solid rgba(239, 68, 68, 0.35); background: transparent; color: #ef4444; font-size: 15px; line-height: 1;
+}
+.pay-split-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pay-split-add {
+  border: 1px dashed currentColor; background: transparent; border-radius: 8px; padding: 5px 10px; cursor: pointer;
+  font-size: 12px; color: #3b82f6;
+}
+.pay-split-sum { font-size: 12px; opacity: 0.85; font-variant-numeric: tabular-nums; }
+.pay-split-err { font-size: 12px; color: #ef4444; }
+body[data-theme="light"] .pay-split-add { color: #2563eb !important; }
+body[data-theme="light"] .pay-split-remove { color: #dc2626 !important; border-color: rgba(220, 38, 38, 0.35) !important; }

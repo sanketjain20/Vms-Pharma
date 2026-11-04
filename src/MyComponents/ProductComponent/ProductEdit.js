@@ -3,6 +3,8 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import ProductGstFields, { gstRateError, gstRatePayload, gstRateValue } from "./ProductGstFields";
 
 /* ── Reusable searchable dropdown — same as Add ── */
 const SearchDrop = ({ label, options, value, onChange, placeholder, error }) => {
@@ -64,9 +66,11 @@ const SCHEDULE_TYPES = ["OTC", "H", "H1", "NARCOTIC"];
 const PACK_UNITS     = ["STRIP", "BOTTLE", "VIAL", "BOX", "TUBE", "SACHET", "AMPOULE"];
 
 export default function ProductEdit({ uKey, onClose, onSubmit }) {
+    const { isPharma } = useBusinessProfile(); // drug licence etc. only for a pharmacy (Phase 4)
   const [productTypes,  setProductTypes]  = useState([]);
   const [manufacturers, setManufacturers] = useState([]);
   const [activeTab,     setActiveTab]     = useState("details");
+  const [gstWasMissing, setGstWasMissing] = useState(false); // an older product: ask for its GST rate
   const [errors,        setErrors]        = useState({});
   const [originalData,  setOriginalData]  = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -89,6 +93,10 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
     packSize:        "",
     packUnit:        "STRIP",
     barcode:         "",
+    trackSerial:     false, // Phase 6
+    warrantyMonths:  "",
+    gstRate:          "",    // product-wise GST: an older product has none until it is set here
+    priceIncludesGst: false, // existing products stay exclusive unless changed
   });
 
   /* ── FETCH PRODUCT TYPES ── */
@@ -147,6 +155,10 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
             packSize:        p.packSize        || "",
             packUnit:        p.packUnit        || "STRIP",
             barcode:         p.barcode         || "",
+            trackSerial:     !!p.trackSerial,
+            warrantyMonths:  p.warrantyMonths ?? "",
+            gstRate:          gstRateValue(p.gstRate),
+            priceIncludesGst: !!p.priceIncludesGst,
           }));
           setOriginalData({
             name:            p.name,
@@ -161,7 +173,12 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
             packSize:        p.packSize        || "",
             packUnit:        p.packUnit        || "STRIP",
             barcode:         p.barcode         || "",
+            trackSerial:     !!p.trackSerial,
+            warrantyMonths:  p.warrantyMonths ?? "",
+            gstRate:          gstRateValue(p.gstRate),
+            priceIncludesGst: !!p.priceIncludesGst,
           });
+          setGstWasMissing(p.gstRate === null || p.gstRate === undefined);
         } else {
           toast.error("Error loading product details");
         }
@@ -191,9 +208,10 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
     const e = {};
     if (!formData.name?.trim())    e.name            = "Name is required";
     if (!formData.product_type_id) e.product_type_id = "Product type is required";
-    if (!formData.price)           e.price           = "Price is required";
+    if (!formData.price)           e.price           = "Selling price is required";
     if (!formData.unit)            e.unit            = "Unit is required";
     if (formData.packSize && isNaN(parseInt(formData.packSize))) e.packSize = "Must be a number";
+    if (gstRateError(formData.gstRate)) e.gstRate = gstRateError(formData.gstRate);
     return e;
   };
 
@@ -213,6 +231,10 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
       packSize:        String(obj.packSize ?? ""),
       packUnit:        obj.packUnit        ?? "",
       barcode:         obj.barcode         ?? "",
+      trackSerial:     !!obj.trackSerial,
+      warrantyMonths:  String(obj.warrantyMonths ?? ""),
+      gstRate:         String(obj.gstRate ?? ""),
+      priceIncludesGst: !!obj.priceIncludesGst,
     });
     return JSON.stringify(norm(originalData)) !== JSON.stringify(norm(formData));
   };
@@ -220,7 +242,11 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
   const handleSubmit = async e => {
     e.preventDefault();
     const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      if (validationErrors.gstRate || validationErrors.price || validationErrors.unit) setActiveTab("pricing");
+      return;
+    }
 
     const payload = {
       name:            formData.name,
@@ -230,12 +256,17 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
       product_type_id: formData.product_type_id,
       // NEW fields
       manufacturer_id: formData.manufacturer_id || null,
-      genericName:     formData.genericName      || null,
+      // generic name, schedule and pack size/unit are a pharmacy's only
+      genericName:     isPharma ? formData.genericName || null : null,
       hsnCode:         formData.hsnCode          || null,
-      scheduleType:    formData.scheduleType      || null,
-      packSize:        formData.packSize ? parseInt(formData.packSize) : null,
-      packUnit:        formData.packUnit          || null,
+      scheduleType:    isPharma ? formData.scheduleType || null : null,
+      packSize:        isPharma && formData.packSize ? parseInt(formData.packSize) : null,
+      packUnit:        isPharma ? formData.packUnit || null : null,
       barcode:         formData.barcode?.trim()   || null,
+      trackSerial:     !isPharma && !!formData.trackSerial,
+      warrantyMonths:  formData.warrantyMonths !== "" && formData.warrantyMonths != null ? parseInt(formData.warrantyMonths) : null,
+      gstRate:         gstRatePayload(formData.gstRate),
+      priceIncludesGst: !!formData.priceIncludesGst,
     };
 
     try {
@@ -258,7 +289,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
 
   const TABS = [
     { id: "details", label: "Details"        },
-    { id: "pharma",  label: "Pharma"         },
+    { id: "pharma",  label: isPharma ? "Pharma" : "More details"         },
     { id: "pricing", label: "Pricing & Units" },
   ];
 
@@ -315,16 +346,16 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
 
                 {activeTab === "pharma" && (
                   <div className="afx-grid">
-                    <SearchDrop label="Manufacturer"
+                    <SearchDrop label={isPharma ? "Manufacturer" : "Brand / Manufacturer"}
                       options={manufacturers} value={formData.manufacturer_id}
                       onChange={v => set("manufacturer_id", v)}
-                      placeholder="Select manufacturer (optional)"
+                      placeholder={isPharma ? "Select manufacturer (optional)" : "Select brand (optional)"}
                     />
 
-                    <div className="afx-field">
+                    {isPharma && (<div className="afx-field">
                       <label className="afx-label">Generic / Salt Name</label>
                       <input className="afx-input" type="text" name="genericName" value={formData.genericName || ""} onChange={handleChange} placeholder="e.g. Paracetamol" />
-                    </div>
+                    </div>)}
 
                     <div className="afx-field">
                       <label className="afx-label">HSN Code</label>
@@ -336,7 +367,23 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
                       <input className="afx-input" type="text" name="barcode" value={formData.barcode || ""} onChange={handleChange} placeholder="Scan or type — leave blank to auto-generate" autoComplete="off" />
                     </div>
 
-                    <div className="afx-field">
+                    {!isPharma && (
+                      <label className="afx-checkbox-label afx-field--full" style={{ display: "flex", gap: 10, alignItems: "center", cursor: "pointer" }}>
+                        <input type="checkbox" checked={!!formData.trackSerial} data-testid="track-serial"
+                          onChange={e => set("trackSerial", e.target.checked)} />
+                        <span>Track a serial number / IMEI for every unit (asked on purchase, sale and return)</span>
+                      </label>
+                    )}
+
+                    {!isPharma && (
+                      <div className="afx-field">
+                        <label className="afx-label">Warranty (months)</label>
+                        <input className="afx-input" type="number" min="0" name="warrantyMonths" value={formData.warrantyMonths ?? ""}
+                          onChange={handleChange} placeholder="e.g. 12 — printed on the bill with each serial" />
+                      </div>
+                    )}
+
+                    {isPharma && (<div className="afx-field">
                       <label className="afx-label">Schedule Type</label>
                       <div className="afx-select-wrap">
                         <select className="afx-select" name="scheduleType" value={formData.scheduleType || "OTC"} onChange={handleChange}>
@@ -344,24 +391,29 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
                         </select>
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </div>
-                    </div>
+                    </div>)}
 
-                    <div className="afx-info afx-field--full">
+                    {isPharma && (<div className="afx-info afx-field--full">
                       <strong>OTC</strong>&nbsp;— no prescription&emsp;
                       <strong>H</strong>&nbsp;— prescription required&emsp;
                       <strong>H1</strong>&nbsp;— strict prescription&emsp;
                       <strong>NARCOTIC</strong>&nbsp;— controlled substance
-                    </div>
+                    </div>)}
                   </div>
                 )}
 
                 {activeTab === "pricing" && (
                   <div className="afx-grid">
                     <div className="afx-field">
-                      <label className="afx-label">Cost Price (₹)<span className="afx-req">*</span></label>
+                      <label className="afx-label">Selling Price (₹)<span className="afx-req">*</span></label>
                       <input className={`afx-input ${errors.price ? "afx-input--err" : ""}`} type="number" name="price" value={formData.price || ""} onChange={handleChange} placeholder="0.00" min="0" step="0.01" />
                       {errors.price && <div className="afx-error">{errors.price}</div>}
+                      <div className="afx-hint" data-testid="cost-note">The cost comes from your purchases (average of the stock on hand).</div>
                     </div>
+
+                    <ProductGstFields gstRate={formData.gstRate} priceIncludesGst={formData.priceIncludesGst}
+                      hsnCode={formData.hsnCode} productId={formData.id} error={errors.gstRate} missingOnEdit={gstWasMissing}
+                      onChange={(patch) => Object.entries(patch).forEach(([k, v]) => set(k, v))} />
 
                     <div className="afx-field">
                       <label className="afx-label">Unit<span className="afx-req">*</span></label>
@@ -369,6 +421,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
                       {errors.unit && <div className="afx-error">{errors.unit}</div>}
                     </div>
 
+                    {isPharma && (<>
                     <div className="afx-field">
                       <label className="afx-label">Pack Size <span style={{ color: "var(--afx-text-3)", fontWeight: 400 }}>(qty per unit)</span></label>
                       <input className={`afx-input ${errors.packSize ? "afx-input--err" : ""}`} type="number" name="packSize" value={formData.packSize || ""} onChange={handleChange} placeholder="e.g. 10 tablets per strip" min="1" />
@@ -391,6 +444,7 @@ export default function ProductEdit({ uKey, onClose, onSubmit }) {
                         Each <strong>{formData.unit || "unit"}</strong> contains <strong>{formData.packSize}</strong> × <strong>{formData.packUnit}</strong>
                       </div>
                     )}
+                    </>)}
                   </div>
                 )}
               </div>

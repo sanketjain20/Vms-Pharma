@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import FieldHelpLayer from "./MyComponents/CommonComponent/FieldHelpLayer";
 import "react-toastify/dist/ReactToastify.css";
 import "./Styles/Toast.css";
 
@@ -25,10 +26,12 @@ import Product from "./MyComponents/ProductComponent/Product";
 import ProductType from "./MyComponents/ProductTypeComponent/ProductType";
 import Vendor from "./MyComponents/VendorComponent/Vendor";
 import Report from "./MyComponents/ReportComponent/Reports";
+import DayEndSummary from "./MyComponents/ReportComponent/DayEndSummary";
 import Inventory from "./MyComponents/InventoryComponent/Inventory";
 import ExpiryAlert from "./MyComponents/InventoryComponent/ExpiryAlert";
 import ReorderAlert from "./MyComponents/InventoryComponent/ReorderAlert";
 import Batch from "./MyComponents/InventoryComponent/Batch";
+import SerialLookup from "./MyComponents/InventoryComponent/SerialLookup";
 import Sales from "./MyComponents/SalesComponent/Sales";
 import Role from "./MyComponents/RoleComponent/Role";
 import Unauthorized from "./MyComponents/SecurityComponent/Unauthorized";
@@ -59,6 +62,8 @@ import Retailer from "./MyComponents/RetailerComponent/Retailer";
 import Manufacturer from "./MyComponents/ManufacturerComponent/Manufacturer";
 import Godown from "./MyComponents/GodownComponent/Godown";
 import Scheme from "./MyComponents/SchemeComponent/Scheme";
+import SupplierScheme from "./MyComponents/SupplierSchemeComponent/SupplierScheme";
+import Styles from "./MyComponents/ProductComponent/Styles";
 import Supplier from "./MyComponents/SupplierComponent/Supplier";
 import PaymentCollection from "./MyComponents/PaymentCollectionComponent/PaymentCollection";
 import Purchase from "./MyComponents/PurchaseComponent/Purchase";
@@ -237,7 +242,10 @@ useEffect(() => {
         closeOnClick
         pauseOnHover
         className="vms-toast-container"
+        theme={theme === "light" ? "light" : "dark"}
       />
+      {/* the ⓘ next to the important fields of every Add / Edit / View screen */}
+      <FieldHelpLayer />
       <Routes>
         
         <Route
@@ -371,6 +379,24 @@ useEffect(() => {
             }
           />
 
+          {/* Phase 7 */}
+          <Route
+            path="supplier-scheme"
+            element={
+              <ModuleGuard moduleName="SUPPLIER_SCHEME">
+                <SupplierScheme />
+              </ModuleGuard>
+            }
+          />
+          <Route
+            path="styles"
+            element={
+              <ModuleGuard moduleName="PRODUCT_STYLE">
+                <Styles />
+              </ModuleGuard>
+            }
+          />
+
           
           <Route
             path="supplier"
@@ -467,6 +493,15 @@ useEffect(() => {
           />
 
           <Route
+            path="day-end"
+            element={
+              <ModuleGuard moduleName="REPORTS">
+                <DayEndSummary />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
             path="reports/open"
             element={
               <ModuleGuard moduleName="REPORTS">
@@ -486,7 +521,7 @@ useEffect(() => {
 
           <Route
             path="accounting"
-            element={<ModuleGuard moduleName="REPORTS"><Accounting /></ModuleGuard>}
+            element={<ModuleGuard moduleName="ACCOUNTING"><Accounting /></ModuleGuard>}
           />
 
           <Route path="purchase-order" element={<ModuleGuard moduleName="PURCHASE_ORDER"><PurchaseOrder /></ModuleGuard>} />
@@ -573,6 +608,15 @@ useEffect(() => {
             element={
               <ModuleGuard moduleName={["ALERTS", "REORDER_ALERTS", "LOW_STOCK_ALERTS"]}>
                 <ReorderAlert />
+              </ModuleGuard>
+            }
+          />
+
+          <Route
+            path="serial-lookup"
+            element={
+              <ModuleGuard moduleName="INVENTORY">
+                <SerialLookup />
               </ModuleGuard>
             }
           />

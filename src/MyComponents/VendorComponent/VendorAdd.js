@@ -3,6 +3,7 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import BusinessTypeFields from "./BusinessTypeFields";
 
 const getLoggedInVendor = () => {
   try {
@@ -25,6 +26,7 @@ export default function VendorAdd({ onClose, onSubmit }) {
   const [expiryDate, setExpiryDate]   = useState("");
   const [masterVendor, setMasterVendor] = useState(true);
   const [subVendorLimit, setSubVendorLimit] = useState(0);
+  const [business, setBusiness] = useState({ businessType: "PHARMA", trackExpiry: true }); // Phase 7: chosen when the shop is created
   const [roles, setRoles]             = useState([]);
   const [errors, setErrors]           = useState({});
   const [loading, setLoading]         = useState(false);
@@ -74,6 +76,8 @@ export default function VendorAdd({ onClose, onSubmit }) {
       expiryDate,
       masterVendor: useLoggedInVendorPrefix ? false : masterVendor,
       subVendorLimit: (useLoggedInVendorPrefix || !masterVendor) ? 0 : Number(subVendorLimit) || 0,
+      // a worker account follows its shop's type, so only a new shop sends one
+      ...(useLoggedInVendorPrefix ? {} : business),
     };
 
     try {
@@ -183,6 +187,10 @@ export default function VendorAdd({ onClose, onSubmit }) {
                   />
                   {errors.shopName && <span className="afx-error">{errors.shopName}</span>}
                 </div>
+              )}
+
+              {!useLoggedInVendorPrefix && (
+                <BusinessTypeFields businessType={business.businessType} trackExpiry={business.trackExpiry} onChange={setBusiness} />
               )}
 
               <div className="afx-field">

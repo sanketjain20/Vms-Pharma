@@ -22,6 +22,7 @@ import SupplierLedgerView from "../SupplierOutstandingComponent/SupplierLedgerVi
 import GodownView from "../GodownComponent/GodownView";
 import SchemeView from "../SchemeComponent/SchemeView";
 import EventLogDock from "../EventLogComponent/EventLogDock";
+import StockAdjustmentView from "../StockAdjustmentComponent/StockAdjustmentView";
 
 export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
   if (!isOpen) return null;
@@ -47,6 +48,7 @@ export default function ViewModal({ isOpen, onClose, moduleName, uKey }) {
     case "Supplier Outstanding": content = <SupplierLedgerView uKey={uKey} onClose={onClose} />; break;
     case "Godown":        content = <GodownView       uKey={uKey} onClose={onClose} />; break;
     case "Scheme":        content = <SchemeView       uKey={uKey} onClose={onClose} />; break;
+    case "Stock Adjustment": content = <StockAdjustmentView uKey={uKey} onClose={onClose} />; break; // uKey = the adjustment id
     default:             return null;
   }
 

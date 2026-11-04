@@ -2,12 +2,30 @@ import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toastApiError } from "../../utils/toastMessage";
+import { resolveWalkIn, MAX_NAME_LENGTH } from "../../utils/walkInCustomer";
+import { toCustomLine, useCustomItemsAllowed } from "../../utils/customItems";
+import CustomItemForm from "./CustomItemForm";
+import LineGstCell, { useCanOverrideGst } from "./LineGstCell";
+import LinePriceCell, { useCanChangePrice } from "./LinePriceCell";
+import CreditLimitNotice from "./CreditLimitNotice";
+import { useCreditCheck, creditProblem } from "../../utils/creditLimit";
+import GstMissingNote from "./GstMissingNote";
+import PaymentSplit from "../CommonComponent/PaymentSplit";
+import {
+  startPayments, fillLast, paymentsTotal, paymentsProblem, paymentPayload, billingModeOf, roundOffText, useRoundBillTotal, normMode,
+} from "../../utils/salePayments";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import { createPortal } from "react-dom";
 import {
   computeTotals, toItemPayload, fetchApplicable, withScheme, removeScheme, freeText, linesFromSale,
 } from "../../utils/salesSchemes";
+import { switchEdit, putBack, editRateOf, keptOnEdit } from "../../utils/editingLine";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import { VariantChips } from "../CommonComponent/VariantWidgets";
+import { isVariant } from "../../utils/variants";
+import { LineSerialPicker, SerialList } from "../CommonComponent/SerialWidgets";
+import { tracksSerials } from "../../utils/serials";
 const GST_RATES = [0, 5, 12, 18, 28];
 
 /* ─────────────────────────────────────────
@@ -128,6 +146,7 @@ const SearchableDropdown = ({
 };
 
 export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = false }) {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   // ── Existing state ────────────────────────────────────────────────────────
   const [productTypes, setProductTypes] = useState([]);
   const [products, setProducts]         = useState([]);
@@ -140,21 +159,30 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
   const [taxInput, setTaxInput]     = useState("");
   const [taxType, setTaxType]       = useState("PERCENT");
   const [lineItems, setLineItems]       = useState([]);
-  const [editIndex, setEditIndex]       = useState(null);
+  // the line in the entry form, out of the table until "Update Item" or "Cancel edit" puts it back: { line, index }
+  const [editing, setEditing]           = useState(null);
   const [discountInput, setDiscountInput] = useState("0");
   const [discountType, setDiscountType]   = useState("FLAT");
   const [billingMode, setBillingMode]     = useState("CASH");
   const [saleId, setSaleId]               = useState(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [amountPaid, setAmountPaid]       = useState(0);
+  // the bill's own payments (one row per mode); money collected on it later stays as it is and is not edited here
+  const [payments, setPayments]           = useState([]);
+  const [collectedLater, setCollectedLater] = useState(0);
+  const roundBill = useRoundBillTotal(!documentMode);
   const [remainingAmount, setRemainingAmount] = useState(0);
   const [errors, setErrors]           = useState({});
   const [activeTab, setActiveTab]     = useState("Existing");
   const [viewMode, setViewMode]       = useState("tabs"); // "tabs" | "all"
   const [originalItems, setOriginalItems] = useState([]);
+  const [saleGodownId, setSaleGodownId]   = useState(null); // the units of a serial product are picked from the bill's godown
+  const [pickedSerials, setPickedSerials] = useState([]);
 
   // ── Schemes: a saved line keeps its scheme; a new or changed line gets the best one suggested ──
   const lineKeyRef = useRef(0);
+  // custom (run-time) items: new ones only while the shop has them switched on; a bill that already has some keeps them
+  const customAllowed = useCustomItemsAllowed(!documentMode);
+  const [customForm, setCustomForm] = useState(null); // { index: number|null } while the form is open
   // document mode: the order as loaded, so a save keeps what this form does not edit (date, godown, notes...)
   const loadedOrder = useRef(null);
   const lineItemsRef = useRef([]);
@@ -172,6 +200,9 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
   // ── NEW state ─────────────────────────────────────────────────────────────
   const [retailers, setRetailers]           = useState([]);
   const [selectedRetailer, setSelectedRetailer] = useState("");
+  // walk-in customer on the bill (only used when no retailer is picked)
+  const [customerName, setCustomerName]   = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [retailerSearch, setRetailerSearch]     = useState("");
   const [retailerDropdownOpen, setRetailerDropdownOpen] = useState(false);
   const retailerDropdownRef = useRef(null);
@@ -239,6 +270,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
         setSaleId(sale.id);
         setInvoiceNumber(sale.invoiceNumber);
         setOriginalItems(sale.items);
+        setSaleGodownId(sale.godownId ?? null);
         // Free-goods rows are not lines (the server recreates them from the scheme); the discount the clerk typed is
         // the manual one, the schemes' share is worked out again from the lines.
         const manual = sale.manualDiscount ?? sale.totalDiscount ?? 0;
@@ -247,10 +279,20 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
         setDiscountInput(manual);
         setDiscountType("FLAT");
         setBillingMode(sale.billingMode || "CASH");
-        setAmountPaid(sale.amountPaid || 0);
+        {
+          // the bill's own payments; a bill from before split payments has one, in its mode
+          const own = (sale.payments || []).filter(p => p.source === "BILL")
+            .map(p => ({ mode: normMode(p.mode), amount: Number(p.amount).toFixed(2), reference: p.reference || "" }));
+          const later = (sale.payments || []).length || !Number(sale.amountPaid) ? Math.max(0, Number(sale.amountPaid || 0) - paymentsTotal(own)) : 0;
+          setCollectedLater(Math.round(later * 100) / 100);
+          setPayments(own.length || !Number(sale.amountPaid) ? own
+            : [{ mode: normMode(sale.billingMode), amount: Number(sale.amountPaid).toFixed(2), reference: "" }]);
+        }
         setRemainingAmount(sale.remainingAmount || 0);
         // NEW — load existing retailer + payment fields
         if (sale.retailerId) setSelectedRetailer(String(sale.retailerId));
+        setCustomerName(sale.customerName || "");
+        setCustomerPhone(sale.customerPhone || "");
         setCreditPaymentType(sale.paymentType || "PAID");
         setDueDate(sale.dueDate || "");
       })
@@ -301,7 +343,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
   const handleProductChange = (e) => {
     const prodId = e.target.value;
     setSelectedProduct(prodId); setInventory(null); setErrors({});
-    setAvailableBatches([]); setSelectedBatchId("");
+    setAvailableBatches([]); setSelectedBatchId(""); setPickedSerials([]);
     if (!prodId) return;
     apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${prodId}`, { method: "GET" })
       .then(safeJson).then(json => setInventory(json?.data || null)).catch(() => {});
@@ -318,10 +360,31 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  /* ── Serial numbers (Phase 6): a product that tracks them is sold by picking its units, one per unit ── */
+  const serialProduct = !documentMode && tracksSerials(allProducts.find(p => String(p.id) === String(selectedProduct)));
+  // the units this bill already sold of the product stay pickable (they come back to stock when the bill is saved),
+  // except those another line of the bill still holds
+  const heldElsewhere = new Set(lineItems.flatMap(l => l.serials || [])); // the line being edited is out of the table
+  const billSerials = serialProduct
+    ? [...new Set([
+        ...originalItems.filter(i => String(i.productId) === String(selectedProduct)).flatMap(i => i.serials || []),
+        ...(editing ? editing.line.serials || [] : []),
+      ])].filter(s => !heldElsewhere.has(s))
+    : [];
+  useEffect(() => { if (serialProduct) setQuantity(pickedSerials.length ? String(pickedSerials.length) : ""); }, [pickedSerials, serialProduct]);
+
   /* ── Stock helpers for the currently-selected product's inventory ── */
-  const outOfStock = !!inventory && inventory.currentQuantity <= 0;
+  // a serial product: the picker decides (units on this bill count as available), not the godown total
+  const outOfStock = !serialProduct && !!inventory && inventory.currentQuantity <= 0;
   const lowStock    = !!inventory && inventory.currentQuantity > 0 && inventory.currentQuantity <= 10;
   const noPriceConfigured = !!selectedProduct && !inventory;
+  // product-wise GST: a product with a rate is billed at it; only one without needs a rate typed here (flagged)
+  const pickedProduct = products.find(p => String(p.id) === String(selectedProduct));
+  const pickedRate = pickedProduct?.gstRate ?? null;
+  const canOverrideGst = useCanOverrideGst();
+  const canChangePrice = useCanChangePrice() && !documentMode; // an order keeps the price agreed on it
+  const [creditReason, setCreditReason] = useState(""); // why this edit may take the retailer over their credit limit
+  const patchLine = (i, patch) => setLineItems(prev => prev.map((l, k) => (k === i ? { ...l, ...patch } : l)));
 
   /* ── QUANTITY STEPPER ── */
   const stepQuantity = (delta) => {
@@ -333,6 +396,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
 
   /* Asks the server which scheme fits a line and attaches it (see SalesAdd). The server checks again on save. */
   const suggestScheme = async (line, retailerId) => {
+    if (line.custom) return; // a custom item gets no scheme
     setSchemePending(n => n + 1);
     const applicable = await fetchApplicable({
       productId: line.productId, retailerId, quantity: line.quantity, unitPrice: line.sellingPrice,
@@ -371,17 +435,21 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
     // there is no manual/adhoc price entry.
     if (selectedProduct && !inventory) {
       tempErrors.selectedProduct = "Selling price is not configured for this product";
-    } else if (inventory && inventory.currentQuantity <= 0) {
+    } else if (!serialProduct && inventory && inventory.currentQuantity <= 0) {
       tempErrors.selectedProduct = "This product is out of stock";
     }
 
-    if (!quantity || quantity <= 0) {
+    if (serialProduct) {
+      // the picker only offers units in stock or already on this bill, so the count of picked units is the quantity
+      if (pickedSerials.length === 0) tempErrors.serials = "Pick the serial numbers being sold";
+    } else if (!quantity || quantity <= 0) {
       tempErrors.quantity = "Enter valid quantity";
     } else if (inventory && parseInt(quantity) > inventory.currentQuantity) {
       tempErrors.quantity = "Exceeds available stock";
     }
 
-    const price = inventory ? inventory.unitSellingPrice : 0;
+    const kept = keptOnEdit(editing?.line, selectedProduct); // a price change / GST override made on the line stays
+    const price = kept.sellingPrice ?? (inventory ? inventory.unitSellingPrice : 0);
     let taxValue = parseFloat(taxInput || 0);
     if (taxValue < 0) tempErrors.taxInput = "Tax cannot be negative";
     setErrors(tempErrors);
@@ -392,8 +460,8 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
 
     const taxAmount = taxType === "PERCENT" ? (price * quantity * taxValue) / 100 : taxValue;
     const item = {
-      lineKey: editIndex !== null ? lineItems[editIndex].lineKey : ++lineKeyRef.current,
-      schemeOff: editIndex !== null ? !!lineItems[editIndex].schemeOff : false,
+      lineKey: ++lineKeyRef.current,
+      schemeOff: false,
       schemeId: null, schemeName: "", schemeDescription: "", freeQuantity: 0, schemeDiscount: 0,
       productId: parseInt(selectedProduct),
       productName: product.name,
@@ -401,6 +469,12 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
       sellingPrice: price,
       taxAmount,
       totalAmount: price * quantity + taxAmount,
+      productGstRate: product.gstRate ?? null,
+      // a product with no rate yet: the % chosen here, so its GST follows the quantity (a ₹ amount would not)
+      ...(product.gstRate == null && taxType === "PERCENT" ? { commonGstRate: taxValue } : {}),
+      priceIncludesGst: !!product.priceIncludesGst,
+      ...kept,
+      ...(serialProduct ? { quantity: pickedSerials.length, serials: [...pickedSerials], schemeOff: true } : {}),
       // NEW
       batchId: selectedBatchId ? parseInt(selectedBatchId) : null,
       batchNumber: selectedBatchId
@@ -411,10 +485,9 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
         : "",
     };
 
-    let updated = [...lineItems];
-    if (editIndex !== null) { updated[editIndex] = item; setEditIndex(null); }
-    else updated.push(item);
-    setLineItems(updated);
+    // an edited line goes back where it was; a new one at the end
+    setLineItems(editing ? putBack(lineItems, editing, item) : [...lineItems, item]);
+    setEditing(null);
     clearForm();
     toast.success("Item saved");
     if (!item.schemeOff) suggestScheme(item, selectedRetailer || null);
@@ -424,15 +497,36 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
     setSelectedType(""); setSelectedProduct(""); setQuantity("");
     setTaxInput(""); setInventory(null);
     setTaxType("PERCENT"); setErrors({});
-    setAvailableBatches([]); setSelectedBatchId("");
+    setAvailableBatches([]); setSelectedBatchId(""); setPickedSerials([]);
+  };
+
+  /* ── CUSTOM ITEM ── typed in at billing time, not a product in stock (see CustomItemForm) */
+  const saveCustomItem = (checked) => {
+    const index = customForm?.index ?? null;
+    const line = toCustomLine(checked, index !== null ? lineItems[index].lineKey : ++lineKeyRef.current);
+    setLineItems(prev => (index !== null ? prev.map((l, i) => (i === index ? line : l)) : [...prev, line]));
+    setCustomForm(null);
+  };
+  const canAddCustom = !documentMode && (customAllowed || originalItems.some(i => i.custom));
+
+  /** "Cancel edit": the line goes back as it was. With nothing being edited, the button just clears the form. */
+  const cancelEdit = () => {
+    if (editing) setLineItems(prev => putBack(prev, editing));
+    setEditing(null);
+    clearForm();
   };
 
   const editItem = async (index) => {
     const it = lineItems[index];
-    setEditIndex(index);
+    if (it.custom) { setCustomForm({ index }); return; }
+    // the line leaves the table while it is in the form (a line already there goes back first)
+    const next = switchEdit(lineItems, editing, index);
+    setLineItems(next.lines);
+    setEditing(next.editing);
     setSelectedProduct(it.productId); setQuantity(it.quantity);
-    setTaxInput(it.taxAmount);
-    setTaxType("FLAT"); setErrors({});
+    setPickedSerials(it.serials || []);
+    setTaxInput(String(editRateOf(it))); // the rate it was billed at: the GST follows the quantity
+    setTaxType("PERCENT"); setErrors({});
     setSelectedBatchId(it.batchId ? String(it.batchId) : "");
     try {
       const iRes  = await apiClient(`${API_BASE_URL}/api/Inventory/GetInventoryByProdId/${it.productId}`, { method: "GET" });
@@ -494,7 +588,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
   /* ── TOTALS: Subtotal → Discount → Taxable Value → GST → Net Amount ── */
   // One calculation (utils/salesSchemes.js) that mirrors the server: scheme discount, then the invoice discount on what
   // is left, GST on the discounted value. With no scheme and no discount it is the same sum as before.
-  const totals = computeTotals({ lines: lineItems, manualDiscount: discountInput, discountType });
+  const totals = computeTotals({ lines: lineItems, manualDiscount: discountInput, discountType, roundOff: roundBill && !documentMode });
   const lineSubtotal = totals.gross;
   const schemeDiscAmt = totals.schemeDiscount;
   const discAmt = totals.manualDiscount;
@@ -502,28 +596,47 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
   const lineTaxTotal = totals.tax;
   const netAmount = totals.net;
 
+  // what is left to pay on the bill once the money collected on it later is counted; amountPaid is everything paid
+  const toPay = Math.max(0, Math.round((netAmount - collectedLater) * 100) / 100);
+  // what the bill leaves unpaid, against the retailer's credit limit (what it already owed is not counted twice)
+  const credit = useCreditCheck(documentMode || initialLoading ? null : selectedRetailer || null, toPay - paymentsTotal(payments), saleId);
+  const amountPaid = Math.round((paymentsTotal(payments) + collectedLater) * 100) / 100;
   useEffect(() => {
-    const net = netAmount.toFixed(2);
-    if (creditPaymentType === "PAID") { setAmountPaid(net); setRemainingAmount(0); }
-    else if (creditPaymentType === "CREDIT") { setAmountPaid(0); setRemainingAmount(net); }
-    else {
-      const paid = parseFloat(amountPaid || 0);
-      const rem  = netAmount - paid;
-      setRemainingAmount(rem < 0 ? 0 : rem);
-    }
+    if (initialLoading) return; // the loaded payments stay as they were until the bill changes
+    if (creditPaymentType === "PAID") setPayments(prev => (prev.length ? fillLast(prev, toPay) : startPayments("PAID", toPay, billingMode)));
+    if (creditPaymentType === "CREDIT") setPayments([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [creditPaymentType, lineItems, discountInput, discountType]);
+  }, [creditPaymentType, toPay, initialLoading]);
+  useEffect(() => {
+    setRemainingAmount(Math.max(0, Math.round((netAmount - amountPaid) * 100) / 100));
+  }, [netAmount, amountPaid]);
+  const choosePaymentType = (id) => {
+    setCreditPaymentType(id);
+    setPayments(startPayments(id, toPay, billingMode));
+  };
 
   const updateSale = () => {
+    if (editing) { // a line is in the entry form, out of the bill: saving now would leave it out
+      toast.error(`Finish editing ${editing.line.productName || "the line"} first: Update Item or Cancel edit`);
+      return;
+    }
     let tempErrors = {};
     if (lineItems.length === 0) tempErrors.lineItems = "Add at least one item";
-    if (!billingMode) tempErrors.billingMode = "Select billing mode";
     if (discountInput < 0) tempErrors.discountInput = "Discount cannot be negative";
     if (totals.discountTooLarge) tempErrors.discountInput = "Discount cannot be more than the value of the goods after schemes";
     if ((creditPaymentType === "CREDIT" || creditPaymentType === "PARTIAL") && !dueDate)
       tempErrors.dueDate = "Due date is required";
-    if (creditPaymentType !== "CREDIT" && (!amountPaid || amountPaid <= 0)) tempErrors.amountPaid = "Enter valid amount paid";
-    if (parseFloat(amountPaid) > netAmount) tempErrors.amountPaid = "Amount paid cannot exceed net amount";
+    if (!documentMode) {
+      const payProblem = paymentsProblem(creditPaymentType, toPay, payments);
+      if (payProblem) tempErrors.amountPaid = payProblem;
+    }
+    // a sales order always goes to a retailer, so it never carries walk-in details
+    const walkIn = documentMode
+      ? { customerName: null, customerPhone: null, errors: {} }
+      : resolveWalkIn({ retailerId: selectedRetailer, name: customerName, phone: customerPhone });
+    Object.assign(tempErrors, walkIn.errors);
+    const creditIssue = creditProblem(credit, creditReason); // the server refuses it the same way
+    if (creditIssue) { tempErrors.credit = creditIssue; toast.error(creditIssue); }
     setErrors(tempErrors);
     if (Object.keys(tempErrors).length > 0) return;
     if (schemePending > 0) { toast.info("Still checking schemes — try again in a moment"); return; }
@@ -534,8 +647,9 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
       orderDate: loadedOrder.current?.orderDate || new Date().toISOString().slice(0, 10),
       expectedDate: loadedOrder.current?.expectedDate || null,
       terms: loadedOrder.current?.terms || "", notes: loadedOrder.current?.notes || "",
-      billingMode, paymentType: creditPaymentType, dueDate: dueDate || null,
-      amountPaid: parseFloat(amountPaid || 0), totalDiscount: totals.manualDiscount,
+      billingMode: creditPaymentType === "CREDIT" ? billingMode : billingModeOf(payments),
+      paymentType: creditPaymentType, dueDate: dueDate || null,
+      amountPaid, totalDiscount: totals.manualDiscount,
       autoApplySchemes: loadedOrder.current?.autoApplySchemes !== false,
       items: lineItems.map(item => ({ productId: item.productId, quantity: item.quantity,
         unitPrice: Number(item.sellingPrice || 0), gstRate: Number(item.gstRate || 0), schemeId: item.schemeId || null,
@@ -546,11 +660,15 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(documentMode ? orderPayload : {
         totalDiscount: totals.manualDiscount, // what the clerk gave; the server adds the schemes' discount itself
-        billingMode,
-        amountPaid: parseFloat(amountPaid),
+        billingMode: creditPaymentType === "CREDIT" ? billingMode : billingModeOf(payments),
+        amountPaid,
+        payments: paymentPayload(payments),
         remainingAmount: parseFloat(remainingAmount),
+        ...(credit?.over ? { creditLimitReason: creditReason.trim() } : {}),
         // NEW fields
         retailerId: selectedRetailer ? parseInt(selectedRetailer) : null,
+        customerName: walkIn.customerName,
+        customerPhone: walkIn.customerPhone,
         paymentType: creditPaymentType,
         dueDate: dueDate || null,
         items: toItemPayload(lineItems, totals),
@@ -601,10 +719,11 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
                   <td>
                     <div className="afx-line-name">{it.product}</div>
                     <div className="afx-line-meta">
+                      {it.custom && "Custom item "}
                       {it.freeItem && <strong className="afx-text-success">FREE </strong>}
                       {it.schemeNameSnapshot && `${it.schemeNameSnapshot} `}
                       {it.batchNumberSnapshot && `· Batch ${it.batchNumberSnapshot} `}
-                      {it.expiryDateSnapshot && `· Exp ${it.expiryDateSnapshot} `}
+                      {trackExpiry && it.expiryDateSnapshot && `· Exp ${it.expiryDateSnapshot} `}
                       {it.hsnCodeSnapshot && `· HSN ${it.hsnCodeSnapshot}`}
                     </div>
                   </td>
@@ -687,6 +806,15 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
             placeholder="Search product…" dropdownRef={productDropdownRef} error={errors.selectedProduct}
           />
 
+          {/* Phase 7: the picked product's sister sizes / colours, as on a new sale */}
+          {(() => {
+            const picked = allProducts.find(p => String(p.id) === String(selectedProduct));
+            const sisters = isVariant(picked) ? allProducts.filter(p => p.styleId === picked.styleId) : [];
+            return sisters.length > 1 ? (
+              <VariantChips variants={sisters} selectedId={selectedProduct} onSelect={id => handleProductChange({ target: { value: id } })} />
+            ) : null;
+          })()}
+
           {/* Inventory info — price & stock are always read from product configuration,
               there is no manual/adhoc price entry here. */}
           {inventory ? (
@@ -712,11 +840,11 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
               <div className="afx-section-title" style={{ padding: 0 }}>Batch Selection</div>
               <div className="afx-select-wrap">
                 <select className="afx-select" value={selectedBatchId} onChange={e => setSelectedBatchId(e.target.value)}>
-                  <option value="">Auto-select (FIFO — oldest expiry first)</option>
+                  <option value="">{trackExpiry ? "Auto-select (FIFO — oldest expiry first)" : "Auto-select (oldest stock first)"}</option>
                   {availableBatches.map(b => (
                     <option key={b.batchId} value={b.batchId}>
-                      {b.batchNumber} · Exp: {b.expiryDate} · Qty: {b.availableQuantity}
-                      {b.expiryStatus === "EXPIRING_SOON" ? " (expiring soon)" : b.expiryStatus === "EXPIRED" ? " (expired)" : ""}
+                      {b.batchNumber}{trackExpiry && b.expiryDate ? ` · Exp: ${b.expiryDate}` : ""} · Qty: {b.availableQuantity}
+                      {!trackExpiry ? "" : b.expiryStatus === "EXPIRING_SOON" ? " (expiring soon)" : b.expiryStatus === "EXPIRED" ? " (expired)" : ""}
                     </option>
                   ))}
                 </select>
@@ -727,6 +855,17 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
         </div>
       </div>
 
+      {serialProduct && (
+        <div className="afx-subpanel" data-testid="edit-serials">
+          <div className="afx-subpanel-header">Serial numbers / IMEI</div>
+          <div className="afx-subpanel-body">
+            <LineSerialPicker productId={selectedProduct} godownId={saleGodownId} selected={pickedSerials}
+              onChange={setPickedSerials} extra={billSerials} testId="edit-serial-picker" />
+            {errors.serials && <div className="afx-error">{errors.serials}</div>}
+          </div>
+        </div>
+      )}
+
       <div className="afx-subpanel">
         <div className="afx-subpanel-header">Quantity &amp; Tax</div>
         <div className="afx-subpanel-body">
@@ -734,21 +873,31 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
             <div className="afx-field">
               <label className="afx-label">Quantity</label>
               <div className="afx-qty">
-                <button type="button" className="afx-qty-btn" onClick={() => stepQuantity(-1)} disabled={outOfStock || (parseInt(quantity) || 0) <= 1}>−</button>
+                <button type="button" className="afx-qty-btn" onClick={() => stepQuantity(-1)} disabled={outOfStock || serialProduct || (parseInt(quantity) || 0) <= 1}>−</button>
                 <input
                   className={`afx-qty-input ${errors.quantity ? "afx-input--err" : ""}`}
                   style={errors.quantity ? { borderColor: "var(--afx-danger)" } : undefined}
                   type="number" value={quantity}
                   onChange={e => setQuantity(e.target.value)}
-                  placeholder="Enter qty"
-                  disabled={outOfStock}
+                  placeholder={serialProduct ? "Pick serial numbers" : "Enter qty"}
+                  disabled={outOfStock || serialProduct}
                 />
-                <button type="button" className="afx-qty-btn" onClick={() => stepQuantity(1)} disabled={outOfStock}>+</button>
+                <button type="button" className="afx-qty-btn" onClick={() => stepQuantity(1)} disabled={outOfStock || serialProduct}>+</button>
               </div>
               {errors.quantity && <div className="afx-error">{errors.quantity}</div>}
             </div>
+            {selectedProduct && pickedRate !== null && (
+              <div className="afx-field" data-testid="product-gst-info">
+                <label className="afx-label">GST</label>
+                <div className="afx-line-meta">{pickedRate}% (from the product){pickedProduct?.priceIncludesGst ? " · price includes GST" : ""}</div>
+              </div>
+            )}
+            {pickedRate === null && (
             <div className="afx-field">
               <label className="afx-label">GST {taxType === "PERCENT" ? "Rate (%)" : "Amount (₹)"}</label>
+              {selectedProduct && pickedProduct && (
+                <GstMissingNote>No GST rate on product — the line is flagged. Set it in Products.</GstMissingNote>
+              )}
               <div style={{ display: "flex", gap: 8 }}>
                 {taxType === "PERCENT" ? (
                   <div className="afx-select-wrap" style={{ flex: 1 }}>
@@ -768,13 +917,20 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
               </div>
               {errors.taxInput && <div className="afx-error">{errors.taxInput}</div>}
             </div>
+            )}
           </div>
 
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" className="afx-btn" onClick={clearForm}>Clear All</button>
+            <button type="button" className="afx-btn" onClick={cancelEdit}>{editing ? "Cancel edit" : "Clear All"}</button>
             <button type="button" className="afx-btn afx-btn--primary" onClick={addOrUpdateItem} disabled={outOfStock || noPriceConfigured}>
-              {editIndex !== null ? "Update Item" : "+ Add Item"}
+              {editing ? "Update Item" : "+ Add Item"}
             </button>
+            {canAddCustom && (
+              <button type="button" className="afx-btn" onClick={() => setCustomForm({ index: null })}
+                title="Bill something that is not a product in stock">
+                + Custom item
+              </button>
+            )}
           </div>
           {errors.lineItems && <div className="afx-error">{errors.lineItems}</div>}
         </div>
@@ -807,16 +963,18 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
                       // per product: value before GST (after any scheme), the GST % and amount on it, and the two together
                       const row = totals.lines[i] || { post: 0, rate: 0 };
                       const excl = row.post;
-                      const gst = row.post * row.rate;
+                      const gst = (row.rawPost ?? row.post) * row.rate; // on the unrounded value, as the server
                       return (
                         <tr key={i} className="afx-line-row" data-testid="sale-line">
                           <td>{i + 1}</td>
                           <td>
                             <div className="afx-line-name">{it.productName}</div>
+                            <SerialList serials={it.serials} />
                             <div className="afx-line-meta">
+                              {it.custom && <span data-testid="line-custom">Custom item{it.hsnCode ? ` · HSN ${it.hsnCode}` : ""} </span>}
                               {it.freeQuantity > 0 && <strong className="afx-text-success">{freeText(it)} </strong>}
                               {it.batchNumber && it.batchNumber !== "AUTO" && `Batch ${it.batchNumber} `}
-                              {it.expiryDate && `· Exp ${it.expiryDate}`}
+                              {trackExpiry && it.expiryDate && `· Exp ${it.expiryDate}`}
                             </div>
                             {it.schemeId && (
                               <span className="afx-line-meta" data-testid="line-scheme">
@@ -824,16 +982,19 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
                                 {" "}<button type="button" className="afx-link-btn" onClick={() => dropScheme(i)}>Remove</button>
                               </span>
                             )}
-                            {!it.schemeId && it.schemeOff && (
+                            {!it.schemeId && it.schemeOff && !it.custom && (
                               <span className="afx-line-meta">
                                 No scheme <button type="button" className="afx-link-btn" onClick={() => retryScheme(i)}>Apply scheme</button>
                               </span>
                             )}
                           </td>
-                          <td data-testid="line-price">{Number(it.sellingPrice || 0).toFixed(2)}</td>
+                          <td data-testid="line-price">
+                            <LinePriceCell line={it} product={allProducts.find((p) => p.id === it.productId)} canChange={canChangePrice}
+                              onChange={(p) => patchLine(i, p)} />
+                          </td>
                           <td data-testid="line-qty">{it.quantity}</td>
                           <td data-testid="line-excl">{excl.toFixed(2)}</td>
-                          <td data-testid="line-rate">{Number((row.rate * 100).toFixed(2))}%</td>
+                          <td><LineGstCell line={it} row={row} canOverride={canOverrideGst} onChange={(p) => patchLine(i, p)} /></td>
                           <td data-testid="line-gst">{gst.toFixed(2)}</td>
                           <td data-testid="line-incl" style={{ fontWeight: 700, color: "var(--afx-text-1)" }}>{(excl + gst).toFixed(2)}</td>
                           <td>
@@ -855,8 +1016,8 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
                       <td colSpan={4} style={{ textAlign: "right" }}>Total ({lineItems.length} item{lineItems.length === 1 ? "" : "s"})</td>
                       <td data-testid="sum-excl">{lineItems.reduce((s, _, k) => s + (totals.lines[k]?.post || 0), 0).toFixed(2)}</td>
                       <td></td>
-                      <td data-testid="sum-gst">{lineItems.reduce((s, _, k) => s + (totals.lines[k] ? totals.lines[k].post * totals.lines[k].rate : 0), 0).toFixed(2)}</td>
-                      <td data-testid="sum-incl" style={{ color: "var(--afx-text-1)" }}>{lineItems.reduce((s, _, k) => s + (totals.lines[k] ? totals.lines[k].post * (1 + totals.lines[k].rate) : 0), 0).toFixed(2)}</td>
+                      <td data-testid="sum-gst">{lineItems.reduce((s, _, k) => s + (totals.lines[k] ? (totals.lines[k].rawPost ?? totals.lines[k].post) * totals.lines[k].rate : 0), 0).toFixed(2)}</td>
+                      <td data-testid="sum-incl" style={{ color: "var(--afx-text-1)" }}>{lineItems.reduce((s, _, k) => s + (totals.lines[k] ? totals.lines[k].post + (totals.lines[k].rawPost ?? totals.lines[k].post) * totals.lines[k].rate : 0), 0).toFixed(2)}</td>
                       <td></td>
                     </tr>
                   </tfoot>
@@ -889,6 +1050,34 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
                     error={errors.retailerId}
                   />
 
+                  {/* Walk-in customer: only when no retailer is picked (an order always goes to a retailer) */}
+                  {!selectedRetailer && !documentMode && (
+                    <div className="afx-grid">
+                      <div className="afx-field">
+                        <label className="afx-label" htmlFor="se-customer-name">Customer name <span style={{ fontWeight: 400, color: "var(--afx-text-3)" }}>(optional)</span></label>
+                        <input
+                          id="se-customer-name"
+                          className="afx-input"
+                          type="text" value={customerName}
+                          onChange={e => setCustomerName(e.target.value)}
+                          maxLength={MAX_NAME_LENGTH} placeholder="Walk-in customer" autoComplete="off"
+                        />
+                        {errors.customerName && <div className="afx-error">{errors.customerName}</div>}
+                      </div>
+                      <div className="afx-field">
+                        <label className="afx-label" htmlFor="se-customer-phone">Mobile number <span style={{ fontWeight: 400, color: "var(--afx-text-3)" }}>(optional)</span></label>
+                        <input
+                          id="se-customer-phone"
+                          className="afx-input"
+                          type="tel" inputMode="tel" value={customerPhone}
+                          onChange={e => setCustomerPhone(e.target.value)}
+                          maxLength={16} placeholder="10-digit mobile" autoComplete="off"
+                        />
+                        {errors.customerPhone && <div className="afx-error">{errors.customerPhone}</div>}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="afx-field">
                     <label className="afx-label">Discount</label>
                     <div style={{ display: "flex", gap: 8 }}>
@@ -901,21 +1090,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
                     {errors.discountInput && <div className="afx-error">{errors.discountInput}</div>}
                   </div>
 
-                  <div className="afx-field">
-                    <label className="afx-label">Billing Mode</label>
-                    <div className="afx-seg-row">
-                      {[["CASH", "Cash"], ["ONLINE", "Online / UPI"], ["CARD", "Card"]].map(([val, lbl]) => (
-                        <button
-                          key={val} type="button"
-                          className={`afx-seg-btn ${billingMode === val ? "is-active" : ""}`}
-                          onClick={() => setBillingMode(val)}
-                        >{lbl}</button>
-                      ))}
-                    </div>
-                    {errors.billingMode && <div className="afx-error">{errors.billingMode}</div>}
-                  </div>
-
-                  {/* ── Totals breakdown: Subtotal → Discount → Taxable Value → GST → Net Amount ── */}
+                                    {/* ── Totals breakdown: Subtotal → Discount → Taxable Value → GST → Net Amount ── */}
                   <div className="afx-totals">
                     <div className="afx-totals-row"><span>Subtotal</span><span style={{ color: "var(--afx-text-1)" }}>₹{lineSubtotal.toFixed(2)}</span></div>
                     {schemeDiscAmt > 0 && (
@@ -929,6 +1104,9 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
                     )}
                     <div className="afx-totals-row"><span>Taxable Value</span><span style={{ color: "var(--afx-text-1)" }}>₹{taxableValue.toFixed(2)}</span></div>
                     <div className="afx-totals-row"><span>GST</span><span style={{ color: "var(--afx-text-1)" }}>₹{lineTaxTotal.toFixed(2)}</span></div>
+                    {totals.roundOff !== 0 && totals.roundOff !== undefined && (
+                      <div className="afx-totals-row" data-testid="round-off"><span>Round off</span><span>{roundOffText(totals.roundOff)}</span></div>
+                    )}
                     <div className="afx-totals-divider" />
                     <div className="afx-totals-row afx-totals-grand"><span>Net Amount</span><span>₹{netAmount.toFixed(2)}</span></div>
                   </div>
@@ -940,7 +1118,7 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
                         <button
                           key={id} type="button"
                           className={`afx-pay-tile ${creditPaymentType === id ? "is-active" : ""}`}
-                          onClick={() => setCreditPaymentType(id)}
+                          onClick={() => choosePaymentType(id)}
                         >
                           <span className="afx-pay-tile-icon">{PAYMENT_ICONS[id]}</span>
                           <span className="afx-pay-tile-text">
@@ -965,17 +1143,19 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
                     </div>
                   )}
 
-                  <div className="afx-field">
-                    <label className="afx-label">Amount Paid (₹)</label>
-                    <input
-                      className="afx-input"
-                      type="number" value={amountPaid}
-                      onChange={e => setAmountPaid(e.target.value)}
-                      disabled={creditPaymentType === "PAID" || creditPaymentType === "CREDIT"}
-                      placeholder="0.00"
-                    />
-                    {errors.amountPaid && <div className="afx-error">{errors.amountPaid}</div>}
-                  </div>
+                  {collectedLater > 0 && (
+                    <div className="afx-hint" data-testid="collected-later">
+                      ₹{collectedLater.toFixed(2)} was collected on this bill later; it stays. The payments below are the rest.
+                    </div>
+                  )}
+                  {creditPaymentType !== "CREDIT" && !documentMode && (
+                    <div className="afx-field">
+                      <label className="afx-label">Payment <span style={{ fontWeight: 400, color: "var(--afx-text-3)" }}>(split across Cash / UPI / Card)</span></label>
+                      <PaymentSplit type={creditPaymentType} net={toPay} payments={payments} onChange={setPayments}
+                        error={errors.amountPaid} />
+                    </div>
+                  )}
+                  <CreditLimitNotice check={credit} reason={creditReason} onReason={setCreditReason} />
 
       <div className="afx-totals">
         <div className="afx-totals-row afx-totals-grand">
@@ -1063,6 +1243,13 @@ export default function SalesEdit({ uKey, onClose, onSubmit, documentMode = fals
               <button className="afx-btn" type="button" onClick={onClose}>Cancel</button>
               <button className="afx-btn afx-btn--primary" type="button" onClick={updateSale}>Update Sale</button>
             </div>
+            {customForm && (
+              <CustomItemForm
+                line={customForm.index !== null ? lineItems[customForm.index] : null}
+                onSave={saveCustomItem}
+                onCancel={() => setCustomForm(null)}
+              />
+            )}
           </>
         )}
       </div>

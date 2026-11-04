@@ -5,6 +5,7 @@ const ALL = [
   "INVENTORY", "BATCH", "STOCK_ADJUSTMENT", "ALERTS", "SALES", "SALES_RETURN", "PURCHASE", "PURCHASE_RETURN",
   "PAYMENT_COLLECTION", "SUPPLIER_PAYMENT", "RETAILER_OUTSTANDING", "SUPPLIER_OUTSTANDING", "EINVOICE", "EWAYBILL", "GSTR2RECON",
   "FIELD_REP", "FIELD_ORDER", "FIELD_COLLECTION", "VENDOR", "ROLES", "SCHEDULER", "BULK_UPLOAD_MANAGEMENT", "SCHEME",
+  "SUPPLIER_SCHEME", "PRODUCT_STYLE",
 ];
 
 const labels = (menu) => menu.map((m) => m.label);
@@ -32,9 +33,9 @@ describe("the menu structure", () => {
     expect(new Set(routes).size).toBe(routes.length);
     expect(routes).toEqual(expect.arrayContaining([
       "/home", "/master/dashboard", "/master/product-type", "/master/stock-adjustment", "/master/alerts", "/master/reorder-alerts",
-      "/master/job-scheduler", "/master/bulk-upload", "/master/marg-import", "/master/field-collection", "/master/gstr2-recon", "/master/scheme",
+      "/master/job-scheduler", "/master/bulk-upload", "/master/marg-import", "/master/field-collection", "/master/gstr2-recon", "/master/scheme", "/master/day-end",
     ]));
-    expect(entries).toHaveLength(35); // Home + the 34 permissioned pages (the 32 the old search listed, plus Schemes & Discounts and Import from Marg)
+    expect(entries).toHaveLength(39); // Home + the 38 permissioned pages (the 32 the old search listed, plus Schemes & Discounts, Import from Marg, Serial Lookup, Supplier Schemes, Styles and Day-end Summary)
   });
 
   it("every permission the old sidebar knew about still opens a page", () => {
@@ -47,7 +48,7 @@ describe("the menu structure", () => {
 
   it("Schemes & Discounts sits with the products under Masters, and is not mistaken for an unknown module", () => {
     const products = main(buildMenu(ALL), "masters").items.find((i) => i.label === "Products");
-    expect(products.children.map((c) => c.label)).toEqual(["Product", "Product Type", "Schemes & Discounts"]);
+    expect(products.children.map((c) => c.label)).toEqual(["Product", "Product Type", "Schemes & Discounts", "Styles (Sizes & Colours)"]);
     expect(unknownModules(["SCHEME"])).toEqual([]);
   });
 
@@ -91,7 +92,7 @@ describe("permissions decide what is shown", () => {
     const masters = main(buildMenu(["GODOWN", "PRODUCT", "PRODUCT_TYPE"]), "masters");
     const godown = masters.items.find((i) => i.label === "Godown");
     expect(godown).toMatchObject({ type: "leaf", route: "/master/godown" }); // not a "Locations" group with one child
-    expect(masters.items.find((i) => i.label === "Products").children).toHaveLength(2);
+    expect(masters.items.find((i) => i.label === "Products").children).toHaveLength(2); // Styles needs its own PRODUCT_STYLE permission
   });
 
   it("a main menu with exactly one page is a direct link", () => {
@@ -172,5 +173,43 @@ describe("helpers", () => {
   it("normalize and formatName", () => {
     expect(normalize("Stock_Adjustment")).toBe("stockadjustment");
     expect(formatName("SOME_NEW_MODULE")).toBe("Some New Module");
+  });
+});
+
+describe("assistant helpers — one source with the sidebar", () => {
+  const { pageTitleFor, hiddenRoutesFor, userMenu, assistantPages, MENU } = require("./sidebarMenu");
+
+  it("names any menu page from its address, the longest match winning", () => {
+    expect(pageTitleFor("/master/sales")).toBe("Sales");
+    expect(pageTitleFor("/master/sales-order")).toBe("Sales Orders");
+    expect(pageTitleFor("/master/sales-return")).toBe("Sales Return");
+    expect(pageTitleFor("/master/salesshrt")).toBe("Quick Sale");
+    expect(pageTitleFor("/master/reports/generate")).toBe("Reports");
+    expect(pageTitleFor("/setting")).toBe("Account settings");
+    expect(pageTitleFor("/home")).toBe("Home");
+    expect(pageTitleFor("/nowhere")).toBe("");
+  });
+
+  it("every page in the menu has a title for the assistant (a new page needs nothing extra)", () => {
+    const leaves = MENU.flatMap((m) => m.items.flatMap((i) => (i.type === "group" ? i.children : [i])));
+    leaves.filter((l) => l.route !== "/home").forEach((l) => expect(pageTitleFor(l.route)).toBe(l.label));
+  });
+
+  it("hides the same pages as the sidebar for the shop", () => {
+    expect(hiddenRoutesFor({ trackExpiry: false, isPharma: false })).toEqual(["/master/alerts"]);
+    expect(hiddenRoutesFor({ trackExpiry: true, isPharma: true })).toEqual(["/master/serial-lookup", "/master/styles"]);
+    const pages = assistantPages(userMenu(["SALES", "Alerts"], { trackExpiry: false, isPharma: false }));
+    expect(pages.some((p) => p.includes("Reorder Alerts"))).toBe(true);
+    expect(pages.some((p) => p.includes("Expiry Alerts"))).toBe(false);
+  });
+});
+
+describe("Accounting has its own permission", () => {
+  it("shows under Dashboard & Reports only for a role with the ACCOUNTING module, not for Reports alone", () => {
+    const withIt = main(buildMenu(["REPORTS", "ACCOUNTING"]), "overview");
+    expect(leafLabels(withIt)).toEqual(["Reports", "Day-end Summary", "Accounting"]);
+    expect(searchMenu(buildMenu(["ACCOUNTING"]), "accounting")[0].route).toBe("/master/accounting");
+    expect(leafLabels(main(buildMenu(["REPORTS"]), "overview"))).not.toContain("Accounting");
+    expect(unknownModules(["ACCOUNTING"])).toEqual([]);
   });
 });

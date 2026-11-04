@@ -1,0 +1,54 @@
+/* Revenue / Profit report: an invoice's totals shown once on top of its popup (revenueInvoices.js).
+   Class names avoid the fragments Theme.css force-recolours in light mode (-label, -value, -number, -row…). */
+
+.rvi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.rvi-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #3b82f6;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.rvi-cap {
+  color: #9ca3af;
+  font: 600 10px 'JetBrains Mono', monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rvi-num { color: #f3f4f6; font: 700 15px 'JetBrains Mono', monospace; }
+
+.rvi-profit { border-left-color: #10b981; }
+.rvi-netProfit { border-left-color: #06b6d4; }
+.rvi-tax { border-left-color: #8b5cf6; }
+.rvi-discount { border-left-color: #f97316; }
+.rvi-marginPercent { border-left-color: #ec4899; }
+
+body[data-theme="light"] .rvi-cell { border-color: rgba(15, 23, 42, 0.1); background: #f8fafc; }
+body[data-theme="light"] .rvi-profit { border-left-color: #10b981; }
+body[data-theme="light"] .rvi-netProfit { border-left-color: #06b6d4; }
+body[data-theme="light"] .rvi-tax { border-left-color: #8b5cf6; }
+body[data-theme="light"] .rvi-discount { border-left-color: #f97316; }
+body[data-theme="light"] .rvi-marginPercent { border-left-color: #ec4899; }
+body[data-theme="light"] .rvi-revenue,
+body[data-theme="light"] .rvi-quantity,
+body[data-theme="light"] .rvi-paymentStatus { border-left-color: #3b82f6; }
+body[data-theme="light"] .rvi-cap { color: #64748b; }
+body[data-theme="light"] .rvi-num { color: #0f172a; }
+
+/* an invoice's lines wrap rather than cut off, so a free-goods line reads in full ("Kurta · Free (Buy 10 Get 1)") */
+.gen-modal-content [data-testid="invoice-line"] .gen-table-body-cell {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}

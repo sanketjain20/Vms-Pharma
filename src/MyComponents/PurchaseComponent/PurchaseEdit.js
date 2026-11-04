@@ -3,6 +3,14 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import { freeNote } from "../../utils/purchaseFree";
+import { useSupplierSchemeFill } from "../../utils/supplierSchemes";
+import { SerialEntry } from "../CommonComponent/SerialWidgets";
+import { VariantQtyGrid } from "../CommonComponent/VariantWidgets";
+import { stylesIn } from "../../utils/variants";
+import { serialProblem, tracksSerials } from "../../utils/serials";
+import { PURCHASE_PAYMENT_MODES } from "./PurchaseAdd";
 
 /* ── reuse same SearchDrop as PurchaseAdd — externally controlled open
    state so a row of these (one per line item) can be tracked by a single
@@ -50,6 +58,9 @@ const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setO
 const GST_RATES = [0, 5, 12, 18, 28];
 
 export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = false }) {
+  // a shop that does not track expiry (Phase 4) buys without batch / MFG / expiry
+  const { trackExpiry, isPharma } = useBusinessProfile();
+  const [gridOpen, setGridOpen] = useState(false); // Phase 7: the size × colour grid, as on a new purchase
   // document mode: the order as loaded, so a save keeps what this form does not edit (order date, godown, terms)
   const loadedOrder = useRef(null);
   const [suppliers, setSuppliers] = useState([]);
@@ -67,7 +78,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
 
   const [form, setForm] = useState({
     supplierId: "", supplierInvoiceNumber: "", invoiceDate: "",
-    paymentStatus: "CREDIT", dueDate: "", amountPaid: "", notes: "", items: [],
+    paymentStatus: "CREDIT", dueDate: "", amountPaid: "", paymentMode: "BANK", notes: "", items: [],
   });
 
   /* ── FETCH DROPDOWNS ── */
@@ -102,6 +113,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
             paymentStatus:         d.paymentStatus         || "CREDIT",
             dueDate:               d.dueDate               || "",
             amountPaid:            d.amountPaid            || "",
+            paymentMode:           d.paymentMode           || "BANK",
             notes:                 d.notes                 || "",
             items: (d.items || []).map(it => ({
               productId:         it.productId         || "",
@@ -110,6 +122,9 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
               manufacturingDate: it.manufacturingDate || "",
               expiryDate:        it.expiryDate        || "",
               quantity:          it.quantity          || 1,
+              freeQuantity:      it.freeQuantity      || "",
+              freeManual:        true, // what was saved stays; the scheme fills only lines changed here
+              serials:           it.serials           || [],
               costPrice:         (documentMode ? it.unitCost : it.costPrice) || "",
               mrp:               it.mrp               || "",
               gstRate:           it.gstRate           || 0,
@@ -142,19 +157,32 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
 
   const addItem = () => setForm(p => ({
     ...p,
-    items: [...p.items, { productId: "", productName: "", quantity: 1, costPrice: "", mrp: "", gstRate: 0, batchNumber: "", manufacturingDate: "", expiryDate: "" }]
+    items: [...p.items, { productId: "", productName: "", quantity: 1, freeQuantity: "", costPrice: "", mrp: "", gstRate: 0, batchNumber: "", manufacturingDate: "", expiryDate: "" }]
   }));
+
+  // Phase 7: the supplier's free-goods scheme fills each line's Free (unless typed by hand)
+  useSupplierSchemeFill({ enabled: !documentMode, supplierId: form.supplierId, date: form.invoiceDate, items: form.items,
+    setItems: fn => setForm(p => ({ ...p, items: fn(p.items) })) });
 
   const updateItem = (i, field, value) => {
     const updated = [...form.items];
     updated[i] = { ...updated[i], [field]: value };
     if (field === "productId") {
       const p = products.find(x => x.id === value);
-      if (p) { updated[i].costPrice = p.price || ""; updated[i].mrp = p.price || ""; updated[i].productName = p.name; }
+      if (p) { updated[i].costPrice = p.costPrice || ""; updated[i].mrp = p.price || ""; updated[i].productName = p.name; } // last average cost; the product price is the selling price
+      updated[i].freeManual = false;
     }
+    if (field === "quantity" && !updated[i].freeTyped) updated[i].freeManual = false; // a new quantity re-reads the scheme
+    if (field === "freeQuantity") { updated[i].freeManual = true; updated[i].freeTyped = true; }
     setForm(p => ({ ...p, items: updated }));
     if (errors.items?.[i]?.[field])
       setErrors(p => ({ ...p, items: { ...p.items, [i]: { ...p.items?.[i], [field]: "" } } }));
+  };
+
+  /* The size × colour grid's lines go after the lines already on the purchase (blank ones are dropped). */
+  const addGridLines = lines => {
+    setForm(p => ({ ...p, items: [...p.items.filter(it => it.productId), ...lines] }));
+    setGridOpen(false);
   };
 
   const removeItem = i => {
@@ -188,10 +216,16 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
       const ie = {};
       if (!item.productId)   ie.productId = "Required";
       if (!item.quantity)    ie.quantity = "Required";
+      if (parseInt(item.freeQuantity) < 0) ie.freeQuantity = "Can't be negative";
       if (!item.costPrice)   ie.costPrice = "Required";
       if (!item.mrp)         ie.mrp = "Required";
-      if (!item.batchNumber) ie.batchNumber = "Required";
-      if (!item.expiryDate)  ie.expiryDate = "Required";
+      // the batch number is optional: blank keeps this purchase's own code (or makes one)
+      if (trackExpiry && !item.expiryDate)  ie.expiryDate = "Required";
+      // Phase 6 — a product that tracks serial numbers needs one per unit received (paid + free)
+      if (!documentMode && tracksSerials(products.find(p => p.id === item.productId))) {
+        const problem = serialProblem(item.serials || [], (parseInt(item.quantity) || 0) + Math.max(parseInt(item.freeQuantity) || 0, 0));
+        if (problem) ie.serials = problem;
+      }
       if (Object.keys(ie).length) itemErrors[i] = ie;
     });
     if (Object.keys(itemErrors).length) e.items = itemErrors;
@@ -216,7 +250,7 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
         orderDate: loadedOrder.current?.orderDate || new Date().toISOString().slice(0, 10),
         expectedDate: loadedOrder.current?.expectedDate || null, terms: loadedOrder.current?.terms || "", notes: form.notes,
         supplierInvoiceNumber: form.supplierInvoiceNumber || null, invoiceDate: form.invoiceDate || null,
-        paymentStatus: form.paymentStatus, dueDate: form.dueDate || null, amountPaid: parseFloat(form.amountPaid || 0),
+        paymentStatus: form.paymentStatus, dueDate: form.dueDate || null, amountPaid: parseFloat(form.amountPaid || 0), paymentMode: form.paymentMode,
         items: form.items.map(it => ({ productId: it.productId, quantity: parseInt(it.quantity), unitCost: parseFloat(it.costPrice), gstRate: parseFloat(it.gstRate || 0),
           batchNumber: it.batchNumber || null, manufacturingDate: it.manufacturingDate || null,
           expiryDate: it.expiryDate || null, mrp: it.mrp === "" || it.mrp == null ? null : parseFloat(it.mrp) })),
@@ -226,14 +260,16 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
         invoiceDate:           form.invoiceDate,
         paymentStatus:         form.paymentStatus,
         dueDate:               form.dueDate || null,
-        amountPaid:            parseFloat(form.amountPaid || 0),
+        amountPaid:            parseFloat(form.amountPaid || 0), paymentMode: form.paymentMode,
         notes:                 form.notes,
         items: form.items.map(it => ({
           productId:         it.productId,
           batchNumber:       it.batchNumber.trim().toUpperCase(),
           manufacturingDate: it.manufacturingDate || null,
-          expiryDate:        it.expiryDate,
+          expiryDate:        it.expiryDate || null,
           quantity:          parseInt(it.quantity),
+          freeQuantity:      Math.max(parseInt(it.freeQuantity) || 0, 0),
+          serials:           it.serials && it.serials.length ? it.serials : null,
           costPrice:         parseFloat(it.costPrice),
           mrp:               parseFloat(it.mrp),
           gstRate:           parseFloat(it.gstRate || 0),
@@ -366,6 +402,20 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
                     </div>
                   )}
 
+                  {(form.paymentStatus === "PAID" || form.paymentStatus === "PARTIAL") && (
+                    <div className="afx-field">
+                      <label className="afx-label" htmlFor="purchase-paid-by">Paid by</label>
+                      <div className="afx-select-wrap">
+                        <select id="purchase-paid-by" className="afx-select" value={form.paymentMode} onChange={e => setField("paymentMode", e.target.value)}>
+                          {PURCHASE_PAYMENT_MODES.map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+                        </select>
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                      <span className="afx-hint">Goes to the cash book (Cash) or the bank book (anything else)</span>
+                    </div>
+                  )}
+
+
                   <div className="afx-field afx-field--full">
                     <label className="afx-label">Notes</label>
                     <textarea className="afx-textarea" rows={3}
@@ -416,13 +466,16 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
                             </div>
 
                             <div className="afx-item-card-fields">
+                              {trackExpiry && (
+                              <>
                               <div className="afx-item-field">
-                                <label className="afx-item-field-label">Batch No<span className="afx-req">*</span></label>
+                                <label className="afx-item-field-label">Batch No</label>
                                 <input className="afx-cell-input"
                                   style={errors.items?.[i]?.batchNumber ? { borderColor: "var(--afx-danger)" } : undefined}
                                   value={item.batchNumber}
                                   onChange={e => updateItem(i, "batchNumber", e.target.value)}
-                                  placeholder="Batch No"
+                                  placeholder="Blank = keep / automatic" aria-label="Batch number"
+                                  title="A batch number belongs to this purchase only. Leave it blank and one is made for you."
                                 />
                                 {errors.items?.[i]?.batchNumber && <span className="afx-error">{errors.items[i].batchNumber}</span>}
                               </div>
@@ -444,6 +497,8 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
                                 />
                                 {errors.items?.[i]?.expiryDate && <span className="afx-error">{errors.items[i].expiryDate}</span>}
                               </div>
+                              </>
+                              )}
 
                               <div className="afx-item-field">
                                 <label className="afx-item-field-label">Qty<span className="afx-req">*</span></label>
@@ -454,6 +509,30 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
                                 />
                                 {errors.items?.[i]?.quantity && <span className="afx-error">{errors.items[i].quantity}</span>}
                               </div>
+
+                              {!documentMode && (
+                                <div className="afx-item-field">
+                                  <label className="afx-item-field-label" title="Units the supplier gives free (a scheme such as 10 + 1); not billed">Free</label>
+                                  <input type="number" min="0" className="afx-cell-input" aria-label="Free quantity"
+                                    style={errors.items?.[i]?.freeQuantity ? { borderColor: "var(--afx-danger)" } : undefined}
+                                    value={item.freeQuantity ?? ""}
+                                    placeholder="0"
+                                    onChange={e => updateItem(i, "freeQuantity", e.target.value)}
+                                  />
+                                  {errors.items?.[i]?.freeQuantity && <span className="afx-error">{errors.items[i].freeQuantity}</span>}
+                                </div>
+                              )}
+
+                              {freeNote(item.costPrice, item.quantity, item.freeQuantity) && (
+                                <div className="afx-item-field" data-testid="free-note" style={{ alignSelf: "end", color: "var(--afx-success)", fontSize: 11 }}>
+                                  {freeNote(item.costPrice, item.quantity, item.freeQuantity)}
+                                </div>
+                              )}
+                              {item.schemeLabel && !item.freeManual && (
+                                <div className="afx-item-field" data-testid="supplier-scheme" style={{ alignSelf: "end", fontSize: 11 }}>
+                                  Supplier scheme {item.schemeLabel}
+                                </div>
+                              )}
 
                               <div className="afx-item-field">
                                 <label className="afx-item-field-label">Cost (₹)<span className="afx-req">*</span></label>
@@ -485,6 +564,16 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
                               </div>
                             </div>
 
+                            {!documentMode && tracksSerials(products.find(p => p.id === item.productId)) && (
+                              <div style={{ padding: "4px 0 8px" }}>
+                                <SerialEntry
+                                  value={item.serials || []}
+                                  needed={(parseInt(item.quantity) || 0) + Math.max(parseInt(item.freeQuantity) || 0, 0)}
+                                  onChange={list => updateItem(i, "serials", list)}
+                                />
+                                {errors.items?.[i]?.serials && <span className="afx-error">{errors.items[i].serials}</span>}
+                              </div>
+                            )}
                             <div className="afx-item-card-footer">
                               <span className="afx-item-card-footer-label">Line total</span>
                               <span className="afx-line-total">₹{getLineTotal(item).toFixed(2)}</span>
@@ -501,7 +590,14 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
                       </div>
                     </>
                   )}
-                  <button type="button" className="afx-line-add" style={{ marginTop: 10 }} onClick={addItem}>+ Add Item</button>
+                  <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                    <button type="button" className="afx-line-add" onClick={addItem}>+ Add Item</button>
+                    {!isPharma && (
+                      <button type="button" className="afx-line-add" onClick={() => setGridOpen(true)} data-testid="open-variant-grid">
+                        + Sizes &amp; colours
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </>
@@ -514,6 +610,9 @@ export default function PurchaseEdit({ uKey, onSubmit, onClose, documentMode = f
             {loading ? <><span className="afx-spinner" /> Updating…</> : "Update Purchase"}
           </button>
         </div>
+        {gridOpen && (
+          <VariantQtyGrid styles={stylesIn(products)} gstRates={GST_RATES} onAdd={addGridLines} onClose={() => setGridOpen(false)} />
+        )}
       </div>
     </div>
   );

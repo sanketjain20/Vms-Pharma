@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../../Styles/Report/GenerateReport.css";
 import { ReportEntity } from "../Enums/ReportEntity.js";
+import { invoiceConfig, summariseInvoice, lineColumns, invoiceStrip, gridLabel, lineCell } from "./invoiceGroups";
+import "../../Styles/Report/RevenueInvoice.css";
 import {
   useCanvasThemeKey,
   getPerspectiveCanvasPalette,
@@ -10,6 +12,9 @@ import {
 } from "../../utils/canvasTheme";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { RUN_TIME_REPORTS, cardValue } from "./runTimeReports";
+import ReportFilterPanel, { ReportFilterButton, activeFilterCount } from "./ReportFilterBar";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 /* ═══════════════════════════════════════════════════════════════
    SHARED FORMAT HELPER
@@ -440,8 +445,21 @@ PnlStatement.displayName = "PnlStatement";
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════ */
 export default function GenerateReport() {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   const location = useLocation();
   const { moduleId, reportName, filters: initialFilters } = location.state || {};
+  const navigate = useNavigate();
+  // the filters the report is showing: first those chosen on the filter page, then whatever is applied here
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
+  const [filtersOpen, setFiltersOpen] = useState(false); // the side panel opened by the filter button
+  // another report (or Back / Forward) brings its own filters: show those, not the previous report's
+  useEffect(() => { setAppliedFilters(initialFilters); }, [moduleId, initialFilters]);
+  const applyFilters = (next) => {
+    setAppliedFilters(next);
+    setPage(1);
+    // kept in the page's history entry, so a refresh or coming back shows the same filters
+    navigate(location.pathname, { replace: true, state: { ...(location.state || {}), filters: next } });
+  };
 
   const [fields,          setFields]          = useState([]);
   const [loading,         setLoading]         = useState(true);
@@ -533,7 +551,9 @@ useEffect(() => {
     .then((r) => r.json())
     .then((d) => {
       if (d?.status === 200 && Array.isArray(d?.data)) {
-        setFields(d.data);
+        // no stock-expiry columns for a shop that doesn't track expiry (the Vendor report's "Expiry Date" is the
+        // account's validity, not stock, so it stays)
+        setFields(trackExpiry || Number(moduleId) === 1 ? d.data : d.data.filter((f) => !/expir/i.test(String(f))));
       } else {
         setFields([]); // fallback if data is null
       }
@@ -545,7 +565,7 @@ useEffect(() => {
     .finally(() => {
       setLoading(false);
     });
-}, [moduleId]);
+}, [moduleId, trackExpiry]);
 
   /* ── API maps ── */
   const apiMap = {
@@ -568,6 +588,7 @@ useEffect(() => {
     [ReportEntity.ProfitLoss]:        `${API_BASE_URL}/api/Reports/PnlReportData`,
     [ReportEntity.AuditLog]:          `${API_BASE_URL}/api/EventLog/GetAuditReportData`,
     [ReportEntity.NarcoticRegister]:  `${API_BASE_URL}/api/Reports/NarcoticRegisterReportData`,
+    ...Object.fromEntries(Object.entries(RUN_TIME_REPORTS).map(([id, r]) => [id, r.data])),
   };
 
   const downloadApiMap = {
@@ -590,15 +611,16 @@ useEffect(() => {
     [ReportEntity.ProfitLoss]:        `${API_BASE_URL}/api/Reports/PnlReport`,
     [ReportEntity.AuditLog]:          `${API_BASE_URL}/api/EventLog/GetAuditReport`,
     [ReportEntity.NarcoticRegister]:  `${API_BASE_URL}/api/Reports/NarcoticRegisterReport`,
+    ...Object.fromEntries(Object.entries(RUN_TIME_REPORTS).map(([id, r]) => [id, r.download])),
   };
 
   /* ── Fetch report data ── */
   useEffect(() => {
-    if (!moduleId || !initialFilters) return;
+    if (!moduleId || !appliedFilters) return;
 
     const payload = {};
-    Object.keys(initialFilters).forEach((k) => {
-      payload[k] = initialFilters[k]?.trim() !== "" ? initialFilters[k] : null;
+    Object.keys(appliedFilters).forEach((k) => {
+      payload[k] = String(appliedFilters[k] ?? "").trim() !== "" ? appliedFilters[k] : null;
     });
     payload.page     = page;
     payload.pageSize = pageSize;
@@ -650,6 +672,13 @@ useEffect(() => {
           return;
         }
 
+        // ── Run-time reports (Phase 3): { rows, summary } ──
+        if (RUN_TIME_REPORTS[moduleId]) {
+          setSummary(d.data?.summary || null);
+          setReportData(d.data?.rows || []);
+          return;
+        }
+
         // ── Generic ──────────────────────────────────────────────────────
         setReportData(d.data);
       })
@@ -658,19 +687,19 @@ useEffect(() => {
         if (moduleId === ReportEntity.GSTR1)     { setGstrData(null); setGstrLoaded(true); }
         if (moduleId === ReportEntity.ProfitLoss) { setPnlData(null);  setPnlLoaded(true);  }
       });
-  }, [moduleId, initialFilters, page, pageSize]);
+  }, [moduleId, appliedFilters, page, pageSize]);
 
   /* ── Download ── */
   const handleDownload = async () => {
-    if (!moduleId || !initialFilters || downloading) return;
+    if (!moduleId || !appliedFilters || downloading) return;
     const apiUrl = downloadApiMap[moduleId];
     if (!apiUrl) return;
 
     setDownloading(true); setDownloadSuccess(false);
     try {
       const payload = {};
-      Object.keys(initialFilters).forEach((k) => {
-        payload[k] = initialFilters[k]?.trim() !== "" ? initialFilters[k] : null;
+      Object.keys(appliedFilters).forEach((k) => {
+        payload[k] = String(appliedFilters[k] ?? "").trim() !== "" ? appliedFilters[k] : null;
       });
 
       const response = await apiClient(apiUrl, {
@@ -771,6 +800,9 @@ useEffect(() => {
     invoiceMap.get(key).push(row);
   });
 
+  // reports with several rows per invoice (Revenue, Sales, Custom Item Sales): the grid shows each invoice's totals,
+  // the popup its lines (invoiceGroups.js)
+  const groupCfg      = invoiceConfig(moduleId);
   const invoiceKeys   = Array.from(invoiceMap.keys());
   const totalPages    = Math.ceil(invoiceKeys.length / pageSize);
   const paginatedKeys = invoiceKeys.slice((page - 1) * pageSize, page * pageSize);
@@ -872,6 +904,9 @@ useEffect(() => {
           </div>
 
           <div className="header-actions">
+            {appliedFilters && (
+              <ReportFilterButton count={activeFilterCount(appliedFilters)} onClick={() => setFiltersOpen(true)} />
+            )}
             <button
               className={`download-btn ${downloading ? "downloading" : ""} ${downloadSuccess ? "success" : ""}`}
               onClick={handleDownload}
@@ -913,6 +948,10 @@ useEffect(() => {
         <div className="header-rule" />
       </header>
 
+      {/* ══ FILTERS — a side panel, opened from the button beside Export Excel ══ */}
+      <ReportFilterPanel moduleId={moduleId} open={filtersOpen} applied={appliedFilters} onApply={applyFilters}
+        onClose={() => setFiltersOpen(false)} />
+
       {/* ══ REVENUE SUMMARY CARDS ══ */}
       {moduleId === ReportEntity.Revenue && summary && (
         <div className="rev-summary">
@@ -926,6 +965,26 @@ useEffect(() => {
               <div className="rev-card-icon">{cfg.icon}</div>
               <div className="rev-card-label">{cfg.label}</div>
               <div className="rev-card-value">{summary[cfg.key]}{cfg.suffix || ""}</div>
+              <div className="rev-card-ticker" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ══ RUN-TIME REPORT SUMMARY CARDS (Phase 3) ══ */}
+      {RUN_TIME_REPORTS[moduleId] && summary && (
+        <div className="rev-summary" data-testid="runtime-summary">
+          {RUN_TIME_REPORTS[moduleId].cards.map((cfg, i) => (
+            <div key={cfg.key} className="rev-card" title={cfg.hint ? cfg.hint(summary) : undefined}
+              style={{ "--card-accent": cfg.color, "--card-glow": cfg.glow, animationDelay: `${i * 0.06}s` }}>
+              <div className="rev-card-bg" />
+              <div className="rev-card-corner tl" /><div className="rev-card-corner tr" />
+              <div className="rev-card-corner bl" /><div className="rev-card-corner br" />
+              <div className="rev-card-top-line" />
+              <div className="rev-card-icon">{cfg.icon}</div>
+              <div className="rev-card-label">{cfg.label}</div>
+              <div className="rev-card-value" data-testid={`card-${cfg.key}`}>{cardValue(cfg, summary)}</div>
+              {cfg.hint && cfg.hint(summary) && <div className="rev-card-label">{cfg.hint(summary)}</div>}
               <div className="rev-card-ticker" />
             </div>
           ))}
@@ -1091,13 +1150,14 @@ useEffect(() => {
                         <div key={i} className="gen-table-header-cell"
                           style={{ width: "170px", animationDelay: `${i * 0.04}s` }}>
                           <span className="col-index">{String(i + 1).padStart(2, "0")}</span>
-                          {field}
+                          {gridLabel(groupCfg, field, toCamelCase(field))}
                         </div>
                       ))}
                     </div>
                     {paginatedKeys.map((key, gIndex) => {
                       const items       = invoiceMap.get(key);
                       const hasMultiple = items.length > 1;
+                      const shown       = groupCfg && hasMultiple ? summariseInvoice(groupCfg, items) : items[0];
                       return (
                         <div key={gIndex}
                           className={`gen-table-body-row invoice-row ${hoveredRow === gIndex ? "row-hovered" : ""}`}
@@ -1114,7 +1174,7 @@ useEffect(() => {
                                   display: fIndex === 0 && hasMultiple ? "flex" : undefined,
                                   justifyContent: fIndex === 0 && hasMultiple ? "space-between" : undefined,
                                 }}>
-                                {items[0][keyField] ?? "—"}
+                                {shown[keyField] ?? "—"}
                                 {fIndex === 0 && hasMultiple && (
                                   <span className="expand-indicator">
                                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -1187,6 +1247,40 @@ useEffect(() => {
                         CLOSE
                       </button>
                     </div>
+                    {groupCfg && (
+                      <div className="rvi-strip" data-testid="invoice-totals">
+                        {invoiceStrip(groupCfg, modalInvoice).map((c) => (
+                          <div key={c.key} className={`rvi-cell rvi-${c.key}`}>
+                            <span className="rvi-cap">{c.label}</span>
+                            <strong className="rvi-num">{c.value}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {groupCfg ? (
+                    <div className="gen-table-wrapper" ref={modalTableRef}>
+                      <div className="gen-table">
+                        <div className="gen-table-header-row">
+                          {lineColumns(groupCfg, fields, toCamelCase).map((col, i) => (
+                            <div key={col.key} className="gen-table-header-cell" style={{ width: "170px" }}>
+                              <span className="col-index">{String(i + 1).padStart(2, "0")}</span>
+                              {col.label}
+                            </div>
+                          ))}
+                        </div>
+                        {modalInvoice.map((row, rIndex) => (
+                          <div key={rIndex} className="gen-table-body-row" data-testid="invoice-line"
+                            style={{ animationDelay: `${rIndex * 0.04}s` }}>
+                            {lineColumns(groupCfg, fields, toCamelCase).map((col) => (
+                              <div key={col.key} className="gen-table-body-cell" style={{ width: "170px" }}>
+                                {lineCell(groupCfg, row, col.key) ?? "—"}
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    ) : (
                     <div className="gen-table-wrapper" ref={modalTableRef}>
                       <div className="gen-table">
                         <div className="gen-table-header-row">
@@ -1212,6 +1306,7 @@ useEffect(() => {
                         ))}
                       </div>
                     </div>
+                    )}
                   </div>
                 </div>
               )}

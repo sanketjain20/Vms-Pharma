@@ -3,6 +3,7 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import BusinessTypeFields from "./BusinessTypeFields";
 
 const getLoggedInVendor = () => {
   try {
@@ -26,6 +27,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
   const [expiryDate, setExpiryDate] = useState("");
   const [masterVendor, setMasterVendor] = useState(true);
   const [subVendorLimit, setSubVendorLimit] = useState(0);
+  const [business, setBusiness] = useState(null); // Phase 7: a shop's own account only (a worker account follows its shop)
   const [roles, setRoles] = useState([]);
   const [errors, setErrors] = useState({});
   const [vendorId, setVendorId] = useState(null);
@@ -70,6 +72,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
           setExpiryDate(v.expiryDate || "");
           setMasterVendor(v.masterVendor ?? true);
           setSubVendorLimit(v.subVendorLimit ?? 0);
+          setBusiness(v.parentVendorId ? null : { businessType: v.businessType || "PHARMA", trackExpiry: v.trackExpiry ?? true });
           if (roles.length > 0 && v.roleName) {
             const matched = roles.find(r => r.roleName === v.roleName);
             if (matched) setRoleId(matched.id);
@@ -112,6 +115,7 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
       expiryDate,
       masterVendor,
       subVendorLimit: Number(subVendorLimit) || 0,
+      ...(!useLoggedInVendorPrefix && business ? business : {}),
     };
 
     try {
@@ -230,6 +234,10 @@ export default function VendorEdit({ uKey, onClose, onSubmit }) {
                   />
                   {errors.shopName && <span className="afx-error">{errors.shopName}</span>}
                 </div>
+              )}
+
+              {!useLoggedInVendorPrefix && business && (
+                <BusinessTypeFields businessType={business.businessType} trackExpiry={business.trackExpiry} onChange={setBusiness} />
               )}
 
               {!useLoggedInVendorPrefix && (

@@ -4,6 +4,7 @@ import "../../Styles/Dashboard/Dashboard.css";
 import { useCanvasThemeKey, isLightTheme } from "../../utils/canvasTheme";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 const API = `${API_BASE_URL}/api/Dashboard/Summary`;
 
@@ -439,7 +440,11 @@ const VIEWS = [
   { id: "alerts",      label: "Alerts & Warnings",  color: "#f87171" },
 ];
 
+/** A shop that does not track expiry (Phase 4) sees plain "Inventory". */
+const viewLabel = (v, trackExpiry) => (v.id === "inventory" && !trackExpiry ? "Inventory" : v.label);
+
 const ViewSwitcher = ({ active, onChange }) => {
+  const { trackExpiry } = useBusinessProfile();
   const railRef = useRef(null);
   const btnRefs = useRef({});
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
@@ -472,7 +477,7 @@ const ViewSwitcher = ({ active, onChange }) => {
           onClick={() => onChange(v.id)}
         >
           {VIEW_ICONS[v.id]}
-          <span>{v.label}</span>
+          <span>{viewLabel(v, trackExpiry)}</span>
         </button>
       ))}
     </nav>
@@ -538,6 +543,7 @@ const ICN = {
    MAIN DASHBOARD
 ════════════════════════════════════════════ */
 export default function Dashboard() {
+  const { trackExpiry } = useBusinessProfile(); // expiry widgets only where expiry is tracked (Phase 4)
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState("today");
@@ -693,7 +699,7 @@ export default function Dashboard() {
 
       case "inventory": return (
         <div className="db-metricview">
-          <StatHero label="Expiring in 7 days" valueText={fmtNum(d.expiringIn7Days)} color="#f59e0b" icon={ICN.clock}
+          {trackExpiry && (<StatHero label="Expiring in 7 days" valueText={fmtNum(d.expiringIn7Days)} color="#f59e0b" icon={ICN.clock}
             sub={`${fmtNum(d.expiringIn30Days)} batches within 30 days`}>
             {(d.expiryAlerts?.length || 0) > 0 && (
               <AlertList
@@ -707,10 +713,10 @@ export default function Dashboard() {
                 )}
               />
             )}
-          </StatHero>
+          </StatHero>)}
           <div className="db-tilerow">
-            <StatTile label="Expired stock" valueText={fmtNum(d.expiredBatchCount)} color="#ef4444" icon={ICN.warnTri}
-              sub="Batches with qty > 0" />
+            {trackExpiry && (<StatTile label="Expired stock" valueText={fmtNum(d.expiredBatchCount)} color="#ef4444" icon={ICN.warnTri}
+              sub="Batches with qty > 0" />)}
             <StatTile label="Low stock items" valueText={fmtNum(d.lowStockCount)} color="#f59e0b" icon={ICN.stack}
               sub={`${fmtNum(d.zeroStockCount)} products at zero`}>
               <AlertList items={d.lowStockItems || []} emptyText="All stock levels OK"
@@ -751,8 +757,8 @@ export default function Dashboard() {
               defaultType="pie" allowedTypes={["bar","pie"]} data={d.topProducts || []} xKey="label" yKey="value" barColor="#f59e0b" />
             <ChartCard title="Top products — units sold" color="#a78bfa" delay={0.22}
               defaultType="bar" allowedTypes={["bar","pie"]} data={d.topProductsByUnitsMonth || []} xKey="label" yKey="value" barColor="#a78bfa" />
-            <ChartCard title="Expiry countdown — days remaining" color="#f43f5e" delay={0.26}
-              defaultType="bar" allowedTypes={["bar","line","pie"]} data={d.expiryAlertBatches || []} xKey="label" yKey="value" barColor="#f43f5e" />
+            {trackExpiry && (<ChartCard title="Expiry countdown — days remaining" color="#f43f5e" delay={0.26}
+              defaultType="bar" allowedTypes={["bar","line","pie"]} data={d.expiryAlertBatches || []} xKey="label" yKey="value" barColor="#f43f5e" />)}
           </div>
         </>
       );
@@ -776,7 +782,7 @@ export default function Dashboard() {
 
       case "alerts": return (
         <div className="db-charts-row db-charts-2">
-          <Panel title="Expiry alerts" color="#f87171" badge={`${(d.expiryAlerts || []).length} items`} delay={0.02}>
+          {trackExpiry && (<Panel title="Expiry alerts" color="#f87171" badge={`${(d.expiryAlerts || []).length} items`} delay={0.02}>
             <div className="db-alertpanel-list">
               {(d.expiryAlerts || []).length === 0 && <span className="db-list-empty">No expiry alerts</span>}
               {(d.expiryAlerts || []).map((e, i) => (
@@ -784,7 +790,7 @@ export default function Dashboard() {
                   value={e.expiryDate} pill={expiryPill(e.expiryStatus)} />
               ))}
             </div>
-          </Panel>
+          </Panel>)}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <Panel title="Low stock" color="#fbbf24" badge={`${(d.lowStockItems || []).length} products`} delay={0.06}>
               <div className="db-alertpanel-list" style={{ maxHeight: 160 }}>
@@ -845,7 +851,7 @@ export default function Dashboard() {
           <div className="db-view db-view--all">
             {VIEWS.map((v) => (
               <div className="db-section" key={v.id}>
-                <SectionHeading label={v.label} color={v.color} />
+                <SectionHeading label={viewLabel(v, trackExpiry)} color={v.color} />
                 {renderView(v.id)}
               </div>
             ))}

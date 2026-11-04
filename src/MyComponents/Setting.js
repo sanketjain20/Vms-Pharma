@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import "../Styles/Setting.css";
 import API_BASE_URL from "../Config/api.config";
 import apiClient from "../Config/apiClient";
+import { fetchCustomItemSetting, saveCustomItemSetting, saveRoundOffSetting } from "../utils/customItems";
+import { useBusinessProfile } from "../utils/businessProfile";
 
 /* ─── Helpers ──────────────────────────────────────────────── */
 const blobToBase64 = async (blobUrl) => {
@@ -68,11 +70,14 @@ const icons = {
   chevron: "M9 18l6-6-6-6",
   arrowLeft: "M19 12H5M12 19l-7-7 7-7",
   percent: "M19 5L5 19M7.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM16.5 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5z",
+  receipt: "M4 2h16v20l-3-2-3 2-2-2-2 2-3-2-3 2zM8 7h8M8 11h8M8 15h5",
+  store: "M3 9l1.5-5h15L21 9M3 9h18M3 9v11h18V9M9 20v-6h6v6",
 };
 
 const TABS = [
   { id: "profile", label: "Profile", icon: "user", title: "Profile", blurb: "How your shop appears across VMS." },
   { id: "password", label: "Password", icon: "lock", title: "Password", blurb: "Keep your account secure with a strong password." },
+  { id: "billing", label: "Billing", icon: "receipt", title: "Billing", blurb: "What a bill can carry — for shops that sell more than what is in stock." },
   { id: "tax", label: "Tax", icon: "percent", title: "Tax Configuration", blurb: "TDS on what you buy, and the retailer-TDS estimate on what you sell — settings for your business." },
   { id: "security", label: "Security", icon: "shield", title: "Security", blurb: "Review active sessions and manage account safety." },
 ];
@@ -537,6 +542,40 @@ export default function Settings() {
       .finally(() => setMfaLoading(false));
   }, []);
 
+  // the shop's type is chosen on the vendor (Add / Edit Vendor) — only read here
+  const shopProfile = useBusinessProfile();
+
+  /* Billing tab: custom (run-time) items on bills — a shop-wide switch only the main account can change. */
+  const [customItems, setCustomItems] = useState(null); // { allowCustomItems, canChange } once loaded
+  const [savingCustomItems, setSavingCustomItems] = useState(false);
+  useEffect(() => {
+    if (tab === "billing" && customItems === null) fetchCustomItemSetting().then(setCustomItems);
+  }, [tab, customItems]);
+  const toggleCustomItems = () => {
+    const next = !customItems.allowCustomItems;
+    setSavingCustomItems(true);
+    saveCustomItemSetting(next)
+      .then((d) => {
+        if (d?.status === 200) { setCustomItems((c) => ({ ...c, allowCustomItems: next })); push(d.message, "success"); }
+        else push(d?.message || "Could not save the setting", "error");
+      })
+      .catch(() => push("Could not save the setting — please try again", "error"))
+      .finally(() => setSavingCustomItems(false));
+  };
+  // round bill totals to the rupee (on by default); read with the custom-items switch
+  const [savingRoundOff, setSavingRoundOff] = useState(false);
+  const toggleRoundOff = () => {
+    const next = !customItems.roundBillTotal;
+    setSavingRoundOff(true);
+    saveRoundOffSetting(next)
+      .then((d) => {
+        if (d?.status === 200) { setCustomItems((c) => ({ ...c, roundBillTotal: next })); push(d.message, "success"); }
+        else push(d?.message || "Could not save the setting", "error");
+      })
+      .catch(() => push("Could not save the setting — please try again", "error"))
+      .finally(() => setSavingRoundOff(false));
+  };
+
   // Loaded lazily on first visit to the Security tab rather than on mount —
   // this data isn't needed for Profile/Password and changes per device/login.
   useEffect(() => {
@@ -824,9 +863,11 @@ export default function Settings() {
                     inputMode="numeric"
                   />
                 </Row>
-                <Row label="Drug License Number" hint="Required on wholesale invoices under the Drugs & Cosmetics Rules.">
-                  <input className="st-input" value={drugLicenseNumber} onChange={(e) => setDrugLicenseNumber(e.target.value)} placeholder="e.g. MH-MUM-2024-WD-1234" />
-                </Row>
+                {shopProfile.isPharma && (
+                  <Row label="Drug License Number" hint="Required on wholesale invoices under the Drugs & Cosmetics Rules.">
+                    <input className="st-input" value={drugLicenseNumber} onChange={(e) => setDrugLicenseNumber(e.target.value)} placeholder="e.g. MH-MUM-2024-WD-1234" />
+                  </Row>
+                )}
                 <Row label="Email address" hint="Contact support to change your sign-in email.">
                   <input className="st-input" value={email} disabled placeholder="email@example.com" />
                 </Row>
@@ -858,6 +899,61 @@ export default function Settings() {
                 <button className="st-btn st-btn-primary" onClick={handlePasswordUpdate}>
                   <Icon d={icons.check} size={15} /> Update password
                 </button>
+              </div>
+            </div>
+          )}
+
+
+          {tab === "billing" && (
+            <div className="st-stage" key="billing-panel">
+              <div className="st-block">
+                <div className="st-block-kicker">Custom items</div>
+                <Row
+                  label="Allow custom items on bills"
+                  hint="Bill something that is not a product in stock — a service, an alteration, an item you haven't added yet — by typing its name, price and GST. It takes no stock. Off by default; medical shops can leave it off."
+                  first
+                >
+                  {customItems === null ? (
+                    <span className="st-row-hint">Loading…</span>
+                  ) : (
+                    <button
+                      type="button"
+                      data-testid="custom-items-toggle"
+                      className={`st-btn st-btn-sm ${customItems.allowCustomItems ? "st-btn-primary" : "st-btn-ghost"}`}
+                      onClick={toggleCustomItems}
+                      disabled={!customItems.canChange || savingCustomItems}
+                      title={customItems.canChange ? undefined : "Only the shop's main account can change this"}
+                    >
+                      {customItems.allowCustomItems ? "Enabled" : "Disabled"}
+                    </button>
+                  )}
+                </Row>
+                {customItems && !customItems.canChange && (
+                  <div className="st-row-hint">Only the shop's main account can change this setting.</div>
+                )}
+              </div>
+              <div className="st-block">
+                <div className="st-block-kicker">Round-off</div>
+                <Row
+                  label="Round bill totals to the rupee"
+                  hint="₹1,247.37 is billed as ₹1,247.00 with a Round off line (− 0.37); ₹1,247.50 and up go to the next rupee. GST and taxable values are not changed. On by default."
+                  first
+                >
+                  {customItems === null ? (
+                    <span className="st-row-hint">Loading…</span>
+                  ) : (
+                    <button
+                      type="button"
+                      data-testid="round-off-toggle"
+                      className={`st-btn st-btn-sm ${customItems.roundBillTotal ? "st-btn-primary" : "st-btn-ghost"}`}
+                      onClick={toggleRoundOff}
+                      disabled={!customItems.canChange || savingRoundOff}
+                      title={customItems.canChange ? undefined : "Only the shop's main account can change this"}
+                    >
+                      {customItems.roundBillTotal ? "Enabled" : "Disabled"}
+                    </button>
+                  )}
+                </Row>
               </div>
             </div>
           )}

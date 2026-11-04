@@ -26,7 +26,8 @@ describe("Retailer PAN field", () => {
     await userEvent.click(screen.getByRole("button", { name: /save retailer/i }));
 
     expect(await screen.findByText(/Invalid PAN format/i)).toBeInTheDocument();
-    expect(apiClient).not.toHaveBeenCalled();
+    // only the shop profile (business type) was read; nothing was saved
+    expect(apiClient.mock.calls.filter(([u]) => !u.includes("/api/BusinessSetting/"))).toHaveLength(0);
   });
 
   it("normalises a lowercase PAN to uppercase in the Add payload", async () => {

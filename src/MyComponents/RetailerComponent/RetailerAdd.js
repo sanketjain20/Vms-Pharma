@@ -3,6 +3,7 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 const FIELDS = [
   { key: "shopName",           label: "Shop Name",           type: "text",     required: true,  placeholder: "e.g. Sharma Medical Store" },
@@ -27,6 +28,7 @@ const FIELDS = [
 const EMPTY = FIELDS.reduce((a, f) => ({ ...a, [f.key]: f.type === "checkbox" ? false : "" }), {});
 
 export default function RetailerAdd({ onClose, onSubmit }) {
+    const { isPharma } = useBusinessProfile(); // drug licence etc. only for a pharmacy (Phase 4)
   const [form, setForm]       = useState(EMPTY);
   const [errors, setErrors]   = useState({});
   const [loading, setLoading] = useState(false);
@@ -129,7 +131,7 @@ export default function RetailerAdd({ onClose, onSubmit }) {
           </div>
 
           <div className="afx-grid">
-            {FIELDS.map(f => (
+            {FIELDS.filter(f => isPharma || f.key !== "drugLicenseNumber").map(f => (
               <div key={f.key} className={`afx-field ${f.type === "textarea" || f.type === "checkbox" ? "afx-field--full" : ""}`}>
                 {f.type === "checkbox" ? (
                   <label className="afx-checkbox-label">

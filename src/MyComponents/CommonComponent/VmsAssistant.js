@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "../../Styles/VmsAssistant.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { fetchBusinessProfile, PHARMA_PROFILE } from "../../utils/businessProfile";
+import { assistantPages, pageTitleFor, userMenu } from "./sidebarMenu";
 
 const CHAT_API = `${API_BASE_URL}/api/Chat/SendMessage`;
 const STORAGE_KEY = "vmsAssistantHistory";
@@ -10,59 +12,34 @@ const SIZE_STORAGE_KEY = "vmsAssistantExpanded";
 const MAX_STORED_MESSAGES = 60;
 const MAX_HISTORY_SENT = 16;
 
-/* Route → module title, purely for the "On this page" status line and to
-   give the backend a hint of context — not a canned-answer table. The LLM
-   generates the actual reply. */
-const routeHints = [
-  { match: "/onboarding", title: "Onboarding" },
-  { match: "/setting", title: "Account settings" },
-  { match: "/master/product-type", title: "Product Type" },
-  { match: "/master/product", title: "Product" },
-  { match: "/master/manufacturer", title: "Manufacturer" },
-  { match: "/master/retailer", title: "Retailer" },
-  { match: "/master/supplier", title: "Supplier" },
-  { match: "/master/purchase-return", title: "Purchase Return" },
-  { match: "/master/purchase", title: "Purchase" },
-  { match: "/master/inventory", title: "Inventory" },
-  { match: "/master/batch", title: "Batches" },
-  { match: "/master/stock-adjustment", title: "Stock Adjustment" },
-  { match: "/master/salesshrt", title: "Quick Sale" },
-  { match: "/master/sales-return", title: "Sales Return" },
-  { match: "/master/sales", title: "Sales" },
-  { match: "/master/supplier-payment", title: "Supplier Payment" },
-  { match: "/master/payment-collection", title: "Payment Collection" },
-  { match: "/master/retailer-outstanding", title: "Retailer Outstanding" },
-  { match: "/master/supplier-outstanding", title: "Supplier Outstanding" },
-  { match: "/master/reports", title: "Reports" },
-  { match: "/master/alerts", title: "Expiry & reorder alerts" },
-  { match: "/master/reorder-alerts", title: "Expiry & reorder alerts" },
-  { match: "/master/bulk-upload", title: "Bulk Upload" },
-  { match: "/master/job-scheduler", title: "Job Scheduler" },
-  { match: "/master/intelligence", title: "VMS Intelligence" },
-  { match: "/master/dashboard", title: "Dashboard" },
-  { match: "/master/roles", title: "Roles & permissions" },
-];
-
+/* Page names come from the sidebar menu itself (sidebarMenu.js), so a page added to or removed from the menu is
+   known here without touching this file. With each question the assistant also gets the pages THIS user can open
+   (their permissions, their kind of shop); the server-side guide (resources/assistant/vms-guide.md) explains them. */
 const quickActions = [
   "How does VMS flow work?",
   "How do I create a sale?",
   "What should I add before a purchase?",
+  "How does product-wise GST and a price that includes GST work?",
+  "How do I move stock between godowns?",
   "Paid vs Credit vs Partial — what's the difference?",
-  "How does FIFO batch selection work?",
 ];
 
-const jumpModules = [
-  "VMS flow",
-  "Product",
-  "Purchase",
-  "Inventory",
-  "Sales",
-  "Quick Sale",
-  "Retailer Outstanding",
-  "Reports",
-  "VMS Intelligence",
-  "Account settings",
+/** "Ask about a module" chips, in this order, but only the pages this user can actually open. */
+const JUMP_PRIORITY = [
+  "Product", "Purchase", "Sales", "Quick Sale", "Inventory", "Purchase Orders", "Stock Transfers",
+  "Schemes & Discounts", "Reports", "VMS Intelligence", "Account settings",
 ];
+export const jumpModulesFor = (pages) => JUMP_PRIORITY.filter((label) => pages.some((p) => p === label || p.endsWith(` › ${label}`)));
+
+/** The modules the signed-in user holds (the sidebar keeps them in localStorage). */
+function storedModules() {
+  try {
+    const list = JSON.parse(window.localStorage.getItem("modules") || "[]");
+    return Array.isArray(list) ? list.map((m) => (typeof m === "string" ? m : m?.name || m?.moduleName || "")).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
 
 const welcomeMessage = {
   id: "welcome",
@@ -308,10 +285,22 @@ function VmsAssistant() {
   const inputRef = useRef(null);
   const copyTimerRef = useRef(null);
 
-  const currentModuleTitle = useMemo(() => {
-    const found = routeHints.find((hint) => location.pathname.startsWith(hint.match));
-    return found ? found.title : "VMS flow";
-  }, [location.pathname]);
+  // the shop (kind, expiry): read only once the panel is opened — never on the login screens, where it is hidden
+  const [profile, setProfile] = useState(PHARMA_PROFILE);
+  useEffect(() => {
+    if (!open) return undefined;
+    let live = true;
+    fetchBusinessProfile().then((p) => { if (live && p) setProfile(p); });
+    return () => { live = false; };
+  }, [open]);
+  const { trackExpiry, isPharma } = profile;
+  const currentModuleTitle = useMemo(() => pageTitleFor(location.pathname) || "VMS flow", [location.pathname]);
+  // the pages this user can open, exactly as their sidebar shows them (read again when the panel opens)
+  const availablePages = useMemo(
+    () => assistantPages(userMenu(storedModules(), { trackExpiry, isPharma })),
+    [open, trackExpiry, isPharma] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const jumpModules = useMemo(() => jumpModulesFor(availablePages), [availablePages]);
 
   useEffect(() => {
     persistMessages(messages);
@@ -369,6 +358,7 @@ function VmsAssistant() {
     const payload = {
       messages: historyForRequest.slice(-MAX_HISTORY_SENT).map((m) => ({ role: m.role, content: m.text })),
       pageContext: currentModuleTitle,
+      availablePages,
     };
 
     let replaceWith;

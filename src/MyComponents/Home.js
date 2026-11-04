@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import "../Styles/Home.css";
 import API_BASE_URL from "../Config/api.config";
 import apiClient from "../Config/apiClient";
+import { useBusinessProfile } from "../utils/businessProfile";
+import { whenMenuReady } from "../utils/menuReady";
 
 /* The 3D scenes pull in three.js — lazy, so it is only downloaded for this page. */
 const StockFlowScene = lazy(() => import("./HomeScenes/StockFlowScene"));
@@ -591,6 +593,7 @@ function greetingFor(hour) {
 }
 
 export default function Home() {
+  const { trackExpiry } = useBusinessProfile(); // no expiry tile for a shop that does not track expiry (Phase 4)
   const navigate = useNavigate();
   const user = (() => { try { return JSON.parse(localStorage.getItem("vmsUser")) || {}; } catch { return {}; } })();
   const name = user?.data?.name || "Vendor";
@@ -615,14 +618,20 @@ export default function Home() {
     try { localStorage.setItem(PRESET_STORAGE_KEY, rayPreset); } catch { /* private mode */ }
   }, [rayPreset]);
 
+  // Home's requests go out once the sidebar's menu is on screen, so they never compete with it (utils/menuReady)
   useEffect(() => {
-    apiClient(`${API_BASE_URL}/api/Vendor/GetUserRoleId`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    })
-      .then(r => r.json())
-      .then(d => { if (d.status === 200) localStorage.setItem("roleId", d.data); })
-      .catch(() => {});
+    let alive = true;
+    whenMenuReady().then(() => {
+      if (!alive) return;
+      apiClient(`${API_BASE_URL}/api/Vendor/GetUserRoleId`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      })
+        .then(r => r.json())
+        .then(d => { if (d.status === 200) localStorage.setItem("roleId", d.data); })
+        .catch(() => {});
+    });
+    return () => { alive = false; };
   }, []);
 
   /* ── Live dashboard summary: collections, bills, expiry, dues ── */
@@ -666,13 +675,19 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetchSummary();
-    fetchTicker();
-
-    // Keep the dashboard live: re-pull every 60s without a full page reload.
-    const statsId = setInterval(fetchSummary, 60000);
-    const tickerId = setInterval(fetchTicker, 45000);
+    let alive = true;
+    let statsId;
+    let tickerId;
+    whenMenuReady().then(() => {
+      if (!alive) return;
+      fetchSummary();
+      fetchTicker();
+      // Keep the dashboard live: re-pull every 60s without a full page reload.
+      statsId = setInterval(fetchSummary, 60000);
+      tickerId = setInterval(fetchTicker, 45000);
+    });
     return () => {
+      alive = false;
       clearInterval(statsId);
       clearInterval(tickerId);
     };
@@ -747,7 +762,7 @@ export default function Home() {
         </div>
 
         <section className="hc-stats" aria-label="Today's summary">
-          {stats.map((s, i) => (
+          {stats.filter(st => trackExpiry || st.key !== "expiring30d").map((s, i) => (
             <div key={s.key} className="hc-stat hc-glass hc-rise" style={{ "--stat-color": s.color, "--i": 6 + i * 0.5 }} data-testid={`stat-${s.key}`}>
               <span className="hc-stat-top">
                 <span className="hc-stat-dot" aria-hidden="true" />
@@ -867,7 +882,7 @@ export default function Home() {
               <span className="hc-scene-tag hc-glass">Move your cursor to look around</span>
             </Reveal>
             <Reveal from="right" className="hc-feature-list">
-              {checklist.map((f, i) => (
+              {checklist.filter(f => trackExpiry || !/expiry/i.test(f.label + f.sub)).map((f, i) => (
                 <div key={i} className="hc-feature">
                   <span className="hc-feature-dot" style={{ "--check-color": f.color }} aria-hidden="true" />
                   <div>

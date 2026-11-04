@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import { SerialList } from "../CommonComponent/SerialWidgets";
 
 /* ── Read-only detail view for a Stock Transfer. ──
    Props: uKey (string), onClose (), onEdit (uKey) — passed up by the list
@@ -20,6 +22,7 @@ const statusBadge = s => {
 };
 
 export default function StockTransferView({ uKey, onClose, onEdit }) {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   const [transfer, setTransfer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -141,13 +144,14 @@ export default function StockTransferView({ uKey, onClose, onEdit }) {
                             <th>Product</th>
                             <th>Quantity</th>
                             <th>Batch number</th>
-                            <th>Expiry</th>
+                            {trackExpiry && <th>Expiry</th>}
                           </tr>
                         </thead>
                         <tbody>
                           {(transfer.items || []).map((item, idx) => (
                             <tr key={item.id || idx}>
-                              <td style={{ fontWeight: 600, color: "var(--afx-text-1)" }}>{item.productName || `Product #${item.productId}`}</td>
+                              <td style={{ fontWeight: 600, color: "var(--afx-text-1)" }}>{item.productName || `Product #${item.productId}`}
+                                <SerialList serials={item.serials} /></td>
                               <td>{item.quantity ?? "—"}</td>
                               <td style={{ fontFamily: "var(--afx-font-mono)", fontSize: 11 }} data-testid="transfer-batch">
                                 {fmt(item.batchNumber)}
@@ -155,7 +159,7 @@ export default function StockTransferView({ uKey, onClose, onEdit }) {
                                   <span className="afx-view-value--muted" style={{ fontFamily: "inherit", marginLeft: 6 }} title="Taken at dispatch (FIFO); can change if stock moves before then">planned</span>
                                 )}
                               </td>
-                              <td style={{ fontSize: 11 }}>{fmt(item.expiryDate)}</td>
+                              {trackExpiry && <td style={{ fontSize: 11 }}>{fmt(item.expiryDate)}</td>}
                             </tr>
                           ))}
                         </tbody>

@@ -3,6 +3,7 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import Barcode, { printBarcodeLabel } from "../CommonComponent/Barcode";
+import { useBusinessProfile } from "../../utils/businessProfile";
 const fmt = n => parseFloat(n || 0).toFixed(2);
 
 /* ── Read-only field ── */
@@ -30,6 +31,7 @@ const ScheduleBadge = ({ type }) => {
 export default function ProductView({ uKey, onClose }) {
   const [product, setProduct] = useState(null);
   const [activeTab, setActiveTab] = useState("details");
+  const { isPharma } = useBusinessProfile(); // schedule, generic name and pack details are a pharmacy's only
 
   useEffect(() => {
     if (!uKey) return;
@@ -46,7 +48,7 @@ export default function ProductView({ uKey, onClose }) {
 
   const TABS = [
     { id: "details", label: "Details"        },
-    { id: "pharma",  label: "Pharma"         },
+    { id: "pharma",  label: isPharma ? "Pharma" : "More details" },
     { id: "pricing", label: "Pricing & Units" },
   ];
 
@@ -127,16 +129,23 @@ export default function ProductView({ uKey, onClose }) {
 
               {activeTab === "pharma" && (
                 <div className="afx-grid">
-                  <ViewField label="Manufacturer"        value={product.manufacturerName || product.manufacturer} />
-                  <ViewField label="Generic / Salt Name" value={product.genericName} />
+                  <ViewField label={isPharma ? "Manufacturer" : "Brand / Manufacturer"} value={product.manufacturerName || product.manufacturer} />
+                  {isPharma && <ViewField label="Generic / Salt Name" value={product.genericName} />}
                   <ViewField label="HSN Code"            value={product.hsnCode} mono />
+                  <ViewField label="GST Rate" value={product.gstRate != null ? `${Number(product.gstRate)}%` : "Not set — bills use the common rate"} />
+                  <ViewField label="Selling price" value={product.gstRate != null ? (product.priceIncludesGst ? "Includes GST" : "GST added on top") : null} />
 
-                  <div className="afx-field">
-                    <label className="afx-label">Schedule Type</label>
-                    <div><ScheduleBadge type={product.scheduleType || "OTC"} /></div>
-                  </div>
+                  {isPharma && (
+                    <div className="afx-field" data-testid="schedule-type">
+                      <label className="afx-label">Schedule Type</label>
+                      <div><ScheduleBadge type={product.scheduleType || "OTC"} /></div>
+                    </div>
+                  )}
 
-                  {!product.genericName && !product.hsnCode && !product.manufacturerName && (
+                  {!isPharma && product.trackSerial && <ViewField label="Serial numbers / IMEI" value="Tracked for every unit" />}
+                  {!isPharma && product.warrantyMonths != null && <ViewField label="Warranty" value={`${product.warrantyMonths} months`} />}
+
+                  {isPharma && !product.genericName && !product.hsnCode && !product.manufacturerName && (
                     <div className="afx-info afx-field--full">
                       No pharma details entered yet. Edit the product to add manufacturer, HSN code and schedule type.
                     </div>
@@ -146,9 +155,11 @@ export default function ProductView({ uKey, onClose }) {
 
               {activeTab === "pricing" && (
                 <div className="afx-grid">
-                  <ViewField label="Cost Price" value={`₹ ${fmt(product.price)}`} />
+                  <ViewField label="Selling Price" value={`₹ ${fmt(product.price)}`} />
+                  <ViewField label="Average Cost (from purchases)" value={product.costPrice != null ? `₹ ${fmt(product.costPrice)}` : "Not bought yet"} />
                   <ViewField label="Unit"       value={product.unit} />
 
+                  {isPharma && (<>
                   <ViewField label="Pack Size"
                     value={product.packSize ? `${product.packSize} per ${product.unit || "unit"}` : null}
                   />
@@ -159,6 +170,7 @@ export default function ProductView({ uKey, onClose }) {
                       Each <strong>{product.unit || "unit"}</strong> contains <strong>{product.packSize}</strong> × <strong>{product.packUnit}</strong>
                     </div>
                   )}
+                  </>)}
                 </div>
               )}
             </div>

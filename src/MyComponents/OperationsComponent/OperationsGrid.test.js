@@ -64,61 +64,30 @@ describe("operations document payloads", () => {
 });
 
 describe("operations document create forms", () => {
+  // Each module now opens its full Add screen (the generic order form these tests used to drive was replaced).
+  // What each screen submits is covered next to it: PurchaseAdd.purchaseOrder, SalesAdd.salesOrder,
+  // DeliveryChallanAdd and StockTransferAdd tests.
   beforeEach(() => {
-    apiClient.mockImplementation(async (url, options = {}) => {
-      if (options.method === "POST") return { ok: true, status: 200, text: async () => "" };
+    apiClient.mockImplementation(async (url) => {
       let data = [];
       if (url.includes("Supplier/GetSupplierDropdown")) data = [{ id: 2, shopName: "Supplier One" }];
-      if (url.includes("Retailer/Dropdown")) data = [{ id: 3, shopName: "Retailer One" }];
+      if (url.includes("Retailer/Dropdown")) data = [{ id: 3, shopName: "Retailer One", ownerName: "Owner" }];
       if (url.includes("Godown/GetGodownDropdown")) data = [{ id: 4, name: "Central" }, { id: 5, name: "East" }];
       if (url.includes("Product/GetAllProduct")) data = [{ id: 8, name: "Bandage", price: 10, sellingPrice: 15 }];
-      return { ok: true, status: 200, json: async () => ({ status: 200, data }) };
+      if (url.includes("ProductType/GetAllProductType")) data = { productTypes: [] };
+      const body = { status: 200, data };
+      return { ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) };
     });
   });
 
   it.each([
-    ["purchase-order", "/api/PurchaseOrder/AddPurchaseOrder", { supplierId: 2, godownId: 4, orderDate: expect.any(String), expectedDate: null, terms: "", notes: "", supplierInvoiceNumber: null, invoiceDate: null, paymentStatus: "CREDIT", dueDate: null, amountPaid: 0, items: [{ productId: 8, quantity: 2, unitCost: 10, gstRate: 18 }] }],
-    ["sales-order", "/api/SalesOrder/AddSalesOrder", { retailerId: 3, godownId: 4, orderDate: expect.any(String), expectedDate: null, terms: "", notes: "", billingMode: "SIMPLE", paymentType: "CREDIT", dueDate: null, amountPaid: 0, totalDiscount: 0, autoApplySchemes: true, items: [{ productId: 8, quantity: 2, unitPrice: 15, gstRate: 18, schemeId: null }] }],
-    ["delivery-challan", "/api/DeliveryChallan/AddDeliveryChallan", { retailerId: 3, godownId: 4, salesOrderUKey: null, challanDate: expect.any(String), purpose: "SALE_PENDING_INVOICE", vehicleNumber: "", transporter: "", notes: "", items: [{ productId: 8, quantity: 2, unitPrice: 15 }] }],
-    ["stock-transfer", "/api/StockTransfer/AddStockTransfer", { fromGodownId: 4, toGodownId: 5, transferDate: expect.any(String), vehicleNumber: "", notes: "", items: [{ productId: 8, quantity: 2 }] }],
-  ])("submits %s form with the matching API request", async (module, endpoint, expectedBody) => {
-    const Component = {
-      "purchase-order": PurchaseOrder,
-      "sales-order": SalesOrder,
-      "delivery-challan": DeliveryChallan,
-      "stock-transfer": StockTransfer,
-    }[module];
-    const { container } = render(<Component />);
+    ["purchase-order", PurchaseOrder, "Create Purchase Order"],
+    ["sales-order", SalesOrder, "Add Sales Order"],
+    ["delivery-challan", DeliveryChallan, "Create Delivery Challan"],
+    ["stock-transfer", StockTransfer, "Create Stock Transfer"],
+  ])("%s: Add document opens its own create screen", async (_module, Component, title) => {
+    render(<Component />);
     fireEvent.click(screen.getByText("Add document"));
-    await waitFor(() => expect(apiClient).toHaveBeenCalledWith(expect.stringContaining("Product/GetAllProduct"), expect.anything()));
-
-    const form = container.querySelector("form");
-    const selects = form.querySelectorAll("select");
-    await waitFor(() => expect(selects[0].options.length).toBeGreaterThan(1));
-    if (module === "purchase-order") fireEvent.change(selects[0], { target: { value: "2" } });
-    if (module === "sales-order" || module === "delivery-challan") fireEvent.change(selects[0], { target: { value: "3" } });
-    fireEvent.change(selects[module === "stock-transfer" ? 0 : 1], { target: { value: "4" } });
-    if (module === "stock-transfer") fireEvent.change(selects[1], { target: { value: "5" } });
-    fireEvent.click(screen.getByRole("tab", { name: /Items/ }));
-    fireEvent.click(screen.getByText("+ Add item"));
-    await waitFor(() => expect(form.querySelector(".ops-order-item select option[value='8']")).toBeTruthy());
-
-    const itemSelects = form.querySelectorAll(".ops-order-item select");
-    fireEvent.change(itemSelects[0], { target: { value: "8" } });
-    const numeric = form.querySelectorAll(".ops-order-item input[type='number']");
-    fireEvent.change(numeric[0], { target: { value: "2" } });
-    if (module === "purchase-order") fireEvent.change(numeric[1], { target: { value: "10" } });
-    if (module === "sales-order" || module === "delivery-challan") {
-      const price = form.querySelector(".ops-order-item input[placeholder='Use godown price']");
-      if (price) fireEvent.change(price, { target: { value: "15" } });
-    }
-    fireEvent.submit(form);
-
-    await waitFor(() => expect(apiClient).toHaveBeenCalledWith(
-      expect.stringContaining(endpoint),
-      expect.objectContaining({ method: "POST", body: expect.any(String) }),
-    ));
-    const [, request] = apiClient.mock.calls.find(([url, options]) => url.includes(endpoint) && options?.method === "POST");
-    expect(JSON.parse(request.body)).toEqual(expectedBody);
+    expect(await screen.findByText(title)).toBeInTheDocument();
   });
 });

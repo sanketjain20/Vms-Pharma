@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
 export default function PurchaseReturnView({ uKey, onClose }) {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -131,7 +133,7 @@ export default function PurchaseReturnView({ uKey, onClose }) {
                     <tr>
                       <th>Product</th>
                       <th>Batch No</th>
-                      <th>Expiry</th>
+                      {trackExpiry && <th>Expiry</th>}
                       <th>Return Qty</th>
                       <th>Cost (Rs)</th>
                       <th>Tax (Rs)</th>
@@ -149,7 +151,7 @@ export default function PurchaseReturnView({ uKey, onClose }) {
                               <td style={{ color: "var(--afx-accent)", fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>
                                 {item.batchNumberSnapshot || item.batchNumber || "-"}
                               </td>
-                              <td style={{ fontSize: 11 }}>{item.expiryDateSnapshot || item.expiryDate || "-"}</td>
+                              {trackExpiry && <td style={{ fontSize: 11 }}>{item.expiryDateSnapshot || item.expiryDate || "-"}</td>}
                               <td>{item.returnQuantity ?? "-"}</td>
                               <td>Rs {money(item.costPrice)}</td>
                               <td>Rs {money(item.taxAmount)}</td>
@@ -160,7 +162,7 @@ export default function PurchaseReturnView({ uKey, onClose }) {
                       } catch (e) {
                         console.error("Failed to render purchase return items:", e, data.items);
                         return (
-                          <tr><td colSpan={7} className="afx-alert" style={{ display: "table-cell" }}>
+                          <tr><td colSpan={trackExpiry ? 7 : 6} className="afx-alert" style={{ display: "table-cell" }}>
                             Couldn't display line items — unexpected data shape. Check the console for details.
                           </td></tr>
                         );

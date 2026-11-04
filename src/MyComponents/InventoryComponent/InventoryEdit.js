@@ -376,8 +376,9 @@ export default function InventoryEdit({ uKey, onClose, onSubmit }) {
                           <input
                             className={`afx-input ${errors.unitSellingPrice ? "afx-input--err" : ""}`}
                             type="number" name="unitSellingPrice" value={formData.unitSellingPrice}
-                            onChange={handleChange} placeholder="Enter price"
+                            onChange={handleChange} placeholder="Enter price" readOnly aria-label="Unit selling price"
                           />
+                          <div className="afx-hint">The product's selling price — change it on the product.</div>
                           {errors.unitSellingPrice && <div className="afx-error">{errors.unitSellingPrice}</div>}
                         </div>
                       </div>

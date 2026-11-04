@@ -120,7 +120,7 @@ describe("Sidebar — sub menu and sub-sub menu", () => {
     await waitFor(() => expect(mainLabels(container)).toHaveLength(7));
     hover(container, "Dashboard & Reports");
     const items = (await screen.findAllByRole("menuitem")).map((e) => e.textContent);
-    expect(items).toEqual(["Dashboard", "VMS Intelligence", "Reports"]); // Home is not in here any more
+    expect(items).toEqual(["Dashboard", "VMS Intelligence", "Reports", "Day-end Summary"]); // Home is not in here any more
   });
 
   it("clicking a page goes to its route and closes the menu", async () => {

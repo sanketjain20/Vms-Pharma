@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import "../../Styles/Inventory/ExpiryAlert.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 const API_URL = `${API_BASE_URL}/api/Inventory/ExpiryAlerts`;
 
@@ -79,6 +80,7 @@ const statusFor = (days) => {
 };
 
 export default function ExpiryAlert() {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -156,6 +158,14 @@ export default function ExpiryAlert() {
   useEffect(() => {
     if (page >= totalPages) setPage(0);
   }, [totalPages, page]);
+
+  if (!trackExpiry) {
+    return (
+      <div className="ea-root" data-testid="expiry-off">
+        <div className="afx-info">Expiry dates are switched off for this shop (Settings → Business), so there are no expiry alerts.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="ea-root">

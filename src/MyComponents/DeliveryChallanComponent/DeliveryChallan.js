@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
+import ActionErrorBanner from "../CommonComponent/ActionErrorBanner";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import { toast } from "react-toastify";
@@ -9,7 +10,7 @@ import "../../Styles/Inventory.css";
 import DeliveryChallanAdd from "./DeliveryChallanAdd";
 import DeliveryChallanView from "./DeliveryChallanView";
 
-const config = { title: "Delivery challans", singular: "Delivery challan", base: "DeliveryChallan", list: "GetAllDeliveryChallansPaged", detail: "GetDeliveryChallanByUKey", add: "AddDeliveryChallan", cancel: "CancelDeliveryChallan", id: 37, number: "challanNumber", party: "retailerName", date: "challanDate", actions: { ISSUED: ["ConvertToInvoice", "Create invoice"] } };
+const config = { title: "Delivery challans", singular: "Delivery challan", base: "DeliveryChallan", list: "GetAllDeliveryChallansPaged", detail: "GetDeliveryChallanByUKey", add: "AddDeliveryChallan", cancel: "CancelDeliveryChallan", id: 37, number: "challanNumber", party: "retailerName", date: "challanDate", actions: { ISSUED: ["ConvertToInvoice", "Create invoice", "Invoice", "payment"] } };
 
 function readResponse(response) {
   return response.text().then(text => {
@@ -54,13 +55,13 @@ export default function DeliveryChallan() {
   const actions = (row, { can, ActionIcon }) => <>
     <button className="dg-icon-btn dg-icon-btn--view" title="View" aria-label="View" onClick={() => setDetailUKey(row.uKey)}><ActionIcon.View /></button>
     {config.update && row.status === "DRAFT" && can("Edit") && <button className="dg-icon-btn dg-icon-btn--edit" title="Edit" aria-label="Edit" onClick={() => { try { setForm(row); } catch (e) { setError(e.message); } }}><ActionIcon.Edit /></button>}
-    {config.actions[row.status] && can("Edit") && <button className="dg-icon-btn dg-icon-btn--activate" title={config.actions[row.status][1]} aria-label={config.actions[row.status][1]} disabled={busy} onClick={() => perform(row, config.actions[row.status][0])}><ActionIcon.Activate /></button>}
-    {row.status !== "CANCELLED" && can("Disable") && <button className="dg-icon-btn dg-icon-btn--disable" disabled={busy} title="Cancel" aria-label="Cancel" onClick={() => perform(row, config.cancel)}><ActionIcon.Disable /></button>}
+    {config.actions[row.status] && can("Edit") && (() => { const [call, label, icon, tone] = config.actions[row.status]; const Icon = ActionIcon[icon] || ActionIcon.Activate; return <button className={`dg-icon-btn dg-icon-btn--${tone || "activate"}`} title={label} aria-label={label} disabled={busy} onClick={() => perform(row, call)}><Icon /></button>; })()}
+    {row.status !== "CANCELLED" && can("Disable") && <button className="dg-icon-btn dg-icon-btn--disable" disabled={busy} title="Cancel" aria-label="Cancel" onClick={() => perform(row, config.cancel)}><ActionIcon.Cancel /></button>}
   </>;
   return <main className="ops-page">
     {detailUKey && ReactDOM.createPortal(<DeliveryChallanView uKey={detailUKey} onClose={() => setDetailUKey(null)} />, document.body)}
     <header className="ops-header"><div><span className="ops-eyebrow">OPERATIONS / DOCUMENTS</span><h1>{config.title}</h1><p>Manage documents and their status.</p></div></header>
-    {error && <div className="ops-error" role="alert">{error}<button onClick={() => setError("")}>Dismiss</button></div>}
+    <ActionErrorBanner message={error} onDismiss={() => setError("")} />
     <DynamicGrid Module={config.title} ModuleId={String(config.id)} apiUrl={`${baseUrl}/${config.list}`} columns={columns} customActionsOnly customAddAction={() => setForm({})} customAddLabel={`Add ${config.singular}`} extraActions={actions} />
     {form && ReactDOM.createPortal(<DeliveryChallanAdd onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />, document.body)}
   </main>;

@@ -4,8 +4,11 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { SerialPicker } from "../CommonComponent/SerialWidgets";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 export default function PurchaseReturnAdd({ onClose, onSubmit }) {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   const [step, setStep] = useState(1);
   const [purchaseNumber, setPurchaseNumber] = useState("");
   const [purchaseData, setPurchaseData] = useState(null);
@@ -41,9 +44,12 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
           (purchase.items || []).map(item => ({
             purchaseItemId: item.id,
             productName: item.productName || item.product || "",
-            costPrice: Number(item.costPrice || 0),
+            // what a unit really cost (the bill spread over paid + free units), as the server values the return
+            costPrice: Number(item.effectiveCost ?? item.costPrice ?? 0),
             gstRate: Number(item.gstRate || 0),
-            max: Number(item.quantity || 0),
+            max: Number(item.quantity || 0) + Number(item.freeQuantity || 0), // free goods can go back too
+            serialOptions: item.serials && item.serials.length ? [] : null,   // Phase 6: filled with the units still in stock
+            returnSerials: [],
             batchNumber: item.batchNumber,
             expiryDate: item.expiryDate,
             returnQuantity: 0,
@@ -51,6 +57,17 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
         );
         setStep(2);
         toast.success("Purchase loaded successfully");
+        // Phase 6 — for a serialised line, which of its units are still in stock (only those can go back)
+        (purchase.items || []).forEach((item, idx) => {
+          if (!item.serials || !item.serials.length) return;
+          apiClient(`${API_BASE_URL}/api/Serial/PurchaseLine/${item.id}`, { method: "GET" })
+            .then(r => r.json())
+            .then(j => {
+              const inStock = (j?.data || []).filter(s => s.status === "IN_STOCK").map(s => ({ serialNo: s.serialNo }));
+              setReturnLines(prev => prev.map((l, i) => (i === idx ? { ...l, serialOptions: inStock } : l)));
+            })
+            .catch(() => {});
+        });
       } else {
         const message = getApiMessage(json, "Purchase not found");
         setFetchErr(message);
@@ -61,6 +78,11 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
     } finally {
       setFetching(false);
     }
+  };
+
+  /* Phase 6 — a serialised line returns the units picked */
+  const pickSerials = (idx, list) => {
+    setReturnLines(prev => prev.map((l, i) => (i === idx ? { ...l, returnSerials: list, returnQuantity: list.length } : l)));
   };
 
   const updateQty = (idx, val) => {
@@ -99,6 +121,7 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
           .map(line => ({
             purchaseItemId: line.purchaseItemId,
             returnQuantity: line.returnQuantity,
+            ...(line.serialOptions ? { serials: line.returnSerials } : {}),
           })),
       };
 
@@ -247,7 +270,7 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
                       <tr>
                         <th>Product</th>
                         <th>Batch</th>
-                        <th>Expiry</th>
+                        {trackExpiry && <th>Expiry</th>}
                         <th>Purchased</th>
                         <th>Cost (₹)</th>
                         <th>GST %</th>
@@ -260,19 +283,27 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
                         const active = line.returnQuantity > 0;
                         return (
                           <tr key={idx} style={active ? { background: "var(--afx-accent-soft)" } : undefined}>
-                            <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>{line.productName}</td>
+                            <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>
+                              {line.productName}
+                              {line.serialOptions && (
+                                <div style={{ marginTop: 6, fontWeight: 400 }} data-testid="return-serials">
+                                  <SerialPicker options={line.serialOptions} selected={line.returnSerials}
+                                    onChange={list => pickSerials(idx, list)} emptyText="None of these units is in stock." />
+                                </div>
+                              )}
+                            </td>
                             <td style={{ fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{line.batchNumber || "—"}</td>
-                            <td>
+                            {trackExpiry && <td>
                               <span style={{ color: expiryColor(line.expiryDate), fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>
                                 {line.expiryDate || "—"}
                               </span>
-                            </td>
+                            </td>}
                             <td>{line.max}</td>
                             <td>₹{line.costPrice.toFixed(2)}</td>
                             <td>{line.gstRate}%</td>
                             <td>
                               <div className="afx-qty">
-                                <button className="afx-qty-btn" onClick={() => updateQty(idx, line.returnQuantity - 1)} disabled={line.returnQuantity <= 0}>−</button>
+                                <button className="afx-qty-btn" onClick={() => updateQty(idx, line.returnQuantity - 1)} disabled={line.returnQuantity <= 0 || !!line.serialOptions}>−</button>
                                 <input
                                   type="number"
                                   className="afx-qty-input"
@@ -280,8 +311,9 @@ export default function PurchaseReturnAdd({ onClose, onSubmit }) {
                                   min={0}
                                   max={line.max}
                                   onChange={e => updateQty(idx, e.target.value)}
+                                  disabled={!!line.serialOptions}
                                 />
-                                <button className="afx-qty-btn" onClick={() => updateQty(idx, line.returnQuantity + 1)} disabled={line.returnQuantity >= line.max}>+</button>
+                                <button className="afx-qty-btn" onClick={() => updateQty(idx, line.returnQuantity + 1)} disabled={line.returnQuantity >= line.max || !!line.serialOptions}>+</button>
                               </div>
                             </td>
                             <td style={{ fontWeight: 700, color: active ? "var(--afx-accent)" : "var(--afx-text-2)" }}>

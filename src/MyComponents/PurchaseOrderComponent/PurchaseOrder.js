@@ -1,22 +1,27 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
+import ActionErrorBanner from "../CommonComponent/ActionErrorBanner";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import { toast } from "react-toastify";
 import PurchaseAdd from "../PurchaseComponent/PurchaseAdd";
 import PurchaseEdit from "../PurchaseComponent/PurchaseEdit";
 import PurchaseView from "../PurchaseComponent/PurchaseView";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import OrderSerialsModal, { serialProductIds, serialLinesOf } from "../CommonComponent/OrderSerialsModal";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import "../../Styles/Inventory.css";
 
-const config = { title: "Purchase orders", singular: "Purchase order", base: "PurchaseOrder", list: "GetAllPurchaseOrdersPaged", detail: "GetPurchaseOrderByUKey", add: "AddPurchaseOrder", update: "UpdatePurchaseOrder", cancel: "CancelPurchaseOrder", id: 35, number: "orderNumber", party: "supplierName", date: "orderDate", actions: { DRAFT: ["ConfirmPurchaseOrder", "Confirm"], CONFIRMED: ["ConvertToPurchase", "Create purchase"] } };
+const config = { title: "Purchase orders", singular: "Purchase order", base: "PurchaseOrder", list: "GetAllPurchaseOrdersPaged", detail: "GetPurchaseOrderByUKey", add: "AddPurchaseOrder", update: "UpdatePurchaseOrder", cancel: "CancelPurchaseOrder", id: 35, number: "orderNumber", party: "supplierName", date: "orderDate", actions: { DRAFT: ["ConfirmPurchaseOrder", "Confirm", "Confirm", "activate"], CONFIRMED: ["ConvertToPurchase", "Create purchase", "Purchase", "payment"] } };
 
 export default function PurchaseOrder() {
+  const { trackExpiry } = useBusinessProfile(); // no made-up expiry date for a shop that does not track expiry
   const [form, setForm] = useState(null);
   const [detailState, setDetail] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [serialAsk, setSerialAsk] = useState(null); // Phase 7: { row, order, lines } while serial numbers are asked for
   const detail = null; // Legacy drawer is intentionally disabled; use PurchaseView below.
   const baseUrl = `${API_BASE_URL}/api/${config.base}`;
   const columns = [
@@ -45,10 +50,33 @@ export default function PurchaseOrder() {
         // items + a future expiry date), not an empty body — otherwise the backend
         // throws "Select at least one line to receive."
         const order = await api(`${baseUrl}/${config.detail}/${row.uKey}`);
+        // a product with serial numbers is received unit by unit: ask for them first
+        const lines = serialLinesOf(order, await serialProductIds());
+        if (lines.length) { setSerialAsk({ row, order, lines }); return; }
+        body = receiveBody(order);
+      }
+      await api(`${baseUrl}/${action}/${row.uKey}`, { method: "POST", body });
+      window.dispatchEvent(new Event("document-grid-refresh"));
+      setDetail(null);
+      toast.success(`${config.singular} updated successfully.`);
+    } catch (e) { setError(e.message || "Action failed"); }
+    finally { setBusy(false); }
+  };
+  const receiveWithSerials = async (serials) => {
+    try {
+      setBusy(true); setError("");
+      await api(`${baseUrl}/ConvertToPurchase/${serialAsk.row.uKey}`, { method: "POST", body: receiveBody(serialAsk.order, serials) });
+      setSerialAsk(null);
+      window.dispatchEvent(new Event("document-grid-refresh"));
+      toast.success(`${config.singular} updated successfully.`);
+    } catch (e) { setError(e.message || "Action failed"); setSerialAsk(null); }
+    finally { setBusy(false); }
+  };
+  const receiveBody = (order, serials = {}) => {
         const today = new Date();
         const futureExpiry = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())
           .toISOString().slice(0, 10);
-        body = JSON.stringify({
+        return JSON.stringify({
           supplierInvoiceNumber: order.supplierInvoiceNumber || null,
           invoiceDate: order.invoiceDate || null,
           godownId: order.godownId || null,
@@ -61,29 +89,24 @@ export default function PurchaseOrder() {
             quantity: item.pendingQuantity > 0 ? item.pendingQuantity : item.quantity,
             batchNumber: item.batchNumber || null,
             manufacturingDate: item.manufacturingDate || null,
-            expiryDate: item.expiryDate || futureExpiry,
+            expiryDate: item.expiryDate || (trackExpiry ? futureExpiry : null),
             mrp: item.mrp || null,
             costPrice: item.costPrice || null,
+            ...(serials[item.id] ? { serials: serials[item.id] } : {}),
           })),
         });
-      }
-      await api(`${baseUrl}/${action}/${row.uKey}`, { method: "POST", body });
-      window.dispatchEvent(new Event("document-grid-refresh"));
-      setDetail(null);
-      toast.success(`${config.singular} updated successfully.`);
-    } catch (e) { setError(e.message || "Action failed"); }
-    finally { setBusy(false); }
   };
   const actions = (row, { can, ActionIcon }) => <>
     <button className="dg-icon-btn dg-icon-btn--view" title="View" aria-label="View" onClick={async () => { try { setDetail(await api(`${baseUrl}/${config.detail}/${row.uKey}`)); } catch (e) { setError(e.message); } }}><ActionIcon.View /></button>
     {config.update && row.status === "DRAFT" && can("Edit") && <button className="dg-icon-btn dg-icon-btn--edit" title="Edit" aria-label="Edit" onClick={async () => { try { setForm(await api(`${baseUrl}/${config.detail}/${row.uKey}`)); } catch (e) { setError(e.message); } }}><ActionIcon.Edit /></button>}
-    {config.actions[row.status] && can("Edit") && <button className="dg-icon-btn dg-icon-btn--activate" title={config.actions[row.status][1]} aria-label={config.actions[row.status][1]} disabled={busy} onClick={() => perform(row, config.actions[row.status][0])}><ActionIcon.Activate /></button>}
-    {row.status !== "CANCELLED" && can("Disable") && <button className="dg-icon-btn dg-icon-btn--disable" disabled={busy} title="Cancel" aria-label="Cancel" onClick={() => perform(row, config.cancel)}><ActionIcon.Disable /></button>}
+    {config.actions[row.status] && can("Edit") && (() => { const [call, label, icon, tone] = config.actions[row.status]; const Icon = ActionIcon[icon] || ActionIcon.Activate; return <button className={`dg-icon-btn dg-icon-btn--${tone || "activate"}`} title={label} aria-label={label} disabled={busy} onClick={() => perform(row, call)}><Icon /></button>; })()}
+    {row.status !== "CANCELLED" && can("Disable") && <button className="dg-icon-btn dg-icon-btn--disable" disabled={busy} title="Cancel" aria-label="Cancel" onClick={() => perform(row, config.cancel)}><ActionIcon.Cancel /></button>}
   </>;
   return <div className="i-container">
     <h2 className="i-title">📥 PURCHASE ORDER</h2>
     {detailState && ReactDOM.createPortal(<PurchaseView documentMode uKey={detailState.uKey} onClose={() => setDetail(null)} onEdit={uKey => setForm({ uKey })} />, document.body)}
-    {error && <div className="ops-error" role="alert">{error}<button onClick={() => setError("")}>Dismiss</button></div>}
+    {serialAsk && <OrderSerialsModal mode="receive" lines={serialAsk.lines} busy={busy} onDone={receiveWithSerials} onClose={() => setSerialAsk(null)} />}
+    <ActionErrorBanner message={error} onDismiss={() => setError("")} />
     <DynamicGrid Module={config.title} ModuleId={String(config.id)} apiUrl={`${baseUrl}/${config.list}`} columns={columns} customActionsOnly customAddAction={() => setForm({})} customAddLabel={`Add ${config.singular}`} extraActions={actions} />
     {form && ReactDOM.createPortal(form.uKey
       ? <PurchaseEdit documentMode uKey={form.uKey} onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />
@@ -135,8 +158,8 @@ function DocumentForm({ config, row, onClose, onSaved }) {
   const chooseProduct = (index, productId) => {
     const product = catalog.products.find(p => String(p.id) === String(productId));
     setForm(prev => ({ ...prev, items: prev.items.map((item, i) => i !== index ? item : {
-      ...item, productId, unitCost: item.unitCost || product?.price || product?.costPrice || "",
-      unitPrice: item.unitPrice || product?.sellingPrice || product?.price || "",
+      ...item, productId, unitCost: item.unitCost || product?.costPrice || "",
+      unitPrice: item.unitPrice || product?.price || product?.sellingPrice || "",
     }) }));
   };
   const chosenList = stock ? [] : config.id === 35 ? catalog.suppliers : catalog.retailers;

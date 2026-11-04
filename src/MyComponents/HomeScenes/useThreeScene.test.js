@@ -1,6 +1,6 @@
 import { render, screen, waitFor, act } from "@testing-library/react";
 import { useRef } from "react";
-import useThreeScene from "./useThreeScene";
+import useThreeScene, { clearSceneCache } from "./useThreeScene";
 
 /* A stand-in three.js: just enough surface for the hook, with spies on the
    parts that matter (render, setSize, dispose, context loss). */
@@ -63,7 +63,7 @@ beforeEach(() => {
   });
   window.ResizeObserver = jest.fn(function () { this.observe = jest.fn(); this.disconnect = jest.fn(); });
 });
-afterEach(() => jest.restoreAllMocks());
+afterEach(() => { clearSceneCache(); jest.restoreAllMocks(); });
 
 const tick = (ms = 16) => {
   now += ms;
@@ -192,4 +192,99 @@ it("passes the app theme to the scene and repaints when <body data-theme> flips"
   await new Promise((r) => setTimeout(r, 0));
   expect(setTheme).not.toHaveBeenCalled();
   document.body.removeAttribute("data-theme");
+});
+
+/* ── kept scenes and deferred builds (the Home page) ── */
+
+const flushTimers = () => act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+
+it("with a cacheKey, leaving keeps the built scene and coming back re-attaches it without building again", () => {
+  const update = jest.fn();
+  const build = jest.fn(() => ({ update }));
+  const first = render(<Host build={build} options={{ cacheKey: "home-a" }} />);
+  const renderer = THREE.__made.renderers[0];
+  tick(16); tick(16);
+  first.unmount();
+  expect(renderer.dispose).not.toHaveBeenCalled();             // kept, not thrown away
+  expect(renderer.domElement.isConnected).toBe(false);          // but off the page
+
+  render(<Host build={build} options={{ cacheKey: "home-a" }} />);
+  expect(build).toHaveBeenCalledTimes(1);                        // not built again
+  expect(THREE.__made.renderers).toHaveLength(1);                // the same GL context
+  expect(screen.getByTestId("host")).toHaveAttribute("data-status", "ready");
+  expect(screen.getByTestId("host").contains(renderer.domElement)).toBe(true);
+  tick(16);
+  const [t] = update.mock.calls[update.mock.calls.length - 1];
+  expect(t).toBeCloseTo(0.048, 5);                               // the animation carries on where it was
+});
+
+it("a kept scene that missed a theme flip while away gets the new theme on return", () => {
+  document.body.setAttribute("data-theme", "dark");
+  const setTheme = jest.fn();
+  const first = render(<Host build={() => ({ update: jest.fn(), setTheme })} options={{ cacheKey: "home-b" }} />);
+  first.unmount();
+  document.body.setAttribute("data-theme", "light");
+  render(<Host build={() => ({ update: jest.fn(), setTheme })} options={{ cacheKey: "home-b" }} />);
+  expect(setTheme).toHaveBeenLastCalledWith("light");
+  document.body.removeAttribute("data-theme");
+});
+
+it("clearSceneCache frees kept scenes", () => {
+  const first = render(<Host build={() => ({ update: jest.fn() })} options={{ cacheKey: "home-c" }} />);
+  first.unmount();
+  clearSceneCache();
+  expect(THREE.__made.renderers[0].dispose).toHaveBeenCalled();
+  expect(THREE.__made.renderers[0].forceContextLoss).toHaveBeenCalled();
+});
+
+it("deferUntil: nothing is built until it resolves, then after the next paint", async () => {
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  const build = jest.fn(() => ({ update: jest.fn() }));
+  render(<Host build={build} options={{ deferUntil: () => gate }} />);
+  await flushTimers();
+  expect(build).not.toHaveBeenCalled();
+  expect(screen.getByTestId("host")).toHaveAttribute("data-status", "loading");
+
+  await act(async () => { release(); await gate; });
+  tick();                 // the paint
+  await flushTimers();    // then the build
+  expect(build).toHaveBeenCalledTimes(1);
+  expect(screen.getByTestId("host")).toHaveAttribute("data-status", "ready");
+});
+
+it("buildWhenVisible: built only once the host comes near the screen", async () => {
+  const build = jest.fn(() => ({ update: jest.fn() }));
+  render(<Host build={build} options={{ buildWhenVisible: true }} />);
+  await flushTimers();
+  expect(build).not.toHaveBeenCalled();
+  act(() => ioCallback([{ isIntersecting: false }]));
+  expect(build).not.toHaveBeenCalled();
+  await act(async () => { ioCallback([{ isIntersecting: true }]); });
+  tick();
+  await flushTimers();
+  expect(build).toHaveBeenCalledTimes(1);
+});
+
+it("leaving before a deferred build starts never builds it", async () => {
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  const build = jest.fn(() => ({ update: jest.fn() }));
+  const view = render(<Host build={build} options={{ deferUntil: () => gate }} />);
+  view.unmount();
+  await act(async () => { release(); await gate; });
+  tick();
+  await flushTimers();
+  expect(build).not.toHaveBeenCalled();
+  expect(THREE.__made.renderers).toHaveLength(0);
+});
+
+it("a kept scene comes back at once, without waiting for deferUntil or visibility again", () => {
+  const build = jest.fn(() => ({ update: jest.fn() }));
+  const first = render(<Host build={build} options={{ cacheKey: "home-d" }} />);
+  first.unmount();
+  const never = () => new Promise(() => {});
+  render(<Host build={build} options={{ cacheKey: "home-d", deferUntil: never, buildWhenVisible: true }} />);
+  expect(screen.getByTestId("host")).toHaveAttribute("data-status", "ready");
+  expect(build).toHaveBeenCalledTimes(1);
 });

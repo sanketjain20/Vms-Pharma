@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import useThreeScene from "./useThreeScene";
 import { robotPose, RIG, BOX_LABELS } from "./robotTimeline";
+import { whenMenuReady } from "../../utils/menuReady";
 
 /* ── The VMS juggler ──
    A short, broad-shouldered helmet bot (white shell, black visor with blue eyes,
@@ -318,7 +319,12 @@ function buildRobotScene({ THREE, renderer, scene, camera, pointer }) {
 
 export default function RobotScene({ className = "" }) {
   const hostRef = useRef(null);
-  const status = useThreeScene(hostRef, buildRobotScene, { fov: 32 });
+  const status = useThreeScene(hostRef, buildRobotScene, {
+    fov: 32,
+    cacheKey: "home-robot",
+    deferUntil: whenMenuReady,
+    buildWhenVisible: true, // it sits further down the page: built when scrolled near, not on arrival
+  });
   return (
     <div
       ref={hostRef}

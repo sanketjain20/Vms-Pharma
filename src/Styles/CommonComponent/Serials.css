@@ -1,0 +1,82 @@
+/* Serial numbers / IMEI (Phase 6). On the form shell's --afx-* tokens (both themes). Class names avoid the fragments
+   Theme.css force-recolours in light mode (-label, -row, -panel, -modal, -backdrop, -title, -value…); a chosen chip
+   carries "primary" so the light theme's blanket button recolour leaves it alone. */
+
+.srl-entry,
+.srl-picker { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+
+.srl-cap {
+  color: var(--afx-text-3, #9ca3af);
+  font: 600 10px 'JetBrains Mono', monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.srl-text { font-family: 'JetBrains Mono', monospace !important; font-size: 12px !important; min-height: 56px; }
+.srl-bad { border-color: var(--afx-danger, #ef4444) !important; }
+
+.srl-count { color: var(--afx-warning, #f59e0b); font-size: 11px; font-weight: 600; }
+.srl-count.srl-ok { color: var(--afx-success, #10b981); }
+
+.srl-chips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 220px; overflow-y: auto; }
+
+.srl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--afx-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--afx-text-1, #f3f4f6);
+  font: 600 12px 'JetBrains Mono', monospace;
+  cursor: pointer;
+}
+
+.srl-chip:hover { border-color: var(--afx-accent, #3b82f6); }
+.srl-chip.srl-chip-primary { border-color: var(--afx-accent, #3b82f6); background: var(--afx-accent, #3b82f6); color: #ffffff; }
+.srl-chip-sub { font-size: 10px; opacity: 0.7; }
+
+.srl-note { color: var(--afx-text-3, #9ca3af); font-size: 12px; }
+.srl-scan .afx-input { width: 100%; }
+
+.srl-line { display: block; color: var(--afx-text-3, #9ca3af); font: 500 11px 'JetBrains Mono', monospace; margin-top: 2px; }
+
+.afx-backdrop.srl-layer { z-index: 110500; }
+
+/* ── the Serial Lookup page ── */
+.srl-page { display: flex; flex-direction: column; gap: 16px; }
+.srl-search { display: flex; gap: 10px; max-width: 760px; }
+.srl-search .afx-input { flex: 1; }
+
+.srl-card {
+  border: 1px solid var(--afx-border, rgba(255, 255, 255, 0.1));
+  border-radius: 14px;
+  background: var(--afx-surface, #101014);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 960px;
+}
+
+.srl-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.srl-sn { font: 700 18px 'JetBrains Mono', monospace; color: var(--afx-text-1, #f3f4f6); letter-spacing: 0.04em; }
+.srl-prod { font-size: 13px; color: var(--afx-text-2, #9a9db0); margin-top: 2px; }
+
+.srl-status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--srl-status);
+  color: var(--srl-status);
+  font: 700 11px 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+
+.srl-facts { display: grid; gap: 6px; font-size: 13px; color: var(--afx-text-2, #9a9db0); }
+.srl-facts b { color: var(--afx-text-1, #f3f4f6); font-weight: 600; }
+.srl-facts .srl-cap { display: inline-block; min-width: 84px; }
+
+.srl-history { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 12px; color: var(--afx-text-2, #9a9db0); }
+.srl-history b { color: var(--afx-text-1, #f3f4f6); font-weight: 600; }

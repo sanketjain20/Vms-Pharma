@@ -267,55 +267,8 @@
 .inventory-card.inv-amber::before { background: linear-gradient(to right, #f59e0b, transparent); }
 .inventory-card.inv-rose::before  { background: linear-gradient(to right, #f43f5e, transparent); }
 
-/* =========================
-   TOAST OVERRIDES
-========================= */
-.Toastify__toast {
-  width: 420px !important;
-  min-height: 48px !important;
-  background: rgba(4, 5, 12, 0.97) !important;
-  border: 1px solid rgba(59, 130, 246, 0.2) !important;
-  border-radius: 10px !important;
-  box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.9),
-    0 0 0 1px rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  font-family: var(--inv-font-m) !important;
-  font-size: 12px !important;
-  letter-spacing: 0.04em !important;
-  color: var(--inv-text-1) !important;
-}
-
-.Toastify__toast--success {
-  border-color: rgba(16, 185, 129, 0.25) !important;
-}
-
-.Toastify__toast--error {
-  border-color: rgba(239, 68, 68, 0.25) !important;
-}
-
-.Toastify__toast--warning {
-  border-color: rgba(245, 158, 11, 0.25) !important;
-}
-
-.Toastify__progress-bar {
-  background: var(--inv-accent) !important;
-  height: 2px !important;
-  border-radius: 0 0 10px 10px !important;
-}
-
-.Toastify__progress-bar--success { background: #10b981 !important; }
-.Toastify__progress-bar--error   { background: #ef4444 !important; }
-.Toastify__progress-bar--warning { background: #f59e0b !important; }
-
-.Toastify__close-button {
-  color: var(--inv-text-2) !important;
-  opacity: 0.6;
-  transition: opacity 0.2s;
-}
-
-.Toastify__close-button:hover { opacity: 1; }
+/* Toasts: styled once, for both themes, in Styles/Toast.css — page stylesheets must not restyle them
+   (an !important override here used to make every light-theme toast dark text on a dark box). */
 
 /* =========================
    RESPONSIVE

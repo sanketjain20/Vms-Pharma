@@ -3,6 +3,7 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { LineSerialPicker } from "../CommonComponent/SerialWidgets";
 const ADJUSTMENT_TYPES = [
   { value: "BREAKAGE", label: "BREAKAGE" },
   { value: "SAMPLE", label: "SAMPLE" },
@@ -30,6 +31,18 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
     quantity: "",
     note: "",
   });
+  // Phase 7: a product with serial numbers is written off unit by unit, and its count can't simply be set
+  const [serialProducts, setSerialProducts] = useState(() => new Set());
+  const [serials, setSerials] = useState([]);
+
+  useEffect(() => {
+    let alive = true;
+    apiClient(`${API_BASE_URL}/api/Product/GetAllProduct`, { method: "GET" })
+      .then((r) => r.json())
+      .then((json) => { if (alive) setSerialProducts(new Set(extractList(json).filter((p) => p.trackSerial).map((p) => String(p.id)))); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +93,9 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
     [inventories, formData.inventoryId]
   );
 
+  const serialProduct = !!selectedInventory && serialProducts.has(String(selectedInventory.productId));
+  useEffect(() => { setSerials([]); }, [formData.inventoryId]);
+
   const filteredInventories = useMemo(() => {
     const query = inventorySearch.trim().toLowerCase();
     if (!query) return inventories;
@@ -102,11 +118,15 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
 
   const validate = () => {
     const nextErrors = {};
-    const quantity = Number(formData.quantity);
+    const quantity = serialProduct ? serials.length : Number(formData.quantity);
 
     if (!formData.inventoryId) nextErrors.inventoryId = "Inventory is required";
     if (!formData.adjustmentType) nextErrors.adjustmentType = "Adjustment type is required";
-    if (!Number.isInteger(quantity) || quantity <= 0) nextErrors.quantity = "Quantity must be a positive whole number";
+    if (serialProduct && formData.adjustmentType === "OPENING_STOCK_CORRECTION") {
+      nextErrors.adjustmentType = "This product tracks serial numbers: its stock is counted from its units. Receive new units on a purchase, or write off the named units.";
+    } else if (serialProduct && quantity === 0) {
+      nextErrors.quantity = "Pick the units being written off";
+    } else if (!Number.isInteger(quantity) || quantity <= 0) nextErrors.quantity = "Quantity must be a positive whole number";
 
     return nextErrors;
   };
@@ -122,8 +142,9 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
     const payload = {
       inventoryId: Number(formData.inventoryId),
       adjustmentType: formData.adjustmentType,
-      quantity: Number(formData.quantity),
+      quantity: serialProduct ? serials.length : Number(formData.quantity),
       note: formData.note.trim(),
+      ...(serialProduct ? { serials } : {}),
     };
 
     setSaving(true);
@@ -239,12 +260,21 @@ export default function StockAdjustmentAdd({ onSubmit, onClose }) {
                   name="quantity"
                   min="1"
                   step="1"
-                  value={formData.quantity}
+                  value={serialProduct ? serials.length : formData.quantity}
                   onChange={handleChange}
-                  placeholder="Enter quantity"
+                  disabled={serialProduct}
+                  placeholder={serialProduct ? "Pick the units" : "Enter quantity"}
                 />
                 {errors.quantity && <div className="afx-error">{errors.quantity}</div>}
               </div>
+
+              {serialProduct && formData.adjustmentType !== "OPENING_STOCK_CORRECTION" && (
+                <div className="afx-field afx-field--full">
+                  <LineSerialPicker productId={selectedInventory.productId} godownId={selectedInventory.godownId}
+                    selected={serials} onChange={(v) => { setSerials(v); setErrors((c) => ({ ...c, quantity: "" })); }}
+                    testId="adjust-serials" />
+                </div>
+              )}
 
               <div className="afx-field afx-field--full">
                 <label className="afx-label">Note</label>

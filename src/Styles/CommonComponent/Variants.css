@@ -1,0 +1,160 @@
+/* Sizes and colours (Phase 5): the size × colour grid in the product form and the purchase entry, the size/colour
+   picker of the Quick Sale catalog and the size/colour chips of Sales Add.
+   Colours come from the form shell's --afx-* tokens (defined for both themes). Class names avoid the fragments
+   Theme.css force-recolours in light mode (-label, -row, -panel, -modal, -backdrop, -title, -val…). */
+
+.vgx-axis { display: flex; flex-direction: column; gap: 8px; }
+
+.vgx-cap {
+  color: var(--afx-text-3, #9ca3af);
+  font: 600 10px 'JetBrains Mono', monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.vgx-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+.vgx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--afx-border, rgba(255, 255, 255, 0.1));
+  border-radius: 999px;
+  background: transparent;
+  color: var(--afx-text-1, #f3f4f6);
+  font: 600 12px 'Space Grotesk', system-ui, sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.vgx-chip:hover:not(:disabled) { border-color: var(--afx-accent, #3b82f6); }
+.vgx-chip.is-on { border-color: var(--afx-accent, #3b82f6); background: var(--afx-accent, #3b82f6); color: #ffffff; }
+.vgx-chip:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+.vgx-chip-x { opacity: 0.7; font-size: 11px; }
+.vgx-chip-sub { font: 500 10px 'JetBrains Mono', monospace; opacity: 0.75; }
+
+.vgx-preset {
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px dashed var(--afx-border, rgba(255, 255, 255, 0.14));
+  border-radius: 999px;
+  background: transparent;
+  color: var(--afx-text-2, #d1d5db);
+  font: 500 11px 'Space Grotesk', system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.vgx-preset:hover { border-color: var(--afx-accent, #3b82f6); color: var(--afx-accent, #3b82f6); }
+
+.vgx-add { display: flex; gap: 6px; }
+.vgx-add .afx-input { flex: 1; }
+
+/* ── the size × colour grid ── */
+.vgx-scroll { overflow-x: auto; border: 1px solid var(--afx-border, rgba(255, 255, 255, 0.08)); border-radius: 12px; }
+
+.vgx-grid { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+
+.vgx-grid th,
+.vgx-grid td {
+  padding: 8px;
+  border-bottom: 1px solid var(--afx-border, rgba(255, 255, 255, 0.06));
+  text-align: center;
+  white-space: nowrap;
+}
+
+.vgx-grid tr:last-child td { border-bottom: none; }
+
+.vgx-grid th {
+  color: var(--afx-text-3, #9ca3af);
+  font: 600 10px 'JetBrains Mono', monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--afx-sunken, rgba(255, 255, 255, 0.02));
+}
+
+.vgx-grid th.vgx-side,
+.vgx-grid td.vgx-side { text-align: left; color: var(--afx-text-1, #f3f4f6); font-weight: 700; font-size: 12px; letter-spacing: 0; text-transform: none; }
+
+.vgx-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 88px; }
+.vgx-cell.is-off { opacity: 0.45; }
+
+.vgx-cell input[type="number"] {
+  width: 76px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--afx-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  background: var(--afx-sunken, rgba(255, 255, 255, 0.04));
+  color: var(--afx-text-1, #f3f4f6);
+  font: 600 12px 'JetBrains Mono', monospace;
+  text-align: center;
+  outline: none;
+}
+
+.vgx-cell input[type="number"]:focus { border-color: var(--afx-accent, #3b82f6); }
+.vgx-cell input.is-set { border-color: var(--afx-accent, #3b82f6); }
+
+.vgx-toggle { display: inline-flex; align-items: center; gap: 4px; color: var(--afx-text-3, #9ca3af); font-size: 11px; cursor: pointer; }
+
+.vgx-none { color: var(--afx-text-3, #9ca3af); }
+.vgx-stock { font: 500 10px 'JetBrains Mono', monospace; color: var(--afx-text-3, #9ca3af); }
+.vgx-stock.is-out { color: var(--afx-danger, #ef4444); }
+.vgx-stock.is-low { color: var(--afx-warning, #f59e0b); }
+.vgx-price { font: 700 12px 'JetBrains Mono', monospace; color: var(--afx-text-1, #f3f4f6); }
+
+.vgx-note { color: var(--afx-text-3, #9ca3af); font-size: 12px; line-height: 1.5; }
+.vgx-sum { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--afx-text-2, #d1d5db); }
+.vgx-sum strong { color: var(--afx-text-1, #f3f4f6); }
+
+/* ── Quick Sale: +/- inside a grid cell ── */
+.vgx-step { display: inline-flex; align-items: center; border: 1px solid var(--afx-border, rgba(255, 255, 255, 0.1)); border-radius: 8px; overflow: hidden; }
+
+.vgx-step button {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--afx-text-1, #f3f4f6);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.vgx-step button:disabled { opacity: 0.35; cursor: not-allowed; }
+.vgx-step span { min-width: 24px; text-align: center; font: 700 12px 'JetBrains Mono', monospace; color: var(--afx-text-1, #f3f4f6); }
+
+.vgx-grab {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--afx-accent, #3b82f6);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--afx-accent, #3b82f6);
+  font: 600 11px 'Space Grotesk', system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.vgx-grab:disabled { opacity: 0.35; cursor: not-allowed; border-color: var(--afx-border, rgba(255, 255, 255, 0.1)); color: var(--afx-text-3, #9ca3af); }
+
+/* ── Quick Sale catalog: a style card's extra line ── */
+.vgx-meta { font: 500 11px 'JetBrains Mono', monospace; color: var(--san-text-3, var(--afx-text-3, #9ca3af)); }
+
+/* nested over another form: the shell's backdrop, raised */
+.afx-backdrop.vgx-layer { z-index: 110500; }
+
+/* ── product form: the "comes in sizes and colours" switch ── */
+.vgx-switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--afx-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  background: var(--afx-accent-soft, rgba(59, 130, 246, 0.12));
+  cursor: pointer;
+}
+
+.vgx-switch input { margin-top: 3px; accent-color: var(--afx-accent, #3b82f6); }
+.vgx-switch > span { display: flex; flex-direction: column; gap: 4px; }
+.vgx-switch strong { color: var(--afx-text-1, #f3f4f6); font-size: 13px; font-weight: 600; }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 /* ── Read-only detail view for a Delivery Challan. ──
    Props: uKey (string), onClose (). No Edit button (per user: DC has no update
@@ -21,6 +22,7 @@ const statusBadge = s => {
 };
 
 export default function DeliveryChallanView({ uKey, onClose }) {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   const [challan, setChallan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -166,7 +168,7 @@ export default function DeliveryChallanView({ uKey, onClose }) {
                           <tr>
                             <th>Product</th>
                             <th>Batch No</th>
-                            <th>Expiry</th>
+                            {trackExpiry && <th>Expiry</th>}
                             <th>Qty</th>
                             <th>Unit Price (₹)</th>
                             <th>GST %</th>
@@ -178,7 +180,7 @@ export default function DeliveryChallanView({ uKey, onClose }) {
                             <tr key={item.id || idx}>
                               <td style={{ fontWeight: 600, color: "var(--afx-text-1)" }}>{item.productName || `Product #${item.productId}`}</td>
                               <td style={{ fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{fmt(item.batchNumber)}</td>
-                              <td style={{ fontSize: 11 }}>{fmt(item.expiryDate)}</td>
+                              {trackExpiry && <td style={{ fontSize: 11 }}>{fmt(item.expiryDate)}</td>}
                               <td>{item.quantity ?? "—"}</td>
                               <td>₹{(Number(item.unitPrice || 0)).toFixed(2)}</td>
                               <td>{item.gstRate != null ? `${Number(item.gstRate)}%` : "—"}</td>

@@ -25,6 +25,7 @@ function mockApiClient() {
           productCode: "PROD001",
           name: "Paracetamol 500mg",
           price: 10,
+          gstRate: 12, // product-wise GST (required on save)
           unit: "STRIP",
           productTypeId: 5,
         },

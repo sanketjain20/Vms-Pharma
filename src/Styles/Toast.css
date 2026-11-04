@@ -1,18 +1,36 @@
 /* =========================
-   TOAST — dark default, light override, self-contained tokens.
-   Previously this file only ever rendered light-styled cards, even in
-   dark mode; now it follows body[data-theme] like the rest of the app.
+   TOAST — the card is plain black (dark theme) or white (light theme); the only colour is the action line along the
+   bottom edge (the progress bar) and the icon: green = success, red = error / validation, yellow = warning, blue = info.
+   No side borders. At least half the screen wide.
 ========================= */
 .Toastify__toast-container {
-  --tc-bg:      #131318;
-  --tc-border:  rgba(255, 255, 255, 0.1);
-  --tc-text:    #f2f3f7;
-  --tc-muted:   #9a9db0;
+  --tc-bg:      #0b0b0f;
+  --tc-border:  rgba(255, 255, 255, 0.12);
+  --tc-text:    #f5f5f7;
+  --tc-muted:   #a1a1aa;
   --tc-success: #10b981;
   --tc-error:   #ef4444;
   --tc-warning: #f59e0b;
   --tc-info:    #3b82f6;
-  --tc-shadow:  rgba(0, 0, 0, 0.45);
+  --tc-shadow:  rgba(0, 0, 0, 0.5);
+
+  /* react-toastify reads these: its own progress colours (and the rainbow / purple theme bars) become ours */
+  --toastify-color-progress-success: var(--tc-success);
+  --toastify-color-progress-error:   var(--tc-error);
+  --toastify-color-progress-warning: var(--tc-warning);
+  --toastify-color-progress-info:    var(--tc-info);
+  --toastify-color-progress-light:   var(--tc-muted);
+  --toastify-color-progress-dark:    var(--tc-muted);
+  --toastify-color-progress-bgo:     0.18;
+  --toastify-icon-color-success: var(--tc-success);
+  --toastify-icon-color-error:   var(--tc-error);
+  --toastify-icon-color-warning: var(--tc-warning);
+  --toastify-icon-color-info:    var(--tc-info);
+
+  /* at least half the screen wide, never wider than the screen */
+  --toastify-toast-width: max(50vw, 360px);
+  width: auto !important;
+  max-width: calc(100vw - 32px);
 
   position: fixed !important;
   z-index: 2147483647 !important;
@@ -21,68 +39,72 @@
 
 body[data-theme="light"] .Toastify__toast-container {
   --tc-bg:      #ffffff;
-  --tc-border:  rgba(15, 23, 42, 0.1);
+  --tc-border:  rgba(15, 23, 42, 0.12);
   --tc-text:    #0f172a;
   --tc-muted:   #64748b;
   --tc-success: #059669;
   --tc-error:   #dc2626;
-  --tc-warning: #b45309;
+  --tc-warning: #d97706;
   --tc-info:    #2563eb;
   --tc-shadow:  rgba(15, 23, 42, 0.16);
 }
 
-.Toastify__toast {
+/* Scoped under the container on purpose: react-toastify v11 injects its own stylesheet at runtime, after this
+   file, and its .Toastify__toast-theme--light/--dark background would otherwise win on load order. */
+.Toastify__toast-container .Toastify__toast {
+  width: var(--toastify-toast-width);
+  max-width: 100%;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   min-height: 0;
-  padding: 12px 14px;
+  padding: 14px 16px 16px;
   border-radius: 12px;
-  border: 1px solid var(--tc-border);
-  border-left: 3px solid var(--tc-info);
+  border: 1px solid var(--tc-border); /* the same neutral edge all round: no coloured side border */
   background: var(--tc-bg);
   color: var(--tc-text);
   box-shadow: 0 12px 32px var(--tc-shadow);
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.45;
+  overflow: hidden;
 }
 
-.Toastify__toast-body { padding: 0; color: inherit; }
-.Toastify__toast-icon { width: 18px; }
+.Toastify__toast-container .Toastify__toast-body { padding: 0; color: inherit; }
+.Toastify__toast-container .Toastify__toast-icon { width: 18px; }
 
-.Toastify__toast--success { border-left-color: var(--tc-success); }
-.Toastify__toast--success .Toastify__toast-icon svg { fill: var(--tc-success); }
+/* The action colour: the icon, and the line along the bottom */
+.Toastify__toast-container .Toastify__toast--success .Toastify__toast-icon svg { fill: var(--tc-success); }
+.Toastify__toast-container .Toastify__toast--error   .Toastify__toast-icon svg { fill: var(--tc-error); }
+.Toastify__toast-container .Toastify__toast--warning .Toastify__toast-icon svg { fill: var(--tc-warning); }
+.Toastify__toast-container .Toastify__toast--info    .Toastify__toast-icon svg { fill: var(--tc-info); }
 
-.Toastify__toast--error { border-left-color: var(--tc-error); }
-.Toastify__toast--error .Toastify__toast-icon svg { fill: var(--tc-error); }
-
-.Toastify__toast--warning { border-left-color: var(--tc-warning); }
-.Toastify__toast--warning .Toastify__toast-icon svg { fill: var(--tc-warning); }
-
-.Toastify__toast--info { border-left-color: var(--tc-info); }
-.Toastify__toast--info .Toastify__toast-icon svg { fill: var(--tc-info); }
-
-/* Progress bar */
-.Toastify__progress-bar { height: 2px; opacity: 0.7; }
-.Toastify__progress-bar--success { background: var(--tc-success); }
-.Toastify__progress-bar--error   { background: var(--tc-error); }
-.Toastify__progress-bar--warning { background: var(--tc-warning); }
-.Toastify__progress-bar--info    { background: var(--tc-info); }
+.Toastify__toast-container .Toastify__progress-bar--wrp { height: 3px; border-radius: 0; }
+.Toastify__toast-container .Toastify__progress-bar { opacity: 1; }
+.Toastify__toast-container .Toastify__progress-bar--success { background: var(--tc-success); }
+.Toastify__toast-container .Toastify__progress-bar--error   { background: var(--tc-error); }
+.Toastify__toast-container .Toastify__progress-bar--warning { background: var(--tc-warning); }
+.Toastify__toast-container .Toastify__progress-bar--info    { background: var(--tc-info); }
+/* a plain toast("…") has no action: its line stays neutral */
+.Toastify__toast-container .Toastify__progress-bar--default { background: var(--tc-muted); }
+.Toastify__toast-container .Toastify__progress-bar--bg.Toastify__progress-bar--success { background: var(--tc-success); }
+.Toastify__toast-container .Toastify__progress-bar--bg.Toastify__progress-bar--error   { background: var(--tc-error); }
+.Toastify__toast-container .Toastify__progress-bar--bg.Toastify__progress-bar--warning { background: var(--tc-warning); }
+.Toastify__toast-container .Toastify__progress-bar--bg.Toastify__progress-bar--info    { background: var(--tc-info); }
 
 /* Close button */
-.Toastify__close-button {
+.Toastify__toast-container .Toastify__close-button {
   color: var(--tc-muted);
-  opacity: 0.7;
+  opacity: 0.8;
   align-self: center;
 }
-.Toastify__close-button:hover { opacity: 1; color: var(--tc-text); }
+.Toastify__toast-container .Toastify__close-button:hover { opacity: 1; color: var(--tc-text); }
 
 /* =========================
-   RESPONSIVE — phone / tablet
+   RESPONSIVE — phone / tablet: full width
 ========================= */
 @media (max-width: 768px) {
-  .Toastify__toast-container { padding: 4px; }
-  .Toastify__toast { font-size: 13px; border-radius: 10px; padding: 11px 12px; }
+  .Toastify__toast-container { --toastify-toast-width: 100%; padding: 4px; }
+  .Toastify__toast-container .Toastify__toast { font-size: 13px; border-radius: 10px; padding: 12px 12px 14px; }
 }
 
 @media (max-width: 480px) {
@@ -91,5 +113,5 @@ body[data-theme="light"] .Toastify__toast-container {
   .Toastify__toast-container.Toastify__toast-container--top-center {
     top: 8px;
   }
-  .Toastify__toast { margin-bottom: 6px; }
+  .Toastify__toast-container .Toastify__toast { margin-bottom: 6px; }
 }

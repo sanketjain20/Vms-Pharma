@@ -311,6 +311,9 @@ input:disabled, .san-field input:disabled { opacity: 0.45 !important; cursor: no
 
 .san-pcard-price { font-family: var(--san-font-d); font-size: 19px; font-weight: 700; color: var(--san-text-1); }
 .san-pcard-noprice { font-family: var(--san-font-m); font-size: 10px; color: var(--san-text-3); }
+/* how the price stands with GST, and the size / colour / unit, under the name */
+.san-pcard-gst { display: block; font-family: var(--san-font-m); font-size: 10.5px; font-weight: 500; color: var(--san-text-2); }
+.san-pcard-meta { font-family: var(--san-font-m); font-size: 11px; color: var(--san-text-2); }
 
 .san-pcard-action { margin-top: auto; }
 
@@ -400,7 +403,7 @@ input:disabled, .san-field input:disabled { opacity: 0.45 !important; cursor: no
 
 .san-item-info { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
 .san-item-name { font-family: var(--san-font-b); font-size: 12.5px; font-weight: 600; color: var(--san-text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.san-item-unit { font-family: var(--san-font-m); font-size: 9px; color: var(--san-text-2); letter-spacing: 0.05em; }
+.san-item-unit { font-family: var(--san-font-m); font-size: 11px; color: var(--san-text-2); letter-spacing: 0.02em; line-height: 1.5; }
 
 .san-item-controls { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
 
@@ -411,6 +414,7 @@ input:disabled, .san-field input:disabled { opacity: 0.45 !important; cursor: no
 
 .san-item-total { font-family: var(--san-font-b); font-size: 12.5px; font-weight: 600; color: #6ee7b7; min-width: 58px; text-align: right; }
 .san-item-total-was { display: block; font-size: 10px; font-weight: 400; color: var(--san-text-3); text-decoration: line-through; }
+.san-item-total-split { display: block; font-size: 10px; font-weight: 400; color: var(--san-text-3); white-space: nowrap; }
 
 /* Scheme on a cart line — same Remove / Apply scheme controls as SalesAdd */
 .san-item-free { color: var(--san-success); font-weight: 600; }
@@ -701,3 +705,60 @@ body[data-theme="light"] .san-page .san-pay-tile-active .san-pay-tile-icon { col
 body[data-theme="light"] .san-page .san-segmented-btn { color: #64748b; }
 body[data-theme="light"] .san-page .san-search-bar,
 body[data-theme="light"] .san-page .san-block { background: #f8fafc; }
+
+/* =========================
+   CHECKOUT — billing layout: items table (≈75%) | total + payment (≈25%)
+========================= */
+.san-content.san-content-wide { max-width: none; }
+.san-layout.san-layout-bill { grid-template-columns: minmax(0, 3fr) minmax(300px, 1fr); }
+/* one scroll bar only: the page scrolls; the items panel, the table and the right panel grow to fit instead of
+   scrolling inside themselves (each used to add its own bar next to the page one) */
+.san-block-body.san-bill-main-body, .san-block-body.san-bill-side-body { max-height: none; overflow: visible; }
+/* the total and Place order stay in view while the page scrolls, on screens tall enough to hold the whole panel */
+.san-bill-side { position: sticky; top: 12px; }
+@media (max-height: 860px) { .san-bill-side { position: static; } }
+
+.san-bill-table-wrap {
+  overflow-x: auto; overflow-y: hidden; min-height: 260px; /* sideways only, on a narrow screen */
+  border: 1px solid var(--san-border); border-radius: var(--san-r-md); background: rgba(0,0,0,0.28);
+}
+.san-bill-table { width: 100%; border-collapse: collapse; font-family: var(--san-font-b); font-size: 12.5px; color: var(--san-text-1); }
+.san-bill-table thead th {
+  position: sticky; top: 0; z-index: 1; background: var(--san-surface);
+  padding: 10px 12px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--san-border-mid);
+  font-family: var(--san-font-m); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--san-text-3);
+}
+.san-bill-table td { padding: 10px 12px; border-bottom: 1px solid var(--san-border); vertical-align: top; }
+.san-bill-table tbody tr:hover td { background: rgba(59,130,246,0.04); }
+.san-bill-table .san-bt-num { width: 34px; color: var(--san-text-3); }
+.san-bill-table .san-bt-item { min-width: 220px; }
+.san-bill-table .san-bt-item > span, .san-bill-table .san-bt-item > div { display: block; }
+.san-bill-table .san-item-name { white-space: normal; font-size: 13px; }
+.san-bill-table .san-bt-qty { width: 96px; }
+.san-bill-table .san-bt-qty .san-qty-ctrl { display: inline-flex; }
+.san-bill-table .san-bt-money { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.san-bill-table th.san-bt-money { text-align: right; }
+.san-bill-table .san-bt-sub { display: block; font-size: 10px; color: var(--san-text-3); }
+.san-bill-table .san-bt-amount .san-item-total { display: inline-block; min-width: 0; }
+.san-bill-table .san-bt-actions { width: 64px; white-space: nowrap; text-align: right; }
+.san-bill-table .san-bt-actions button { margin-left: 4px; }
+.san-bill-table .san-bt-empty { text-align: center; padding: 36px 12px; color: var(--san-text-3); }
+
+.san-bill-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; align-items: start; }
+
+.san-bill-hero {
+  display: flex; flex-direction: column; gap: 4px; padding: 16px 18px;
+  border: 1px solid var(--san-border-mid); border-radius: var(--san-r-md);
+  background: linear-gradient(135deg, rgba(59,130,246,0.14), rgba(16,185,129,0.10));
+}
+.san-bill-hero-label { font-family: var(--san-font-m); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--san-text-2); }
+.san-bill-hero-amount { font-family: var(--san-font-d); font-size: 30px; font-weight: 800; line-height: 1.1; color: var(--san-text-1); font-variant-numeric: tabular-nums; }
+
+body[data-theme="light"] .san-page .san-bill-table-wrap { background: #ffffff; }
+body[data-theme="light"] .san-page .san-bill-table thead th { background: #eef1f6; }
+body[data-theme="light"] .san-page .san-bill-hero { background: linear-gradient(135deg, #e0ecff, #e3f7ef); }
+
+@media (max-width: 1100px) {
+  .san-layout.san-layout-bill { grid-template-columns: 1fr; }
+  .san-bill-side { position: static; }
+}

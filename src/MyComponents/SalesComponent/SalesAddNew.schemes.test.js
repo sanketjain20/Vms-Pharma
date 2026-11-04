@@ -116,7 +116,7 @@ describe("SalesAddNew (Quick Sale) — synced with SalesAdd: schemes, discount, 
     fireEvent.change(discountBox, { target: { value: "10" } }); // 10%
 
     expect(totalRow("Taxable value")).toHaveTextContent("₹900.00");
-    expect(totalRow("GST (18% common)")).toHaveTextContent("₹162.00");
+    expect(totalRow("GST @ 18%")).toHaveTextContent("₹162.00");
     expect(totalRow("Net amount")).toHaveTextContent("₹1062.00");
 
     fireEvent.click(screen.getByRole("button", { name: /Place order/i }));

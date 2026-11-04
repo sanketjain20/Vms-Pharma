@@ -5,6 +5,12 @@ import VmsAssistant from "./VmsAssistant";
 import apiClient from "../../Config/apiClient";
 
 jest.mock("../../Config/apiClient");
+// the shop: a clothing store that does not track expiry (decides which pages the menu has)
+let mockProfile = { trackExpiry: false, isPharma: false };
+jest.mock("../../utils/businessProfile", () => ({
+  PHARMA_PROFILE: { trackExpiry: true, isPharma: true },
+  fetchBusinessProfile: () => Promise.resolve(mockProfile),
+}));
 
 function jsonResponse(body) {
   return Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
@@ -25,6 +31,7 @@ async function openPanel() {
 beforeEach(() => {
   jest.clearAllMocks();
   window.localStorage.clear();
+  mockProfile = { trackExpiry: false, isPharma: false };
   if (!navigator.clipboard) {
     Object.defineProperty(navigator, "clipboard", { value: {}, configurable: true });
   }
@@ -155,5 +162,63 @@ describe("VmsAssistant", () => {
     await openPanel();
 
     await waitFor(() => expect(screen.getByText("Persisted reply.")).toBeInTheDocument());
+  });
+});
+
+describe("VmsAssistant — knows the pages from the menu", () => {
+  const sentBody = () => JSON.parse(apiClient.mock.calls[0][1].body);
+  const ask = async (text = "hi") => {
+    await userEvent.type(screen.getByPlaceholderText(/Ask about sales/i), text);
+    await userEvent.click(screen.getByTitle("Send"));
+    await waitFor(() => expect(apiClient).toHaveBeenCalled());
+  };
+
+  beforeEach(() => apiClient.mockReturnValue(jsonResponse({ status: 200, data: { reply: "ok" } })));
+
+  it("names the page the user is on from the menu, including newer pages", async () => {
+    renderAt("/master/stock-transfer");
+    await openPanel();
+    await ask();
+    expect(sentBody().pageContext).toBe("Stock Transfers");
+  });
+
+  it("sends the pages this user can open — their modules, their kind of shop", async () => {
+    window.localStorage.setItem("modules", JSON.stringify(["SALES", "STOCK_TRANSFER", "PRODUCT_STYLE", "Alerts"]));
+    renderAt("/master/sales");
+    await openPanel();
+    await ask();
+    const pages = sentBody().availablePages;
+    expect(pages).toEqual(expect.arrayContaining([
+      "Billing & GST › Sales",
+      "Billing & GST › Stock Transfers",
+      "Masters › Styles (Sizes & Colours)",
+      "Quick Sale",
+      "Account settings",
+    ]));
+    expect(pages).not.toContain("Inventory › Alerts › Expiry Alerts"); // this shop doesn't track expiry
+    expect(pages.some((p) => p.includes("Purchase Orders"))).toBe(false); // not in this role
+  });
+
+  it("never reads the shop profile while hidden (login screens)", () => {
+    renderAt("/");
+    expect(apiClient).not.toHaveBeenCalled();
+  });
+
+  it("a pharmacy's assistant isn't told about styles", async () => {
+    mockProfile = { trackExpiry: true, isPharma: true };
+    window.localStorage.setItem("modules", JSON.stringify(["SALES", "PRODUCT_STYLE"]));
+    renderAt("/master/sales");
+    await openPanel();
+    await ask();
+    expect(sentBody().availablePages.some((p) => p.includes("Styles"))).toBe(false);
+  });
+
+  it("offers 'ask about a module' chips only for pages the user can open", async () => {
+    window.localStorage.setItem("modules", JSON.stringify(["SALES", "STOCK_TRANSFER"]));
+    renderAt("/home");
+    await openPanel();
+    expect(screen.getByRole("button", { name: "Sales" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Stock Transfers" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Purchase" })).toBeNull();
   });
 });

@@ -1,0 +1,29 @@
+/* A grid action that was refused: the card follows the theme like the toasts; red marks it as an error. */
+.aeb {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 0 0 14px; padding: 12px 12px 12px 14px;
+  border: 1px solid rgba(239, 68, 68, 0.35); border-bottom: 3px solid #ef4444; border-radius: 10px;
+  background: #0b0b0f; color: #f5f5f7;
+  font-size: 13.5px; line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  animation: aebIn 0.2s ease-out both;
+}
+@keyframes aebIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.aeb-icon { flex-shrink: 0; display: inline-flex; margin-top: 1px; color: #ef4444; }
+.aeb-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+.aeb .aeb-close {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; margin: -3px 0 -3px 4px; padding: 0;
+  border: 1px solid transparent; border-radius: 7px;
+  background: transparent; color: #a1a1aa; cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.aeb .aeb-close:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.12); color: #f5f5f7; }
+.aeb .aeb-close:focus-visible { outline: 2px solid #ef4444; outline-offset: 1px; }
+
+body[data-theme="light"] .aeb { background: #ffffff !important; color: #0f172a !important; border-color: rgba(220, 38, 38, 0.3) !important; border-bottom-color: #dc2626 !important; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1); }
+body[data-theme="light"] .aeb-icon { color: #dc2626 !important; }
+body[data-theme="light"] .aeb .aeb-close { background: transparent !important; color: #64748b !important; border-color: transparent !important; box-shadow: none !important; }
+body[data-theme="light"] .aeb .aeb-close:hover { background: #f1f5f9 !important; color: #0f172a !important; }

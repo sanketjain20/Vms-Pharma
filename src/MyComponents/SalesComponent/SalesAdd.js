@@ -9,6 +9,24 @@ import { calculateTcsPreview, partyHasPan } from "../../utils/taxPreview";
 import {
   computeTotals, toItemPayload, fetchApplicable, withScheme, removeScheme, freeText, round2,
 } from "../../utils/salesSchemes";
+import { switchEdit, putBack, editRateOf, keptOnEdit } from "../../utils/editingLine";
+import { resolveWalkIn, MAX_NAME_LENGTH } from "../../utils/walkInCustomer";
+import { toCustomLine, useCustomItemsAllowed } from "../../utils/customItems";
+import CustomItemForm from "./CustomItemForm";
+import LineGstCell, { useCanOverrideGst } from "./LineGstCell";
+import LinePriceCell, { useCanChangePrice } from "./LinePriceCell";
+import CreditLimitNotice from "./CreditLimitNotice";
+import { useCreditCheck, creditProblem } from "../../utils/creditLimit";
+import GstMissingNote from "./GstMissingNote";
+import PaymentSplit from "../CommonComponent/PaymentSplit";
+import {
+  startPayments, fillLast, paymentsTotal, paymentsProblem, paymentPayload, billingModeOf, roundOffText, useRoundBillTotal,
+} from "../../utils/salePayments";
+import { VariantChips } from "../CommonComponent/VariantWidgets";
+import { isVariant } from "../../utils/variants";
+import { SerialPicker, SerialList, useSerialsInStock } from "../CommonComponent/SerialWidgets";
+import { tracksSerials } from "../../utils/serials";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 /* ─────────────────────────────────────────
    PRODUCT AVATAR — deterministic color + initials, no image needed
@@ -129,6 +147,7 @@ const PAYMENT_TYPES = [
 ];
 
 export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   // ── State ─────────────────────────────────────────────────────────────────
   const [productTypes, setProductTypes]       = useState([]);
   const [products, setProducts]               = useState([]);
@@ -139,16 +158,20 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
   const [taxInput, setTaxInput]               = useState("");
   const [taxType, setTaxType]                 = useState("PERCENT");
   const [lineItems, setLineItems]             = useState([]);
-  const [editIndex, setEditIndex]             = useState(null);
+  // the line in the entry form, out of the table until "Update Item" or "Cancel edit" puts it back: { line, index }
+  const [editing, setEditing]                 = useState(null);
   const [discountInput, setDiscountInput]     = useState("");
   const [discountType, setDiscountType]       = useState("PERCENT");
-  const [billingMode, setBillingMode]         = useState("CASH");
+  const [billingMode]                         = useState("CASH"); // the mode when nothing is paid now (credit)
   const [commonTax, setCommonTax]             = useState("18");
   const [taxMode, setTaxMode]                 = useState("COMMON");
   const [errors, setErrors]                   = useState({});
   const [activeTab, setActiveTab]             = useState("Tax");
   const [viewMode, setViewMode]               = useState("tabs"); // "tabs" | "all"
-  const [amountPaid, setAmountPaid]           = useState("");
+  // how the bill is paid: one row per mode (Rs 500 Cash + Rs 300 UPI); amountPaid is their total
+  const [payments, setPayments]               = useState(() => startPayments("PAID", 0));
+  const amountPaid = paymentsTotal(payments);
+  const roundBill = useRoundBillTotal(!documentMode);
   const [allProducts, setAllProducts]         = useState([]);
   const lastLoadedType                        = useRef(null);
   const [typeSearch, setTypeSearch]           = useState("");
@@ -162,6 +185,9 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
 
   // ── Schemes: each line gets the best matching scheme suggested; the clerk can remove it ──
   const lineKeyRef = useRef(0);
+  // custom (run-time) items: only when the shop has them switched on, and never on a sales order
+  const customAllowed = useCustomItemsAllowed(!documentMode);
+  const [customForm, setCustomForm] = useState(null); // { index: number|null } while the form is open
   const lineItemsRef = useRef([]);
   const [schemePending, setSchemePending] = useState(0);
 
@@ -171,6 +197,9 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
   const [retailerSearch, setRetailerSearch]           = useState("");
   const [retailerDropdownOpen, setRetailerDropdownOpen] = useState(false);
   const retailerDropdownRef = useRef(null);
+  // walk-in customer typed on the bill (only used when no retailer is picked)
+  const [customerName, setCustomerName]               = useState("");
+  const [customerPhone, setCustomerPhone]             = useState("");
   const [creditPaymentType, setCreditPaymentType]     = useState("PAID");
   const [dueDate, setDueDate]                         = useState("");
   const [availableBatches, setAvailableBatches]       = useState([]);
@@ -304,6 +333,7 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
   const handleProductChange = (e) => {
     const id = e.target.value;
     setSelectedProduct(id);
+    setPickedSerials([]);
     setTaxInput("");
     setErrors({});
     setAvailableBatches([]);
@@ -361,11 +391,33 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
     setAvailableBatches([]);
     setSelectedBatchId("");
     setBatchesLoading(false);
-    setEditIndex(null);
+    setPickedSerials([]);
     setErrors({});
     setTypeSearch("");
     setProductSearch("");
   };
+
+  /* ── Serial numbers (Phase 6): a product that tracks them is sold by picking its units ── */
+  const [pickedSerials, setPickedSerials] = useState([]);
+  const serialProduct = tracksSerials(allProducts.find(p => String(p.id) === String(selectedProduct)));
+  // product-wise GST: a product with a rate is billed at it; one without falls back to the common rate (flagged)
+  const gstProduct = products.find(p => String(p.id) === String(selectedProduct))
+    || allProducts.find(p => String(p.id) === String(selectedProduct));
+  const pickedRate = gstProduct?.gstRate ?? null;
+  const canOverrideGst = useCanOverrideGst();
+  const canChangePrice = useCanChangePrice() && !documentMode; // an order keeps the price agreed on it
+  const [creditReason, setCreditReason] = useState(""); // why this bill may go over the retailer's credit limit
+  const patchLine = (i, patch) => setLineItems(prev => prev.map((l, k) => (k === i ? { ...l, ...patch } : l)));
+  const serialStock = useSerialsInStock(serialProduct ? selectedProduct : null);
+  // a line being edited keeps its own units pickable (they are still in stock until the sale is saved)
+  const serialOptions = editing?.line?.serials
+    ? [...editing.line.serials.filter(s => !serialStock.options.some(o => o.serialNo === s)).map(s => ({ serialNo: s })), ...serialStock.options]
+    : serialStock.options;
+  useEffect(() => { if (serialProduct) setQuantity(pickedSerials.length ? String(pickedSerials.length) : ""); }, [pickedSerials, serialProduct]);
+
+  /* ── Sizes & colours (Phase 5): the picked product's sister variants, for the size/colour chips ── */
+  const pickedProduct = allProducts.find(p => String(p.id) === String(selectedProduct));
+  const sisterVariants = isVariant(pickedProduct) ? allProducts.filter(p => p.styleId === pickedProduct.styleId) : [];
 
   /* ── Stock helpers for the currently-selected product's inventory ── */
   const outOfStock = !!inventory && inventory.currentQuantity <= 0;
@@ -385,6 +437,7 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
      item never waits on it; a result is dropped if the line was changed or removed in the meantime. The server
      checks the scheme again on save, so a missed suggestion is harmless. */
   const suggestScheme = async (line, retailerId) => {
+    if (line.custom) return; // a custom item gets no scheme
     setSchemePending(n => n + 1);
     const applicable = await fetchApplicable({
       productId: line.productId, retailerId, quantity: line.quantity, unitPrice: line.sellingPrice,
@@ -425,13 +478,17 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
       tempErrors.selectedProduct = "This product is out of stock";
     }
 
+    if (serialProduct && pickedSerials.length === 0) {
+      tempErrors.serials = "Pick the serial numbers being sold";
+    }
     if (!quantity || quantity <= 0) {
-      tempErrors.quantity = "Enter valid quantity";
+      tempErrors.quantity = serialProduct ? "Pick the serial numbers being sold" : "Enter valid quantity";
     } else if (inventory && parseInt(quantity) > inventory.currentQuantity) {
       tempErrors.quantity = "Exceeds available stock";
     }
 
-    const price = inventory ? inventory.unitSellingPrice : 0;
+    const kept = keptOnEdit(editing?.line, selectedProduct); // a price change / GST override made on the line stays
+    const price = kept.sellingPrice ?? (inventory ? inventory.unitSellingPrice : 0);
     const taxValue = taxMode === "COMMON" ? parseFloat(commonTax || 0) : parseFloat(taxInput || 0);
     if (taxValue < 0)                                     tempErrors.taxInput       = "Tax cannot be negative";
     setErrors(tempErrors);
@@ -444,15 +501,20 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
     const taxAmount = taxType === "PERCENT" ? (price * quantity * taxValue) / 100 : taxValue;
 
     const item = {
-      lineKey: editIndex !== null ? lineItems[editIndex].lineKey : ++lineKeyRef.current,
-      schemeOff: editIndex !== null ? !!lineItems[editIndex].schemeOff : false,
+      lineKey: ++lineKeyRef.current,
+      schemeOff: false,
       schemeId: null, schemeName: "", schemeDescription: "", freeQuantity: 0, schemeDiscount: 0,
       productId:   parseInt(selectedProduct),
       productName: product?.name || "",
       quantity:    parseInt(quantity),
       sellingPrice: price,
       taxAmount,
-      gstRate: taxMode === "COMMON" ? parseFloat(commonTax || 0) : parseFloat(taxInput || 0),
+      gstRate: product?.gstRate ?? (taxMode === "COMMON" ? parseFloat(commonTax || 0) : parseFloat(taxInput || 0)),
+      productGstRate: product?.gstRate ?? null,
+      // a product with no rate yet: the % chosen for it, so its GST follows the quantity (Common GST mode uses the bill's)
+      ...(product?.gstRate == null && taxMode !== "COMMON" && taxType === "PERCENT" ? { commonGstRate: taxValue } : {}),
+      priceIncludesGst: !!product?.priceIncludesGst,
+      ...kept,
       batchId: selectedBatchId ? parseInt(selectedBatchId) : null,
       batchNumber: selectedBatchId
         ? availableBatches.find(b => String(b.batchId) === String(selectedBatchId))?.batchNumber || ""
@@ -460,13 +522,12 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
       expiryDate: selectedBatchId
         ? availableBatches.find(b => String(b.batchId) === String(selectedBatchId))?.expiryDate || ""
         : "",
+      ...(serialProduct ? { serials: [...pickedSerials], batchId: null, batchNumber: "AUTO", schemeOff: true } : {}),
     };
 
-    const updated = [...lineItems];
-    if (editIndex !== null) { updated[editIndex] = item; setEditIndex(null); }
-    else updated.push(item);
-
-    setLineItems(updated);
+    // an edited line goes back where it was; a new one at the end
+    setLineItems(editing ? putBack(lineItems, editing, item) : [...lineItems, item]);
+    setEditing(null);
     clearProductForm();
     if (!item.schemeOff) suggestScheme(item, selectedRetailer || null);
   };
@@ -519,12 +580,33 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
     toast.success(`${product.name} selected — enter quantity and Add Item`);
   };
 
+  /* ── CUSTOM ITEM ── typed in at billing time, not a product in stock (see CustomItemForm) */
+  const saveCustomItem = (checked) => {
+    const index = customForm?.index ?? null;
+    const line = toCustomLine(checked, index !== null ? lineItems[index].lineKey : ++lineKeyRef.current);
+    setLineItems(prev => (index !== null ? prev.map((l, i) => (i === index ? line : l)) : [...prev, line]));
+    setCustomForm(null);
+  };
+
+  /** "Cancel edit": the line goes back as it was. With nothing being edited, the button just clears the form. */
+  const cancelEdit = () => {
+    if (editing) setLineItems(prev => putBack(prev, editing));
+    setEditing(null);
+    clearProductForm();
+  };
+
   const editItem = async (index) => {
     const it = lineItems[index];
-    setEditIndex(index);
+    if (it.custom) { setCustomForm({ index }); return; }
+    // the line leaves the table while it is in the form (a line already there goes back first)
+    const next = switchEdit(lineItems, editing, index);
+    setLineItems(next.lines);
+    setEditing(next.editing);
     setSelectedProduct(it.productId);
     setQuantity(it.quantity);
-    setTaxInput(it.taxAmount);
+    setPickedSerials(it.serials || []);
+    setTaxInput(String(editRateOf(it))); // the rate it was billed at: the GST follows the quantity
+    setTaxType("PERCENT");
     setSelectedBatchId(it.batchId || "");
     setErrors({});
     try {
@@ -555,6 +637,7 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
     manualDiscount: discountInput,
     discountType,
     commonRate: taxMode === "COMMON" && taxType === "PERCENT" ? parseFloat(commonTax || 0) : null,
+    roundOff: roundBill && !documentMode, // an order is priced, not billed: no round-off until it becomes a bill
   });
   const lineTotal    = totals.gross;
   const lineTaxTotal = round2(totals.lines.reduce((s, r) => s + r.clientTax, 0));
@@ -579,30 +662,38 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
       })
     : { taxable: 0, rate: 0, tcs: 0 };
   const payableAmount = round2(netAmount + tcsPreview.tcs);
+  // a sales order is not a bill on credit: only a bill is checked against the retailer's credit limit
+  const credit = useCreditCheck(documentMode ? null : selectedRetailer || null, payableAmount - amountPaid);
 
+  // paid in full: the payments follow the bill (the last one takes what the others leave); credit: none
   useEffect(() => {
-    if (creditPaymentType === "PAID") setAmountPaid(payableAmount.toFixed(2));
+    if (creditPaymentType === "PAID") setPayments(prev => (prev.length ? fillLast(prev, payableAmount) : startPayments("PAID", payableAmount, billingMode)));
+    if (creditPaymentType === "CREDIT") setPayments([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [creditPaymentType, payableAmount]);
 
   /* ── SUBMIT ── */
   const submitSales = async () => {
+    if (editing) { // a line is in the entry form, out of the bill: saving now would leave it out
+      toast.error(`Finish editing ${editing.line.productName || "the line"} first: Update Item or Cancel edit`);
+      return;
+    }
     let tempErrors = {};
     if (lineItems.length === 0)                          tempErrors.lineItems    = "Add at least one item";
-    if (creditPaymentType !== "CREDIT" && !billingMode)  tempErrors.billingMode  = "Select billing mode";
     if (discountInput < 0)                               tempErrors.discountInput = "Discount cannot be negative";
     if (totals.discountTooLarge)                         tempErrors.discountInput = "Discount cannot be more than the value of the goods after schemes";
-    // compared to the paisa: the box shows the payable rounded to 2 places, so an exact match on the raw figure can fail
-    if (creditPaymentType === "PAID" && Math.abs(round2(parseFloat(amountPaid) || 0) - round2(payableAmount)) > 0.005)
-      tempErrors.amountPaid = "Amount must be equal to the payable amount";
-    if (creditPaymentType === "PARTIAL") {
-      if (!amountPaid || amountPaid <= 0)               tempErrors.amountPaid = "Enter valid amount paid";
-      else if (parseFloat(amountPaid) >= payableAmount) tempErrors.amountPaid = "Partial payment must be less than total";
-    }
-    if (creditPaymentType === "CREDIT" && parseFloat(amountPaid) !== 0)
-      tempErrors.amountPaid = "Amount paid must be 0 for credit";
+    // the payments must cover the bill (paid in full), stay under it (part payment), or be none (credit)
+    const payProblem = paymentsProblem(creditPaymentType, payableAmount, payments);
+    if (payProblem) tempErrors.amountPaid = payProblem;
     if (creditPaymentType === "CREDIT" && !dueDate)     tempErrors.dueDate = "Due date is required for credit";
     if (creditPaymentType === "PARTIAL" && !dueDate)    tempErrors.dueDate = "Due date is required for partial payment";
+    // a sales order always goes to a retailer, so it never carries walk-in details
+    const walkIn = documentMode
+      ? { customerName: null, customerPhone: null, errors: {} }
+      : resolveWalkIn({ retailerId: selectedRetailer, name: customerName, phone: customerPhone });
+    Object.assign(tempErrors, walkIn.errors);
+    const creditIssue = creditProblem(credit, creditReason); // the server refuses it the same way
+    if (creditIssue) { tempErrors.credit = creditIssue; toast.error(creditIssue); }
     setErrors(tempErrors);
     if (Object.keys(tempErrors).length > 0) return;
 
@@ -616,8 +707,9 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
         retailerId: selectedRetailer ? parseInt(selectedRetailer) : null,
         godownId: Number(localStorage.getItem("activeGodownId") || 0) || null,
         orderDate: new Date().toISOString().slice(0, 10), expectedDate: null, terms: "", notes: "",
-        billingMode, paymentType: creditPaymentType, dueDate: dueDate || null,
-        amountPaid: parseFloat(amountPaid || 0), totalDiscount: totals.manualDiscount,
+        billingMode: creditPaymentType === "CREDIT" ? billingMode : billingModeOf(payments),
+        paymentType: creditPaymentType, dueDate: dueDate || null,
+        amountPaid, totalDiscount: totals.manualDiscount,
         autoApplySchemes: true,
         items: lineItems.map(item => ({ productId: item.productId, quantity: item.quantity,
           unitPrice: Number(item.sellingPrice || 0), gstRate: Number(item.gstRate || 0), schemeId: item.schemeId || null,
@@ -627,11 +719,15 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(documentMode ? orderPayload : {
-          billingMode,
+          billingMode: creditPaymentType === "CREDIT" ? billingMode : billingModeOf(payments),
           totalDiscount: totals.manualDiscount, // what the clerk gave; the server adds the schemes' discount itself
-          amountPaid: parseFloat(amountPaid),
+          amountPaid,
+          payments: paymentPayload(payments),
           remainingAmount: parseFloat((payableAmount - amountPaid).toFixed(2)),
+          ...(credit?.over ? { creditLimitReason: creditReason.trim() } : {}),
           retailerId: selectedRetailer ? parseInt(selectedRetailer) : null,
+          customerName: walkIn.customerName,
+          customerPhone: walkIn.customerPhone,
           paymentType: creditPaymentType,
           dueDate: dueDate || null,
           items: toItemPayload(lineItems, totals),
@@ -674,6 +770,7 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
             ))}
           </select>
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div className="afx-line-meta" data-testid="common-gst-hint">Used only for products that have no GST rate yet; the rest use their own.</div>
         </div>
       ) : (
         <div className="afx-select-wrap" style={{ marginTop: 8 }}>
@@ -744,6 +841,22 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
             placeholder="Search product…" dropdownRef={productDropdownRef} error={errors.selectedProduct}
           />
 
+          {serialProduct && (
+            <div className="afx-card" data-testid="sale-serials">
+              <div className="afx-section-title" style={{ padding: 0 }}>Serial numbers / IMEI</div>
+              {serialStock.loading ? <span style={{ fontSize: 12 }}>Loading serial numbers…</span> : (
+                <SerialPicker options={serialOptions} selected={pickedSerials} onChange={setPickedSerials}
+                  emptyText="None of this product is in stock." />
+              )}
+              {errors.serials && <div className="afx-error">{errors.serials}</div>}
+            </div>
+          )}
+
+          {sisterVariants.length > 1 && (
+            <VariantChips variants={sisterVariants} selectedId={selectedProduct}
+              onSelect={id => handleProductChange({ target: { value: id } })} />
+          )}
+
           {/* Inventory info — price & stock are always read from product configuration */}
           {inventory ? (
             <div className="afx-card">
@@ -776,11 +889,11 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
               <div className="afx-section-title" style={{ padding: 0 }}>Batch Selection</div>
               <div className="afx-select-wrap">
                 <select className="afx-select" value={selectedBatchId} onChange={e => setSelectedBatchId(e.target.value)}>
-                  <option value="">Auto-select (FIFO — oldest expiry first)</option>
+                  <option value="">{trackExpiry ? "Auto-select (FIFO — oldest expiry first)" : "Auto-select (oldest stock first)"}</option>
                   {availableBatches.map(b => (
                     <option key={b.batchId} value={b.batchId}>
-                      {b.batchNumber} · Exp: {b.expiryDate} · Qty: {b.availableQuantity}
-                      {b.expiryStatus === "EXPIRING_SOON" ? " (expiring soon)" : b.expiryStatus === "EXPIRED" ? " (expired)" : ""}
+                      {b.batchNumber}{trackExpiry && b.expiryDate ? ` · Exp: ${b.expiryDate}` : ""} · Qty: {b.availableQuantity}
+                      {!trackExpiry ? "" : b.expiryStatus === "EXPIRING_SOON" ? " (expiring soon)" : b.expiryStatus === "EXPIRED" ? " (expired)" : ""}
                     </option>
                   ))}
                 </select>
@@ -791,10 +904,12 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
                 return b ? (
                   <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--afx-text-2)", flexWrap: "wrap" }}>
                     <span>Batch: <strong style={{ color: "var(--afx-accent)" }}>{b.batchNumber}</strong></span>
-                    <span>Expiry: <strong style={{
-                      color: b.expiryStatus === "EXPIRING_SOON" ? "var(--afx-warning)"
-                        : b.expiryStatus === "EXPIRED" ? "var(--afx-danger)" : "var(--afx-success)"
-                    }}>{b.expiryDate}</strong></span>
+                    {trackExpiry && b.expiryDate && (
+                      <span>Expiry: <strong style={{
+                        color: b.expiryStatus === "EXPIRING_SOON" ? "var(--afx-warning)"
+                          : b.expiryStatus === "EXPIRED" ? "var(--afx-danger)" : "var(--afx-success)"
+                      }}>{b.expiryDate}</strong></span>
+                    )}
                     <span>MRP: <strong style={{ color: "var(--afx-text-1)" }}>₹{b.mrp}</strong></span>
                     <span>Stock: <strong style={{ color: "var(--afx-text-1)" }}>{b.availableQuantity}</strong></span>
                   </div>
@@ -817,20 +932,31 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
             <div className="afx-field">
               <label className="afx-label">Quantity</label>
               <div className="afx-qty">
-                <button type="button" className="afx-qty-btn" onClick={() => stepQuantity(-1)} disabled={outOfStock || (parseInt(quantity) || 0) <= 1}>−</button>
+                <button type="button" className="afx-qty-btn" onClick={() => stepQuantity(-1)} disabled={outOfStock || serialProduct || (parseInt(quantity) || 0) <= 1}>−</button>
                 <input
                   className={`afx-qty-input ${errors.quantity ? "afx-input--err" : ""}`}
                   style={errors.quantity ? { borderColor: "var(--afx-danger)" } : undefined}
                   type="number" value={quantity}
                   onChange={e => setQuantity(e.target.value)}
-                  min="1" placeholder="Enter qty"
-                  disabled={outOfStock}
+                  min="1" placeholder={serialProduct ? "Pick serial numbers" : "Enter qty"}
+                  disabled={outOfStock || serialProduct}
                 />
-                <button type="button" className="afx-qty-btn" onClick={() => stepQuantity(1)} disabled={outOfStock}>+</button>
+                <button type="button" className="afx-qty-btn" onClick={() => stepQuantity(1)} disabled={outOfStock || serialProduct}>+</button>
               </div>
               {errors.quantity && <div className="afx-error">{errors.quantity}</div>}
             </div>
-            {taxMode === "PRODUCT" && (
+            {selectedProduct && pickedRate !== null && (
+              <div className="afx-field" data-testid="product-gst-info">
+                <label className="afx-label">GST</label>
+                <div className="afx-line-meta">{pickedRate}% (from the product){gstProduct?.priceIncludesGst ? " · price includes GST" : ""}</div>
+              </div>
+            )}
+            {selectedProduct && gstProduct && pickedRate === null && (
+              <GstMissingNote>
+                No GST rate on product — the {taxMode === "COMMON" ? "common rate" : "rate below"} is used. Set it in Products.
+              </GstMissingNote>
+            )}
+            {taxMode === "PRODUCT" && pickedRate === null && (
               <div className="afx-field">
                 <label className="afx-label">GST {taxType === "PERCENT" ? "Rate (%)" : "Amount (₹)"}</label>
                 {taxType === "PERCENT" ? (
@@ -857,10 +983,16 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
           </div>
 
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" className="afx-btn" onClick={clearProductForm}>Clear All</button>
+            <button type="button" className="afx-btn" onClick={cancelEdit}>{editing ? "Cancel edit" : "Clear All"}</button>
             <button type="button" className="afx-btn afx-btn--primary" onClick={addItem} disabled={outOfStock || noPriceConfigured}>
-              {editIndex !== null ? "Update Item" : "+ Add Item"}
+              {editing ? "Update Item" : "+ Add Item"}
             </button>
+            {customAllowed && !documentMode && (
+              <button type="button" className="afx-btn" onClick={() => setCustomForm({ index: null })}
+                title="Bill something that is not a product in stock">
+                + Custom item
+              </button>
+            )}
           </div>
           {errors.lineItems && <div className="afx-error">{errors.lineItems}</div>}
         </div>
@@ -893,16 +1025,18 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
                       // per product: value before GST (after any scheme), the GST % and amount on it, and the two together
                       const row = totals.lines[idx] || { post: 0, rate: 0 };
                       const excl = row.post;
-                      const gst = row.post * row.rate;
+                      const gst = (row.rawPost ?? row.post) * row.rate; // on the unrounded value, as the server
                       return (
                         <tr key={idx} className="afx-line-row" data-testid="sale-line">
                           <td>{idx + 1}</td>
                           <td>
                             <div className="afx-line-name">{it.productName}</div>
+                            <SerialList serials={it.serials} />
                             <div className="afx-line-meta">
+                              {it.custom && <span data-testid="line-custom">Custom item{it.hsnCode ? ` · HSN ${it.hsnCode}` : ""} </span>}
                               {it.freeQuantity > 0 && <strong className="afx-text-success">{freeText(it)} </strong>}
                               {it.batchNumber && it.batchNumber !== "AUTO" && `Batch ${it.batchNumber} `}
-                              {it.expiryDate && `· Exp ${it.expiryDate}`}
+                              {trackExpiry && it.expiryDate && `· Exp ${it.expiryDate}`}
                             </div>
                             {it.schemeId && (
                               <span className="afx-line-meta" data-testid="line-scheme">
@@ -910,16 +1044,19 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
                                 {" "}<button type="button" className="afx-link-btn" onClick={() => dropScheme(idx)}>Remove</button>
                               </span>
                             )}
-                            {!it.schemeId && it.schemeOff && (
+                            {!it.schemeId && it.schemeOff && !it.custom && (
                               <span className="afx-line-meta">
                                 No scheme <button type="button" className="afx-link-btn" onClick={() => retryScheme(idx)}>Apply scheme</button>
                               </span>
                             )}
                           </td>
-                          <td data-testid="line-price">{Number(it.sellingPrice || 0).toFixed(2)}</td>
+                          <td data-testid="line-price">
+                            <LinePriceCell line={it} product={allProducts.find((p) => p.id === it.productId)} canChange={canChangePrice}
+                              onChange={(p) => patchLine(idx, p)} />
+                          </td>
                           <td data-testid="line-qty">{it.quantity}</td>
                           <td data-testid="line-excl">{excl.toFixed(2)}</td>
-                          <td data-testid="line-rate">{Number((row.rate * 100).toFixed(2))}%</td>
+                          <td><LineGstCell line={it} row={row} canOverride={canOverrideGst && !documentMode} onChange={(p) => patchLine(idx, p)} /></td>
                           <td data-testid="line-gst">{gst.toFixed(2)}</td>
                           <td data-testid="line-incl" style={{ fontWeight: 700, color: "var(--afx-text-1)" }}>{(excl + gst).toFixed(2)}</td>
                           <td>
@@ -941,8 +1078,8 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
                       <td colSpan={4} style={{ textAlign: "right" }}>Total ({lineItems.length} item{lineItems.length === 1 ? "" : "s"})</td>
                       <td data-testid="sum-excl">{lineItems.reduce((s, _, k) => s + (totals.lines[k]?.post || 0), 0).toFixed(2)}</td>
                       <td></td>
-                      <td data-testid="sum-gst">{lineItems.reduce((s, _, k) => s + (totals.lines[k] ? totals.lines[k].post * totals.lines[k].rate : 0), 0).toFixed(2)}</td>
-                      <td data-testid="sum-incl" style={{ color: "var(--afx-text-1)" }}>{lineItems.reduce((s, _, k) => s + (totals.lines[k] ? totals.lines[k].post * (1 + totals.lines[k].rate) : 0), 0).toFixed(2)}</td>
+                      <td data-testid="sum-gst">{lineItems.reduce((s, _, k) => s + (totals.lines[k] ? (totals.lines[k].rawPost ?? totals.lines[k].post) * totals.lines[k].rate : 0), 0).toFixed(2)}</td>
+                      <td data-testid="sum-incl" style={{ color: "var(--afx-text-1)" }}>{lineItems.reduce((s, _, k) => s + (totals.lines[k] ? totals.lines[k].post + (totals.lines[k].rawPost ?? totals.lines[k].post) * totals.lines[k].rate : 0), 0).toFixed(2)}</td>
                       <td></td>
                     </tr>
                   </tfoot>
@@ -975,6 +1112,34 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
                 error={errors.retailerId}
               />
 
+              {/* Walk-in customer: only when no retailer is picked (an order always goes to a retailer) */}
+              {!selectedRetailer && !documentMode && (
+                <div className="afx-grid">
+                  <div className="afx-field">
+                    <label className="afx-label" htmlFor="sa-customer-name">Customer name <span style={{ fontWeight: 400, color: "var(--afx-text-3)" }}>(optional)</span></label>
+                    <input
+                      id="sa-customer-name"
+                      className="afx-input"
+                      type="text" value={customerName}
+                      onChange={e => setCustomerName(e.target.value)}
+                      maxLength={MAX_NAME_LENGTH} placeholder="Walk-in customer" autoComplete="off"
+                    />
+                    {errors.customerName && <div className="afx-error">{errors.customerName}</div>}
+                  </div>
+                  <div className="afx-field">
+                    <label className="afx-label" htmlFor="sa-customer-phone">Mobile number <span style={{ fontWeight: 400, color: "var(--afx-text-3)" }}>(optional)</span></label>
+                    <input
+                      id="sa-customer-phone"
+                      className="afx-input"
+                      type="tel" inputMode="tel" value={customerPhone}
+                      onChange={e => setCustomerPhone(e.target.value)}
+                      maxLength={16} placeholder="10-digit mobile" autoComplete="off"
+                    />
+                    {errors.customerPhone && <div className="afx-error">{errors.customerPhone}</div>}
+                  </div>
+                </div>
+              )}
+
               <div className="afx-field">
                 <label className="afx-label">Discount</label>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -991,22 +1156,6 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
                 </div>
                 {errors.discountInput && <div className="afx-error">{errors.discountInput}</div>}
               </div>
-
-              {creditPaymentType !== "CREDIT" && (
-                <div className="afx-field">
-                  <label className="afx-label">Billing Mode</label>
-                  <div className="afx-seg-row">
-                    {[["CASH", "Cash"], ["ONLINE", "Online / UPI"], ["CARD", "Card"]].map(([val, lbl]) => (
-                      <button
-                        key={val} type="button"
-                        className={`afx-seg-btn ${billingMode === val ? "is-active" : ""}`}
-                        onClick={() => setBillingMode(val)}
-                      >{lbl}</button>
-                    ))}
-                  </div>
-                  {errors.billingMode && <div className="afx-error">{errors.billingMode}</div>}
-                </div>
-              )}
 
               {/* ── Totals breakdown ── */}
               <div className="afx-totals">
@@ -1028,6 +1177,9 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
                     <span>₹{tcsPreview.tcs.toFixed(2)}</span>
                   </div>
                 )}
+                {totals.roundOff !== 0 && totals.roundOff !== undefined && (
+                  <div className="afx-totals-row" data-testid="round-off"><span>Round off</span><span>{roundOffText(totals.roundOff)}</span></div>
+                )}
                 <div className="afx-totals-divider" />
                 <div className="afx-totals-row afx-totals-grand"><span>Payable Amount</span><span>₹{payableAmount.toFixed(2)}</span></div>
                 {tcsPreview.tcs > 0 && (
@@ -1047,9 +1199,7 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
                       className={`afx-pay-tile ${creditPaymentType === id ? "is-active" : ""}`}
                       onClick={() => {
                         setCreditPaymentType(id);
-                        if (id === "PAID")    setAmountPaid(payableAmount.toFixed(2));
-                        if (id === "CREDIT")  setAmountPaid("0");
-                        if (id === "PARTIAL") setAmountPaid("");
+                        setPayments(startPayments(id, payableAmount, billingMode));
                       }}
                     >
                       <span className="afx-pay-tile-icon">{PAYMENT_ICONS[id]}</span>
@@ -1075,23 +1225,20 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
                 </div>
               )}
 
-              <div className="afx-field">
-                <label className="afx-label">Amount Paid (₹)</label>
-                <input
-                  className="afx-input"
-                  type="number" value={amountPaid}
-                  onChange={e => setAmountPaid(e.target.value)}
-                  disabled={creditPaymentType === "PAID" || creditPaymentType === "CREDIT"}
-                  min="0" placeholder="0.00"
-                />
-                {errors.amountPaid && <div className="afx-error">{errors.amountPaid}</div>}
-              </div>
+              {creditPaymentType !== "CREDIT" && (
+                <div className="afx-field">
+                  <label className="afx-label">Payment <span style={{ fontWeight: 400, color: "var(--afx-text-3)" }}>(split across Cash / UPI / Card)</span></label>
+                  <PaymentSplit type={creditPaymentType} net={payableAmount} payments={payments} onChange={setPayments}
+                    error={errors.amountPaid} />
+                </div>
+              )}
+              <CreditLimitNotice check={credit} reason={creditReason} onReason={setCreditReason} />
 
       {creditPaymentType !== "PAID" && (
         <div className="afx-totals">
           <div className="afx-totals-row afx-totals-grand">
             <span>Due Amount</span>
-            <span className="afx-text-danger">₹{Math.max(0, payableAmount - parseFloat(amountPaid || 0)).toFixed(2)}</span>
+            <span className="afx-text-danger">₹{Math.max(0, payableAmount - (amountPaid || 0)).toFixed(2)}</span>
           </div>
         </div>
       )}
@@ -1103,8 +1250,8 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
       <div className="afx-modal afx-modal--full">
         <div className="afx-header">
           <div>
-            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />New Transaction</div>
-            <h3 className="afx-title">Add Sales</h3>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />{documentMode ? "New Order" : "New Transaction"}</div>
+            <h3 className="afx-title">{documentMode ? "Add Sales Order" : "Add Sales"}</h3>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {viewMode === "tabs" && (
@@ -1166,8 +1313,15 @@ export default function SalesAdd({ onClose, onSubmit, documentMode = false }) {
 
         <div className="afx-footer">
           <button className="afx-btn" onClick={onClose}>Cancel</button>
-          <button className="afx-btn afx-btn--primary" onClick={submitSales}>Submit Sales</button>
+          <button className="afx-btn afx-btn--primary" onClick={submitSales}>{documentMode ? "Save Sales Order" : "Submit Sales"}</button>
         </div>
+        {customForm && (
+          <CustomItemForm
+            line={customForm.index !== null ? lineItems[customForm.index] : null}
+            onSave={saveCustomItem}
+            onCancel={() => setCustomForm(null)}
+          />
+        )}
       </div>
     </div>
   );

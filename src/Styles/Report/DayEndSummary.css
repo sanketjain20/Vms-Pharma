@@ -1,0 +1,36 @@
+/* Day-end summary: totals per payment mode (cards), then every movement. Dark by default, light under data-theme. */
+.dayend { --de-surface: #0d0d11; --de-raised: #16161c; --de-border: rgba(255, 255, 255, 0.09); --de-text: #f2f3f7;
+  --de-muted: #9a9db0; --de-cash: #10b981; --de-upi: #8b5cf6; --de-card: #3b82f6; --de-out: #ef4444; color: var(--de-text); }
+body[data-theme="light"] .dayend { --de-surface: #ffffff; --de-raised: #f8fafc; --de-border: rgba(15, 23, 42, 0.1); --de-text: #0f172a;
+  --de-muted: #64748b; --de-cash: #059669; --de-upi: #7c3aed; --de-card: #2563eb; --de-out: #dc2626; }
+
+.dayend-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.dayend-date { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--de-muted); }
+.dayend-date input { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--de-border); background: var(--de-raised); color: var(--de-text); }
+.dayend-note { margin: 6px 0 16px; font-size: 13px; color: var(--de-muted); }
+.dayend-error { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--de-out); color: var(--de-out); margin-bottom: 12px; }
+.dayend-muted { color: var(--de-muted); text-align: center; padding: 18px; }
+
+.dayend-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.dayend-card { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--de-border); border-left: 4px solid var(--de-muted);
+  background: var(--de-surface); display: flex; flex-direction: column; gap: 4px; }
+.dayend-card--cash { border-left-color: var(--de-cash); }
+.dayend-card--upi { border-left-color: var(--de-upi); }
+.dayend-card--card { border-left-color: var(--de-card); }
+.dayend-card--all { border-left-color: var(--de-text); }
+.dayend-card-mode { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--de-muted); }
+.dayend-card-total { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.dayend-card-split { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--de-muted); }
+
+.dayend-table-wrap { overflow-x: auto; border: 1px solid var(--de-border); border-radius: 12px; background: var(--de-surface); }
+.dayend-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dayend-table th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--de-muted); background: var(--de-raised); border-bottom: 1px solid var(--de-border); white-space: nowrap; }
+.dayend-table td { padding: 9px 12px; border-bottom: 1px solid var(--de-border); white-space: nowrap; }
+.dayend-table .dayend-amt { text-align: right; font-variant-numeric: tabular-nums; }
+.dayend-table tr.dayend-out td.dayend-amt { color: var(--de-out); }
+/* the app's light theme greys every "-card" border: keep each mode's colour */
+body[data-theme="light"] .dayend .dayend-card.dayend-card--cash { border-left-color: var(--de-cash) !important; }
+body[data-theme="light"] .dayend .dayend-card.dayend-card--upi { border-left-color: var(--de-upi) !important; }
+body[data-theme="light"] .dayend .dayend-card.dayend-card--card { border-left-color: var(--de-card) !important; }
+body[data-theme="light"] .dayend .dayend-card.dayend-card--all { border-left-color: var(--de-text) !important; }

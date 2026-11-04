@@ -3,6 +3,16 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import { VariantQtyGrid } from "../CommonComponent/VariantWidgets";
+import { stylesIn } from "../../utils/variants";
+import { freeNote } from "../../utils/purchaseFree";
+import { useSupplierSchemeFill } from "../../utils/supplierSchemes";
+import { SerialEntry } from "../CommonComponent/SerialWidgets";
+import { serialProblem, tracksSerials } from "../../utils/serials";
+
+/** How the money paid when the purchase is saved left the shop: cash from the drawer, anything else from the bank. */
+export const PURCHASE_PAYMENT_MODES = [["BANK", "Bank transfer"], ["CASH", "Cash"], ["UPI", "UPI"], ["CHEQUE", "Cheque"], ["CARD", "Card"]];
 
 /* ── Searchable dropdown — externally controlled open state so a row of
    these (one per line item) can be tracked by a single index ── */
@@ -49,12 +59,16 @@ const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setO
 const GST_RATES = [0, 5, 12, 18, 28];
 
 const EMPTY_ITEM = {
-  productId: "", productName: "", quantity: 1,
+  productId: "", productName: "", quantity: 1, freeQuantity: "",
   costPrice: "", mrp: "", gstRate: 0,
   batchNumber: "", manufacturingDate: "", expiryDate: "",
 };
 
 export default function PurchaseAdd({ onSubmit, onClose, documentMode = false }) {
+  // a shop that does not track expiry (Phase 4) buys without batch / MFG / expiry
+  const { trackExpiry, isPharma } = useBusinessProfile();
+  // a style bought by size × colour in one go (Phase 5, non-pharmacy shops)
+  const [gridOpen, setGridOpen] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts]   = useState([]);
   const [activeTab, setActiveTab] = useState("DETAILS");
@@ -73,6 +87,7 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
     paymentStatus: "CREDIT",
     dueDate: "",
     amountPaid: "",
+    paymentMode: "BANK",
     notes: "",
     items: [],
   });
@@ -115,6 +130,11 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
     if (errors[key]) setErrors(p => ({ ...p, [key]: "" }));
   };
 
+
+  // Phase 7: the supplier's free-goods scheme fills each line's Free (unless typed by hand)
+  useSupplierSchemeFill({ enabled: !documentMode, supplierId: form.supplierId, date: form.invoiceDate, items: form.items,
+    setItems: fn => setForm(p => ({ ...p, items: fn(p.items) })) });
+
   const addItem = () => setForm(p => ({ ...p, items: [...p.items, { ...EMPTY_ITEM }] }));
 
   const updateItem = (i, field, value) => {
@@ -123,13 +143,23 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
     // Auto-fill cost/mrp when product selected
     if (field === "productId") {
       const p = products.find(x => x.id === value);
-      if (p) { updated[i].costPrice = p.price || ""; updated[i].mrp = p.price || ""; updated[i].productName = p.name; }
+      if (p) { updated[i].costPrice = p.costPrice || ""; updated[i].mrp = p.price || ""; updated[i].productName = p.name; } // last average cost; the product price is the selling price
+      updated[i].freeManual = false;
     }
+    if (field === "freeQuantity") updated[i].freeManual = true; // typed by hand: the scheme no longer fills it
     setForm(p => ({ ...p, items: updated }));
     // Clear item error
     if (errors.items?.[i]?.[field]) {
       setErrors(p => ({ ...p, items: { ...p.items, [i]: { ...p.items?.[i], [field]: "" } } }));
     }
+  };
+
+  /* The size × colour grid's lines go after the lines already picked (blank ones are dropped). */
+  const addGridLines = lines => {
+    setForm(p => ({ ...p, items: [...p.items.filter(it => it.productId), ...lines] }));
+    if (errors.items_empty) setErrors(p => ({ ...p, items_empty: "" }));
+    setGridOpen(false);
+    toast.success(`${lines.length} line${lines.length === 1 ? "" : "s"} added`);
   };
 
   const removeItem = i => {
@@ -167,21 +197,29 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
       const ie = {};
       if (!item.productId)        ie.productId = "Required";
       if (!item.quantity || item.quantity < 1) ie.quantity = "Required";
+      if (parseInt(item.freeQuantity) < 0) ie.freeQuantity = "Can't be negative";
       if (!item.costPrice)        ie.costPrice = "Required";
       if (!item.mrp)              ie.mrp = "Required";
-      if (!item.expiryDate)       ie.expiryDate = "Required";
+      if (trackExpiry && !item.expiryDate)       ie.expiryDate = "Required";
+      // Phase 6 — a product that tracks serial numbers needs one per unit received (paid + free)
+      if (!documentMode && tracksSerials(products.find(p => p.id === item.productId))) {
+        const problem = serialProblem(item.serials || [], (parseInt(item.quantity) || 0) + Math.max(parseInt(item.freeQuantity) || 0, 0));
+        if (problem) ie.serials = problem;
+      }
       if (Object.keys(ie).length) itemErrors[i] = ie;
     });
     if (Object.keys(itemErrors).length) e.items = itemErrors;
 
     setErrors(e);
-    return Object.keys(e).length === 0;
+    return e;
   };
 
   const handleSubmit = async () => {
-    if (!validate()) {
+    // the errors just found — not the `errors` state, which still holds the previous render's until React re-renders
+    const found = validate();
+    if (Object.keys(found).length > 0) {
       // Switch to tab with errors
-      if (errors.supplierId || errors.supplierInvoiceNumber || errors.invoiceDate || errors.paymentStatus || errors.dueDate)
+      if (found.supplierId || found.supplierInvoiceNumber || found.invoiceDate || found.paymentStatus || found.dueDate)
         setActiveTab("DETAILS");
       else setActiveTab("ITEMS");
       toast.error("Please fix the errors before submitting");
@@ -200,7 +238,7 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
         invoiceDate: form.invoiceDate || null,
         paymentStatus: form.paymentStatus,
         dueDate: form.dueDate || null,
-        amountPaid: parseFloat(form.amountPaid || 0),
+        amountPaid: parseFloat(form.amountPaid || 0), paymentMode: form.paymentMode,
         items: form.items.map(it => ({ productId: it.productId, quantity: parseInt(it.quantity),
           unitCost: parseFloat(it.costPrice), gstRate: parseFloat(it.gstRate || 0),
           batchNumber: it.batchNumber || null, manufacturingDate: it.manufacturingDate || null,
@@ -211,14 +249,16 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
         invoiceDate:           form.invoiceDate,
         paymentStatus:         form.paymentStatus,
         dueDate:               form.dueDate || null,
-        amountPaid:            parseFloat(form.amountPaid || 0),
+        amountPaid:            parseFloat(form.amountPaid || 0), paymentMode: form.paymentMode,
         notes:                 form.notes,
         items: form.items.map(it => ({
           productId:         it.productId,
           batchNumber:       it.batchNumber || null,
           manufacturingDate: it.manufacturingDate || null,
-          expiryDate:        it.expiryDate,
+          expiryDate:        it.expiryDate || null,
           quantity:          parseInt(it.quantity),
+          freeQuantity:      Math.max(parseInt(it.freeQuantity) || 0, 0), // supplier's free goods: into stock, not billed
+          serials:           it.serials && it.serials.length ? it.serials : null,
           costPrice:         parseFloat(it.costPrice),
           mrp:               parseFloat(it.mrp),
           gstRate:           parseFloat(it.gstRate || 0),
@@ -245,8 +285,8 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
       <div className="afx-modal afx-modal--xl">
         <div className="afx-header">
           <div>
-            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />New Purchase</div>
-            <h3 className="afx-title">Create Purchase Entry</h3>
+            <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />{documentMode ? "New Purchase Order" : "New Purchase"}</div>
+            <h3 className="afx-title">{documentMode ? "Create Purchase Order" : "Create Purchase Entry"}</h3>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div className="afx-tabs" style={{ padding: 0, background: "none", border: "none" }}>
@@ -343,6 +383,19 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
                 </div>
               )}
 
+              {(form.paymentStatus === "PAID" || form.paymentStatus === "PARTIAL") && (
+                <div className="afx-field">
+                  <label className="afx-label" htmlFor="purchase-paid-by">Paid by</label>
+                  <div className="afx-select-wrap">
+                    <select id="purchase-paid-by" className="afx-select" value={form.paymentMode} onChange={e => setField("paymentMode", e.target.value)}>
+                      {PURCHASE_PAYMENT_MODES.map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+                    </select>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <span className="afx-hint">Goes to the cash book (Cash) or the bank book (anything else)</span>
+                </div>
+              )}
+
               <div className="afx-field afx-field--full">
                 <label className="afx-label">Notes</label>
                 <textarea className="afx-textarea" rows={3}
@@ -393,12 +446,15 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
                         </div>
 
                         <div className="afx-item-card-fields">
+                          {trackExpiry && (
+                          <>
                           <div className="afx-item-field">
                             <label className="afx-item-field-label">Batch No</label>
                             <input className="afx-cell-input"
                               value={item.batchNumber}
                               onChange={e => updateItem(i, "batchNumber", e.target.value)}
-                              placeholder="Optional"
+                              placeholder="Blank = automatic" aria-label="Batch number"
+                              title="A batch number belongs to this purchase only. Leave it blank and one is made for you."
                             />
                           </div>
 
@@ -419,6 +475,8 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
                             />
                             {errors.items?.[i]?.expiryDate && <span className="afx-error">{errors.items[i].expiryDate}</span>}
                           </div>
+                          </>
+                          )}
 
                           <div className="afx-item-field">
                             <label className="afx-item-field-label">Qty<span className="afx-req">*</span></label>
@@ -429,6 +487,19 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
                             />
                             {errors.items?.[i]?.quantity && <span className="afx-error">{errors.items[i].quantity}</span>}
                           </div>
+
+                          {!documentMode && (
+                            <div className="afx-item-field">
+                              <label className="afx-item-field-label" title="Units the supplier gives free (a scheme such as 10 + 1); not billed">Free</label>
+                              <input type="number" min="0" className="afx-cell-input" aria-label="Free quantity"
+                                style={errors.items?.[i]?.freeQuantity ? { borderColor: "var(--afx-danger)" } : undefined}
+                                value={item.freeQuantity ?? ""}
+                                placeholder="0"
+                                onChange={e => updateItem(i, "freeQuantity", e.target.value)}
+                              />
+                              {errors.items?.[i]?.freeQuantity && <span className="afx-error">{errors.items[i].freeQuantity}</span>}
+                            </div>
+                          )}
 
                           <div className="afx-item-field">
                             <label className="afx-item-field-label">Cost (₹)<span className="afx-req">*</span></label>
@@ -463,7 +534,27 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
                           </div>
                         </div>
 
+                        {!documentMode && tracksSerials(products.find(p => p.id === item.productId)) && (
+                          <div style={{ padding: "4px 0 8px" }}>
+                            <SerialEntry
+                              value={item.serials || []}
+                              needed={(parseInt(item.quantity) || 0) + Math.max(parseInt(item.freeQuantity) || 0, 0)}
+                              onChange={list => updateItem(i, "serials", list)}
+                            />
+                            {errors.items?.[i]?.serials && <span className="afx-error">{errors.items[i].serials}</span>}
+                          </div>
+                        )}
                         <div className="afx-item-card-footer">
+                          {freeNote(item.costPrice, item.quantity, item.freeQuantity) && (
+                            <span className="afx-item-card-footer-label" data-testid="free-note" style={{ marginRight: "auto", color: "var(--afx-success)" }}>
+                              + {item.freeQuantity} free · {freeNote(item.costPrice, item.quantity, item.freeQuantity)}
+                            </span>
+                          )}
+                          {item.schemeLabel && !item.freeManual && (
+                            <span className="afx-item-card-footer-label" data-testid="supplier-scheme" style={{ marginRight: "auto" }}>
+                              Supplier scheme {item.schemeLabel}
+                            </span>
+                          )}
                           <span className="afx-item-card-footer-label">Line total</span>
                           <span className="afx-line-total">₹{getLineTotal(item).toFixed(2)}</span>
                         </div>
@@ -489,15 +580,26 @@ export default function PurchaseAdd({ onSubmit, onClose, documentMode = false })
                 </>
               )}
 
-              <button type="button" className="afx-line-add" style={{ marginTop: 10 }} onClick={addItem}>+ Add Item</button>
+              <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                <button type="button" className="afx-line-add" onClick={addItem}>+ Add Item</button>
+                {!isPharma && (
+                  <button type="button" className="afx-line-add" onClick={() => setGridOpen(true)} data-testid="open-variant-grid">
+                    + Sizes &amp; colours
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
 
+        {gridOpen && (
+          <VariantQtyGrid styles={stylesIn(products)} gstRates={GST_RATES} onAdd={addGridLines} onClose={() => setGridOpen(false)} />
+        )}
+
         <div className="afx-footer">
           <button type="button" className="afx-btn" onClick={onClose}>Cancel</button>
           <button type="button" className="afx-btn afx-btn--primary" onClick={handleSubmit} disabled={loading}>
-            {loading ? <><span className="afx-spinner" /> Saving…</> : "Save Purchase"}
+            {loading ? <><span className="afx-spinner" /> Saving…</> : (documentMode ? "Save Purchase Order" : "Save Purchase")}
           </button>
         </div>
       </div>

@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import { roundOffText } from "../../utils/salePayments";
 export default function SalesReturnView({ uKey, onClose }) {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   const [data,    setData]    = useState(null);
   const [error,   setError]   = useState("");
   const [loading, setLoading] = useState(true);
@@ -150,7 +153,7 @@ export default function SalesReturnView({ uKey, onClose }) {
                     <tr>
                       <th>Product</th>
                       <th>Batch No</th>
-                      <th>Expiry</th>
+                      {trackExpiry && <th>Expiry</th>}
                       <th>HSN</th>
                       <th>Return Qty</th>
                       <th>Unit Price (₹)</th>
@@ -167,7 +170,7 @@ export default function SalesReturnView({ uKey, onClose }) {
                             <tr key={idx}>
                               <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>{productLabel(item)}</td>
                               <td style={{ color: "var(--afx-accent)", fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{item.batchNumberSnapshot || "—"}</td>
-                              <td style={{ fontSize: 11 }}>{item.expiryDateSnapshot || "—"}</td>
+                              {trackExpiry && <td style={{ fontSize: 11 }}>{item.expiryDateSnapshot || "—"}</td>}
                               <td style={{ fontSize: 11 }}>{item.hsnCodeSnapshot || "—"}</td>
                               <td>{item.returnQuantity ?? "—"}</td>
                               <td>₹{item.sellingPrice ?? "—"}</td>
@@ -179,7 +182,7 @@ export default function SalesReturnView({ uKey, onClose }) {
                       } catch (e) {
                         console.error("Failed to render sales return items:", e, data.items);
                         return (
-                          <tr><td colSpan={8} className="afx-alert" style={{ display: "table-cell" }}>
+                          <tr><td colSpan={trackExpiry ? 8 : 7} className="afx-alert" style={{ display: "table-cell" }}>
                             Couldn't display line items — unexpected data shape. Check the console for details.
                           </td></tr>
                         );
@@ -199,6 +202,9 @@ export default function SalesReturnView({ uKey, onClose }) {
                   <span>Total Tax</span>
                   <span>₹{Number(data.totalReturnTax || 0).toFixed(2)}</span>
                 </div>
+                {Number(data.roundOff) !== 0 && data.roundOff != null && (
+                  <div className="afx-totals-row" data-testid="return-round-off"><span>Round off</span><span>{roundOffText(Number(data.roundOff))}</span></div>
+                )}
                 <div className="afx-totals-divider" />
                 <div className="afx-totals-row afx-totals-grand">
                   <span>Net Refund Amount</span>

@@ -126,7 +126,7 @@ describe("SalesAdd — schemes", () => {
     const body = saleBody();
     expect(body.totalDiscount).toBe(0); // the 100 scheme discount is the server's to add
     expect(body.amountPaid).toBe(1062);
-    expect(body.items).toEqual([{ productId: 1, quantity: 1, sellingPrice: 1000, taxAmount: 180, batchId: null, schemeId: 8 }]);
+    expect(body.items).toEqual([{ productId: 1, quantity: 1, sellingPrice: 1000, taxAmount: 180, batchId: null, schemeId: 8, gstRate: 18, priceIncludesGst: false }]);
   });
 
   it("a removed scheme is sent as none", async () => {
@@ -151,7 +151,8 @@ describe("SalesAdd — schemes", () => {
     fireEvent.change(screen.getByPlaceholderText("0"), { target: { value: "10" } }); // 10 %
     const discountRow = screen.getAllByText("Discount").find((el) => el.tagName === "SPAN"); // the label above the input is a <label>
     expect(discountRow.nextSibling).toHaveTextContent("−₹90.00");                            // 10% of 900, not of 1,000
-    expect(screen.getByText("Payable Amount").nextSibling).toHaveTextContent("₹955.80"); // 810 + 18%
+    expect(screen.getByText("Payable Amount").nextSibling).toHaveTextContent("₹956.00"); // 810 + 18% = 955.80, rounded
+    expect(screen.getByTestId("round-off")).toHaveTextContent("+ 0.20");
 
     fireEvent.click(screen.getByRole("button", { name: /Submit Sales/ }));
     await waitFor(() => expect(apiClient.mock.calls.some(([u]) => u.includes("/api/Sales/AddSales"))).toBe(true));

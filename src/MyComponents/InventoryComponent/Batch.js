@@ -2,29 +2,35 @@ import React from "react";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
 import "../../Styles/Inventory.css";
 import API_BASE_URL from "../../Config/api.config";
+import { useBusinessProfile } from "../../utils/businessProfile";
+
+// One row per batch number: a batch number belongs to one purchase and may cover several products. View lists them all.
+export function batchColumns(trackExpiry) {
+  return [
+    { header: "Batch No", field: "batchNumber", width: "150px" },
+    { header: "Purchase No", field: "purchaseNumber", width: "160px" },
+    { header: "Supplier", field: "supplier", width: "180px" },
+    { header: "Products", field: "productCount", width: "110px" },
+    { header: "Purchased Qty", field: "purchased", width: "140px" },
+    { header: "Available Qty", field: "available", width: "140px" },
+    ...(trackExpiry ? [
+      { header: "MFG Date", field: "manufacturingDate", width: "130px" },
+      { header: "Earliest Expiry", field: "expiryDate", width: "150px" },
+    ] : []),
+    { header: "Action", field: "Action", width: "150px" },
+  ];
+}
 
 export default function Batch() {
-  const columns = [
-    { header: "Batch No", field: "batchNumber", width: "150px" },
-    { header: "Product Name", field: "productName", width: "190px" },
-    { header: "Product Code", field: "productCode", width: "150px" },
-    {header:"Purchase Quantity", field:"originalQuantity", width:"150px"},
-    { header: "Available Qty", field: "quantity", width: "150px" },
-    { header: "MFG Date", field: "manufacturingDate", width: "150px" },
-    { header: "Expiry Date", field: "expiryDate", width: "150px" },
-    { header: "Cost Price", field: "costPrice", width: "130px" },
-    { header: "MRP", field: "mrp", width: "120px" },
-    { header: "Supplier", field: "supplier", width: "180px" },
-    {header:"Action", field:"Action", width:"150px" }
-  ];
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
 
   return (
     <div className="i-container">
       <h2 className="i-title">BATCHES</h2>
 
       <DynamicGrid
-        columns={columns}
-        apiUrl={`${API_BASE_URL}/api/Batch/GetAllBatch`} 
+        columns={batchColumns(trackExpiry)}
+        apiUrl={`${API_BASE_URL}/api/Batch/GetBatchGroups`}
         Module="Batch"
         ModuleId="20"
       />

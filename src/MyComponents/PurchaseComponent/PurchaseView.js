@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import { effectiveCost } from "../../utils/purchaseFree";
+import { SerialList } from "../CommonComponent/SerialWidgets";
 
 const statusStyle = s => {
   if (s === "PAID")    return { color: "var(--afx-success)", background: "var(--afx-success-soft)" };
@@ -23,6 +26,7 @@ const productLabel = (item) => {
 };
 
 export default function PurchaseView({ uKey, onClose, onEdit, documentMode = false }) {
+  const { trackExpiry } = useBusinessProfile(); // no MFG / expiry columns without expiry (Phase 4)
   const [purchase, setPurchase] = useState(null);
   const [error, setError]       = useState("");
   const [ewayBill, setEwayBill] = useState(null);
@@ -229,8 +233,8 @@ export default function PurchaseView({ uKey, onClose, onEdit, documentMode = fal
                     <tr>
                       <th>Product</th>
                       <th>Batch No</th>
-                      <th>MFG Date</th>
-                      <th>Expiry</th>
+                      {trackExpiry && <th>MFG Date</th>}
+                      {trackExpiry && <th>Expiry</th>}
                       <th>Qty</th>
                       <th>Cost (₹)</th>
                       <th>MRP (₹)</th>
@@ -249,12 +253,22 @@ export default function PurchaseView({ uKey, onClose, onEdit, documentMode = fal
                           const lineTotal = base + gstAmt;
                           return (
                             <tr key={idx}>
-                              <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>{productLabel(item)}</td>
+                              <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>{productLabel(item)}<SerialList serials={item.serials} /></td>
                               <td style={{ color: "var(--afx-accent)", fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{item.batchNumber || "—"}</td>
-                              <td style={{ fontSize: 11 }}>{item.manufacturingDate || "—"}</td>
-                              <td style={{ fontSize: 11 }}>{item.expiryDate || "—"}</td>
-                              <td>{item.quantity ?? "—"}</td>
-                              <td>₹{fmt(item.costPrice)}</td>
+                              {trackExpiry && <td style={{ fontSize: 11 }}>{item.manufacturingDate || "—"}</td>}
+                              {trackExpiry && <td style={{ fontSize: 11 }}>{item.expiryDate || "—"}</td>}
+                              <td>
+                                {item.quantity ?? "—"}
+                                {item.freeQuantity > 0 && <span data-testid="free-qty" style={{ color: "var(--afx-success)", fontWeight: 600 }}> + {item.freeQuantity} free</span>}
+                              </td>
+                              <td>
+                                ₹{fmt(item.costPrice)}
+                                {item.freeQuantity > 0 && (
+                                  <div style={{ fontSize: 10, color: "var(--afx-text-3)" }} title="The bill spread over the paid and free units">
+                                    ₹{fmt(item.effectiveCost ?? effectiveCost(item.costPrice, item.quantity, item.freeQuantity))} / unit in stock
+                                  </div>
+                                )}
+                              </td>
                               <td>₹{fmt(item.mrp)}</td>
                               <td>{item.gstRate ?? 0}%</td>
                               <td>₹{fmt(gstAmt)}</td>

@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor, act, within } from "@testing-library/react";
 import Home, { Reveal } from "./Home";
 import apiClient from "../Config/apiClient";
+import { markMenuReady, resetMenuReady } from "../utils/menuReady";
 
 jest.mock("../Config/apiClient");
 // the real scenes need WebGL; they are tested on their own in HomeScenes/
@@ -31,6 +32,9 @@ beforeAll(() => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // in the app Home sits beside the sidebar, whose menu is normally on screen by now (utils/menuReady)
+  resetMenuReady();
+  markMenuReady();
   localStorage.clear();
   localStorage.setItem("vmsUser", JSON.stringify({ data: { name: "Asha" } }));
 });
@@ -115,6 +119,21 @@ describe("Home — content carried over from the old page", () => {
     render(<Home />);
     ["Auto FIFO batches", "Credit limit enforcement", "Nightly expiry scheduler", "GST-ready invoices",
       "Batch recall trace", "Zero manual outstanding"].forEach(t => expect(screen.getByText(t)).toBeInTheDocument());
+  });
+});
+
+describe("Home waits for the sidebar's menu", () => {
+  it("sends its own requests only once the menu is on screen, so they never hold the menu back", async () => {
+    resetMenuReady();
+    mockApi();
+    render(<Home />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 30)); });
+    expect(apiClient.mock.calls.some(([u]) => u.includes("/api/Dashboard/GetHomeSummary"))).toBe(false);
+
+    act(() => markMenuReady());
+    await waitFor(() => expect(apiClient.mock.calls.some(([u]) => u.includes("/api/Dashboard/GetHomeSummary"))).toBe(true));
+    expect(apiClient.mock.calls.some(([u]) => u.includes("/api/Dashboard/GetActivityFeed"))).toBe(true);
+    expect(apiClient.mock.calls.some(([u]) => u.includes("/api/Vendor/GetUserRoleId"))).toBe(true);
   });
 });
 

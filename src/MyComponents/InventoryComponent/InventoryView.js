@@ -93,7 +93,7 @@ export default function InventoryView({ uKey, onClose }) {
                   </div>
 
                   <div className="afx-field">
-                    <label className="afx-label">Unit Cost Price (₹)</label>
+                    <label className="afx-label">Average Cost (₹, stock on hand)</label>
                     <div className="afx-view-value">{inventory.unitCostPrice != null ? `₹ ${inventory.unitCostPrice}` : <span className="afx-view-value--empty">—</span>}</div>
                   </div>
 

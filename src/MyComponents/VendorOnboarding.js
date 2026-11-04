@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/VendorOnboarding.css";
+import { useBusinessProfile } from "../utils/businessProfile";
 
 const GROUPS = [
   { id: "start", label: "Start here", description: "Set up the people and products you work with." },
@@ -54,6 +55,43 @@ const STEP_HINT = {
   sales: "Bill a retailer — you're live.",
 };
 
+// Phase 7 — the guide speaks the shop's language: medicines and pharmacies for a pharmacy, plain products and
+// customers for any other shop, and no expiry wording where expiry dates are switched off.
+const SHOP_WORDING = {
+  manufacturer: { name: "Brands / manufacturers", summary: "Add the brands or companies that make the products you sell." },
+  "product-type": { summary: "Create simple categories such as Shirts, Mobiles, or Snacks." },
+  product: { summary: "Build your product catalogue with type, selling price, and GST details." },
+  retailer: { name: "Customers", summary: "Add your regular customers and their credit limits." },
+  sales: { summary: "Create invoices for customers and reduce stock from the oldest stock first." },
+  "sales-return": { summary: "Record goods returned by a customer and update stock and balances." },
+  "payment-collection": { summary: "Record cash, UPI, card, cheque, or bank payments from customers." },
+  "retailer-outstanding": { name: "Customer outstanding", summary: "See what every customer owes and review their ledger." },
+};
+const SHOP_HINTS = {
+  manufacturer: "Add the brands you sell.",
+  "product-type": "Group products, e.g. Shirts, Mobiles, Snacks.",
+  product: "Build your product list — name, selling price, GST.",
+  retailer: "Add the customers you sell to on credit.",
+  sales: "Bill a customer — you're live.",
+};
+const NO_EXPIRY_WORDING = {
+  purchase: { summary: "Record stock received from a supplier." },
+  batch: { summary: "Review stock received lot by lot.", use: "Useful for tracing where stock came from." },
+  alerts: { name: "Reorder alerts", summary: "Find stock that is running low." },
+  "purchase-return": { use: "Use for damaged or supplier-returned stock." },
+  reports: { summary: "Generate sales, stock, and outstanding reports." },
+};
+
+/** The guide's modules and starter hints for this shop. */
+export function guideFor({ isPharma = true, trackExpiry = true } = {}) {
+  const modules = MODULES.map((m) => ({
+    ...m,
+    ...(isPharma ? {} : SHOP_WORDING[m.id]),
+    ...(trackExpiry ? {} : NO_EXPIRY_WORDING[m.id]),
+  }));
+  return { modules, hints: isPharma ? STEP_HINT : { ...STEP_HINT, ...SHOP_HINTS } };
+}
+
 /* Reveals a section once it scrolls into view, then stays revealed.
    Respects prefers-reduced-motion by starting already visible. */
 function useReveal() {
@@ -87,6 +125,8 @@ function useReveal() {
 
 export default function VendorOnboarding() {
   const navigate = useNavigate();
+  const profile = useBusinessProfile();
+  const guide = useMemo(() => guideFor(profile), [profile]);
   const [activeGroup, setActiveGroup] = useState("start");
   const [selectedId, setSelectedId] = useState("manufacturer");
   const [showAll, setShowAll] = useState(false);
@@ -101,10 +141,10 @@ export default function VendorOnboarding() {
     return () => clearTimeout(t);
   }, []);
 
-  const selected = MODULES.find((module) => module.id === selectedId) || MODULES[0];
+  const selected = guide.modules.find((module) => module.id === selectedId) || guide.modules[0];
   const visibleModules = useMemo(
-    () => MODULES.filter((module) => showAll || module.group === activeGroup),
-    [activeGroup, showAll]
+    () => guide.modules.filter((module) => showAll || module.group === activeGroup),
+    [activeGroup, showAll, guide]
   );
 
   const chooseModule = (module) => {
@@ -115,7 +155,7 @@ export default function VendorOnboarding() {
   const chooseGroup = (id) => {
     setActiveGroup(id);
     setShowAll(false);
-    const first = MODULES.find((module) => module.group === id);
+    const first = guide.modules.find((module) => module.group === id);
     if (first) setSelectedId(first.id);
   };
 
@@ -177,14 +217,14 @@ export default function VendorOnboarding() {
 
         <ol className="onboarding-timeline">
           {STARTING_PATH.map((id, index) => {
-            const module = MODULES.find((item) => item.id === id);
+            const module = guide.modules.find((item) => item.id === id);
             return (
               <li key={id} style={{ "--i": index }}>
                 <button className="onboarding-timeline-item" onClick={() => chooseModule(module)}>
                   <span className="onboarding-timeline-num">{index + 1}</span>
                   <span className="onboarding-timeline-copy">
                     <strong>{module.name}</strong>
-                    <small>{STEP_HINT[id]}</small>
+                    <small>{guide.hints[id]}</small>
                   </span>
                 </button>
               </li>
@@ -205,7 +245,7 @@ export default function VendorOnboarding() {
             ))}
           </div>
           <button className={showAll ? "onboarding-all is-active" : "onboarding-all"} onClick={() => setShowAll((current) => !current)}>
-            {showAll ? "Show one group" : `See all ${MODULES.length} modules`}
+            {showAll ? "Show one group" : `See all ${guide.modules.length} modules`}
           </button>
         </aside>
 

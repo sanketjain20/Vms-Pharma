@@ -2,8 +2,15 @@ import React, { useEffect, useState } from "react";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { formatMobile } from "../../utils/walkInCustomer";
+import { SerialList } from "../CommonComponent/SerialWidgets";
+import { warrantyText } from "../../utils/serials";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import { withCancelledSnapshot, cancelledWhen } from "./cancelledBill";
+import { roundOffText, modeName } from "../../utils/salePayments";
 
 export default function SalesView({ uKey, onClose, documentMode = false }) {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   const [sales, setSales] = useState(null);
   const [error, setError] = useState("");
   const [eInvoice, setEInvoice] = useState(null);
@@ -32,7 +39,7 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
             ...item, sellingPrice: item.unitPrice, price: item.unitPrice,
             batchNumberSnapshot: item.batchNumber, expiryDateSnapshot: item.expiryDate, hsnCodeSnapshot: item.hsnCode,
           })),
-        } : data.data);
+        } : withCancelledSnapshot(data.data));
         else setError(data.message || "Failed to fetch sales");
       })
       .catch((err) => { console.error(err); setError(err.message); });
@@ -236,6 +243,13 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
         <div className="afx-body">
           {error && <div className="afx-alert">{error}</div>}
           {notificationMessage && <div className="afx-info">{notificationMessage}</div>}
+          {sales?.cancelled && (
+            <div className="afx-alert" data-testid="bill-cancelled" role="status">
+              <strong>Cancelled</strong>{sales.cancelledAt ? ` on ${cancelledWhen(sales.cancelledAt)}` : ""}
+              {sales.cancelledByName ? ` by ${sales.cancelledByName}` : ""} — {sales.cancelReason}.
+              {" "}Below is what the bill held; it now counts as ₹0, and its stock went back.
+            </div>
+          )}
 
           {!sales && !error && (
             <div className="afx-loading"><div className="afx-loader-ring"><div/><div/><div/></div></div>
@@ -250,18 +264,21 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
                 </div>
                 <div className="afx-meta-card">
                   <span className="afx-meta-card-label">Billing Mode</span>
-                  <span className="afx-meta-card-val"><span className="afx-tag">{sales.billingMode}</span></span>
+                  <span className="afx-meta-card-val"><span className="afx-tag">{sales.billingMode === "SPLIT" ? "Split" : sales.billingMode}</span></span>
                 </div>
                 <div className="afx-meta-card">
                   <span className="afx-meta-card-label">Date</span>
                   <span className="afx-meta-card-val">{sales.createdAt}</span>
                 </div>
                 <div className="afx-meta-card">
-                  <span className="afx-meta-card-label">Retailer</span>
-                  <span className="afx-meta-card-val">
+                  <span className="afx-meta-card-label">{sales.retailerName ? "Retailer" : "Customer"}</span>
+                  <span className="afx-meta-card-val" data-testid="sale-customer">
                     {sales.retailerName
                       ? <>{sales.retailerName} <span className="afx-view-value--muted" style={{ fontSize: 11 }}>· {sales.retailerCode}</span></>
-                      : <span className="afx-view-value--muted" style={{ fontSize: 12 }}>Walk-in customer</span>}
+                      : <>
+                          {sales.customerName || <span className="afx-view-value--muted" style={{ fontSize: 12 }}>Walk-in customer</span>}
+                          {sales.customerPhone && <span className="afx-view-value--muted" style={{ fontSize: 11 }}> · {formatMobile(sales.customerPhone)}</span>}
+                        </>}
                   </span>
                 </div>
                 <div className="afx-meta-card">
@@ -381,7 +398,7 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
                     <tr>
                       <th>Product</th>
                       <th>Batch No</th>
-                      <th>Expiry</th>
+                      {trackExpiry && <th>Expiry</th>}
                       <th>HSN</th>
                       <th>Qty</th>
                       <th>Rate excl. GST (₹)</th>
@@ -401,18 +418,35 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
                           return (
                             <tr key={idx}>
                               <td style={{ color: "var(--afx-text-1)", fontWeight: 600 }}>
-                                {productLabel(item)}
+                                {productLabel(item)}{item.custom && <span data-testid="line-custom" style={{ fontWeight: 400, color: "var(--afx-text-3)" }}> · Custom item</span>}
+                                <SerialList serials={item.serials} warranty={warrantyText(item.warrantyUntil)} />
                                 {item.freeItem && <strong className="afx-text-success"> FREE</strong>}
                                 {item.schemeNameSnapshot && <div style={{ fontSize: 11, fontWeight: 400, color: "var(--afx-text-3)" }}>Scheme: {item.schemeNameSnapshot}</div>}
                               </td>
                               <td style={{ color: "var(--afx-accent)", fontFamily: "var(--afx-font-mono)", fontSize: 11 }}>{item.batchNumberSnapshot || "—"}</td>
-                              <td style={{ fontSize: 11 }}>{item.expiryDateSnapshot || "—"}</td>
+                              {trackExpiry && <td style={{ fontSize: 11 }}>{item.expiryDateSnapshot || "—"}</td>}
                               <td style={{ fontSize: 11 }}>{item.hsnCodeSnapshot || "—"}</td>
                               <td>{item.quantity ?? "—"}</td>
-                              <td>{item.sellingPrice != null ? Number(item.sellingPrice).toFixed(2) : "—"}</td>
+                              <td>
+                                {item.sellingPrice != null ? Number(item.sellingPrice).toFixed(2) : "—"}
+                                {item.priceOverrideReason && (
+                                  <div data-testid="line-price-changed" style={{ fontSize: 10, color: "var(--afx-warning)" }} title={item.priceOverrideReason}>
+                                    {item.listPrice != null ? `from ₹${Number(item.listPrice).toFixed(2)} · ` : ""}{item.priceOverrideReason}{item.priceBelowCost ? " · below cost" : ""}
+                                  </div>
+                                )}
+                              </td>
                               {hasDiscount && <td>{lineDiscount(item) > 0 ? lineDiscount(item).toFixed(2) : "—"}</td>}
                               <td data-testid="line-amount">{amount.toFixed(2)}</td>
-                              <td data-testid="line-rate">{Number(rate.toFixed(2))}%</td>
+                              <td data-testid="line-rate">
+                                {Number(rate.toFixed(2))}%
+                                {item.priceIncludesGst && <div style={{ fontSize: 10, color: "var(--afx-text-3)" }}>price incl. GST</div>}
+                                {!item.freeItem && item.gstSource === "COMMON" && (
+                                  <div data-testid="line-gst-flag" style={{ fontSize: 10, color: "var(--afx-warning)" }} title="The product had no GST rate; the bill's common rate was used">common rate</div>
+                                )}
+                                {!item.freeItem && item.gstSource === "OVERRIDE" && (
+                                  <div data-testid="line-gst-override" style={{ fontSize: 10, color: "var(--afx-warning)" }} title={item.gstOverrideReason || ""}>changed · {item.gstOverrideReason}</div>
+                                )}
+                              </td>
                               <td data-testid="line-tax">{tax.toFixed(2)}</td>
                               <td data-testid="line-total" style={{ fontWeight: 700, color: "var(--afx-text-1)" }}>{total.toFixed(2)}</td>
                             </tr>
@@ -421,7 +455,7 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
                       } catch (e) {
                         console.error("Failed to render sale line items:", e, sales.items);
                         return (
-                          <tr><td colSpan={hasDiscount ? 11 : 10} className="afx-alert" style={{ display: "table-cell" }}>
+                          <tr><td colSpan={(hasDiscount ? 11 : 10) - (trackExpiry ? 0 : 1)} className="afx-alert" style={{ display: "table-cell" }}>
                             Couldn't display line items — unexpected data shape. Check the console for details.
                           </td></tr>
                         );
@@ -430,7 +464,7 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
                   </tbody>
                   <tfoot>
                     <tr style={{ fontWeight: 700 }}>
-                      <td colSpan={hasDiscount ? 7 : 6} style={{ textAlign: "right" }}>Total</td>
+                      <td colSpan={(hasDiscount ? 7 : 6) - (trackExpiry ? 0 : 1)} style={{ textAlign: "right" }}>Total</td>
                       <td data-testid="sum-amount">{lineTotals.amount.toFixed(2)}</td>
                       <td></td>
                       <td data-testid="sum-tax">{lineTotals.tax.toFixed(2)}</td>
@@ -457,8 +491,27 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
                     <span>+₹{Number(sales.tcsAmount).toFixed(2)}</span>
                   </div>
                 )}
+                {Number(sales.roundOff) !== 0 && sales.roundOff != null && (
+                  <div className="afx-totals-row" data-testid="round-off"><span>Round off</span><span>{roundOffText(Number(sales.roundOff))}</span></div>
+                )}
                 <div className="afx-totals-divider" />
                 <div className="afx-totals-row afx-totals-grand"><span>Net Amount</span><span>₹{(sales.netAmount).toFixed(2)}</span></div>
+                {sales.creditLimitReason && (
+                  <div className="afx-totals-row" data-testid="credit-limit-reason" style={{ color: "var(--afx-warning)" }}>
+                    <span>Over credit limit</span><span>{sales.creditLimitReason}</span>
+                  </div>
+                )}
+                {(sales.payments || []).length > 0 && (
+                  <div className="afx-totals-row" data-testid="sale-payments">
+                    <span>Paid by</span>
+                    <span>{sales.payments.map((p, i) => (
+                      <span key={i} style={{ display: "block", textAlign: "right" }}>
+                        {p.source === "REFUND" ? "Refund · " : p.source === "COLLECTION" ? "Later · " : ""}
+                        {modeName(p.mode)} ₹{Math.abs(Number(p.amount)).toFixed(2)}{p.reference ? ` (${p.reference})` : ""}
+                      </span>
+                    ))}</span>
+                  </div>
+                )}
                 {Number(sales.retailerTdsAmount) > 0 && (
                   <div className="afx-totals-row">
                     <span>Retailer TDS{sales.retailerTdsSectionCode ? ` (${sales.retailerTdsSectionCode})` : ""} @ {sales.retailerTdsRate}% — est., withheld by them</span>
@@ -479,7 +532,12 @@ export default function SalesView({ uKey, onClose, documentMode = false }) {
           )}
         </div>
 
-        {sales && (
+        {sales && sales.cancelled && (
+          <div className="afx-footer">
+            <button className="afx-btn" onClick={onClose}>Close</button>
+          </div>
+        )}
+        {sales && !sales.cancelled && (
           <div className="afx-footer">
             <button className="afx-btn" onClick={onClose}>Close</button>
             {eInvoice && (eInvoice.irnStatus === "PENDING" || eInvoice.irnStatus === "FAILED") && (

@@ -21,6 +21,13 @@ function escapeXml(v) {
     .replace(/"/g, "&quot;");
 }
 
+/** A column whose page gives `format(value, row)` shows (and exports) that text instead of the raw value. */
+const formatted = (col, row) => (typeof col.format === "function" ? col.format(row?.[col.field], row) : row?.[col.field]);
+
+/** Switched off / on, whether the list sends disable as 1/0 or true/false. */
+export const isSwitchedOff = (row) => row?.disable === 1 || row?.disable === true;
+export const isSwitchedOn = (row) => row?.disable === 0 || row?.disable === false;
+
 function buildXlsx(rows, colDefs) {
   const cols = colDefs.filter(c => c.field !== "Action");
   const strings = [];
@@ -68,7 +75,7 @@ function buildXlsx(rows, colDefs) {
     const cells = cols.map((c, ci) => {
       const col = String.fromCharCode(65 + ci);
       const rowNum = ri + 2;
-      const raw = row[c.field];
+      const raw = formatted(c, row);
       let val = "";
       if (raw !== undefined && raw !== null) {
         val = typeof raw === "object" ? JSON.stringify(raw) : String(raw);
@@ -201,6 +208,25 @@ const ActionIcon = {
   Disable: () => (
     <svg viewBox="0 -960 960 960" fill="currentColor"><path d="M819-28 701-146q-48 32-103.5 49T480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-62 17-117.5T146-701L27-820l57-57L876-85l-57 57ZM480-160q45 0 85.5-12t76.5-33L487-360l-63 64-170-170 56-56 114 114 7-8-226-226q-21 36-33 76.5T160-480q0 133 93.5 226.5T480-160Zm335-100-59-59q21-35 32.5-75.5T800-480q0-133-93.5-226.5T480-800q-45 0-85.5 11.5T319-756l-59-59q48-31 103.5-48T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 61-17 116.5T815-260ZM602-474l-56-56 104-104 56 56-104 104Zm-64-64ZM424-424Z"/></svg>
   ),
+  /* document actions — each its own symbol, so no two actions look alike */
+  Cancel: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>
+  ),
+  Confirm: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16.5 9.5"/></svg>
+  ),
+  Invoice: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+  ),
+  Purchase: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 4h2l2.4 11h10.2L20 8H6.2"/><circle cx="9" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></svg>
+  ),
+  Dispatch: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 6h11v10H2zM13 9h4l4 4v3h-8"/><circle cx="6" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>
+  ),
+  Receive: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v9m-3.5-3.5L12 12l3.5-3.5"/><path d="M3 13h5l1.5 3h5l1.5-3h5v6H3z"/></svg>
+  ),
   Excel: () => (
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8.5 18l1.75-2.5L8.5 13h1.25L11 15l1.25-2h1.25l-1.75 2.5L13.5 18h-1.25L11 16l-1.25 2H8.5z"/></svg>
   ),
@@ -260,23 +286,27 @@ function RowActions({ row, selectedStatus, can, Module, isReadOnlyModule, hideAc
   // status, not which tab is currently selected — otherwise every row on
   // the "All" tab (which mixes active and inactive rows) shows the same
   // action, including already-inactive rows showing "Disable" again.
-  const isRowInactive = !hideActiveInactiveTabs && Module !== "Sales" && row.disable === 1;
+  const isRowInactive = !hideActiveInactiveTabs && Module !== "Sales" && isSwitchedOff(row);
+
+  // a cancelled bill is history: it can only be viewed
+  if (Module === "Sales" && row.cancelled) {
+    return <button className="dg-icon-btn dg-icon-btn--view" title="View" onClick={() => onView(row)}><ActionIcon.View /></button>;
+  }
 
   if (isRowInactive) {
     return (
       <>
-        {typeof extraActions === "function" && extraActions(row, { can, onView, ActionIcon })}
         {!customActionsOnly &&
         <button className="dg-icon-btn dg-icon-btn--view" title="View" onClick={() => onView(row)}><ActionIcon.View /></button>
         }
         {!customActionsOnly && can("Disable") && <button className="dg-icon-btn dg-icon-btn--activate" title="Activate" onClick={() => onActivate(row)}><ActionIcon.Activate /></button>}
+        {typeof extraActions === "function" && extraActions(row, { can, onView, ActionIcon })}
       </>
     );
   }
 
   return (
     <>
-      {typeof extraActions === "function" && extraActions(row, { can, onView, ActionIcon })}
       {!customActionsOnly && <>
       {can("Edit") && !isReadOnlyModule && <button className="dg-icon-btn dg-icon-btn--edit" title="Edit" onClick={() => onEdit(row)}><ActionIcon.Edit /></button>}
       <button className="dg-icon-btn dg-icon-btn--view" title="View" onClick={() => onView(row)}><ActionIcon.View /></button>
@@ -284,6 +314,8 @@ function RowActions({ row, selectedStatus, can, Module, isReadOnlyModule, hideAc
       {Module === "Sales" && can("Download") && <button className="dg-icon-btn dg-icon-btn--download" title="Download" onClick={() => onDownload(row)}><ActionIcon.Download /></button>}
       {Module !== "Sales" && can("Disable") && !isReadOnlyModule && <button className="dg-icon-btn dg-icon-btn--disable" title="Disable" onClick={() => onDisable(row)}><ActionIcon.Disable /></button>}
       </>}
+      {/* feature actions (e.g. Cancel bill) come last */}
+      {typeof extraActions === "function" && extraActions(row, { can, onView, ActionIcon })}
     </>
   );
 }
@@ -338,6 +370,47 @@ function ViewToggle({ view, onChange }) {
 }
 
 /* ── GRID CARD ── */
+/**
+ * The colour of the tab picked, which the cards of the grid view take on their left edge:
+ * Active / Closed / Payment done = green, Inactive = red, Open / Pending = amber, All (and anything else) = accent.
+ */
+export function tabColorOf(tab) {
+  if (tab === "active" || tab === "closed" || tab === "payment_done") return "green";
+  if (tab === "inactive") return "red";
+  if (tab === "open" || tab === "payment_pending") return "amber";
+  return "accent";
+}
+
+/** Documents that are finished (the Closed tab, except Cancelled): shown green on their card. */
+const DOCUMENT_DONE = ["FULFILLED", "RECEIVED", "RETURNED", "INVOICED"];
+
+/** "IN_TRANSIT" → "In transit". */
+const statusText = (s) => String(s).toLowerCase().replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+
+/**
+ * The status pill on a card, or null for none:
+ *  - Sales: Paid / Pending;
+ *  - a document grid (orders, challans, transfers): the document's own status — Draft, In transit, Fulfilled… —
+ *    amber while open, green once done, red when cancelled (they have no on/off switch, so never Active / Inactive);
+ *  - a record that can be switched off: Active / Inactive;
+ *  - anything else: no pill.
+ */
+export function cardStatus(row, Module) {
+  if (Module === "Sales") {
+    if (row.cancelled) return { label: "Cancelled", color: "red" };
+    const paid = row.statusId === Status?.PaymentDone;
+    return { label: paid ? "Paid" : "Pending", color: paid ? "green" : "amber" };
+  }
+  const moduleKey = String(Module || "").toLowerCase().replace(/\s+/g, "");
+  if (DOCUMENT_TABS[moduleKey]) {
+    if (!row.status) return null;
+    const s = String(row.status).toUpperCase();
+    return { label: statusText(s), color: s === "CANCELLED" ? "red" : DOCUMENT_DONE.includes(s) ? "green" : "amber" };
+  }
+  if (row.disable === undefined || row.disable === null) return null;
+  return isSwitchedOn(row) ? { label: "Active", color: "green" } : { label: "Inactive", color: "red" };
+}
+
 function GridItem({ row, columns, index, ...actionProps }) {
   const { Module } = actionProps;
   const dataCols = columns.filter(c => c.field !== "Action").slice(0, 6);
@@ -351,26 +424,20 @@ function GridItem({ row, columns, index, ...actionProps }) {
     "salesreturn", "purchasereturn", "stockadjustment",
     "retaileroutstanding", "supplieroutstanding", "batch",
   ].includes(cardModuleKey);
-  const isActive = row.disable === 0;
-  const statusColor = Module === "Sales"
-    ? row.statusId === Status?.PaymentDone ? "green" : "amber"
-    : isActive ? "green" : "red";
-  const statusLabel = Module === "Sales"
-    ? row.statusId === Status?.PaymentDone ? "Paid" : "Pending"
-    : isActive ? "Active" : "Inactive";
+  const status = hideStatus ? null : cardStatus(row, Module);
 
   return (
-    <div className={`dg-item ${!hideStatus ? `dg-item--${statusColor}` : ""}`} style={{ animationDelay: `${index * 0.03}s` }}>
+    <div className={`dg-item dg-item--edge-${tabColorOf(actionProps.selectedStatus)}`} data-testid="dg-item" style={{ animationDelay: `${index * 0.03}s` }}>
       <div className="dg-item-top">
         <span className="dg-item-index">#{String(index + 1).padStart(3, "0")}</span>
-        {!hideStatus && <span className={`dg-item-status dg-item-status--${statusColor}`}>{statusLabel}</span>}
+        {status && <span className={`dg-item-status dg-item-status--${status.color}`} data-testid="dg-item-status">{status.label}</span>}
       </div>
 
       <div className="dg-item-title" title={titleVal}>{titleVal}</div>
 
       <div className="dg-item-fields">
         {dataCols.slice(1).map((col, i) => {
-          const val = row[col.field];
+          const val = formatted(col, row);
           let display = "";
           if (val !== undefined && val !== null) {
             display = typeof val === "number" ? val.toFixed(2) : typeof val === "object" ? JSON.stringify(val) : String(val);
@@ -392,6 +459,55 @@ function GridItem({ row, columns, index, ...actionProps }) {
 }
 
 /* ── MAIN COMPONENT ── */
+/** How many data columns a grid shows until the user picks others under "Columns" (Actions is always shown too). */
+export const DEFAULT_VISIBLE_COLUMNS = 6;
+
+/** The column choice is kept per grid in this browser. */
+const columnsKey = (moduleKey) => `dg-cols:${moduleKey}`;
+function readChosenColumns(moduleKey) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(columnsKey(moduleKey)) || "null");
+    return Array.isArray(saved) && saved.length ? saved : null;
+  } catch {
+    return null;
+  }
+}
+function saveChosenColumns(moduleKey, fields) {
+  try {
+    if (fields) localStorage.setItem(columnsKey(moduleKey), JSON.stringify(fields));
+    else localStorage.removeItem(columnsKey(moduleKey));
+  } catch {
+    // private mode / storage blocked: the choice simply isn't remembered
+  }
+}
+
+/**
+ * Document grids get All · Open · Closed; the server turns "open" / "closed" into the module's statuses
+ * (Utils/DocumentTabs). The text says what each tab holds.
+ */
+const DOCUMENT_TABS = {
+  purchaseorders:   { open: "Draft, confirmed or partly received", closed: "Fulfilled or cancelled" },
+  salesorders:      { open: "Draft, confirmed or partly delivered", closed: "Fulfilled or cancelled" },
+  deliverychallans: { open: "Issued or partly returned", closed: "Returned, invoiced or cancelled" },
+  stocktransfers:   { open: "Draft or in transit", closed: "Received or cancelled" },
+};
+
+/** "Download all" reads a server-paged grid in pages of this size (the server may cap it lower; the loop follows its count). */
+const EXPORT_PAGE_SIZE = 500;
+const EXPORT_MAX_PAGES = 1000;
+
+/** A list response in any of the shapes the APIs use → its rows, page count and total (NaN when not given). */
+export function readGridPayload(res) {
+  const payload = res?.data ?? res ?? {};
+  const list = Array.isArray(payload)
+    ? payload
+    : payload.content ?? payload.items ?? payload.records ?? payload.results ??
+      Object.values(payload ?? {}).find(value => Array.isArray(value)) ?? [];
+  const pageCount = Number(payload.totalPages ?? res?.totalPages);
+  const itemCount = Number(payload.totalElements ?? payload.totalItems ?? payload.totalCount ?? res?.totalElements ?? res?.totalItems ?? res?.totalCount);
+  return { list, pageCount, itemCount };
+}
+
 export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, noPagination = false, extraActions, customActionsOnly = false, customAddAction, customAddLabel }) {
   const [allData, setAllData] = useState([]);
   const [page, setPage] = useState(0);
@@ -413,9 +529,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   const [isPaymentCollectionOpen, setIsPaymentCollectionOpen] = useState(false);
   const [paymentCollectionUkey, setPaymentCollectionUkey] = useState(null);
   const [accessList, setAccessList] = useState([]);
-  const [colWidths, setColWidths] = useState(() =>
-    columns.map(c => c.width || `${Math.floor(100 / Math.max(columns.length, 1))}%`)
-  );
+  const [colWidthMap, setColWidthMap] = useState({}); // widths the user dragged, by field
   const [hoveredRow, setHoveredRow] = useState(null);
 
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("dg-view") || "table");
@@ -435,6 +549,45 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
     "retaileroutstanding", "supplieroutstanding", "batch",
     "purchaseorders", "salesorders", "deliverychallans", "stocktransfers",
   ].includes(moduleKey);
+  const documentTabs = DOCUMENT_TABS[moduleKey] || null;
+
+  // ── Columns: the first few by default, the rest added under "Columns" ──
+  const [chosenFields, setChosenFields] = useState(() => readChosenColumns(moduleKey));
+  const [colMenuOpen, setColMenuOpen] = useState(false);
+  const colMenuRef = useRef(null);
+  const dataColumns = columns.filter(c => c.field !== "Action");
+  const defaultFields = dataColumns.slice(0, DEFAULT_VISIBLE_COLUMNS).map(c => c.field);
+  const savedFields = (chosenFields || []).filter(f => dataColumns.some(c => c.field === f));
+  const shownFields = savedFields.length ? savedFields : defaultFields;
+  const visibleColumns = columns.filter(c => c.field === "Action" || shownFields.includes(c.field));
+  const toggleColumn = (field) => {
+    const next = shownFields.includes(field) ? shownFields.filter(f => f !== field) : [...shownFields, field];
+    if (next.length === 0) return; // keep at least one data column
+    const ordered = dataColumns.map(c => c.field).filter(f => next.includes(f));
+    setChosenFields(ordered);
+    saveChosenColumns(moduleKey, ordered);
+  };
+  const resetColumns = () => {
+    setChosenFields(null);
+    setColWidthMap({});
+    saveChosenColumns(moduleKey, null);
+  };
+  useEffect(() => {
+    if (!colMenuOpen) return undefined;
+    const handler = (e) => { if (colMenuRef.current && !colMenuRef.current.contains(e.target)) setColMenuOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [colMenuOpen]);
+
+  // Widths: with the default columns (or fewer) they share the screen, so the table never scrolls sideways and a
+  // long value is cut with "…" (shown whole on hover). Once columns are added beyond the default — or one is
+  // dragged — every column takes its own set width and the table scrolls sideways when it is wider than the screen.
+  const resized = Object.keys(colWidthMap).length > 0;
+  const extraColumns = shownFields.length > DEFAULT_VISIBLE_COLUMNS;
+  const usePx = resized || extraColumns;
+  const weightOf = (c) => parseInt(colWidthMap[c.field] || c.width, 10) || 150;
+  const totalWeight = visibleColumns.reduce((s, c) => s + weightOf(c), 0) || 1;
+  const widthOf = (c) => (usePx ? `${weightOf(c)}px` : `${((weightOf(c) / totalWeight) * 100).toFixed(2)}%`);
 
   useEffect(() => {
     if (!xlDropOpen) return;
@@ -445,10 +598,33 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
     return () => document.removeEventListener("mousedown", handler);
   }, [xlDropOpen]);
 
-  const doExport = async (rows, label) => {
+  /** Every record of the current tab (and search): a grid paged by the server is read page by page from it. */
+  const fetchAllRows = async () => {
+    if (noPagination) return filteredData; // already holds every record; the tab and search are applied on screen
+    const query = new URLSearchParams({
+      ...(searchText.trim() && { search: searchText.trim() }),
+      tab: selectedStatus,
+    });
+    const rows = [];
+    for (let p = 0; p < EXPORT_MAX_PAGES; p++) {
+      const res = await (await apiClient(`${apiUrl}/${p}/${EXPORT_PAGE_SIZE}?${query}`, { method: "GET" })).json();
+      if (res?.status !== undefined && res.status !== 200) throw new Error(res.message || "Could not load the records");
+      const { list, pageCount, itemCount } = readGridPayload(res);
+      rows.push(...list);
+      if (list.length === 0) break;
+      // the server may cap the page size, so stop by its own page count / total, not by the size asked for
+      if (Number.isFinite(pageCount)) { if (p + 1 >= pageCount) break; }
+      else if (Number.isFinite(itemCount)) { if (rows.length >= itemCount) break; }
+      else if (list.length < EXPORT_PAGE_SIZE) break;
+    }
+    return rows;
+  };
+
+  const doExport = async (rowsOrLoader, label) => {
     setXlLoading(true);
     setXlDropOpen(false);
     try {
+      const rows = typeof rowsOrLoader === "function" ? await rowsOrLoader() : rowsOrLoader;
       const filename = `${Module || "export"}_${label}_${new Date().toISOString().slice(0, 10)}.xlsx`;
       await downloadExcel(rows, columns, filename);
       toast.success(`Downloaded ${rows.length} rows`);
@@ -490,13 +666,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
         if (requestId !== gridRequestRef.current) return;
         if (res.status !== undefined && res.status !== 200) return;
 
-        const payload = res.data ?? res;
-        const list = Array.isArray(payload)
-          ? payload
-          : payload.content ?? payload.items ?? payload.records ?? payload.results ??
-            Object.values(payload ?? {}).find(value => Array.isArray(value)) ?? [];
-        const pageCount = Number(payload.totalPages ?? res.totalPages);
-        const itemCount = Number(payload.totalElements ?? payload.totalItems ?? payload.totalCount ?? res.totalElements ?? res.totalItems ?? res.totalCount);
+        const { list, pageCount, itemCount } = readGridPayload(res);
 
         setAllData(list);
         setTotalItems(Number.isFinite(itemCount) ? itemCount : list.length);
@@ -523,7 +693,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
     if (Module === "Sales") {
       return { all, payment_done: allData.filter(r => r.statusId === Status.PaymentDone).length, payment_pending: allData.filter(r => r.statusId === Status.PaymentPending).length };
     }
-    return { all, active: allData.filter(r => r.disable === 0).length, inactive: allData.filter(r => r.disable === 1).length };
+    return { all, active: allData.filter(isSwitchedOn).length, inactive: allData.filter(isSwitchedOff).length };
   }, [allData, Module]);
 
   const filteredData = allData
@@ -535,7 +705,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
         if (selectedStatus === "payment_pending") return row.statusId === Status.PaymentPending;
       } else {
         if (selectedStatus === "all") return true;
-        if (row.disable !== undefined) return selectedStatus === (row.disable === 0 ? "active" : "inactive");
+        if (row.disable !== undefined && row.disable !== null) return selectedStatus === (isSwitchedOn(row) ? "active" : "inactive");
       }
       return true;
     })
@@ -557,15 +727,11 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   useEffect(() => { setPage(0); }, [selectedStatus]);
 
   useEffect(() => {
-    if (hideActiveInactiveTabs && selectedStatus !== "all") {
+    const allowed = documentTabs ? ["all", "open", "closed"] : ["all"];
+    if (hideActiveInactiveTabs && !allowed.includes(selectedStatus)) {
       setSelectedStatus("all");
     }
-  }, [hideActiveInactiveTabs, selectedStatus]);
-
-  useEffect(() => {
-    if (columns.length > 0)
-      setColWidths(columns.map(c => c.width || `${Math.floor(100 / columns.length)}%`));
-  }, [columns]);
+  }, [hideActiveInactiveTabs, documentTabs, selectedStatus]);
 
   const handleEdit = (row) => { setEditUkey(row.uKey); setIsEditOpen(true); };
   const handleView = (row) => { setViewUkey(row.uKey || row.ukey || row.batchUKey || row.batchId || row.id); setIsViewOpen(true); };
@@ -574,21 +740,27 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
   const handleDownload = (row) => { setDownloadId(row.id); setIsDownloadOpen(true); };
   const handlePaymentCollection = (row) => { setPaymentCollectionUkey(row.uKey); setIsPaymentCollectionOpen(true); };
 
-  const startResize = (index, e) => {
+  const startResize = (field, index, e) => {
     e.preventDefault();
     const startX = e.clientX;
     const th = document.getElementById(`col-${index}`);
     const startWidth = th.getBoundingClientRect().width;
+    // the first drag fixes every column at the width it has on screen, so only the dragged one moves
+    const base = usePx ? colWidthMap : Object.fromEntries(visibleColumns.map((c, i) => {
+      const w = document.getElementById(`col-${i}`)?.getBoundingClientRect().width;
+      return [c.field, `${Math.round(w || weightOf(c))}px`];
+    }));
     const onMouseMove = (mv) => {
       const newWidth = startWidth + (mv.clientX - startX);
-      setColWidths(prev => { const u = [...prev]; u[index] = `${Math.max(newWidth, 60)}px`; return u; });
+      setColWidthMap({ ...base, [field]: `${Math.max(newWidth, 60)}px` });
     };
     const onMouseUp = () => { document.removeEventListener("mousemove", onMouseMove); document.removeEventListener("mouseup", onMouseUp); };
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   };
 
-  const totalColWidth = colWidths.reduce((sum, w) => sum + (parseInt(w) || 150), 0);
+  // with extra (or dragged) columns the table is as wide as their set widths, and scrolls sideways if that is wider
+  const tableMinWidth = usePx ? visibleColumns.reduce((s, c) => s + weightOf(c), 0) : 0;
 
   const actionProps = {
     can, Module, isReadOnlyModule, hideActiveInactiveTabs,
@@ -664,12 +836,25 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
             {Module === "Sales" ? (
               [
                 { key: "all", label: "All", count: counts.all },
-                { key: "payment_done", label: "Payment Done", count: counts.payment_done },
-                { key: "payment_pending", label: "Pending", count: counts.payment_pending },
+                { key: "payment_done", label: "Payment Done", count: counts.payment_done, color: tabColorOf("payment_done") },
+                { key: "payment_pending", label: "Pending", count: counts.payment_pending, color: tabColorOf("payment_pending") },
               ].map(c => (
-                <button key={c.key} className={`dg-tab ${selectedStatus === c.key ? "dg-tab--active" : ""}`} onClick={() => setSelectedStatus(c.key)}>
+                <button key={c.key} className={`dg-tab ${selectedStatus === c.key ? "dg-tab--active" : ""} ${c.color ? `dg-tab--${c.color}` : ""}`} onClick={() => setSelectedStatus(c.key)}>
                   {c.label}
                   {selectedStatus === c.key && <span className="dg-tab-count"><CountUp value={c.count} duration={350} /></span>}
+                </button>
+              ))
+            ) : documentTabs ? (
+              [
+                { key: "all", label: "All", hint: "Every document" },
+                { key: "open", label: "Open", hint: documentTabs.open, color: "amber" },
+                { key: "closed", label: "Closed", hint: documentTabs.closed, color: "green" },
+              ].map(c => (
+                <button key={c.key} type="button" title={c.hint} data-testid={`dg-tab-${c.key}`}
+                  className={`dg-tab ${selectedStatus === c.key ? "dg-tab--active" : ""} ${c.color ? `dg-tab--${c.color}` : ""}`}
+                  onClick={() => { setSelectedStatus(c.key); setPage(0); }}>
+                  {c.label}
+                  {selectedStatus === c.key && <span className="dg-tab-count"><CountUp value={totalItems} duration={350} /></span>}
                 </button>
               ))
             ) : hideActiveInactiveTabs ? (
@@ -691,6 +876,39 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
             )}
           </div>
 
+          <div className="dg-filter-end">
+          {dataColumns.length > 0 && (
+            <div className="dg-export dg-colpick" ref={colMenuRef}>
+              {/* every grid: add the columns left out, or hide default ones */}
+              <button type="button" className={`dg-colpick-btn dg-colpick-primary ${colMenuOpen ? "dg-colpick-btn--open" : ""}`} onClick={() => setColMenuOpen(o => !o)}
+                title="Choose the columns to show" aria-label="Choose the columns to show" aria-expanded={colMenuOpen}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16M15 4v16" />
+                </svg>
+                {/* icon only: a dot on its corner while columns are left out */}
+                {shownFields.length < dataColumns.length && (
+                  <span className="dg-colpick-dot" data-testid="dg-col-more" aria-hidden="true"
+                    title={`${dataColumns.length - shownFields.length} more column(s) available`} />
+                )}
+              </button>
+              {colMenuOpen && (
+                <div className="dg-export-menu dg-colpick-menu" data-testid="dg-colpick-menu">
+                  <div className="dg-export-menu-label">Show columns</div>
+                  {dataColumns.map(c => (
+                    <label key={c.field} className="dg-colpick-item">
+                      <input type="checkbox" checked={shownFields.includes(c.field)}
+                        disabled={shownFields.length === 1 && shownFields.includes(c.field)}
+                        onChange={() => toggleColumn(c.field)} />
+                      <span>{c.header}</span>
+                    </label>
+                  ))}
+                  <button type="button" className="dg-export-item dg-colpick-reset" onClick={resetColumns}>
+                    Reset to default ({Math.min(DEFAULT_VISIBLE_COLUMNS, dataColumns.length)} columns)
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           <div className="dg-export" ref={xlDropRef}>
             <button className={`dg-export-btn ${xlLoading ? "dg-export-btn--loading" : ""}`} onClick={() => !xlLoading && setXlDropOpen(o => !o)} title="Export to Excel">
               {xlLoading ? <span className="dg-export-spinner" /> : <ActionIcon.Excel />}
@@ -702,12 +920,12 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
             {xlDropOpen && (
               <div className="dg-export-menu">
                 <div className="dg-export-menu-label">Export as Excel</div>
-                <button className="dg-export-item" onClick={() => doExport(filteredData, "all")}>
+                <button className="dg-export-item" onClick={() => doExport(fetchAllRows, "all")}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
                   Download All
-                  <span className="dg-export-badge">{filteredData.length}</span>
+                  <span className="dg-export-badge">{noPagination ? filteredData.length : totalItems}</span>
                 </button>
                 <button className="dg-export-item" onClick={() => doExport(pagedData, `page${page + 1}`)}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -718,6 +936,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
                 </button>
               </div>
             )}
+          </div>
           </div>
         </div>
 
@@ -739,19 +958,19 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
             </div>
 
             <div className="dg-table-scroll">
-              <table className="dg-table" style={{ width: "100%", minWidth: totalColWidth + "px" }}>
+              <table className="dg-table dg-table--fit" style={{ width: "100%", ...(tableMinWidth ? { minWidth: `${tableMinWidth}px` } : {}) }}>
                 <colgroup>
-                  {colWidths.map((w, i) => <col key={i} style={{ width: w }} />)}
+                  {visibleColumns.map((c, i) => <col key={c.field + i} style={{ width: widthOf(c) }} />)}
                 </colgroup>
                 <thead>
                   <tr>
-                    {columns.map((col, idx) => (
-                      <th key={idx} id={`col-${idx}`} title={col.header} className="dg-th" style={{ width: colWidths[idx], minWidth: colWidths[idx] }}>
+                    {visibleColumns.map((col, idx) => (
+                      <th key={col.field + idx} id={`col-${idx}`} title={col.header} className="dg-th" style={{ width: widthOf(col) }}>
                         <span className="dg-th-label">
                           <span className="dg-col-index">{String(idx + 1).padStart(2, "0")}</span>
                           {col.header}
                         </span>
-                        <div className="dg-col-resizer" onMouseDown={e => startResize(idx, e)} />
+                        <div className="dg-col-resizer" onMouseDown={e => startResize(col.field, idx, e)} />
                       </th>
                     ))}
                   </tr>
@@ -759,7 +978,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
                 <tbody>
                   {filteredData.length === 0 ? (
                     <tr>
-                      <td colSpan={columns.length} className="dg-empty">
+                      <td colSpan={visibleColumns.length} className="dg-empty">
                         <div className="dg-empty-inner">
                           <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
                             <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="1.4" opacity="0.3"/>
@@ -778,7 +997,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
                         onMouseEnter={() => setHoveredRow(rowIdx)}
                         onMouseLeave={() => setHoveredRow(null)}
                       >
-                        {columns.map((col, colIdx) => {
+                        {visibleColumns.map((col, colIdx) => {
                           if (col.field === "Action") {
                             return (
                               <td key={colIdx} className="dg-cell-actions">
@@ -786,7 +1005,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
                               </td>
                             );
                           }
-                          const value = row[col.field];
+                          const value = formatted(col, row);
                           let displayValue = "";
                           if (value !== undefined && value !== null) {
                             if (typeof value === "number") displayValue = value.toFixed(2);
@@ -824,7 +1043,7 @@ export default function DynamicGrid({ columns = [], apiUrl, Module, ModuleId, no
               <>
                 <div className="dg-cards-grid">
                   {pagedData.map((row, i) => (
-                    <GridItem key={i} row={row} columns={columns} index={page * size + i} selectedStatus={selectedStatus} {...actionProps} />
+                    <GridItem key={i} row={row} columns={visibleColumns} index={page * size + i} selectedStatus={selectedStatus} {...actionProps} />
                   ))}
                 </div>
                 <Pager page={page} totalPages={totalPages} size={size} onPageChange={setPage} onSizeChange={handleSizeChange} className="dg-pager--cards" />

@@ -24,6 +24,8 @@ export const MENU = [
       page("Dashboard", "/master/dashboard", ["dashboard"], "dashboard"),
       page("VMS Intelligence", "/master/intelligence", ["intelligence"], "intelligence"),
       page("Reports", "/master/reports", ["reports", "report"], "reports"),
+      page("Day-end Summary", "/master/day-end", ["reports", "report"], "payment"), // money per payment mode, to match the drawer
+      page("Accounting", "/master/accounting", ["accounting"], "ledger"), // its own permission (ACCOUNTING)
     ],
   },
   {
@@ -32,12 +34,14 @@ export const MENU = [
       group("Parties", "user", [
         page("Retailer", "/master/retailer", ["retailer"], "user"),
         page("Supplier", "/master/supplier", ["supplier"], "supplier"),
+        page("Supplier Schemes", "/master/supplier-scheme", ["supplierscheme"], "payment"), // its own permission (SUPPLIER_SCHEME)
         page("Manufacturer", "/master/manufacturer", ["manufacturer"], "factory"),
       ]),
       group("Products", "product", [
         page("Product", "/master/product", ["product"], "product"),
         page("Product Type", "/master/product-type", ["producttype"], "type"),
         page("Schemes & Discounts", "/master/scheme", ["scheme", "schemes"], "payment"),
+        page("Styles (Sizes & Colours)", "/master/styles", ["productstyle"], "product"), // its own permission (PRODUCT_STYLE); not for a pharmacy (Sidebar hides it)
       ]),
       group("Locations", "warehouse", [
         page("Godown", "/master/godown", ["godown"], "warehouse"),
@@ -50,6 +54,7 @@ export const MENU = [
       group("Stock", "inventory", [
         page("Inventory", "/master/inventory", ["inventory"], "inventory"),
         page("Batches", "/master/batch", ["batch", "batches"], "batch"),
+        page("Serial Lookup", "/master/serial-lookup", ["inventory"], "batch"), // Phase 6: not for a pharmacy (Sidebar hides it)
         page("Stock Adjustment", "/master/stock-adjustment", ["stockadjustment", "stockadjustments"], "reorder"),
       ]),
       group("Alerts", "alert", [
@@ -132,6 +137,27 @@ export const unknownModules = (modules) => modules.filter((m) => !KNOWN.has(norm
  * The menu for this user: { id, label, icon, items, direct }.
  * `direct` is set when the main menu has exactly one page, so clicking it can go straight there.
  */
+/**
+ * The menu (main menus, or the items of one) without the pages at these routes (Phase 4). As in buildMenu, a sub menu
+ * left with one page becomes that page, and a main menu left with one page becomes a direct link.
+ */
+export function withoutRoutes(items, routes) {
+  if (!routes.length) return items;
+  return items
+    .map((item) => {
+      if (item.items) { // a main menu, as buildMenu returns it
+        const kept = withoutRoutes(item.items, routes);
+        if (kept.length === 0) return null;
+        return { ...item, items: kept, direct: kept.length === 1 && kept[0].type === "leaf" ? kept[0] : null };
+      }
+      if (item.type !== "group") return routes.includes(item.route) ? null : item;
+      const kids = withoutRoutes(item.children, routes);
+      if (kids.length === 0) return null;
+      return kids.length === 1 ? kids[0] : { ...item, children: kids };
+    })
+    .filter(Boolean);
+}
+
 export function buildMenu(modules = []) {
   const have = new Set(modules.map(normalize));
   const allowed = (leaf) => !leaf.modules || leaf.modules.some((m) => have.has(m));
@@ -186,3 +212,36 @@ export function searchMenu(menu, query) {
       return ap - bp || a.label.localeCompare(b.label);
     });
 }
+
+/** Pages the menu leaves out for this shop: no Expiry Alerts without expiry, no serials or styles for a pharmacy. */
+export const hiddenRoutesFor = ({ trackExpiry = true, isPharma = false } = {}) => [
+  ...(trackExpiry ? [] : ["/master/alerts"]),
+  ...(isPharma ? ["/master/serial-lookup", "/master/styles"] : []),
+];
+
+/** The menu exactly as this user sees it in the sidebar (their modules, their shop). */
+export const userMenu = (modules, profile) => withoutRoutes(buildMenu(modules), hiddenRoutesFor(profile));
+
+/** Screens reached from elsewhere than the menu, so the assistant can still name them. */
+export const EXTRA_PAGES = [
+  { label: "Onboarding", route: "/onboarding" },
+  { label: "Account settings", route: "/setting" },
+  { label: "Quick Sale", route: "/master/salesshrt" },
+  { label: "Keyboard shortcuts", route: "/shortcut-help" },
+];
+
+/** The title of the page at this address ("/master/sales-order/…" -> "Sales Orders"): the longest matching route wins. */
+export function pageTitleFor(pathname = "") {
+  const pages = [...MENU.flatMap((m) => leavesOf(m.items)), ...EXTRA_PAGES];
+  const hit = pages
+    .filter((p) => p.route && p.route !== "/home" && String(pathname).startsWith(p.route))
+    .sort((a, b) => b.route.length - a.route.length)[0];
+  if (hit) return hit.label;
+  return String(pathname).startsWith("/home") ? "Home" : "";
+}
+
+/** "Billing & GST › Orders & Stock Movement › Sales Orders" for every page this user can open — sent to the assistant. */
+export const assistantPages = (menu) => [
+  ...searchEntries(menu).map((e) => `${e.path} › ${e.label}`),
+  ...EXTRA_PAGES.map((p) => p.label),
+];

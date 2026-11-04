@@ -4,6 +4,7 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { getApiMessage, toastApiError } from "../../utils/toastMessage";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 const FIELD_META = [
     { key: "shopName", label: "Shop Name", type: "text", required: true, placeholder: "e.g. Cipla Distributors Pvt Ltd" },
@@ -27,6 +28,7 @@ const FIELD_META = [
 const EMPTY = FIELD_META.reduce((acc, f) => ({ ...acc, [f.key]: f.type === "checkbox" ? false : "" }), {});
 
 export default function SupplierAdd({ onClose, onSubmit }) {
+    const { isPharma } = useBusinessProfile(); // drug licence etc. only for a pharmacy (Phase 4)
     const [form, setForm] = useState(EMPTY);
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -116,7 +118,7 @@ export default function SupplierAdd({ onClose, onSubmit }) {
                     {errors.general && <div className="afx-alert">{errors.general}</div>}
 
                     <div className="afx-grid">
-                        {FIELD_META.map(f => (
+                        {FIELD_META.filter(f => isPharma || f.key !== "drugLicenseNumber").map(f => (
                             <div key={f.key} className={`afx-field ${f.type === "textarea" || f.type === "checkbox" ? "afx-field--full" : ""}`}>
                                 {f.type === "checkbox" ? (
                                     <label className="afx-checkbox-label">

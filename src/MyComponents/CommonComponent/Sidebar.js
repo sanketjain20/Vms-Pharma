@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import "../../Styles/Sidebar.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
-import { buildMenu, searchMenu } from "./sidebarMenu";
+import { markMenuReady } from "../../utils/menuReady";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import { searchMenu, userMenu } from "./sidebarMenu";
 
 /* ── Icon primitives ──────────────────────────────────────────
    Clean stroke-based glyphs (no filled Material Symbols) so every
@@ -238,6 +240,7 @@ const MAIN_LOOK = {
 
 /* ── Main Sidebar ─────────────────────────────────────────── */
 export default function Sidebar() {
+  const { trackExpiry, isPharma } = useBusinessProfile(); // no Expiry Alerts page without expiry (Phase 4); serials are not for a pharmacy (Phase 6)
   const [open, setOpen] = useState(false);
   const [modules, setModules] = useState([]);
   const [hoveredMenu, setHoveredMenu] = useState(null);
@@ -270,7 +273,9 @@ export default function Sidebar() {
           setModules([]);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      // the menu first: the Home page builds its 3D scenes only after this (utils/menuReady)
+      .finally(markMenuReady);
   }, []);
 
   /* close on outside click */
@@ -300,7 +305,7 @@ export default function Sidebar() {
     setHoveredMenu(null);
   };
 
-  const menu = useMemo(() => buildMenu(modules), [modules]);
+  const menu = useMemo(() => userMenu(modules, { trackExpiry, isPharma }), [modules, trackExpiry, isPharma]);
   const searchResults = searchMenu(menu, searchQuery);
 
   return (

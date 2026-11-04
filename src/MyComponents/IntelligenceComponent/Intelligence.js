@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import "../../Styles/Intelligence/Intelligence.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 const DASHBOARD_API = `${API_BASE_URL}/api/Intelligence/GetDashboard`;
 
@@ -405,6 +406,7 @@ function SettingsBar({ settings, onChange, onApply, onReset, disabled }) {
    MAIN COMPONENT
 ════════════════════════════════════════════ */
 export default function Intelligence() {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [data, setData] = useState(null);
@@ -665,7 +667,7 @@ export default function Intelligence() {
         )}
       </Panel>
 
-      <Panel title="Approaching expiry" subtitle="Batches expiring within 30 days." color="#f87171">
+      {trackExpiry && (<Panel title="Approaching expiry" subtitle="Batches expiring within 30 days." color="#f87171">
         {expiryAlerts.length ? (
           <div className="vint-table-wrap">
             <table className="vint-table">
@@ -696,7 +698,7 @@ export default function Intelligence() {
         ) : (
           <EmptyState label="Nothing expiring in the next 30 days." />
         )}
-      </Panel>
+      </Panel>)}
     </div>
   );
 

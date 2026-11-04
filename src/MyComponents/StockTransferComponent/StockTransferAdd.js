@@ -3,6 +3,8 @@ import "../../Styles/CommonAEUDForm/FormShell.css";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { LineSerialPicker } from "../CommonComponent/SerialWidgets";
+import { tracksSerials } from "../../utils/serials";
 import { toastApiError } from "../../utils/toastMessage";
 
 /* ── Searchable dropdown (self-contained copy, mirrors PurchaseAdd's widget).
@@ -53,7 +55,7 @@ const SearchDrop = ({ options, value, onChange, placeholder, dropRef, open, setO
   );
 };
 
-const EMPTY_ITEM = { productId: "", productName: "", quantity: 1 };
+const EMPTY_ITEM = { productId: "", productName: "", quantity: 1, serials: [] };
 
 function extractList(json) {
   const data = json?.data;
@@ -122,7 +124,10 @@ export default function StockTransferAdd({ onSubmit, onClose, documentMode = fal
     if (key === "productId") {
       const p = products.find(x => String(x.id) === String(value));
       if (p) updated[i].productName = p.name || p.productName || "";
+      updated[i].serials = []; // Phase 7: a serial product's units are picked again for the new product
+      if (tracksSerials(p)) updated[i].quantity = 0;
     }
+    if (key === "serials") updated[i].quantity = value.length; // the quantity is the number of units picked
     setForm(p => ({ ...p, items: updated }));
   };
 
@@ -140,7 +145,7 @@ export default function StockTransferAdd({ onSubmit, onClose, documentMode = fal
     form.items.forEach((item, i) => {
       const ie = {};
       if (!item.productId) ie.productId = "Required";
-      if (!item.quantity || Number(item.quantity) < 1) ie.quantity = "Required";
+      if (!item.quantity || Number(item.quantity) < 1) ie.quantity = isSerial(item) ? "Pick the units being moved" : "Required";
       if (Object.keys(ie).length) itemErrors[i] = ie;
     });
     if (Object.keys(itemErrors).length) e.items = itemErrors;
@@ -163,7 +168,8 @@ export default function StockTransferAdd({ onSubmit, onClose, documentMode = fal
         vehicleNumber: form.vehicleNumber || null,
         transporter: form.transporter || null,
         notes: form.notes,
-        items: form.items.map(it => ({ productId: Number(it.productId), quantity: Number(it.quantity) })),
+        items: form.items.map(it => ({ productId: Number(it.productId), quantity: Number(it.quantity),
+          ...(isSerial(it) ? { serials: it.serials } : {}) })),
       };
       const res = await apiClient(`${API_BASE_URL}/api/StockTransfer/AddStockTransfer`, {
         method: "POST",
@@ -185,6 +191,7 @@ export default function StockTransferAdd({ onSubmit, onClose, documentMode = fal
     }
   };
 
+  const isSerial = item => tracksSerials(products.find(x => String(x.id) === String(item.productId)));
   const godownName = g => g.name || g.godownName || `Godown #${g.id}`;
   const productName = p => p.name || p.productName || `Product #${p.id}`;
   const totalUnits = form.items.reduce((s, i) => s + Number(i.quantity || 0), 0);
@@ -369,11 +376,18 @@ export default function StockTransferAdd({ onSubmit, onClose, documentMode = fal
                                   className="afx-cell-input"
                                   style={errors.items?.[i]?.quantity ? { borderColor: "var(--afx-danger)" } : undefined}
                                   value={item.quantity}
+                                  disabled={isSerial(item)}
+                                  aria-label="Quantity"
                                   onChange={e => updateItem(i, "quantity", e.target.value)}
                                 />
                                 {errors.items?.[i]?.quantity && <span className="afx-error">{errors.items[i].quantity}</span>}
                               </div>
                             </div>
+
+                            {isSerial(item) && (form.fromGodownId ? (
+                              <LineSerialPicker productId={item.productId} godownId={form.fromGodownId} selected={item.serials}
+                                onChange={v => updateItem(i, "serials", v)} />
+                            ) : <span className="srl-note">Choose the source godown to pick the units.</span>)}
 
                             <div className="afx-item-card-footer">
                               <span className="afx-item-card-footer-label">Total units</span>

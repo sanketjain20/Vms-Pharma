@@ -1,22 +1,25 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import DynamicGrid from "../CommonComponent/DynamicGrid";
+import ActionErrorBanner from "../CommonComponent/ActionErrorBanner";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
 import { toast } from "react-toastify";
 import SalesAdd from "../SalesComponent/SalesAdd";
 import SalesEdit from "../SalesComponent/SalesEdit";
 import SalesView from "../SalesComponent/SalesView";
+import OrderSerialsModal, { serialProductIds, serialLinesOf, pendingOf } from "../CommonComponent/OrderSerialsModal";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import "../../Styles/Inventory.css";
 
-const config = { title: "Sales orders", singular: "Sales order", base: "SalesOrder", list: "GetAllSalesOrdersPaged", detail: "GetSalesOrderByUKey", add: "AddSalesOrder", update: "UpdateSalesOrder", cancel: "CancelSalesOrder", id: 36, number: "orderNumber", party: "retailerName", date: "orderDate", actions: { DRAFT: ["ConfirmSalesOrder", "Confirm"], CONFIRMED: ["ConvertToSale", "Create invoice"] } };
+const config = { title: "Sales orders", singular: "Sales order", base: "SalesOrder", list: "GetAllSalesOrdersPaged", detail: "GetSalesOrderByUKey", add: "AddSalesOrder", update: "UpdateSalesOrder", cancel: "CancelSalesOrder", id: 36, number: "orderNumber", party: "retailerName", date: "orderDate", actions: { DRAFT: ["ConfirmSalesOrder", "Confirm", "Confirm", "activate"], CONFIRMED: ["ConvertToSale", "Create invoice", "Invoice", "payment"] } };
 
 export default function SalesOrder() {
   const [form, setForm] = useState(null);
   const [detailState, setDetail] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [serialAsk, setSerialAsk] = useState(null); // Phase 7: { row, order, lines } while units are picked
   const detail = null; // Legacy drawer is intentionally disabled; use SalesView below.
   const baseUrl = `${API_BASE_URL}/api/${config.base}`;
   const columns = [
@@ -45,14 +48,10 @@ export default function SalesOrder() {
         // empty body also works (backend defaults to all pending lines). We send
         // the order's godown so the invoice lands in the right place.
         const order = await api(`${baseUrl}/${config.detail}/${row.uKey}`);
-        body = JSON.stringify({
-          godownId: order.godownId || null,
-          paymentType: order.paymentType || null,
-          amountPaid: order.amountPaid ?? null,
-          dueDate: order.dueDate || null,
-          billingMode: order.billingMode || null,
-          autoApplySchemes: order.autoApplySchemes != null ? order.autoApplySchemes : null,
-        });
+        // a product with serial numbers is billed unit by unit: pick them first
+        const lines = serialLinesOf(order, await serialProductIds());
+        if (lines.length) { setSerialAsk({ row, order, lines }); return; }
+        body = invoiceBody(order);
       }
       await api(`${baseUrl}/${action}/${row.uKey}`, { method: "POST", body });
       window.dispatchEvent(new Event("document-grid-refresh"));
@@ -61,16 +60,38 @@ export default function SalesOrder() {
     } catch (e) { setError(e.message || "Action failed"); }
     finally { setBusy(false); }
   };
+  const invoiceBody = (order, serials = null) => JSON.stringify({
+    godownId: order.godownId || null,
+    paymentType: order.paymentType || null,
+    amountPaid: order.amountPaid ?? null,
+    dueDate: order.dueDate || null,
+    billingMode: order.billingMode || null,
+    autoApplySchemes: order.autoApplySchemes != null ? order.autoApplySchemes : null,
+    // with serials, every pending line is listed so the picked units go with theirs
+    ...(serials ? { items: order.items.filter(it => pendingOf(it) > 0)
+      .map(it => ({ itemId: it.id, quantity: null, ...(serials[it.id] ? { serials: serials[it.id] } : {}) })) } : {}),
+  });
+  const billWithSerials = async (serials) => {
+    try {
+      setBusy(true); setError("");
+      await api(`${baseUrl}/ConvertToSale/${serialAsk.row.uKey}`, { method: "POST", body: invoiceBody(serialAsk.order, serials) });
+      setSerialAsk(null);
+      window.dispatchEvent(new Event("document-grid-refresh"));
+      toast.success(`${config.singular} updated successfully.`);
+    } catch (e) { setError(e.message || "Action failed"); setSerialAsk(null); }
+    finally { setBusy(false); }
+  };
   const actions = (row, { can, ActionIcon }) => <>
     <button className="dg-icon-btn dg-icon-btn--view" title="View" aria-label="View" onClick={async () => { try { setDetail(await api(`${baseUrl}/${config.detail}/${row.uKey}`)); } catch (e) { setError(e.message); } }}><ActionIcon.View /></button>
     {config.update && row.status === "DRAFT" && can("Edit") && <button className="dg-icon-btn dg-icon-btn--edit" title="Edit" aria-label="Edit" onClick={async () => { try { setForm(await api(`${baseUrl}/${config.detail}/${row.uKey}`)); } catch (e) { setError(e.message); } }}><ActionIcon.Edit /></button>}
-    {config.actions[row.status] && can("Edit") && <button className="dg-icon-btn dg-icon-btn--activate" title={config.actions[row.status][1]} aria-label={config.actions[row.status][1]} disabled={busy} onClick={() => perform(row, config.actions[row.status][0])}><ActionIcon.Activate /></button>}
-    {row.status !== "CANCELLED" && can("Disable") && <button className="dg-icon-btn dg-icon-btn--disable" disabled={busy} title="Cancel" aria-label="Cancel" onClick={() => perform(row, config.cancel)}><ActionIcon.Disable /></button>}
+    {config.actions[row.status] && can("Edit") && (() => { const [call, label, icon, tone] = config.actions[row.status]; const Icon = ActionIcon[icon] || ActionIcon.Activate; return <button className={`dg-icon-btn dg-icon-btn--${tone || "activate"}`} title={label} aria-label={label} disabled={busy} onClick={() => perform(row, call)}><Icon /></button>; })()}
+    {row.status !== "CANCELLED" && can("Disable") && <button className="dg-icon-btn dg-icon-btn--disable" disabled={busy} title="Cancel" aria-label="Cancel" onClick={() => perform(row, config.cancel)}><ActionIcon.Cancel /></button>}
   </>;
   return <div className="i-container">
     <h2 className="i-title">🧾 SALES ORDER</h2>
     {detailState && ReactDOM.createPortal(<SalesView documentMode uKey={detailState.uKey} onClose={() => setDetail(null)} />, document.body)}
-    {error && <div className="ops-error" role="alert">{error}<button onClick={() => setError("")}>Dismiss</button></div>}
+    {serialAsk && <OrderSerialsModal mode="pick" lines={serialAsk.lines} godownId={serialAsk.order.godownId} busy={busy} onDone={billWithSerials} onClose={() => setSerialAsk(null)} />}
+    <ActionErrorBanner message={error} onDismiss={() => setError("")} />
     <DynamicGrid Module={config.title} ModuleId={String(config.id)} apiUrl={`${baseUrl}/${config.list}`} columns={columns} customActionsOnly customAddAction={() => setForm({})} customAddLabel={`Add ${config.singular}`} extraActions={actions} />
     {form && ReactDOM.createPortal(form.uKey
       ? <SalesEdit documentMode uKey={form.uKey} onClose={() => setForm(null)} onSubmit={() => { setForm(null); window.dispatchEvent(new Event("document-grid-refresh")); }} />
@@ -122,8 +143,8 @@ function DocumentForm({ config, row, onClose, onSaved }) {
   const chooseProduct = (index, productId) => {
     const product = catalog.products.find(p => String(p.id) === String(productId));
     setForm(prev => ({ ...prev, items: prev.items.map((item, i) => i !== index ? item : {
-      ...item, productId, unitCost: item.unitCost || product?.price || product?.costPrice || "",
-      unitPrice: item.unitPrice || product?.sellingPrice || product?.price || "",
+      ...item, productId, unitCost: item.unitCost || product?.costPrice || "",
+      unitPrice: item.unitPrice || product?.price || product?.sellingPrice || "",
     }) }));
   };
   const chosenList = stock ? [] : config.id === 35 ? catalog.suppliers : catalog.retailers;

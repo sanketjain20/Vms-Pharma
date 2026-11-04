@@ -108,23 +108,22 @@ describe("SalesAdd — quantity stepper", () => {
 describe("SalesAdd — payment type tiles", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("switches payment type and syncs the amount-paid field the same way the old radio did", async () => {
+  it("switches payment type: paid in full fills the payment, credit has none, partial is typed in", async () => {
     mockApi();
     render(<SalesAdd onClose={jest.fn()} onSubmit={jest.fn()} />);
     await screen.findByText("Add Sales");
     fireEvent.click(screen.getByRole("button", { name: "Billing" }));
 
-    const amountPaidInput = screen.getByPlaceholderText("0.00");
-    expect(amountPaidInput).toBeDisabled(); // PAID is the default, amount is auto-filled + locked
+    // PAID is the default: one payment of the whole bill, filled in and locked
+    expect(screen.getByLabelText("Payment 1 amount")).toHaveAttribute("readonly");
 
     fireEvent.click(screen.getByText("Credit (Pay Later)"));
     expect(screen.getByText("Credit (Pay Later)").closest("button")).toHaveClass("is-active");
-    expect(amountPaidInput).toHaveValue(0);
-    expect(amountPaidInput).toBeDisabled();
+    expect(screen.queryByTestId("payment-split")).toBeNull(); // nothing is paid now
 
     fireEvent.click(screen.getByText("Partial Payment"));
     expect(screen.getByText("Partial Payment").closest("button")).toHaveClass("is-active");
-    expect(amountPaidInput).not.toBeDisabled();
+    expect(screen.getByLabelText("Payment 1 amount")).not.toHaveAttribute("readonly");
   });
 });
 

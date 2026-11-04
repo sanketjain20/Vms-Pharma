@@ -96,7 +96,7 @@ describe("toItemPayload", () => {
     const lines = [line({ schemeId: 7, freeQuantity: 1, batchId: 5 })];
     const totals = computeTotals({ lines, commonRate: 12 });
     expect(toItemPayload(lines, totals)).toEqual([
-      { productId: 1, quantity: 10, sellingPrice: 100, taxAmount: 120, batchId: 5, schemeId: 7 },
+      { productId: 1, quantity: 10, sellingPrice: 100, taxAmount: 120, batchId: 5, schemeId: 7, gstRate: 12, priceIncludesGst: false },
     ]);
   });
 
@@ -187,6 +187,25 @@ describe("linesFromSale (opening a saved sale for edit)", () => {
     expect(t.tax).toBe(102);
   });
 
+  it("a scheme line merged from two batches goes back to Auto (no one batch holds it all), one batch keeps its batch", () => {
+    const merged = linesFromSale([
+      row({ quantity: 7, schemeId: 5, batchId: 1, batchNumberSnapshot: "B1" }),
+      row({ quantity: 3, schemeId: 5, batchId: 2, batchNumberSnapshot: "B2" }),
+    ], 0, 0);
+    expect(merged[0]).toMatchObject({ quantity: 10, batchId: null, batchNumber: "AUTO", expiryDate: "" });
+
+    const single = linesFromSale([
+      row({ quantity: 7, schemeId: 5, batchId: 2, batchNumberSnapshot: "B2" }),
+      row({ quantity: 3, schemeId: 5, batchId: 2, batchNumberSnapshot: "B2" }),
+    ], 0, 0);
+    expect(single[0]).toMatchObject({ quantity: 10, batchId: 2, batchNumber: "B2" });
+  });
+
+  it("an unmerged line keeps the batch it was sold from, so saving the edit does not move it", () => {
+    const lines = linesFromSale([row({ batchId: 2, batchNumberSnapshot: "B2" })], 0, 0);
+    expect(lines[0]).toMatchObject({ batchId: 2, batchNumber: "B2" });
+  });
+
   it("does not merge different products or rows without a scheme", () => {
     const lines = linesFromSale([row({ productId: 1 }), row({ productId: 1, batchId: 6 }), row({ productId: 2, schemeId: 5 }), row({ productId: 3, schemeId: 5 })], 0, 0);
     expect(lines).toHaveLength(4);
@@ -231,5 +250,71 @@ describe("returnValue", () => {
 
   it("copes with a row of zero quantity", () => {
     expect(returnValue({ sellingPrice: 100, discountAmount: 10, max: 0 }, 0)).toBe(0);
+  });
+});
+
+describe("custom (run-time) lines", () => {
+  const custom = { custom: true, itemName: "Saree", productName: "Saree", quantity: 2, sellingPrice: 500, gstRate: 5, taxAmount: 999, hsnCode: "5007", costPrice: 300 };
+  const product = { productId: 1, quantity: 1, sellingPrice: 1000, taxAmount: 180 };
+
+  it("a custom line always uses its own GST %, even in Common GST mode", () => {
+    const t = computeTotals({ lines: [product, custom], commonRate: 12 });
+    expect(t.lines[0].clientTax).toBeCloseTo(120); // the product takes the common 12%
+    expect(t.lines[1].clientTax).toBeCloseTo(50); // the custom line keeps its 5%, not the 999 it carries
+    expect(t.net).toBe(2170);
+  });
+
+  it("an invoice discount is shared with a custom line and GST is charged after it, as on the server", () => {
+    const t = computeTotals({ lines: [{ ...custom, quantity: 1, sellingPrice: 1000 }], manualDiscount: 100 });
+    expect(t.tax).toBe(45);
+    expect(t.net).toBe(945);
+  });
+
+  it("is sent without a product, batch or scheme", () => {
+    const t = computeTotals({ lines: [product, custom] });
+    expect(toItemPayload([product, custom], t)[1]).toEqual({
+      productId: null, itemName: "Saree", hsnCode: "5007", gstRate: 5, costPrice: 300, quantity: 2, sellingPrice: 500, taxAmount: 50,
+    });
+  });
+
+  it("opening a saved sale keeps a custom row as it was typed, never merged with others", () => {
+    const rows = [
+      { id: 1, custom: true, product: "Saree", itemName: "Saree", productId: null, quantity: 2, sellingPrice: 500, taxAmount: 50, discountAmount: 0, gstRate: 5, hsnCodeSnapshot: "5007", costPrice: 300, freeItem: false },
+      { id: 2, custom: true, product: "Saree", itemName: "Saree", productId: null, quantity: 1, sellingPrice: 500, taxAmount: 25, discountAmount: 0, gstRate: 5, freeItem: false },
+    ];
+    const lines = linesFromSale(rows, 0, 0);
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toMatchObject({ custom: true, productId: null, itemName: "Saree", quantity: 2, gstRate: 5, hsnCode: "5007", costPrice: 300, taxAmount: 50, schemeOff: true });
+  });
+});
+
+describe("computeTotals — round-off to the rupee", () => {
+  it("rounds the bill total and keeps the exact figure and the difference", () => {
+    const t = computeTotals({ lines: [line({ quantity: 1, sellingPrice: 1247.37 })], roundOff: true });
+    expect(t.exactNet).toBe(1247.37);
+    expect(t.net).toBe(1247);
+    expect(t.roundOff).toBe(-0.37);
+    expect(t.taxable).toBe(1247.37); // only the total is rounded
+  });
+
+  it("is off unless the shop rounds", () => {
+    const t = computeTotals({ lines: [line({ quantity: 1, sellingPrice: 1247.37 })] });
+    expect(t.net).toBe(1247.37);
+    expect(t.roundOff).toBe(0);
+  });
+});
+
+describe("a price changed at the counter", () => {
+  it("is sent with its reason; an unchanged line sends nothing extra", () => {
+    const lines = [line({ quantity: 1, sellingPrice: 90, priceOverrideReason: "Bargained", belowCostConfirmed: false }), line({ productId: 2, quantity: 1 })];
+    const sent = toItemPayload(lines, computeTotals({ lines }));
+    expect(sent[0]).toMatchObject({ sellingPrice: 90, priceOverrideReason: "Bargained", belowCostConfirmed: false });
+    expect(sent[1]).not.toHaveProperty("priceOverrideReason");
+  });
+
+  it("comes back with the saved bill, so an edit keeps it", () => {
+    const [l] = linesFromSale([{ productId: 1, product: "Shirt", quantity: 1, sellingPrice: 90, taxAmount: 16.2, discountAmount: 0, freeItem: false,
+      gstSource: "PRODUCT", gstRate: 18, listPrice: 100, priceOverrideReason: "Bargained", priceBelowCost: true }], 0, 0);
+    expect(l).toMatchObject({ sellingPrice: 90, listPrice: 100, priceOverrideReason: "Bargained", belowCostConfirmed: true });
   });
 });

@@ -1,9 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Styles/Report/Report.css";
 import LedgerCanvas from "./LedgerCanvas";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
+import { canSeeReport } from "./runTimeReports";
 
 /* ── Per-volume spine colour, cycling like packaging lot bands ──────── */
 const ACCENTS = [
@@ -124,6 +126,7 @@ const roleId = localStorage.getItem("roleId");
 
 /* ── Main ──────────────────────────────────────────────────────────────── */
 export default function ReportsDashboard() {
+  const { isPharma } = useBusinessProfile(); // the narcotic register only for a pharmacy (Phase 4)
   const moduleId = 7;
   const apiUrl    = `${API_BASE_URL}/api/Reports/GetAllReports`;
   const accessApi = `${API_BASE_URL}/api/Access/GetUserModuleAccess/${moduleId}/${roleId}`;
@@ -134,6 +137,7 @@ export default function ReportsDashboard() {
   const [mode, setMode] = useState(() => localStorage.getItem("rpt-view") === "list" ? "index" : "shelf");
   const [pinned, setPinned] = useState(false);
   const [turningTo, setTurningTo] = useState(null);
+  const leftRef = useRef(false); // the page turn opens the report once
   const navigate = useNavigate();
 
   const handleModeChange = (m) => {
@@ -176,10 +180,10 @@ export default function ReportsDashboard() {
 
   const filtered = useMemo(() => reports.filter(r => {
     const name = r.name.toLowerCase();
-    const access = allowedReportKeys.length === 0 || allowedReportKeys.some(k => name.includes(k));
+    const access = canSeeReport(name, allowedReportKeys);
     const match = name.includes(search.toLowerCase());
-    return access && match;
-  }), [reports, allowedReportKeys, search]);
+    return access && match && (isPharma || !name.includes("narcotic"));
+  }), [reports, allowedReportKeys, search, isPharma]);
 
   const handleOpen = (name) => {
     if (turningTo) return;
@@ -187,8 +191,12 @@ export default function ReportsDashboard() {
   };
 
   const handleTurnEnd = (e) => {
-    if (e.target !== e.currentTarget) return;
-    navigate("/master/reports/open", { state: { reportName: turningTo } });
+    // the sheet and its ::before gleam both animate, and both end here (a pseudo-element animation reports its host as
+    // the target): navigating on each put the report screen in history twice, so Back needed two presses and the
+    // screen Back button landed on a blank copy
+    if (e.target !== e.currentTarget || e.pseudoElement || leftRef.current) return;
+    leftRef.current = true;
+    navigate("/master/reports/open", { state: { reportName: turningTo, from: "reports" } });
   };
 
   return (

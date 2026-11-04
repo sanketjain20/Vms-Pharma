@@ -853,3 +853,124 @@ body[data-theme="light"] .dg-panel .dg-btn-add.dg-btn-add.dg-btn-add.dg-btn-add.
 @media (prefers-reduced-motion: reduce) {
   .dg-export-spinner { animation: none; }
 }
+
+/* ── Columns chooser (beside Export) and a table that fits the screen ── */
+.dg-filter-end { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* icon only, in the accent colour so it is easy to spot; a dot on its corner while some columns are left out */
+.dg-colpick .dg-colpick-btn {
+  position: relative; display: inline-flex; align-items: center; gap: 6px;
+  justify-content: center; width: 34px; height: 32px; padding: 0; border-radius: 100px; cursor: pointer;
+  border: 1px solid var(--dg-accent); background: rgba(59, 130, 246, 0.12); color: var(--dg-accent);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.dg-colpick .dg-colpick-btn:hover, .dg-colpick .dg-colpick-btn--open { background: rgba(59, 130, 246, 0.22); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+.dg-colpick-dot {
+  position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--dg-accent); box-shadow: 0 0 0 2px var(--dg-surface);
+}
+.dg-colpick-menu { min-width: 230px; max-height: 360px; overflow-y: auto; z-index: 30; }
+.dg-colpick-item {
+  display: flex; align-items: center; gap: 10px; padding: 7px 14px; cursor: pointer;
+  font-size: 12.5px; color: var(--dg-text-2); text-transform: none; letter-spacing: 0;
+}
+.dg-colpick-item:hover { background: var(--dg-border-soft); color: var(--dg-text-1); }
+.dg-colpick-item input { width: 14px !important; height: 14px; margin: 0; padding: 0 !important; accent-color: var(--dg-accent); cursor: pointer; }
+.dg-colpick-item input:disabled { cursor: not-allowed; opacity: 0.5; }
+.dg-colpick-reset { width: 100%; border-top: 1px solid var(--dg-border-soft) !important; justify-content: center; font-size: 12px; }
+
+/* fixed layout: the columns share the width, a long value is cut with "…" (the full text is in the cell's tooltip) */
+.dg-table.dg-table--fit { table-layout: fixed; }
+.dg-table--fit .dg-cell { overflow: hidden; text-overflow: ellipsis; }
+.dg-table--fit .dg-th { overflow: hidden; }
+.dg-table--fit .dg-th-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dg-table--fit .dg-cell-actions { white-space: normal; }
+
+/* Column names centred in their column, the same space on the left and the right; the small column number sits in
+   the top-left corner so it does not push the name off-centre. The values are centred the same way under them. */
+.dg-table .dg-th { position: sticky; padding: 10px; text-align: center; }
+.dg-table .dg-th-label { justify-content: center; }
+.dg-table .dg-th-label .dg-col-index { position: absolute; top: 3px; left: 5px; line-height: 1; }
+.dg-table--fit .dg-th-label { display: block; text-align: center; }
+.dg-table .dg-cell { padding-left: 10px; padding-right: 10px; text-align: center; }
+
+/* "Open" tab of the document grids (amber, like the other coloured tabs) */
+.dg-tab--amber.dg-tab--active {
+  background: var(--dg-warning-soft) !important;
+  border-color: var(--dg-warning) !important;
+  color: var(--dg-warning) !important;
+}
+
+/* =========================
+   LIGHT THEME SYNC — the grid looks the same in both themes, only lighter.
+   Theme.css recolours every page by class-name fragment (button, [class*="-btn"], [class*="-card"], [class*="-count"],
+   th, td …) with !important and a high specificity, which flattened the grid in light mode: grey export button, black
+   action icons, no coloured edges on the stat cards. Inside the grid its own colours (the --dg-* tokens, already set
+   for light above) are put back. The repeated .dg-panel only raises specificity above those generic rules.
+========================= */
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-export-btn.dg-export-btn {
+  background: var(--dg-teal-soft) !important; border-color: var(--dg-teal) !important; color: var(--dg-teal) !important;
+}
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-colpick-btn.dg-colpick-btn {
+  background: var(--dg-accent-soft) !important; border-color: var(--dg-accent) !important; color: var(--dg-accent) !important;
+}
+
+/* row actions: coloured icons, coloured tint on hover */
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn { background: var(--dg-border-soft) !important; border-color: transparent !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--edit     { color: var(--dg-accent) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--view     { color: var(--dg-slate) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--activate { color: var(--dg-success) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--download { color: var(--dg-warning) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--payment  { color: var(--dg-teal) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--disable  { color: var(--dg-danger) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--edit:hover     { background: var(--dg-accent-soft) !important; border-color: var(--dg-accent) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--view:hover     { background: var(--dg-slate-soft) !important; border-color: var(--dg-slate) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--activate:hover { background: var(--dg-success-soft) !important; border-color: var(--dg-success) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--download:hover { background: var(--dg-warning-soft) !important; border-color: var(--dg-warning) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--payment:hover  { background: var(--dg-teal-soft) !important; border-color: var(--dg-teal) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-icon-btn.dg-icon-btn--disable:hover  { background: var(--dg-danger-soft) !important; border-color: var(--dg-danger) !important; }
+
+/* stat cards and grid-view cards keep their coloured left edge */
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-stat-card.dg-stat-card { border-color: var(--dg-border) !important; border-left-color: var(--dg-accent) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-stat-card.dg-stat-card--green { border-left-color: var(--dg-success) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-stat-card.dg-stat-card--red   { border-left-color: var(--dg-danger) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-stat-card.dg-stat-card--amber { border-left-color: var(--dg-warning) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-stat-value.dg-stat-value { color: var(--dg-text-1) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-stat-label.dg-stat-label { color: var(--dg-text-3) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-item.dg-item--green { border-left-color: var(--dg-success) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-item.dg-item--red   { border-left-color: var(--dg-danger) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-item.dg-item--amber { border-left-color: var(--dg-warning) !important; }
+
+/* tabs: neutral pills, the active one coloured (accent, or green / red / amber) */
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-tab.dg-tab { background: var(--dg-surface-sunken) !important; border-color: var(--dg-border) !important; color: var(--dg-text-2) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-tab.dg-tab--active { background: var(--dg-accent-soft) !important; border-color: var(--dg-accent) !important; color: var(--dg-accent-strong) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-tab.dg-tab--green.dg-tab--active { background: var(--dg-success-soft) !important; border-color: var(--dg-success) !important; color: var(--dg-success) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-tab.dg-tab--red.dg-tab--active   { background: var(--dg-danger-soft) !important; border-color: var(--dg-danger) !important; color: var(--dg-danger) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-tab.dg-tab--amber.dg-tab--active { background: var(--dg-warning-soft) !important; border-color: var(--dg-warning) !important; color: var(--dg-warning) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-tab-count.dg-tab-count { color: inherit !important; }
+
+/* view switch, record count, pager */
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-switch-btn.dg-switch-btn { color: var(--dg-text-2) !important; border-color: transparent !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-switch-btn.dg-switch-btn.active { color: var(--dg-text-1) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-switch-btn.dg-switch-btn.active svg { color: var(--dg-accent) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-count.dg-count { color: var(--dg-text-2) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-pager-btn.dg-pager-btn { background: var(--dg-surface-sunken) !important; border-color: var(--dg-border) !important; color: var(--dg-text-2) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-pager-btn.dg-pager-btn:hover:not(:disabled) { border-color: var(--dg-accent) !important; color: var(--dg-accent) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-pager-cur.dg-pager-cur { color: var(--dg-accent) !important; }
+
+/* table: header names dark and clear, values in the grid's own text colour */
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel th.dg-th { background: var(--dg-surface-raised) !important; color: var(--dg-text-1) !important; border-color: var(--dg-border-soft) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-th-label.dg-th-label { color: var(--dg-text-1) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-col-index.dg-col-index { color: var(--dg-text-3) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel td.dg-cell { color: var(--dg-text-2) !important; border-color: var(--dg-border-soft) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-row.dg-row--hover td.dg-cell { color: var(--dg-text-1) !important; }
+
+/* Grid view: each card's left edge takes the colour of the tab picked (All = accent, Active / Closed / Payment done =
+   green, Inactive = red, Open / Pending = amber), so the cards match the tab they are listed under. */
+.dg-item.dg-item--edge-accent { border-left-color: var(--dg-accent); }
+.dg-item.dg-item--edge-green  { border-left-color: var(--dg-success); }
+.dg-item.dg-item--edge-red    { border-left-color: var(--dg-danger); }
+.dg-item.dg-item--edge-amber  { border-left-color: var(--dg-warning); }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-item.dg-item--edge-accent { border-left-color: var(--dg-accent) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-item.dg-item--edge-green  { border-left-color: var(--dg-success) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-item.dg-item--edge-red    { border-left-color: var(--dg-danger) !important; }
+body[data-theme="light"] .dg-panel.dg-panel.dg-panel.dg-panel .dg-item.dg-item--edge-amber  { border-left-color: var(--dg-warning) !important; }

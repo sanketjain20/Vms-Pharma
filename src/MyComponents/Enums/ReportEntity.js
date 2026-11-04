@@ -18,4 +18,8 @@ export const ReportEntity={
     ProfitLoss:17,
     AuditLog:18,
     NarcoticRegister:19,
+    // run-time reports (Phase 3)
+    CustomItemSales:20,
+    DailySalesFinance:21,
+    WalkInCustomer:22,
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import "../../Styles/CommonAEUDForm/FormShell.css";
 import API_BASE_URL from "../../Config/api.config";
 import apiClient from "../../Config/apiClient";
+import { useBusinessProfile } from "../../utils/businessProfile";
 
 const fmtMoney = (value) =>
   Number(value || 0).toLocaleString("en-IN", {
@@ -52,29 +53,19 @@ const FieldCard = ({ label, value, accent, mono }) => (
   </div>
 );
 
+// A batch number may cover several products received on one purchase: the view shows them all.
 const fetchBatch = async (uKey) => {
-  const endpoints = [
-    `${API_BASE_URL}/api/Batch/GetBatchByUkey/${uKey}`
-  ];
-
-  let lastError = "Failed to fetch batch";
-  for (const endpoint of endpoints) {
-    try {
-      const response = await apiClient(endpoint, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-      const payload = await response.json().catch(() => null);
-      if (response.ok && payload?.status === 200) return payload.data;
-      lastError = payload?.message || `HTTP ${response.status}`;
-    } catch (error) {
-      lastError = error.message;
-    }
-  }
-  throw new Error(lastError);
+  const response = await apiClient(`${API_BASE_URL}/api/Batch/GetBatchGroup/${uKey}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  const payload = await response.json().catch(() => null);
+  if (response.ok && payload?.status === 200) return payload.data;
+  throw new Error(payload?.message || `HTTP ${response.status}`);
 };
 
 export default function BatchView({ uKey, onClose }) {
+  const { trackExpiry } = useBusinessProfile(); // no expiry anywhere when the shop doesn't track it
   const [batch, setBatch] = useState(null);
   const [error, setError] = useState("");
 
@@ -89,16 +80,15 @@ export default function BatchView({ uKey, onClose }) {
   }, [uKey]);
 
   const meta = useMemo(() => expiryMeta(batch?.expiryDate), [batch?.expiryDate]);
-  const availableQuantity = batch?.quantity ?? 0;
-  const purchasedQuantity = batch?.originalQuantity ?? 0;
-  const soldQuantity = batch?.quantitySold ?? Math.max(Number(purchasedQuantity || 0) - Number(availableQuantity || 0), 0);
-  const stockValue = Number(availableQuantity || 0) * Number(batch?.costPrice || batch?.unitCostPrice || 0);
+  const lines = batch?.lines || [];
+  const sold = Math.max(Number(batch?.purchased || 0) - Number(batch?.available || 0), 0);
+  const stockValue = lines.reduce((t, l) => t + Number(l.quantity || 0) * Number(l.costPrice || 0), 0);
 
   if (!uKey) return null;
 
   return (
     <div className="afx-backdrop">
-      <div className="afx-modal afx-modal--md">
+      <div className="afx-modal afx-modal--lg">
         <div className="afx-header">
           <div>
             <div className="afx-eyebrow"><span className="afx-eyebrow-dot" />Batch Record</div>
@@ -123,37 +113,55 @@ export default function BatchView({ uKey, onClose }) {
             <>
               <div className="afx-option-row" style={{ justifyContent: "flex-start" }}>
                 <span className="afx-tag afx-view-value--mono">{batch.batchNumber || "-"}</span>
-                <span className="afx-badge" style={{ background: meta.bg, color: meta.fg }}>{meta.label}</span>
-                <span style={{ color: "var(--afx-text-3)", fontSize: 11.5 }}>Expiry: {fmtDate(batch.expiryDate)}</span>
+                {trackExpiry && batch.expiryDate && <span className="afx-badge" style={{ background: meta.bg, color: meta.fg }}>{meta.label}</span>}
+                {trackExpiry && batch.expiryDate && <span style={{ color: "var(--afx-text-3)", fontSize: 11.5 }}>Earliest expiry: {fmtDate(batch.expiryDate)}</span>}
               </div>
 
               <div className="afx-grid">
-                <FieldCard label="Product" value={batch.productName || batch.product || "-"} />
-                <FieldCard label="Product Code" value={batch.productCode || batch.inventoryCode || "-"} mono />
-                <FieldCard label="Supplier" value={batch.supplierName || batch.supplier || "-"} />
-                <FieldCard label="Purchase No" value={batch.purchaseNumber || batch.purchaseCode || "-"} mono />
-                <FieldCard label="Manufacturing Date" value={fmtDate(batch.manufacturingDate)} />
-                <FieldCard label="Expiry Date" value={fmtDate(batch.expiryDate)} />
-                <FieldCard label="Days To Expiry" value={meta.daysText} accent />
-                <FieldCard label="Available Quantity" value={availableQuantity} accent />
-                <FieldCard label="Purchased Quantity" value={purchasedQuantity} />
-                <FieldCard label="Sold Quantity" value={soldQuantity} />
-                <FieldCard label="Cost Price" value={`₹${fmtMoney(batch.costPrice || batch.unitCostPrice)}`} />
-                <FieldCard label="MRP" value={`₹${fmtMoney(batch.mrp || batch.unitSellingPrice)}`} />
+                <FieldCard label="Purchase No" value={batch.purchaseNumber || "Opening / transferred stock"} mono />
+                <FieldCard label="Supplier" value={batch.supplier || "-"} />
+                <FieldCard label="Products" value={batch.productCount} accent />
+                <FieldCard label="Purchased Quantity" value={batch.purchased} />
+                <FieldCard label="Available Quantity" value={batch.available} accent />
+                <FieldCard label="Sold / Used" value={sold} />
                 <FieldCard label="Current Stock Value" value={`₹${fmtMoney(stockValue)}`} accent />
-                <FieldCard label="GST Rate" value={batch.gstRate != null ? `${batch.gstRate}%` : "-"} />
-                <FieldCard label="Created At" value={fmtDate(batch.createdAt)} />
-                <FieldCard label="Last Updated" value={fmtDate(batch.updatedAt)} />
               </div>
 
-              {(batch.remarks || batch.notes) && (
-                <>
-                  <div className="afx-section-title">Notes</div>
-                  <div className="afx-card">
-                    <div className="afx-view-value">{batch.remarks || batch.notes}</div>
-                  </div>
-                </>
-              )}
+              <div className="afx-section-title">Products in this batch</div>
+              <div className="afx-line-table" style={{ overflowX: "auto" }}>
+                <table data-testid="batch-lines">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Code</th>
+                      <th>Godown</th>
+                      <th>Purchased</th>
+                      <th>Available</th>
+                      <th>Sold</th>
+                      <th>Cost (₹)</th>
+                      <th>MRP (₹)</th>
+                      {trackExpiry && <th>MFG</th>}
+                      {trackExpiry && <th>Expiry</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lines.map((l) => (
+                      <tr key={l.uKey || l.id}>
+                        <td style={{ fontWeight: 600 }}>{l.productName}</td>
+                        <td className="afx-view-value--mono">{l.productCode}</td>
+                        <td>{l.godownName || "-"}</td>
+                        <td>{l.originalQuantity ?? 0}</td>
+                        <td>{l.quantity ?? 0}</td>
+                        <td>{l.quantitySold ?? 0}</td>
+                        <td>{fmtMoney(l.costPrice)}</td>
+                        <td>{fmtMoney(l.mrp)}</td>
+                        {trackExpiry && <td>{fmtDate(l.manufacturingDate)}</td>}
+                        {trackExpiry && <td>{fmtDate(l.expiryDate)}</td>}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
         </div>
